@@ -1,0 +1,73 @@
+<table class="table mb-4 table-hover table-striped table-sm">
+    <thead>
+        <tr style="background-color:#52BE80" class="text-white text-uppercase">
+            <th>#</th>
+            <th>Codigo</th>
+            <th>Usuario</th>
+            <th>Apertura</th>
+            <th>Cierre</th>
+            <th>$ Inicio</th>
+            <th>$ Cierre </th>
+            <!-- <th>Efectivo T.</th>
+            <th>Deposito T.</th>
+            <th>Efectivo V.</th>
+            <th>Deposito V.</th>
+            <th>Efectivo G.</th>
+            <th>Deposito G.</th> -->
+            <th>Ingreso T.</th>
+            <th>Egreso T.</th>
+            <th>Diferencia</th>
+            <th>Estado</th>
+            <th>Opciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr class="" v-for="(item, index) in lista_caja" :key="index">
+
+            <td>{{ index+1 }}</td>
+            <td>{{ item.id}}</td>
+            <td>{{ item.usuario }}</td>
+            <td>{{ item.fechahora_apertura }}</td>
+            <td>{{ (item.fechahora_cierre==null)?'..........': item.fechahora_cierre}}</td>
+            <td>{{ isNaN((parseFloat(item.monto_inicial)).toFixed(2))?0: (parseFloat(item.monto_inicial)).toFixed(2)}}</td>
+            <!-- <td>{{ item.monto_final }}</td> -->
+            <td>{{  item.monto_final=isNaN((((parseFloat((item.ingreso_total==null?0:item.ingreso_total)) + parseFloat((item.pago_administrativo_total==null?0:item.pago_administrativo_total))+ parseFloat((item.ingreso_total_ingreso==null)?0:item.ingreso_total_ingreso) + parseFloat((item.ingreso_total_amortizacion==null)?0:item.ingreso_total_amortizacion)) - parseFloat((item.egreso_total==null)?0:item.egreso_total) - parseFloat((item.desembolso_total==null)?0:item.desembolso_total)) +  (parseFloat((item.monto_inicial==null)?0:item.monto_inicial))).toFixed(2))?0:(((parseFloat((item.ingreso_total==null)?0:item.ingreso_total) + parseFloat((item.pago_administrativo_total==null?0:item.pago_administrativo_total))+ parseFloat((item.ingreso_total_ingreso==null)?0:item.ingreso_total_ingreso)) + parseFloat((item.ingreso_total_amortizacion==null)?0:item.ingreso_total_amortizacion) - parseFloat((item.egreso_total==null)?0:item.egreso_total) - parseFloat((item.desembolso_total==null)?0:item.desembolso_total)) +  (parseFloat((item.monto_inicial==null)?0:item.monto_inicial))).toFixed(2)}}</td>
+            <!-- <td>{{ item.efectivo_total }}</td>
+            <td>{{ item.deposito_total }}</td>
+            <td>{{ item.efectivo_venta }}</td>
+            <td>{{ item.deposito_venta }}</td>
+            <td>{{ item.efectivo_gasto }}</td>
+            <td>{{ item.deposito_gasto }}</td> -->
+
+            <!-- <td>{{ item.total_ingreso }}</td> -->
+            <td>{{ isNaN((parseFloat((item.ingreso_total==null)?0:item.ingreso_total) + parseFloat((item.pago_administrativo_total==null)?0:item.pago_administrativo_total)+ parseFloat((item.ingreso_total_ingreso==null?0:item.ingreso_total_ingreso)) + parseFloat((item.ingreso_total_amortizacion==null?0:item.ingreso_total_amortizacion))).toFixed(2))?0:(parseFloat((item.ingreso_total==null)?0:item.ingreso_total) + parseFloat((item.pago_administrativo_total==null)?0:item.pago_administrativo_total)+ parseFloat((item.ingreso_total_ingreso==null?0:item.ingreso_total_ingreso)) + parseFloat((item.ingreso_total_amortizacion==null?0:item.ingreso_total_amortizacion))).toFixed(2)}}</td>
+            <!-- <td>{{ item.total_egreso }}</td> -->
+            <td>{{ isNaN(parseFloat(parseFloat(item.egreso_total==null?0:item.egreso_total).toFixed(2)) + parseFloat(parseFloat(item.desembolso_total==null?0:item.desembolso_total).toFixed(2)))?0:parseFloat(parseFloat(parseFloat(item.egreso_total==null?0:item.egreso_total).toFixed(2)) + parseFloat(parseFloat(item.desembolso_total==null?0:item.desembolso_total).toFixed(2))).toFixed(2)}}</td>
+            <!-- <td>{{ item.diferencia }}</td> -->
+            <td>{{  isNaN((parseFloat(item.ingreso_total==null?0:item.ingreso_total) + parseFloat(item.pago_administrativo_total==null?0:item.pago_administrativo_total)+ parseFloat(item.ingreso_total_ingreso==null?0:item.ingreso_total_ingreso) + parseFloat(item.ingreso_total_amortizacion==null?0:item.ingreso_total_amortizacion)).toFixed(2)  - parseFloat(item.egreso_total==null?0:item.egreso_total).toFixed(2)  - parseFloat(item.desembolso_total==null?0:item.desembolso_total).toFixed(2))?0:parseFloat((parseFloat(item.ingreso_total==null?0:item.ingreso_total) + parseFloat(item.pago_administrativo_total==null?0:item.pago_administrativo_total)+ parseFloat(item.ingreso_total_ingreso==null?0:item.ingreso_total_ingreso) + parseFloat(item.ingreso_total_amortizacion==null?0:item.ingreso_total_amortizacion)).toFixed(2) - parseFloat(item.egreso_total==null?0:item.egreso_total).toFixed(2) - parseFloat(item.desembolso_total==null?0:item.desembolso_total).toFixed(2)).toFixed(2)}}</td>
+            <!-- <td>{{ item.estado }}</td> -->
+            <td>
+                <span v-if="item.estado==1"
+                    class="badge text-bg-success">Abierta</span>
+                <span v-else class="badge text-bg-dark">Cerrada</span>
+            </td>
+            <td>
+                <div class="btn-group my-0 py-0">
+                    <a  style="cursor:pointer;"
+                        class="text-success dropdown-toggle btn-sm my-0 py-0"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-ellipsis-h fa-lg fa-fw fs-4"></i>
+                    </a>
+                    
+                    <ul class="dropdown-menu my-0 py-0">
+                        <li >
+                                    <a @click="abrirModalDetallesCaja(item)" class="dropdown-item text-info" href="#">
+                                        <i class="fas fa-eye"></i> Ver Más</a>
+                                </li>
+                    </ul>
+                </div>
+            </td>
+
+        </tr>
+    </tbody>
+</table>

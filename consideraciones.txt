@@ -1,0 +1,6 @@
+-- 
+condicion a la hora de registrar una amortizacion
+cuando no haya ni una cuota programada, o saldo capital anterior en la amortizacion sea 0
+en ese caso la cuota estara CANCELADA
+delete from cuota where id>21
+update cuota set estado=1 where id_plan_pago=8 and estado=3

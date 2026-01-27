@@ -1,0 +1,3 @@
+casos para retiro de boveda desde otros formularios:
+
+-- Otorgamiento de préstamo
