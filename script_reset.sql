@@ -13,7 +13,6 @@ delete from egreso;
 delete from ingreso;
 delete from imagen;
 
-
 delete from garantia;
 delete from motivo_ingreso;
 delete from motivo_gasto;
@@ -27,14 +26,12 @@ delete from pago_amortizacion;
 delete from cuota;
 delete from plan_pago;
 
-
 delete from respaldo;
 delete from solicitud_codeudor;
 delete from solicitud;
 delete from cliente;
 delete from codeudor;
 delete from transferencia_caja_boveda;
-
 delete from caja;
 
 -- reset

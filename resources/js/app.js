@@ -25,37 +25,27 @@ import frmRoles from './components/frmRoles.vue';
 import frmUsuarios from './components/frmUsuarios.vue';
 import frmInformacion from './components/frmInformacion.vue';
 import frmCliente from './components/frmCliente.vue';
-
-import frmClienteNuevo from './components/frmClienteNuevo.vue';
-
 import frmSolicitud from './components/frmSolicitud.vue';
 import frmPlanPago from './components/frmPlanPago.vue';
-import frmPago from './components/frmPago.vue';
 import frmReporte from './components/frmReporte.vue';
 import frmCaja from './components/frmCaja.vue';
 import frmEstadoResultados from './components/frmEstadoResultados.vue';
 import frmCodeudores from './components/frmCodeudores.vue';
-
 import frmHistorialDesPagos from './components/frmHistorialDesPagos.vue';
 import frmHistorialIngresos from './components/frmHistorialIngresos.vue';
 import frmHistorialGastos from './components/frmHistorialGastos.vue';
 import repExtracto from './components/repExtracto.vue';
-
 import repHistoricoCreditoMora from './components/repHistoricoCreditoMora.vue';
-
 import repClientesMora from './components/repClientesMora.vue';
 import repPagosRealizados from './components/repPagosRealizados.vue';
 import repPagosProgramados from './components/repPagosProgramados.vue';
-
 import repMovimientosCredito from './components/repMovimientosCredito.vue';
 import repPorcentajesVenta from './components/repPorcentajesVenta.vue';
 import repDesembolsos from './components/repDesembolsos.vue';
 import repDesembolsosOficial from './components/repDesembolsosOficial.vue';
 import repDesembolsosPendientes from './components/repDesembolsosPendientes.vue';
-
 import frmConfiguracion from './components/frmConfiguracion.vue';
 import frmBoveda from './components/frmBoveda.vue';
-
 import frmHistorialPagos from './components/frmHistorialPagos.vue';
 import PerfilUsuarioComponent from './components/PerfilUsuarioComponent.vue';
 
@@ -67,12 +57,8 @@ app.component('frm-roles', frmRoles);
 app.component('frm-usuarios', frmUsuarios);
 app.component('frm-miempresa', frmInformacion);
 app.component('frm-cliente', frmCliente);
-
-app.component('frm-clientenuevo', frmClienteNuevo);
-
 app.component('frm-solicitud', frmSolicitud);
 app.component('frm-planpago', frmPlanPago);
-app.component('frm-pago', frmPago);
 app.component('frm-reporte', frmReporte);
 app.component('frm-caja', frmCaja);
 app.component('frm-estado_resultados', frmEstadoResultados);
@@ -85,7 +71,6 @@ app.component('rep-histcreditomora', repHistoricoCreditoMora);
 app.component('rep-clientesmora', repClientesMora);
 app.component('rep-pagosrealizados', repPagosRealizados);
 app.component('rep-pagosprogramados', repPagosProgramados);
-
 app.component('rep-movimientoscreditos', repMovimientosCredito);
 app.component('rep-porcentajesventa', repPorcentajesVenta);
 app.component('rep-desembolsos', repDesembolsos);
@@ -93,7 +78,6 @@ app.component('rep-desembolsosoficial', repDesembolsosOficial);
 app.component('rep-desembolsospendientes', repDesembolsosPendientes);
 app.component('frm-configuracion', frmConfiguracion);
 app.component('frm-boveda', frmBoveda);
-
 app.component('frm-historialpagos', frmHistorialPagos);
 app.component('perfil-usuario-component', PerfilUsuarioComponent);
 

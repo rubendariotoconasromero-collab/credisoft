@@ -12,10 +12,7 @@ use Dompdf\Options;
 
 class PagoController extends Controller
 {
-    //
-    public function index(){
-        return view('frmPago');
-    }
+
     public function save(Request $request){
         DB::beginTransaction();
 

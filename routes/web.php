@@ -132,7 +132,6 @@ Route::get('/listar_amortizaciones_cuotas_planpago', 'App\Http\Controllers\PlanP
 
 
 // pago
-Route::get('/pago', 'App\Http\Controllers\PagoController@index')->middleware('auth');
 Route::post('/save_pago', 'App\Http\Controllers\PagoController@save');
 Route::post('/pagar_cuotas', 'App\Http\Controllers\PagoController@pagarCuotas');
 Route::get('/get_pago', 'App\Http\Controllers\PagoController@getPago');
@@ -143,8 +142,6 @@ Route::get('/get_pagos_lista_cuotas', 'App\Http\Controllers\PagoController@getPa
 Route::get('/get_pagos_lista_anulados', 'App\Http\Controllers\PagoController@getPagosListaAnulados');
 Route::get('/get_pagos_lista_cuotas_total', 'App\Http\Controllers\PagoController@getPagosListaCuotasTotal');
 Route::post('/fotoRespaldoPago', 'App\Http\Controllers\PagoController@imagenRespaldo');
-
-
 
 // busqueda por fechas
 Route::get('/get_pagos_fecha', 'App\Http\Controllers\PagoController@getPagosFecha');
