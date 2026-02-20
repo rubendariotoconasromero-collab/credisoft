@@ -51,15 +51,28 @@ export default {
             $('#modalAbrirCaja').modal('hide');
         },
         async guardar() {
+            if (this.monto === '' || this.monto < 0) {
+                Swal.fire('Atención', 'Ingrese un monto inicial válido.', 'warning');
+                return;
+            }
             this.procesando = true;
             try {
-                await axios.post('/save', { monto_inicial: this.monto });
-                Swal.fire('Éxito', 'Caja aperturada correctamente.', 'success');
-                this.$emit('aperturada'); // Avisar al padre
+                const response = await axios.post('/caja/aperturar', { 
+                    monto_inicial: this.monto 
+                });
+
+                Swal.fire('Éxito', response.data.message, 'success');
+                this.$emit('aperturada'); 
                 this.cerrar();
+                this.monto = 0;
             } catch (error) {
-                console.error(error);
-                Swal.fire('Error', 'No se pudo abrir la caja.', 'error');
+                console.error("Error en apertura:", error);
+                // Intentar obtener el mensaje de error del backend
+                let mensaje = 'No se pudo abrir la caja.';
+                if (error.response && error.response.data && error.response.data.message) {
+                    mensaje = error.response.data.message;
+                }
+                Swal.fire('Error', mensaje, 'error');
             } finally {
                 this.procesando = false;
             }

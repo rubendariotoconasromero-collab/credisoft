@@ -1,16 +1,17 @@
 <template>
     <div class="modal fade" id="modalDetalleCaja" tabindex="-1" data-bs-backdrop="static">
-        <div class="modal-dialog modal-xl" style="width:90%; max-width:90%;">
-            <div class="modal-content border border-2 border-success">
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title">Detalles y Cierre de Caja</h5>
-                    <button type="button" class="btn-close btn-close-white" @click="cerrar"></button>
+        <div class="modal-dialog modal-xl" style="width:90%; max-width:90%;height:90%">
+            <div class="modal-content border border-2 border-warning">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title text-dark">Detalles y Cierre de Caja</h5>
+                    <button type="button" class="btn-close btn-close-dark" @click="cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row">
                         <div class="col-md-5">
+                            <h6 class="fw-bold text-dark">Resumén Movimientos</h6>
                             <table class="table table-sm table-bordered table-striped" style="font-size:12px">
-                                <thead class="bg-success text-white">
+                                <thead class="table-dark text-white">
                                     <tr>
                                         <th>Detalle</th>
                                         <th class="text-end">Valor (Bs)</th>
@@ -98,10 +99,10 @@
                         </div>
 
                         <div class="col-md-7">
-                            <h6 class="fw-bold text-success">Últimos Movimientos</h6>
-                            <div class="table-responsive" style="max-height: 400px; font-size:11px;">
-                                <table class="table table-sm table-hover">
-                                    <thead class="bg-light sticky-top">
+                            <h6 class="fw-bold text-dark">Últimos Movimientos</h6>
+                            <div class="table-responsive" style="max-height: 90%; font-size:11px;">
+                                <table class="table table-sm table-striped table-bordered">
+                                    <thead class="bg-light sticky-top table-dark">
                                         <tr>
                                             <th>Tipo</th>
                                             <th>Desc.</th>
@@ -112,11 +113,11 @@
                                     <tbody>
                                         <tr v-for="(mov, i) in movimientos" :key="i">
                                             <td>
-                                                <span class="badge" :class="getBadgeClass(mov.tipo_movimiento)">
+                                                <span class="badge" :class="getBadgeClass(mov.tipo_movimiento)" style="min-width: 100px;">
                                                     {{ mov.tipo_movimiento }}
                                                 </span>
                                             </td>
-                                            <td>{{ mov.descripcion }}</td>
+                                            <td class="text-uppercase">{{ mov.descripcion }}</td>
                                             <td>{{ formatHora(mov.fecha) }}</td>
                                             <td class="text-end fw-bold">{{ mov.monto }}</td>
                                         </tr>
@@ -127,7 +128,7 @@
                     </div>
                 </div>
                 <div class="modal-footer justify-content-center">
-                    <button v-if="caja.estado == 1" @click="cerrarCaja" class="btn btn-danger btn-lg shadow">
+                    <button v-if="caja.estado == 1" @click="cerrarCaja" class="btn btn-danger shadow">
                         <i class="fas fa-lock me-2"></i> CERRAR CAJA DEFINITIVAMENTE
                     </button>
                     <button v-else class="btn btn-secondary" disabled>Caja Cerrada</button>
@@ -228,7 +229,7 @@ export default {
         },
         formatHora(f) { return moment(f).format('HH:mm'); },
         getBadgeClass(tipo) {
-            if(tipo.includes('Ingreso') || tipo.includes('Cobro')) return 'bg-success';
+            if(tipo.includes('ingreso') || tipo.includes('Cobro')) return 'bg-success';
             return 'bg-danger';
         }
     }

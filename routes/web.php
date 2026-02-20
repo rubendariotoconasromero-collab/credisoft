@@ -74,6 +74,7 @@ Route::get('/get_cantidad_clientes', 'App\Http\Controllers\ClienteController@get
 Route::get('/cantidades_clientes', 'App\Http\Controllers\ClienteController@cantidadesClientes');
 Route::get('/cliente/ficha-completa/{id}', [ClienteController::class, 'getFichaCompleta']);
 Route::get('/cliente/reporte', [ClienteController::class, 'imprimirReporteClientes']);
+Route::get('/get_cliente_info', [ClienteController::class, 'getClienteInfo']);
 
 
 // solicitud
@@ -202,7 +203,7 @@ Route::get('/reporte_planes_pago_cancelados', 'App\Http\Controllers\ReporteContr
 Route::get('/caja', 'App\Http\Controllers\CajaController@index')->middleware('auth');
 Route::get('/get_caja', 'App\Http\Controllers\CajaController@getCaja');
 Route::get('/get_caja_fecha', 'App\Http\Controllers\CajaController@getCajaFecha');
-Route::post('/save', 'App\Http\Controllers\CajaController@save');
+Route::post('/caja/aperturar', 'App\Http\Controllers\CajaController@save');
 Route::post('/close_caja', 'App\Http\Controllers\CajaController@closeCaja');
 Route::get('/caja_abierta', 'App\Http\Controllers\CajaController@cajaAbierta');
 Route::get('/get_pagos_caja', 'App\Http\Controllers\CajaController@getPagos');

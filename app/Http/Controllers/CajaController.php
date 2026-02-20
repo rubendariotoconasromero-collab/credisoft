@@ -41,7 +41,7 @@ class CajaController extends Controller
         DB::raw('(SELECT SUM(CASE WHEN pago_amortizacion.forma_pago = "Depósito banco" THEN pago_amortizacion.monto_pago ELSE 0 END) FROM pago_amortizacion WHERE pago_amortizacion.id_caja = caja.id) as suma_deposito_amortizacion'),
         )
         ->addSelect(DB::raw('(SELECT SUM(monto_pago) FROM pago WHERE pago.id_caja = caja.id and estado=1) as ingreso_total'))
-        ->addSelect(DB::raw('(SELECT SUM(monto_pago) FROM pago_amortizacion WHERE pago_amortizacion.id_caja = caja.id) as ingreso_total_amortizacion'))
+        // ->addSelect(DB::raw('(SELECT SUM(monto_pago) FROM pago_amortizacion WHERE pago_amortizacion.id_caja = caja.id) as ingreso_total_amortizacion'))
         ->addSelect(DB::raw('(SELECT SUM(egreso.monto) FROM egreso WHERE egreso.id_caja = caja.id) as egreso_total'))
         ->addSelect(DB::raw('(SELECT SUM(ingreso.monto) FROM ingreso WHERE ingreso.id_caja = caja.id) as ingreso_total_ingreso'))
         ->addSelect(DB::raw('(SELECT SUM(pago_administrativo.monto) FROM pago_administrativo WHERE pago_administrativo.id_caja = caja.id) as pago_administrativo_total'))
@@ -88,30 +88,56 @@ class CajaController extends Controller
         ->paginate(15);
         return $caja;
     }
-    public function save(Request $request){
-        DB::beginTransaction();
-        
-        try{
-            DB::table('caja')->insert([
-                'fechahora_apertura'=>$request->fechahora_apertura,
-                'monto_inicial'=>(empty($request->monto_inicial) || $request->monto_inicial<0)?0:$request->monto_inicial,
-                'monto_final'=>0,
-                'efectivo_total'=>0,
-                'deposito_total'=>0,
-                'efectivo_venta'=>0,
-                'deposito_venta'=>0,
-                'efectivo_gasto'=>0,
-                'deposito_gasto'=>0,
-                'total_ingreso'=>0,
-                'total_egreso'=>0,
-                'diferencia'=>0,
-                'id_usuario'=>Auth::id(),
-            ]);
-            DB::commit();
-        }catch(Exception $exception){
-            DB::rollback();
-        }
+    public function save(Request $request) {
+        $request->validate([
+            'monto_inicial' => 'required|numeric|min:0',
+        ]);
 
+        // Opcional: Verificar si el usuario ya tiene una caja abierta
+        $cajaAbierta = DB::table('caja')->where('id_usuario', Auth::id())->whereNull('fechahora_cierre')->exists();
+        if($cajaAbierta) return response()->json(['message' => 'Ya tienes una caja abierta'], 422);
+
+        DB::beginTransaction();
+
+        try {
+            // 2. Insertar usando Carbon::now() para la fecha exacta del servidor
+            DB::table('caja')->insert([
+                'fechahora_apertura' => Carbon::now(), // FECHA SERVIDOR (Más seguro)
+                'monto_inicial'      => $request->monto_inicial,
+                'monto_final'        => 0,
+                'efectivo_total'     => 0,
+                'deposito_total'     => 0,
+                'efectivo_venta'     => 0,
+                'deposito_venta'     => 0,
+                'efectivo_gasto'     => 0,
+                'deposito_gasto'     => 0,
+                'total_ingreso'      => 0,
+                'total_egreso'       => 0,
+                'diferencia'         => 0,
+                'id_usuario'         => Auth::id(),
+                // 'created_at'      => Carbon::now() // Si usas timestamps
+            ]);
+
+            DB::commit();
+
+            // 3. RETORNAR RESPUESTA JSON (Crucial para Axios)
+            return response()->json([
+                'success' => true,
+                'message' => 'Caja aperturada correctamente'
+            ], 200);
+
+        } catch (\Throwable $th) { // Usar Throwable captura más errores que Exception
+            DB::rollback();
+            
+            // Registrar el error real en el log de Laravel (storage/logs/laravel.log)
+            Log::error('Error al abrir caja: ' . $th->getMessage());
+
+            // Retornar error al frontend
+            return response()->json([
+                'success' => false,
+                'message' => 'Error interno al intentar abrir la caja.'
+            ], 500);
+        }
     }
 
     public function cajaAbierta(Request $request){

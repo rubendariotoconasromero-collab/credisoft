@@ -1,6 +1,5 @@
 <template>
     <main>
-        <!-- Preloader -->
         <div v-if="preloader" class="preloader">
             <div class="spinner-border text-success" role="status">
                 <span class="visually-hidden">Cargando...</span>
@@ -40,7 +39,6 @@
                 />
 
                 <div v-if="view == 1" class="card shadow-sm">
-
                     <div class="card-header bg-warning py-2 d-flex justify-content-between align-items-center">
                         <div class="flex-grow-1 text-center">
                             <h5 class="header-title my-0 fw-bold text-dark text-uppercase">
@@ -62,149 +60,153 @@
                             ? guardarSolicitud()
                             : modificarSolicitud()
                         ">
-
                         <div class="card-body">
 
-                            <div class="card border-0 shadow-sm mb-3">
-                          
-                                <div class="card-header bg-white text-dark">
-                                    <h6
-                                        class="mb-0 text-text-dark fw-bold border-bottom pb-2 border-2 border-dark text-uppercase">
-                                        Seleccione Cliente
+                            <div class="card mb-4 border shadow-sm">
+                                <div class="card-header bg-light border-bottom text-dark py-2">
+                                    <h6 class="mb-0 fw-bold text-uppercase d-flex align-items-center">
+                                        <i class="fas fa-user me-2"></i> Datos del Cliente
                                     </h6>
                                 </div>
 
                                 <div class="card-body p-3">
-                                 
-                                    <div v-if="cliente.nombre==''" class="mb-3">
+                                    
+                                    <div v-if="!cliente.id_cliente" class="mb-2">
+                                        <label class="form-label fw-bold small text-muted text-uppercase mb-1">Buscar o Registrar Cliente</label>
                                         <div class="position-relative">
-                                            <input v-model="cliente.idd_cliente" type="text" id="buscarCliente"
-                                                class="form-control text-uppercase shadow-sm"
-                                                placeholder="Buscar por nombre o CI..."
-                                                @input="filteredItemsClienteMetodo(cliente.idd_cliente)"
-                                                :disabled="solicitud.accion === 2"
-                                                style="padding-left: 2.2rem; border: 1px solid #dee2e6; border-radius: 0.375rem; font-size: 0.9rem;"
-                                                required />
-                                            <i class="bi bi-search position-absolute text-muted"
-                                                style="left: 0.75rem; top: 50%; transform: translateY(-50%); pointer-events: none; font-size: 0.9rem;"></i>
-
-                                      
-                                            <div v-if="filteredItemsCliente.length > 0"
-                                                class="dropdown-menu show w-100 border-0 shadow mt-1"
-                                                style="max-height: 180px; overflow-y: auto; border-radius: 0.375rem; font-size: 0.875rem;">
-                                                <a v-for="clienteItem in filteredItemsCliente" :key="clienteItem.id"
-                                                    class="dropdown-item text-uppercase py-2 px-3 d-flex justify-content-between align-items-center"
-                                                    @click="seleccionarCliente(clienteItem)"
-                                                    style="transition: all 0.15s; cursor: pointer;"
-                                                    @mouseover="$event.target.style.backgroundColor = '#f0f8f0'"
-                                                    @mouseout="$event.target.style.backgroundColor = 'transparent'">
-                                                    <span class="fw-semibold small">{{ clienteItem.nombre }}</span>
-                                                    <span class="badge bg-light text-dark border small">{{
-                                                        clienteItem.ci }}</span>
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div v-if="cliente.id_cliente && cliente.id_cliente !== 0">
-                                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                                <h6 class="mb-0 fw-semibold small">
-                                                    Información del Cliente
-                                                </h6>
-                                                <button v-if="solicitud.accion !== 2" @click="limpiarSeleccionCliente()"
-                                                    class="btn btn-outline-danger btn-sm py-0 px-2" type="button"
-                                                    style="font-size: 0.75rem;">
-                                                    <i class="bi bi-x-circle"></i> Limpiar
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-success border-end-0">
+                                                    <i class="fas fa-search text-white"></i>
+                                                </span>
+                                                <input 
+                                                    v-model="cliente.idd_cliente" 
+                                                    type="text" 
+                                                    class="form-control border-start-0 text-uppercase"
+                                                    placeholder="INGRESE NOMBRE O CI..."
+                                                    @input="filteredItemsClienteMetodo(cliente.idd_cliente)"
+                                                    :disabled="solicitud.accion === 2"
+                                                    autocomplete="off"
+                                                />
+                                                <button 
+                                                    v-if="solicitud.accion !== 2"
+                                                    class="btn btn-success fw-bold px-4" 
+                                                    type="button"
+                                                    @click="abrirModalCliente(0)">
+                                                    <i class="fas fa-plus-circle me-1"></i> NUEVO
                                                 </button>
                                             </div>
 
-                                            <div class="card border">
-                                                <div class="card-body p-2">
-                                              
-                                                    <div class="row g-2" style="font-size: 0.8rem;">
-                                        
-                                                        <div class="col-12 mb-3">
-                                                            <div class="py-2 rounded d-flex align-items-center">
-                                                                <div class="flex-grow-1">
-                                                                    <strong class="d-block text-dark text-uppercase"
-                                                                        style="font-size: 0.95rem;">{{
-                                                                        cliente.idd_cliente }}</strong>
-                                                                </div>
-                                                            </div>
+                                            <div v-if="filteredItemsCliente.length > 0"
+                                                class="dropdown-menu show w-100 border mt-1 shadow-sm p-0"
+                                                style="max-height: 200px; overflow-y: auto; z-index: 1050;">
+                                                <a v-for="clienteItem in filteredItemsCliente" :key="clienteItem.id"
+                                                    class="dropdown-item py-2 px-3 border-bottom d-flex justify-content-between align-items-center"
+                                                    @click="seleccionarCliente(clienteItem)"
+                                                    style="cursor: pointer;">
+                                                    <div>
+                                                        <span class="fw-bold d-block text-uppercase small">{{ clienteItem.nombre }}</span>
+                                                        <span class="text-muted small"><i class="fas fa-briefcase me-1"></i> {{ clienteItem.actividad }}</span>
+                                                    </div>
+                                                    <span class="badge bg-light text-dark border">{{ clienteItem.ci }} {{ clienteItem.lugar_expedicion }}</span>
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <div class="form-text small text-muted mt-1 ms-1">
+                                            <i class="fas fa-info-circle me-1"></i> Busque por nombre/CI o haga clic en "Nuevo" para registrar.
+                                        </div>
+                                    </div>
+
+                                    <div v-else>
+                                        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                                            <div>
+                                                <span class="badge bg-secondary me-2">ID: {{ cliente.id_cliente }}</span>
+                                                <span class="fw-bold text-uppercase text-dark">{{ cliente.nombre }}</span>
+                                            </div>
+                                            
+                                            <div v-if="solicitud.accion !== 2">
+                                                <button 
+                                                    type="button" 
+                                                    class="btn btn-sm btn-outline-primary me-1" 
+                                                    @click="abrirModalCliente(1)"
+                                                    title="Modificar datos del cliente">
+                                                    <i class="fas fa-edit me-1"></i> Editar
+                                                </button>
+                                                <button 
+                                                    type="button" 
+                                                    class="btn btn-sm btn-outline-danger" 
+                                                    @click="limpiarSeleccionCliente()"
+                                                    title="Deseleccionar cliente">
+                                                    <i class="fas fa-times me-1"></i> Quitar
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div class="row g-0 border rounded bg-light">
+                                            <div class="col-md-2 d-flex justify-content-center align-items-center bg-white border-end p-2">
+                                                <img :src="cliente.imagen_validate ? cliente.imagen : '/img/cliente/default.png'"
+                                                    class="img-thumbnail" 
+                                                    style="height: 85px; width: 85px; object-fit: cover;"
+                                                    alt="Foto Cliente">
+                                            </div>
+
+                                            <div class="col-md-3 border-end">
+                                                <div class="p-2">
+                                                    <label class="d-block text-muted small fw-bold mb-0">DOCUMENTO IDENTIDAD</label>
+                                                    <span class="fw-bold text-dark">{{ cliente.ci }} {{ cliente.lugar_expedicion }}</span>
+                                                    
+                                                    <label class="d-block text-muted small fw-bold mb-0 mt-2">SEXO</label>
+                                                    <span class="text-dark small text-uppercase">{{ cliente.sexo }}</span>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-4 border-end">
+                                                <div class="p-2">
+                                                    <label class="d-block text-muted small fw-bold mb-0">ACTIVIDAD ECONÓMICA</label>
+                                                    <span class="text-dark small text-uppercase text-truncate d-block">{{ cliente.actividad }}</span>
+                                                    
+                                                    <div class="row mt-2">
+                                                        <div class="col-6">
+                                                            <label class="d-block text-muted small fw-bold mb-0">EST. CIVIL</label>
+                                                            <span class="text-dark small text-uppercase">{{ cliente.estado_civil }}</span>
                                                         </div>
-
-                                                        <div class="col-md-3 col-6">
-                                                            <div class="info-compact-foto">
-                                                                <img :src="cliente.imagen_validate?cliente.imagen: '/img/empresa/user_img2_old.png'"
-                                                                    class="user-img" alt="Fotografía del cliente">
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-md-3 col-6">
-                                                            <div class="info-compact mt-3">
-                                                       
-                                                                <strong class="d-block text-dark"
-                                                                    style="font-size: 0.9rem;">CI</strong>
-                                                                <span class="fw-semibold">{{ cliente.ci }}</span>
-                                                                <span class="badge bg-secondary ms-1"
-                                                                    style="font-size: 0.8rem;">{{
-                                                                    cliente.lugar_expedicion }}</span>
-
-                                                                <strong class="d-block mt-3 text-dark"
-                                                                    style="font-size: 0.9rem; color: #6c757d;">SEXO</strong>
-                                                                <span>{{ cliente.sexo }}</span>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="col-md-3 col-6">
-                                                            <div class="info-compact mt-3">
-                                                                <strong class="d-block text-dark"
-                                                                    style="font-size: 0.9rem; color: #6c757d;">ESTADO
-                                                                    CIVIL</strong>
-                                                                <span>{{ cliente.estado_civil }}</span>
-                                                                <strong class="d-block text-dark mt-3"
-                                                                    style="font-size: 0.9rem; color: #6c757d;">VIVIENDA</strong>
-                                                                <span>{{ cliente.vivienda }}</span>
-                                                            </div>
-                                                        </div>
-
-
-                                                        <div class="col-md-3 col-6">
-                                                            <div class="info-compact mt-3">
-
-                                                                <strong class="d-block text-dark"
-                                                                    style="font-size: 0.7rem; color: #6c757d;">INGRESO
-                                                                    (Bs)</strong>
-                                                                <span class="fw-bold text-dark"
-                                                                    style="font-size: 0.9rem;">{{
-                                                                    cliente.ingreso_mensual?.toLocaleString('es-BO') ||
-                                                                    'N/A' }}</span>
-
-                                                                <strong class="d-block text-dark mt-3"
-                                                                    style="font-size: 0.7rem; color: #6c757d;">ACTIVIDAD</strong>
-                                                                <span>{{ cliente.actividad }}</span>
-                                                            </div>
+                                                        <div class="col-6">
+                                                            <label class="d-block text-muted small fw-bold mb-0">VIVIENDA</label>
+                                                            <span class="text-dark small text-uppercase">{{ cliente.vivienda }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div v-else-if="cliente.idd_cliente && !cliente.id_cliente">
-                                            <div class="alert alert-info border-0 shadow-sm py-2 px-3 mb-0 d-flex align-items-center"
-                                                role="alert" style="font-size: 0.85rem;">
-                                                <i class="bi bi-info-circle-fill me-2"></i>
-                                                <span><strong>Seleccione un cliente</strong> de los resultados</span>
-                                            </div>
-                                        </div>
-                                        <div v-else>
-                                            <div class="text-center py-3" style="opacity: 0.6;">
-                                                <i class="bi bi-search text-muted" style="font-size: 2rem;"></i>
-                                                <p class="text-muted small mb-0 mt-2">Busque un cliente para continuar
-                                                </p>
+
+                                            <div class="col-md-3 bg-white">
+                                                <div class="p-2 h-100 d-flex flex-column justify-content-center">
+                                                    <label class="d-block text-muted small fw-bold mb-1">INGRESO MENSUAL</label>
+                                                    <div class="fs-5 fw-bold text-success border-start border-4 border-success ps-2">
+                                                        Bs. {{ cliente.ingreso_mensual?.toLocaleString('es-BO') || '0' }}
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+
+                            <div class="modal fade" id="modalClienteOverlay" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+                                <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" style="max-width:90%;">
+                                    <div class="modal-content border-0 shadow-lg">
+                                        <div class="modal-body p-0">
+                                            <ClienteForm 
+                                                v-if="mostrarModalCliente"
+                                                :cliente-id="clienteFormId"
+                                                :accion="clienteFormAccion"
+                                                @cerrar="cerrarModalCliente"
+                                                @guardado="alGuardarCliente"
+                                                :cliente-data="selectedCustomerData"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
 
                             <div class="card mb-4 border-success shadow-sm">
                                 <div class="card-header bg-white border-bottom" id="headerCodeudor">
@@ -231,7 +233,7 @@
                                     </div>
                                 </div>
 
-                                <div class="card-body" v-show="!sinCodeudor">
+                                <!-- <div class="card-body" v-show="!sinCodeudor">
                                
                                     <div v-for="(
 item, index
@@ -311,7 +313,121 @@ item, index
                                         </div>
                                     </div>
 
+                                </div> -->
+
+                                <div class="card-body" v-show="!sinCodeudor">
+                                    <div v-for="(item, index) in lista_codeudores" :key="index" class="row g-3 mb-3 align-items-center">
+                                        
+                                        <div class="col-md-4 position-relative">
+                                            <label class="form-label small fw-bold text-muted mb-1" v-if="index === 0">BUSCAR CODEUDOR</label>
+                                            <div class="input-group">
+                                                <input 
+                                                    v-model="item.select_codeudor.codeudor.idd_codeudor" 
+                                                    type="text" 
+                                                    class="form-control text-uppercase shadow-sm"
+                                                    placeholder="Escriba nombre o CI..." 
+                                                    :disabled="solicitud.accion === 2" 
+                                                    @input="filteredItemsCodeudorMetodo(item.select_codeudor.codeudor.idd_codeudor, index)" 
+                                                />
+                                                
+                                                <button v-if="solicitud.accion !== 2" 
+                                                    @click="addCodeudor" type="button"
+                                                    class="btn btn-success ms-1 shadow-sm"
+                                                    data-bs-toggle="tooltip" title="Agregar otro codeudor">
+                                                    <i class="fas fa-plus"></i>
+                                                </button>
+                                                <button v-if="solicitud.accion !== 2 && lista_codeudores.length > 1" 
+                                                    @click="deleteCodeudor(index)" type="button" 
+                                                    class="btn btn-outline-danger ms-1 shadow-sm"
+                                                    data-bs-toggle="tooltip" title="Quitar este codeudor">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+
+                                            <div v-if="item.select_codeudor.codeudor.filteredItemsCodeudorAux.length > 0" 
+                                                class="dropdown-menu show w-100 border-0 shadow mt-1" 
+                                                style="max-height: 250px; overflow-y: auto; z-index: 1050;">
+                                                <a v-for="codeudorItem in item.select_codeudor.codeudor.filteredItemsCodeudorAux" 
+                                                :key="codeudorItem.id"
+                                                class="dropdown-item py-2 px-3 border-bottom d-flex justify-content-between align-items-center" 
+                                                @click="seleccionarCodeudor(codeudorItem, index)"
+                                                style="cursor: pointer;">
+                                                    <div>
+                                                        <span class="fw-bold d-block text-uppercase small">{{ codeudorItem.nombre }}</span>
+                                                        <span class="text-muted small"><i class="fas fa-briefcase me-1"></i> {{ codeudorItem.actividad }}</span>
+                                                    </div>
+                                                    <span class="badge bg-light text-dark border">{{ codeudorItem.ci }}</span>
+                                                </a>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-8">
+                                            <label class="form-label small fw-bold text-muted mb-1" v-if="index === 0">INFORMACIÓN DETALLADA</label>
+                                            
+                                            <div v-if="item.select_codeudor.codeudor.id_codeudor !== 0" class="row g-0 border rounded bg-light shadow-sm position-relative overflow-hidden">
+                                                
+                                                <div class="col-md-2 d-flex justify-content-center align-items-center bg-white border-end p-2">
+                                                    <img :src="item.select_codeudor.codeudor.imagen ? '/img/codeudor/' + item.select_codeudor.codeudor.imagen : '/img/codeudor/default.png'"
+                                                        class="img-thumbnail rounded-circle" 
+                                                        style="height: 70px; width: 70px; object-fit: cover;"
+                                                        alt="Foto">
+                                                </div>
+
+                                                <div class="col-md-3 border-end">
+                                                    <div class="p-2 d-flex flex-column justify-content-center h-100">
+                                                        <label class="d-block text-muted small fw-bold mb-0" style="font-size: 0.65rem;">DOCUMENTO IDENTIDAD</label>
+                                                        <span class="fw-bold text-dark text-uppercase" style="font-size: 0.85rem;">
+                                                            {{ item.select_codeudor.codeudor.ci }}
+                                                        </span>
+                                                        
+                                                        <div class="d-flex justify-content-between mt-1">
+                                                            <div>
+                                                                <label class="d-block text-muted small fw-bold mb-0" style="font-size: 0.65rem;">SEXO</label>
+                                                                <span class="text-dark small text-uppercase">{{ item.select_codeudor.codeudor.sexo || '-' }}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-4 border-end">
+                                                    <div class="p-2 d-flex flex-column justify-content-center h-100">
+                                                        <label class="d-block text-muted small fw-bold mb-0" style="font-size: 0.65rem;">ACTIVIDAD ECONÓMICA</label>
+                                                        <span class="text-dark small text-uppercase text-truncate d-block mb-1" :title="item.select_codeudor.codeudor.actividad">
+                                                            {{ item.select_codeudor.codeudor.actividad || 'No registrada' }}
+                                                        </span>
+                                                        
+                                                        <div class="row g-0">
+                                                            <div class="col-6">
+                                                                <label class="d-block text-muted small fw-bold mb-0" style="font-size: 0.65rem;">EST. CIVIL</label>
+                                                                <span class="text-dark small text-uppercase">{{ item.select_codeudor.codeudor.estado_civil || '-' }}</span>
+                                                            </div>
+                                                            <div class="col-6">
+                                                                <label class="d-block text-muted small fw-bold mb-0" style="font-size: 0.65rem;">VIVIENDA</label>
+                                                                <span class="text-dark small text-uppercase">{{ item.select_codeudor.codeudor.vivienda || '-' }}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-3 bg-white">
+                                                    <div class="p-2 h-100 d-flex flex-column justify-content-center">
+                                                        <label class="d-block text-muted small fw-bold mb-1" style="font-size: 0.65rem;">INGRESO MENSUAL</label>
+                                                        <div class="fs-6 fw-bold text-success border-start border-3 border-success ps-2">
+                                                            Bs. {{ item.select_codeudor.codeudor.ingreso_mensual?.toLocaleString('es-BO') || '0' }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+
+                                            <div v-else class="border rounded bg-light p-3 text-center text-muted border-dashed">
+                                                <small><i class="fas fa-arrow-left me-2"></i> Busque y seleccione un codeudor para ver su información.</small>
+                                            </div>
+                                        </div>
+
+                                    </div>
                                 </div>
+
                             </div>
 
                             <div class="card mb-4 border-success shadow-sm">
@@ -1011,6 +1127,8 @@ item, index
         <ModalRespaldos ref="modalRespaldosRef" />
         <ModalCalculadoraCredito ref="modalCalculadoraRef" />
 
+        
+
     </main>
 </template>
 
@@ -1025,6 +1143,8 @@ import ModalObservacion from './Solicitud/ModalObservacion.vue';
 import ModalGarantias from './Solicitud/ModalGarantias.vue';
 import ModalRespaldos from './Solicitud/ModalRespaldos.vue';
 import ModalCalculadoraCredito from './Solicitud/ModalCalculadoraCredito.vue';
+import ClienteForm from './Cliente/ClienteForm.vue'; 
+
 
 
 export default {
@@ -1035,6 +1155,7 @@ export default {
         ModalGarantias,
         ModalRespaldos,
         ModalCalculadoraCredito,
+        ClienteForm
     },
     props: {
         rolUsuario: {
@@ -1044,6 +1165,9 @@ export default {
     },
     data() {
         return {
+            mostrarModalCliente: false, // Controla si se renderiza el componente
+            clienteFormAccion: 0,       // 0: Nuevo, 1: Editar
+            clienteFormId: 0,
             orden_pago_actual: null,
             solicitud_editar: {},
             original_data: {
@@ -1209,6 +1333,7 @@ export default {
                 },
             ],
             filteredItemsCliente: [],
+            selectedCustomerData: null,
         };
     },
     watch: {
@@ -1226,16 +1351,106 @@ export default {
   
     },
     methods: {
+        async obtenerClientePorId(idCliente) {
+            this.preloader = true; 
+            try {
+                const response = await axios.get('/get_cliente_info', {
+                    params: {
+                        id: idCliente
+                    }
+                });
+
+                const datos = response.data;
+
+                if (datos.fecha_nacimiento) {
+                    datos.fecha_nacimiento = moment(datos.fecha_nacimiento).format("YYYY-MM-DD");
+                }
+                this.selectedCustomerData = datos;
+
+            } catch (error) {
+                console.error("Error al obtener el cliente:", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudo cargar la información del cliente.'
+                });
+            } finally {
+                this.preloader = false;
+            }
+        },
+
+        async abrirModalCliente(accion) {
+            this.clienteFormAccion = accion;
+            
+            if (accion === 1 && this.cliente.id_cliente) {
+                this.clienteFormId = this.cliente.id_cliente;
+                await this.obtenerClientePorId(this.clienteFormId);
+            } else {
+                this.clienteFormId = 0;
+            }
+
+            this.mostrarModalCliente = true;
+            
+            // Usamos jQuery para mostrar el modal wrapper de Bootstrap
+            this.$nextTick(() => {
+                $('#modalClienteOverlay').modal('show');
+            });
+        },
+
+        // Cierra el modal
+        cerrarModalCliente() {
+            $('#modalClienteOverlay').modal('hide');
+            // Esperamos a que termine la animación de bootstrap para destruir el componente
+            setTimeout(() => {
+                this.mostrarModalCliente = false;
+                this.clienteFormId = 0;
+            }, 300);
+        },
+
+        // Callback cuando el ClienteForm emite "guardado"
+        async alGuardarCliente() {
+            // 1. Recargar la lista de clientes en memoria para el buscador
+            await this.getClientes(); 
+
+            // 2. Si estábamos editando, actualizar los datos del cliente seleccionado en la vista actual
+            if (this.clienteFormAccion === 1 && this.clienteFormId) {
+                // Buscar el cliente actualizado en la lista recién cargada
+                const clienteActualizado = this.items_cliente.find(c => c.id === this.clienteFormId);
+                if (clienteActualizado) {
+                    this.seleccionarCliente(clienteActualizado);
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'success',
+                        title: 'Datos del cliente actualizados',
+                        showConfirmButton: false,
+                        timer: 3000
+                    });
+                }
+            } 
+            // 3. Si estábamos creando uno nuevo
+            else if (this.clienteFormAccion === 0) {
+                // Opcional: Podrías buscar el último cliente creado y seleccionarlo automáticamente
+                // O simplemente notificar al usuario que ya puede buscarlo
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: 'Cliente creado exitosamente. Puede buscarlo ahora.',
+                    showConfirmButton: false,
+                    timer: 3000
+                });
+            }
+            
+            this.cerrarModalCliente();
+        },
         abrirObservacionRepro(accion) {
-            // Usamos el mismo modal pero con los datos de 'solicitud_editar'
             const textoInicial = accion === 'modificar' ? this.solicitud_editar.observacion : '';
-            // Llamamos al hijo con el ID de la solicitud que se está editando
             this.$refs.modalObservacionRef.abrir(this.solicitud_editar.id, textoInicial);
         },
 
         async eliminarObservacionRepro() {
             try {
-                // Reutilizamos la lógica de eliminar enviando string vacío
                 await axios.post('/guardar_observacion', {
                     id_solicitud: this.solicitud_editar.id,
                     observacion: '',
@@ -1247,8 +1462,6 @@ export default {
                     showConfirmButton: false,
                     timer: 1200,
                 });
-                
-                // Actualizamos la interfaz localmente y recargamos lista de fondo
                 this.solicitud_editar.observacion = '';
                 await this.getSolicitudes(this.pagination.current_page);
 
@@ -1258,14 +1471,10 @@ export default {
             }
         },
         abrirCalculadoraCredito() {
-            // Delegamos al hijo
             this.$refs.modalCalculadoraRef.abrir();
         },
         abrirModalObservacion(accion) {
-            // Determinamos el texto inicial basado en la acción
             const textoInicial = accion === 'modificar' ? this.solicitud.observacion : '';
-
-            // Llamamos al método 'abrir' del componente hijo
             this.$refs.modalObservacionRef.abrir(this.solicitud.id, textoInicial);
         },
 
@@ -1281,7 +1490,6 @@ export default {
                     this.solicitud_editar.observacion = itemActualizado.observacion;
                 }
             } else {
-                // Comportamiento normal para otras vistas: volver al listado
                 this.view = 0; 
             }
         },
@@ -1416,8 +1624,6 @@ export default {
             this.solicitud_editar.nro_cuotas = Math.round(plazo * factor);
         },
 
-        // --- 3. ADAPTADOR PARA SIMULACIÓN ---
-        
         async simularNuevaTabla() {
             const backupSolicitud = { ...this.solicitud }; // Guardar estado actual
             const backupLista = [...this.lista_cuotas];    // Guardar lista actual
@@ -1765,6 +1971,52 @@ export default {
             }
         },
         
+        // async cargarCodeudores(solicitudId) {
+        //     try {
+        //         const { data } = await axios.get(
+        //             `/get_codeudores_solicitud?id_solicitud=${solicitudId}`
+        //         );
+        //         this.lista_codeudores = data.length
+        //             ? data.map((item) => ({
+        //                 select_codeudor: {
+        //                     isVisibleCodeudor: false,
+        //                     codeudor: {
+        //                         id_codeudor: item.id,
+        //                         idd_codeudor: item.nombre,
+        //                         nombre: item.nombre,
+        //                         ci: `${item.ci} - ${item.lugar_expedicion}`,
+        //                         lugar_expedicion: item.lugar_expedicion,
+        //                         actividad: item.actividad,
+        //                         items_codeudor: [],
+        //                         filteredItemsCodeudorAux: [],
+        //                     },
+        //                 },
+        //             }))
+        //             : [
+        //                 {
+        //                     select_codeudor: {
+        //                         isVisibleCodeudor: false,
+        //                         codeudor: {
+        //                             id_codeudor: 0,
+        //                             idd_codeudor: "",
+        //                             nombre: "",
+        //                             ci: "",
+        //                             lugar_expedicion: "",
+        //                             actividad: "",
+        //                             items_codeudor: [],
+        //                             filteredItemsCodeudorAux: [],
+        //                         },
+        //                     },
+        //                 },
+        //             ];
+        //         this.lista_codeudores.forEach((_, index) =>
+        //             this.getCodeudores(index)
+        //         );
+        //     } catch (error) {
+        //         console.error("Error loading codeudores:", error);
+        //     }
+        // },
+
         async cargarCodeudores(solicitudId) {
             try {
                 const { data } = await axios.get(
@@ -1778,9 +2030,16 @@ export default {
                                 id_codeudor: item.id,
                                 idd_codeudor: item.nombre,
                                 nombre: item.nombre,
-                                ci: `${item.ci} - ${item.lugar_expedicion}`,
+                                ci: `${item.ci} ${item.lugar_expedicion ? item.lugar_expedicion : ''}`,
                                 lugar_expedicion: item.lugar_expedicion,
                                 actividad: item.actividad,
+                                // --- MAPEO DE DATOS EXTENDIDOS ---
+                                sexo: item.sexo,
+                                estado_civil: item.estado_civil,
+                                vivienda: item.vivienda,
+                                ingreso_mensual: item.ingreso_mensual,
+                                imagen: item.imagen,
+                                // ---------------------------------
                                 items_codeudor: [],
                                 filteredItemsCodeudorAux: [],
                             },
@@ -1799,10 +2058,14 @@ export default {
                                     actividad: "",
                                     items_codeudor: [],
                                     filteredItemsCodeudorAux: [],
+                                    // Inicializar vacíos para evitar errores visuales
+                                    sexo: "", estado_civil: "", vivienda: "", ingreso_mensual: 0, imagen: ""
                                 },
                             },
                         },
                     ];
+                
+                // Cargar la lista completa de opciones para cada fila (para permitir cambios)
                 this.lista_codeudores.forEach((_, index) =>
                     this.getCodeudores(index)
                 );
@@ -1881,19 +2144,41 @@ export default {
             }
         },
         
+        // seleccionarCodeudor(item, index) {
+        //     this.lista_codeudores[index].select_codeudor.codeudor.idd_codeudor =
+        //         item.nombre;
+        //     this.lista_codeudores[index].select_codeudor.codeudor.id_codeudor =
+        //         item.id;
+        //     this.lista_codeudores[
+        //         index
+        //     ].select_codeudor.codeudor.ci = `${item.ci} - ${item.lugar_expedicion}`;
+        //     this.lista_codeudores[index].select_codeudor.codeudor.actividad =
+        //         item.actividad;
+        //     this.lista_codeudores[
+        //         index
+        //     ].select_codeudor.codeudor.filteredItemsCodeudorAux = [];
+        // },
+
         seleccionarCodeudor(item, index) {
-            this.lista_codeudores[index].select_codeudor.codeudor.idd_codeudor =
-                item.nombre;
-            this.lista_codeudores[index].select_codeudor.codeudor.id_codeudor =
-                item.id;
-            this.lista_codeudores[
-                index
-            ].select_codeudor.codeudor.ci = `${item.ci} - ${item.lugar_expedicion}`;
-            this.lista_codeudores[index].select_codeudor.codeudor.actividad =
-                item.actividad;
-            this.lista_codeudores[
-                index
-            ].select_codeudor.codeudor.filteredItemsCodeudorAux = [];
+            // Referencia al objeto codeudor específico en la lista
+            let codeudorTarget = this.lista_codeudores[index].select_codeudor.codeudor;
+
+            // Asignación de datos básicos
+            codeudorTarget.idd_codeudor = item.nombre;
+            codeudorTarget.id_codeudor = item.id;
+            codeudorTarget.ci = `${item.ci} ${item.lugar_expedicion ? item.lugar_expedicion : ''}`;
+            codeudorTarget.actividad = item.actividad;
+
+            // --- NUEVOS CAMPOS PARA LA TARJETA ---
+            codeudorTarget.sexo = item.sexo;
+            codeudorTarget.estado_civil = item.estado_civil;
+            codeudorTarget.vivienda = item.vivienda;
+            codeudorTarget.ingreso_mensual = item.ingreso_mensual;
+            codeudorTarget.imagen = item.imagen; // Asegúrate de que tu backend envíe este campo
+            // -------------------------------------
+
+            // Limpiar lista de búsqueda
+            codeudorTarget.filteredItemsCodeudorAux = [];
         },
 
         abrirModalNuevo() {
@@ -2582,6 +2867,20 @@ export default {
 
 <style scoped>
     @import './styles/frmSolicitud.css';
+
+    /* Dropdown personalizado */
+    .dropdown-item:hover {
+        background-color: #f8f9fa;
+        border-left: 2px solid #198754; /* Borde verde al pasar el mouse */
+    }
+
+    .dropdown-item {
+        border-left: 2px solid #ffffff; /* Borde verde al pasar el mouse */
+    }
+
+   
+
+   
 </style>
 
 

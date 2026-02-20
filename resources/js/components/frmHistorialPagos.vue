@@ -8,9 +8,6 @@
             <div class="container-fluid">
 
                 <div v-if="view==0">
-
-
-
                     <div class="card">
                         <div class="card-header bg-success py-2">
                             <h5 class="header-title my-0 text-center fw-semibold text-white text-uppercase">
@@ -22,10 +19,8 @@
                             <div class="col-md-4">
                                 <div class="card bg-primary text-white mb-3 h-100">
                                     <div class="card-body py-3">
-                                        <h6 class="card-title text-uppercase font-size-12 mb-2">Total Recaudado (Caja)
-                                        </h6>
-                                        <h4 class="mb-0 fw-bold">{{ parseFloat(kpis.total_recaudado || 0).toFixed(2) }}
-                                            Bs.</h4>
+                                        <h6 class="card-title text-uppercase font-size-12 mb-2">Total Recaudado (Caja)</h6>
+                                        <h4 class="mb-0 fw-bold">{{ formatMonto(kpis.total_recaudado) }} Bs.</h4>
                                         <small class="text-white-50">Suma de Pagos + Multas</small>
                                     </div>
                                 </div>
@@ -33,10 +28,8 @@
                             <div class="col-md-4">
                                 <div class="card bg-warning text-white mb-3 h-100">
                                     <div class="card-body py-3">
-                                        <h6 class="card-title text-uppercase font-size-12 mb-2">Total Multas Cobradas
-                                        </h6>
-                                        <h4 class="mb-0 fw-bold">{{ parseFloat(kpis.total_multas || 0).toFixed(2) }} Bs.
-                                        </h4>
+                                        <h6 class="card-title text-uppercase font-size-12 mb-2">Total Multas Cobradas</h6>
+                                        <h4 class="mb-0 fw-bold">{{ formatMonto(kpis.total_multas) }} Bs.</h4>
                                     </div>
                                 </div>
                             </div>
@@ -44,8 +37,7 @@
                                 <div class="card bg-danger text-white mb-3 h-100">
                                     <div class="card-body py-3">
                                         <h6 class="card-title text-uppercase font-size-12 mb-2">Total Condonado</h6>
-                                        <h4 class="mb-0 fw-bold">{{ parseFloat(kpis.total_condonado || 0).toFixed(2) }}
-                                            Bs.</h4>
+                                        <h4 class="mb-0 fw-bold">{{ formatMonto(kpis.total_condonado) }} Bs.</h4>
                                     </div>
                                 </div>
                             </div>
@@ -55,14 +47,10 @@
                             <div class="row mb-3">
                                 <div class="col-md-6">
                                     <div class="input-group">
-                                        <span class="input-group-text bg-light fw-bold"
-                                            style="font-size: 11px;">DESDE</span>
-                                        <input @change="buscarPagos" type="date" v-model="filtros.fecha_inicio"
-                                            class="form-control">
-                                        <span class="input-group-text bg-light fw-bold"
-                                            style="font-size: 11px;">HASTA</span>
-                                        <input @change="buscarPagos" type="date" v-model="filtros.fecha_final"
-                                            class="form-control">
+                                        <span class="input-group-text bg-light fw-bold" style="font-size: 11px;">DESDE</span>
+                                        <input @change="buscarPagos" type="date" v-model="filtros.fecha_inicio" class="form-control">
+                                        <span class="input-group-text bg-light fw-bold" style="font-size: 11px;">HASTA</span>
+                                        <input @change="buscarPagos" type="date" v-model="filtros.fecha_final" class="form-control">
                                     </div>
                                 </div>
 
@@ -74,8 +62,7 @@
                                             <option value="codigo">Cód. Transacción</option>
                                             <option value="users.name">Cajero</option>
                                         </select>
-                                        <input type="text" v-model="filtros.buscar" class="form-control"
-                                            placeholder="Buscar..." @keyup.enter="buscarPagos">
+                                        <input type="text" v-model="filtros.buscar" class="form-control" placeholder="Buscar..." @keyup.enter="buscarPagos">
                                         <button class="btn btn-success" @click="buscarPagos">
                                             <i class="fas fa-search"></i>
                                         </button>
@@ -92,8 +79,7 @@
                                             <th class="text-uppercase fw-bold">Cliente</th>
                                             <th class="text-uppercase fw-bold text-center">Cuotas Pagadas</th>
                                             <th class="text-uppercase fw-bold text-center">Cant.</th>
-                                            <th class="text-uppercase fw-bold text-end bg-success text-white">Total
-                                                Pagado</th>
+                                            <th class="text-uppercase fw-bold text-end bg-success text-white">Total Pagado</th>
                                             <th class="text-uppercase fw-bold text-center">Método</th>
                                             <th class="text-uppercase fw-bold">Cajero</th>
                                             <th class="text-uppercase fw-bold text-center">Estado</th>
@@ -103,9 +89,7 @@
                                     <tbody>
                                         <tr v-for="item in listaPagos" :key="item.codigo_transaccion">
                                             <td class="fw-bold text-primary">{{ item.codigo_transaccion }}</td>
-
                                             <td>{{ formatearFecha(item.fecha_pago) }}</td>
-
                                             <td>
                                                 <div v-if="item.cliente_data">
                                                     <span class="fw-bold d-block text-uppercase">
@@ -117,37 +101,28 @@
                                                     <i class="fas fa-exclamation-circle"></i> Datos no disp.
                                                 </div>
                                             </td>
-
                                             <td class="text-center">
-                                                <span
-                                                    class="badge bg-info text-dark text-uppercase rounded text-white">Cuotas:
-                                                    {{ item.detalles_cuotas }}</span>
+                                                <span class="badge bg-info text-dark text-uppercase rounded text-white">
+                                                    Cuotas: {{ item.detalles_cuotas }}
+                                                </span>
                                             </td>
-
                                             <td class="text-center fw-bold">{{ item.cantidad_cuotas }}</td>
-
+                                            
                                             <td class="text-end fw-bold fs-6">
-                                                {{ (parseFloat(item.total_pagado) + parseFloat(item.total_multa ||
-                                                0)).toFixed(2) }}
+                                                {{ calcularTotalFila(item.total_pagado, item.total_multa) }}
                                             </td>
 
                                             <td class="text-center">
-                                                <span class="badge rounded-pill text-dark border text-uppercase">{{
-                                                    item.forma_pago }}</span>
+                                                <span class="badge rounded-pill text-dark border text-uppercase">{{ item.forma_pago }}</span>
                                             </td>
-
                                             <td>{{ item.usuario ? item.usuario.name : 'Sistema' }}</td>
-
                                             <td class="text-center">
                                                 <span v-if="item.estado == 0" class="badge bg-danger">ANULADO</span>
                                                 <span v-else class="badge bg-success">COMPLETADO</span>
                                             </td>
-
                                             <td class="text-center">
                                                 <div class="btn-group">
-                                                    <a style="cursor:pointer;"
-                                                        class="text-success dropdown-toggle btn-sm"
-                                                        data-bs-toggle="dropdown">
+                                                    <a style="cursor:pointer;" class="text-success dropdown-toggle btn-sm" data-bs-toggle="dropdown">
                                                         <i class="fas fa-ellipsis-h fs-4"></i>
                                                     </a>
                                                     <ul class="dropdown-menu">
@@ -162,11 +137,10 @@
                                                                 <i class="fas fa-times me-2"></i> Anular Transacción
                                                             </a>
                                                         </li>
-
                                                         <li @click="verDetalles(item)">
                                                             <hr class="dropdown-divider">
                                                             <a class="dropdown-item text-dark" href="#">
-                                                                <i class="fas fa-times me-2"></i> Ver Detalles
+                                                                <i class="fas fa-eye me-2"></i> Ver Detalles
                                                             </a>
                                                         </li>
                                                     </ul>
@@ -175,8 +149,7 @@
                                         </tr>
                                         <tr v-if="listaPagos.length === 0">
                                             <td colspan="10" class="text-center py-4 text-muted">
-                                                <i class="fas fa-search me-1"></i> No se encontraron transacciones en
-                                                este rango de fechas.
+                                                <i class="fas fa-search me-1"></i> No se encontraron transacciones.
                                             </td>
                                         </tr>
                                     </tbody>
@@ -190,23 +163,17 @@
                                 <nav>
                                     <ul class="pagination">
                                         <li class="page-item" :class="{ disabled: pagination.current_page <= 1 }">
-                                            <a class="page-link" href="#"
-                                                @click.prevent="cambiarPagina(pagination.current_page - 1)">Ant</a>
+                                            <a class="page-link" href="#" @click.prevent="cambiarPagina(pagination.current_page - 1)">Ant</a>
                                         </li>
-                                        <li class="page-item" v-for="page in pagesNumber" :key="page"
-                                            :class="{ active: page == pagination.current_page }">
-                                            <a class="page-link" href="#" @click.prevent="cambiarPagina(page)">{{ page
-                                                }}</a>
+                                        <li class="page-item" v-for="page in pagesNumber" :key="page" :class="{ active: page == pagination.current_page }">
+                                            <a class="page-link" href="#" @click.prevent="cambiarPagina(page)">{{ page }}</a>
                                         </li>
-                                        <li class="page-item"
-                                            :class="{ disabled: pagination.current_page >= pagination.last_page }">
-                                            <a class="page-link" href="#"
-                                                @click.prevent="cambiarPagina(pagination.current_page + 1)">Sig</a>
+                                        <li class="page-item" :class="{ disabled: pagination.current_page >= pagination.last_page }">
+                                            <a class="page-link" href="#" @click.prevent="cambiarPagina(pagination.current_page + 1)">Sig</a>
                                         </li>
                                     </ul>
                                 </nav>
                             </div>
-
                         </div>
                     </div>
                 </div>
@@ -236,7 +203,7 @@
                                 <p class="mb-1"><strong>Fecha:</strong> {{ formatearFecha(detalleTransaccion.cabecera?.fecha) }}</p>
                                 <p class="mb-1"><strong>Cajero:</strong> {{ detalleTransaccion.cabecera?.cajero }}</p>
                                 <h4 class="text-success fw-bold mt-2 border-top pt-2">
-                                    Total: {{ parseFloat(detalleTransaccion.cabecera?.total_transaccion || 0).toFixed(2) }} Bs.
+                                    Total: {{ formatMonto(detalleTransaccion.cabecera?.total_transaccion) }} Bs.
                                 </h4>
                             </div>
                         </div>
@@ -256,16 +223,16 @@
                                 <tbody>
                                     <tr v-for="pago in detalleTransaccion.detalles" :key="pago.id">
                                         <td class="fw-bold">Cuota {{ pago.cuota.numero }}</td>
-                                        <td class="text-end">{{ parseFloat(pago.monto_cuota).toFixed(2) }}</td>
+                                        <td class="text-end">{{ formatMonto(pago.monto_cuota) }}</td>
                                         <td class="text-end text-danger">
-                                            {{ parseFloat(pago.multa_total || 0).toFixed(2) }}
+                                            {{ formatMonto(pago.multa_total) }}
                                             <div v-if="pago.dias_retrasados > 0" class="badge bg-warning text-dark font-size-10">
                                                 {{ pago.dias_retrasados }} días retraso
                                             </div>
                                         </td>
-                                        <td class="text-end text-success">-{{ parseFloat(pago.monto_condonado || 0).toFixed(2) }}</td>
+                                        <td class="text-end text-success">-{{ formatMonto(pago.monto_condonado) }}</td>
                                         <td class="text-end fw-bold bg-light">
-                                            {{ (parseFloat(pago.monto_pago) + parseFloat(pago.multa_total || 0)).toFixed(2) }}
+                                            {{ calcularTotalFila(pago.monto_pago, pago.multa_total) }}
                                         </td>
                                     </tr>
                                 </tbody>
@@ -282,7 +249,6 @@
                         </button>
                     </div>
                 </div>
-
 
             </div>
         </div>
@@ -301,6 +267,8 @@ export default {
             view: 0,
             preloader: false,
             listaPagos: [],
+            // Inicialización de objeto para evitar errores undefined
+            detalleTransaccion: {}, 
             kpis: {
                 total_recaudado: 0,
                 total_multas: 0,
@@ -324,7 +292,6 @@ export default {
         }
     },
     computed: {
-        // Cálculo de páginas para la paginación
         pagesNumber() {
             if (!this.pagination.to) return [];
             let from = this.pagination.current_page - this.offset;
@@ -344,8 +311,8 @@ export default {
             this.preloader = true;
             axios.get(`/historial-pagos/detalles/${item.codigo_transaccion}`)
                 .then(response => {
-                    this.detalleTransaccion = response.data; // Llenamos el objeto con la data del backend
-                    this.view = 1; // Cambiamos la vista
+                    this.detalleTransaccion = response.data;
+                    this.view = 1; 
                 })
                 .catch(error => {
                     console.error(error);
@@ -353,6 +320,27 @@ export default {
                 })
                 .finally(() => this.preloader = false);
         },
+
+        // MÉTODO AGREGADO: Cierra la vista de detalles
+        cerrarDetalles() {
+            this.view = 0;
+            this.detalleTransaccion = {}; // Limpiar datos para evitar parpadeos en la próxima apertura
+        },
+
+        // Helper para formatear montos y evitar NaN
+        formatMonto(val) {
+            let num = parseFloat(val);
+            if (isNaN(num)) num = 0;
+            return num.toFixed(2);
+        },
+
+        // Helper para sumar montos seguramente
+        calcularTotalFila(monto1, monto2) {
+            const m1 = parseFloat(monto1) || 0;
+            const m2 = parseFloat(monto2) || 0;
+            return (m1 + m2).toFixed(2);
+        },
+
         formatearFecha(fecha) {
             return fecha ? moment(fecha).format('DD/MM/YYYY HH:mm') : '-';
         },
@@ -371,7 +359,6 @@ export default {
 
         getPagos(page) {
             this.preloader = true;
-            // Asegúrate que esta ruta coincida con tu api.php o web.php
             axios.get('/historial-pagos', { 
                 params: {
                     page: page,
@@ -396,7 +383,6 @@ export default {
         },
 
         imprimirRecibo(item) {
-            // Se abre una nueva pestaña con la ruta del PDF, pasando el CÓDIGO de transacción
             const url = `/imprimir/recibo/${item.codigo_transaccion}`;
             window.open(url, '_blank');
         },
@@ -414,14 +400,11 @@ export default {
             }).then((result) => {
                 if (result.isConfirmed) {
                     this.preloader = true;
-                    
-                    // Endpoint específico para anular por código
                     axios.post(`/pagos/anular-transaccion`, { 
                         codigo: item.codigo_transaccion 
                     })
                     .then(response => {
                         Swal.fire('Anulado', 'La transacción ha sido anulada correctamente.', 'success');
-                        // Recargar la tabla
                         this.getPagos(this.pagination.current_page);
                     })
                     .catch(error => {
@@ -476,7 +459,6 @@ export default {
 }
 
 .badge {
-    /* font-weight: 500; */
     font-size:11px;
 }
 

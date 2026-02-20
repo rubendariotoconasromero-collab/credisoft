@@ -282,7 +282,6 @@
                     <ul class="sub-menu" aria-expanded="false">
                         <li><a href="/solicitud" class="{{ $current_route == 'solicitud' ? 'mm-active' : '' }}">Solicitud préstamo</a></li>
                         <li><a href="/plan_pago" class="{{ $current_route == 'plan_pago' ? 'mm-active' : '' }}">Gestión cartera</a></li>
-                        <li><a href="/pago" class="{{ $current_route == 'pago' ? 'mm-active' : '' }}">Listado de pagos</a></li>
                     </ul>
                 </li>
                 @endif

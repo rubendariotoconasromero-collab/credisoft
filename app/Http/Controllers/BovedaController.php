@@ -26,27 +26,34 @@ class BovedaController extends Controller
     }
 
     public function getMovimientosBoveda(Request $request){
+        // 1. Construir la consulta base
         $query = DB::table('movimientos_boveda')
-        ->join('users', 'users.id', '=', 'movimientos_boveda.id_usuario')
-        ->select('movimientos_boveda.*', 'users.personal');
+            ->join('users', 'users.id', '=', 'movimientos_boveda.id_usuario')
+            ->select('movimientos_boveda.*', 'users.personal');
 
-        // Filtrar por tipo de movimiento (ingreso/salida/todos)
+        // 2. Aplicar filtros generales (Fechas y Tipo si viene en el request)
         if ($request->has('tipo') && $request->tipo != 'todos') {
             $query->where('movimientos_boveda.tipo_movimiento', $request->tipo);
         }
 
-        // Filtrar por rango de fechas
         if ($request->has('fecha_inicio') && $request->has('fecha_fin')) {
             $query->whereDate('movimientos_boveda.fecha', '>=', $request->fecha_inicio)
-            ->whereDate('movimientos_boveda.fecha', '<=', $request->fecha_fin);
+                ->whereDate('movimientos_boveda.fecha', '<=', $request->fecha_fin);
         }
 
-        // Paginación
+        // 3. CLONAR la consulta para los totales ANTES de paginar o modificar
+        // Esto asegura que el cálculo de ingresos no afecte al de salidas
+        $queryIngresos = clone $query;
+        $querySalidas = clone $query;
+
+        // 4. Paginación
         $registros = $query->paginate(40);
 
-        // Calcular totales
-        $ingresos = $query->where('movimientos_boveda.tipo_movimiento', 'ingreso')->sum('monto');
-        $salidas = $query->where('movimientos_boveda.tipo_movimiento', 'salida')->sum('monto');
+        // 5. Calcular totales usando los CLONES
+        // Nota: Si el usuario filtró por tipo 'ingreso', las salidas seguirán siendo 0 (lógico),
+        // pero si eligió 'todos', ahora ambos valores se calcularán correctamente.
+        $ingresos = $queryIngresos->where('movimientos_boveda.tipo_movimiento', 'ingreso')->sum('monto');
+        $salidas = $querySalidas->where('movimientos_boveda.tipo_movimiento', 'salida')->sum('monto');
 
         return response()->json([
             'movimientos' => $registros,

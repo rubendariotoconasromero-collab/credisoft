@@ -1,8 +1,8 @@
 <template>
     <Teleport to="body">
         <div class="modal fade" :id="modalId" tabindex="-1" style="z-index: 1080;">
-            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-                <div class="modal-content border border-2 border-info">
+            <div class="modal-dialog modal-xl" style="width:90%; max-width:90%;height:100%">
+                <div class="modal-content border border-2 border-info" style="height:100%">
                     <div class="modal-header bg-info text-white py-2">
                         <h6 class="modal-title fw-bold text-uppercase">
                             <i class="fas fa-list-alt me-2"></i> {{ titulo }}
@@ -15,7 +15,7 @@
                         </div>
                         
                         <div v-else class="table-responsive">
-                            <table class="table table-sm table-striped table-hover mb-0" style="font-size: 12px;">
+                            <table class="table table-sm table-striped table-hover mb-0" style="height: 90%; font-size:11px;">
                                 <thead class="table-light sticky-top">
                                     <tr>
                                         <th>#</th>
@@ -55,9 +55,6 @@
                                 </tfoot>
                             </table>
                         </div>
-                    </div>
-                    <div class="modal-footer py-1">
-                        <button type="button" class="btn btn-secondary btn-sm" @click="cerrar">Cerrar</button>
                     </div>
                 </div>
             </div>

@@ -65,125 +65,136 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="item in solicitudes" :key="item.id">
-                            <td class="text-uppercase">{{ item.id }}</td>
-                            <td class="text-uppercase fw-bold">
-                                <span class="d-block">
-                                    <strong class="fw-bold">CI: </strong>
-                                    {{ item.ci }}
-                                </span>
-                                {{ item.cliente }}
-                            </td>
-                            <td class="text-uppercase">
-                                <div v-if="obtenerCodeudores(item.id).length > 0">
-                                    <p v-for="codeudor in obtenerCodeudores(item.id)" :key="codeudor.id"
-                                        class="mb-1 text-truncate">
-                                        <small class="text-muted">* </small>{{ codeudor.nombre }}
-                                    </p>
-                                </div>
-                                <div v-else class="text-center text-muted fst-italic">
-                                    Sin codeudores
-                                </div>
-                            </td>
-                            <td class="text-uppercase fw-bold">{{ item.personal }}</td>
-                            <td class="text-uppercase">{{ item.importe_solicitud }}</td>
-                            <td>
-                                <span
-                                    class="badge text-dark rounded text-uppercase border border-secondary bg-white d-inline-block w-100 text-center pt-1"
-                                    style="max-width: 150px;font-size: 10px;">
-                                    {{ item.nro_cuotas }} - {{ item.lapso_capital }}
-                                </span>
-                            </td>
-                            <td class="text-uppercase">{{ item.tasa }}</td>
-                            <td class="text-uppercase">{{ formatearFecha(item.fecha) }}</td>
-                            <td class="text-uppercase">{{ formatearFecha(item.fecha_desembolso) }}</td>
-                            <td class="text-uppercase">{{ item.tipo_garantia }}</td>
-
-                            <td class="text-uppercase text-center">
-                                <span v-if="item.desembolso === 0 && item.estado === 2" style="width:110px;"
-                                    class="badge bg-dark badge-fixed-width text-white d-block rounded">
-                                    x desembolsar
-                                </span>
-                                <span style="width:110px;" class="rounded"
-                                    :class="getEstadoClass(item.estado, item.tipo_solicitud)">
-                                    {{ getEstadoText(item.estado, item.tipo_solicitud) }}
-                                </span>
-
-                                <span v-if="item.observacion && item.observacion.trim() !== ''"
-                                    class="mt-1 badge bg-danger badge-fixed-width text-white d-block rounded"
-                                    style="width:110px;">
-                                    OBSERVADO
-                                </span>
-                            </td>
-
-                            <td class="text-uppercase position-relative text-center">
-                                <div class="dropdown">
-                                    <a class="text-success dropdown-toggle" style="cursor: pointer"
-                                        data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="fas fa-ellipsis-h fa-lg"></i>
-                                    </a>
-                                    <ul class="dropdown-menu dropdown-menu-end shadow"
-                                        style="position: absolute; z-index: 1000; min-width: 200px;">
-                                        
-                                        <li v-if="item.estado === 1" @click="$emit('anular', item)">
-                                            <a class="dropdown-item text-danger" href="#">
-                                                <i class="fas fa-times me-1"></i> Anular
-                                            </a>
-                                        </li>
-                                        <li v-else-if="item.estado === 0" @click="$emit('activar', item)">
-                                            <a class="dropdown-item text-success" href="#">
-                                                <i class="fas fa-check me-1"></i> Activar
-                                            </a>
-                                        </li>
-
-                                        <li v-if="item.estado === 1" @click="$emit('editar', item)">
-                                            <a class="dropdown-item text-primary" href="#">
-                                                <i class="fas fa-pencil-alt me-1"></i> Editar
-                                            </a>
-                                        </li>
-                                        <li @click="$emit('ver', item)">
-                                            <a class="dropdown-item text-info" href="#">
-                                                <i class="fas fa-eye me-1"></i> Ver
-                                            </a>
-                                        </li>
-
-                                        <li v-if="esAprobable(item)" @click="$emit('aprobar-solicitud', item)">
-                                            <a class="dropdown-item text-success" href="#">
-                                                <i class="fas fa-money-bill me-1"></i> Aprobar solicitud
-                                            </a>
-                                        </li>
-                                        <li v-if="esReprogramable(item)" @click="$emit('aprobar-reprogramacion', item)">
-                                            <a class="dropdown-item text-success" href="#">
-                                                <i class="fas fa-money-bill me-1"></i> Aprobar Reprogramación
-                                            </a>
-                                        </li>
-                                        <li v-if="esRefinanciable(item)" @click="$emit('aprobar-refinanciamiento', item)">
-                                            <a class="dropdown-item text-success" href="#">
-                                                <i class="fas fa-money-bill me-1"></i> Aprobar Refinanciamiento
-                                            </a>
-                                        </li>
-
-                                        <li v-if="tieneGarantias(item)" @click="$emit('ver-garantias', item.id)">
-                                            <a class="dropdown-item text-secondary" href="#">
-                                                <i class="fas fa-images me-1"></i> Garantías
-                                            </a>
-                                        </li>
-                                        <li @click="$emit('ver-respaldos', item.id)">
-                                            <a class="dropdown-item text-secondary" href="#">
-                                                <i class="fas fa-folder-open me-1"></i> Respaldos de Verificación
-                                            </a>
-                                        </li>
-                                        <li v-if="item.estado === 2" @click="$emit('ver-hoja-aprobacion', item)">
-                                            <a class="dropdown-item text-dark" href="#">
-                                                <i class="fas fa-check-circle me-1"></i> Ver Hoja Aprobacion
-                                            </a>
-                                        </li>
-                                        <li v-if="item.estado !== 2" @click="$emit('ver-hoja-solicitud', item)">
-                                            <a class="dropdown-item text-dark" href="#">
-                                                <i class="fas fa-file-alt me-1"></i> Ver Hoja Solicitud
-                                            </a>
-                                        </li>
-                                    </ul>
+                        <template v-if="solicitudes.length > 0">
+                            <tr v-for="item in solicitudes" :key="item.id">
+                                <td class="text-uppercase">{{ item.id }}</td>
+                                <td class="text-uppercase fw-bold">
+                                    <span class="d-block">
+                                        <strong class="fw-bold">CI: </strong>
+                                        {{ item.ci }}
+                                    </span>
+                                    {{ item.cliente }}
+                                </td>
+                                <td class="text-uppercase">
+                                    <div v-if="obtenerCodeudores(item.id).length > 0">
+                                        <p v-for="codeudor in obtenerCodeudores(item.id)" :key="codeudor.id"
+                                            class="mb-1 text-truncate">
+                                            <small class="text-muted">* </small>{{ codeudor.nombre }}
+                                        </p>
+                                    </div>
+                                    <div v-else class="text-center text-muted fst-italic">
+                                        Sin codeudores
+                                    </div>
+                                </td>
+                                <td class="text-uppercase fw-bold">{{ item.personal }}</td>
+                                <td class="text-uppercase">{{ item.importe_solicitud }}</td>
+                                <td>
+                                    <span
+                                        class="badge text-dark rounded text-uppercase border border-secondary bg-white d-inline-block w-100 text-center pt-1"
+                                        style="max-width: 150px;font-size: 10px;">
+                                        {{ item.nro_cuotas }} - {{ item.lapso_capital }}
+                                    </span>
+                                </td>
+                                <td class="text-uppercase">{{ item.tasa }}</td>
+                                <td class="text-uppercase">{{ formatearFecha(item.fecha) }}</td>
+                                <td class="text-uppercase">{{ formatearFecha(item.fecha_desembolso) }}</td>
+                                <td class="text-uppercase">{{ item.tipo_garantia }}</td>
+    
+                                <td class="text-uppercase text-center">
+                                    <span v-if="item.desembolso === 0 && item.estado === 2" style="width:110px;"
+                                        class="badge bg-dark badge-fixed-width text-white d-block rounded">
+                                        x desembolsar
+                                    </span>
+                                    <span style="width:110px;" class="rounded"
+                                        :class="getEstadoClass(item.estado, item.tipo_solicitud)">
+                                        {{ getEstadoText(item.estado, item.tipo_solicitud) }}
+                                    </span>
+    
+                                    <span v-if="item.observacion && item.observacion.trim() !== ''"
+                                        class="mt-1 badge bg-danger badge-fixed-width text-white d-block rounded"
+                                        style="width:110px;">
+                                        OBSERVADO
+                                    </span>
+                                </td>
+    
+                                <td class="text-uppercase position-relative text-center">
+                                    <div class="dropdown">
+                                        <a class="text-success dropdown-toggle" style="cursor: pointer"
+                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="fas fa-ellipsis-h fa-lg"></i>
+                                        </a>
+                                        <ul class="dropdown-menu dropdown-menu-end shadow"
+                                            style="position: absolute; z-index: 1000; min-width: 200px;">
+                                            
+                                            <li v-if="item.estado === 1" @click="$emit('anular', item)">
+                                                <a class="dropdown-item text-danger" href="#">
+                                                    <i class="fas fa-times me-1"></i> Anular
+                                                </a>
+                                            </li>
+                                            <li v-else-if="item.estado === 0" @click="$emit('activar', item)">
+                                                <a class="dropdown-item text-success" href="#">
+                                                    <i class="fas fa-check me-1"></i> Activar
+                                                </a>
+                                            </li>
+    
+                                            <li v-if="item.estado === 1" @click="$emit('editar', item)">
+                                                <a class="dropdown-item text-primary" href="#">
+                                                    <i class="fas fa-pencil-alt me-1"></i> Editar
+                                                </a>
+                                            </li>
+                                            <li @click="$emit('ver', item)">
+                                                <a class="dropdown-item text-info" href="#">
+                                                    <i class="fas fa-eye me-1"></i> Ver
+                                                </a>
+                                            </li>
+    
+                                            <li v-if="esAprobable(item)" @click="$emit('aprobar-solicitud', item)">
+                                                <a class="dropdown-item text-success" href="#">
+                                                    <i class="fas fa-money-bill me-1"></i> Aprobar solicitud
+                                                </a>
+                                            </li>
+                                            <li v-if="esReprogramable(item)" @click="$emit('aprobar-reprogramacion', item)">
+                                                <a class="dropdown-item text-success" href="#">
+                                                    <i class="fas fa-money-bill me-1"></i> Aprobar Reprogramación
+                                                </a>
+                                            </li>
+                                            <li v-if="esRefinanciable(item)" @click="$emit('aprobar-refinanciamiento', item)">
+                                                <a class="dropdown-item text-success" href="#">
+                                                    <i class="fas fa-money-bill me-1"></i> Aprobar Refinanciamiento
+                                                </a>
+                                            </li>
+    
+                                            <li v-if="tieneGarantias(item)" @click="$emit('ver-garantias', item.id)">
+                                                <a class="dropdown-item text-secondary" href="#">
+                                                    <i class="fas fa-images me-1"></i> Garantías
+                                                </a>
+                                            </li>
+                                            <li @click="$emit('ver-respaldos', item.id)">
+                                                <a class="dropdown-item text-secondary" href="#">
+                                                    <i class="fas fa-folder-open me-1"></i> Respaldos de Verificación
+                                                </a>
+                                            </li>
+                                            <li v-if="item.estado === 2" @click="$emit('ver-hoja-aprobacion', item)">
+                                                <a class="dropdown-item text-dark" href="#">
+                                                    <i class="fas fa-check-circle me-1"></i> Ver Hoja Aprobacion
+                                                </a>
+                                            </li>
+                                            <li v-if="item.estado !== 2" @click="$emit('ver-hoja-solicitud', item)">
+                                                <a class="dropdown-item text-dark" href="#">
+                                                    <i class="fas fa-file-alt me-1"></i> Ver Hoja Solicitud
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
+                        <tr v-else>
+                            <td colspan="12" class="text-center py-5">
+                                <div class="text-muted">
+                                    <i class="fas fa-folder-open fa-3x mb-3"></i>
+                                    <h5 class="fw-normal">No se encontraron solicitudes</h5>
+                                    <p class="small">Intenta ajustar los filtros de búsqueda o registra una nueva solicitud.</p>
                                 </div>
                             </td>
                         </tr>

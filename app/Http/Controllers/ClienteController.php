@@ -605,4 +605,13 @@ class ClienteController extends Controller
 
         return $this->generatePdf('reporte.cliente.reporte_clientes', $data, 'reporte_clientes.pdf');
     }
+
+    public function getClienteInfo(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|integer|exists:cliente,id'
+        ]);
+        $cliente = Cliente::find($request->id);
+        return response()->json($cliente);
+    }
 }
