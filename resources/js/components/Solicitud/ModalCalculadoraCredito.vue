@@ -2,7 +2,7 @@
     <div class="modal fade" id="modalCalculadoraCredito" tabindex="-1" aria-labelledby="modalCalculadoraLabel"
         aria-hidden="true" data-bs-backdrop="static">
         <div class="modal-dialog modal-xl" style="max-width:90%; width:90%">
-            <div class="modal-content border border-2 border-success">
+            <div class="modal-content border border-2 border-dark">
                 <div class="modal-header bg-warning text-dark">
                     <h5 class="modal-title text-dark" id="modalCalculadoraLabel">
                         <i class="fas fa-calculator me-2"></i>Cálculo de Cuotas y Plan de Pago

@@ -465,12 +465,11 @@ class ClienteController extends Controller
 
     public function clientesPdf2(Request $request)
     {
-        // Validate request
+
         $request->validate([
             'id_cliente' => 'required|integer|exists:cliente,id',
         ]);
 
-        // Fetch customer data with optimized query
         $clientes = DB::table('cliente')
             ->leftJoin('direccion', 'direccion.id_cliente', '=', 'cliente.id')
             ->leftJoin('telefono', 'telefono.id_cliente', '=', 'cliente.id')
@@ -491,7 +490,6 @@ class ClienteController extends Controller
             ->where('cliente.id', $request->id_cliente)
             ->first();
 
-        // Fetch related data
         $telefonos = DB::table('telefono')
             ->where('telefono.id_cliente', $request->id_cliente)
             ->get();
@@ -499,15 +497,12 @@ class ClienteController extends Controller
             ->where('direccion.id_cliente', $request->id_cliente)
             ->get();
 
-        // Fetch company data
         $empresa = DB::table('mi_empresa')->first();
 
-        // Check if customer exists
         if (!$clientes) {
             return response()->json(['error' => 'Cliente no encontrado'], 404);
         }
 
-        // Prepare data for the view
         $data = [
             'cliente' => $clientes,
             'telefonos' => $telefonos,
@@ -516,7 +511,6 @@ class ClienteController extends Controller
             'title'=>'Información Personal del Cliente'
         ];
 
-        // Generate PDF using reusable method
         return $this->generatePdf(
             'reporte.reporte_informacion_cliente',
             $data,

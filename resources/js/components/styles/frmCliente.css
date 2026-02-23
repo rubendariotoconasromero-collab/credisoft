@@ -162,3 +162,11 @@
         height: 150px;
     }
 }
+
+.table-customers .badge{
+    border-radius:20px;
+}
+
+.table-guarantors .badge{
+    border-radius:20px;
+}

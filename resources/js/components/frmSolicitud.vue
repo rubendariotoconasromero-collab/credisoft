@@ -1971,51 +1971,6 @@ export default {
             }
         },
         
-        // async cargarCodeudores(solicitudId) {
-        //     try {
-        //         const { data } = await axios.get(
-        //             `/get_codeudores_solicitud?id_solicitud=${solicitudId}`
-        //         );
-        //         this.lista_codeudores = data.length
-        //             ? data.map((item) => ({
-        //                 select_codeudor: {
-        //                     isVisibleCodeudor: false,
-        //                     codeudor: {
-        //                         id_codeudor: item.id,
-        //                         idd_codeudor: item.nombre,
-        //                         nombre: item.nombre,
-        //                         ci: `${item.ci} - ${item.lugar_expedicion}`,
-        //                         lugar_expedicion: item.lugar_expedicion,
-        //                         actividad: item.actividad,
-        //                         items_codeudor: [],
-        //                         filteredItemsCodeudorAux: [],
-        //                     },
-        //                 },
-        //             }))
-        //             : [
-        //                 {
-        //                     select_codeudor: {
-        //                         isVisibleCodeudor: false,
-        //                         codeudor: {
-        //                             id_codeudor: 0,
-        //                             idd_codeudor: "",
-        //                             nombre: "",
-        //                             ci: "",
-        //                             lugar_expedicion: "",
-        //                             actividad: "",
-        //                             items_codeudor: [],
-        //                             filteredItemsCodeudorAux: [],
-        //                         },
-        //                     },
-        //                 },
-        //             ];
-        //         this.lista_codeudores.forEach((_, index) =>
-        //             this.getCodeudores(index)
-        //         );
-        //     } catch (error) {
-        //         console.error("Error loading codeudores:", error);
-        //     }
-        // },
 
         async cargarCodeudores(solicitudId) {
             try {

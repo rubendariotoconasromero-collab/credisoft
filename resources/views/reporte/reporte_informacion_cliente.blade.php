@@ -186,7 +186,7 @@
     </style>
 </head>
 <body>
-    <table width="100%" border="0" style="border-collapse: collapse; margin-bottom: 20px;">
+    <table width="100%" style="border-collapse: collapse; margin-bottom: 20px;">
         <tr>
             <!-- Columna 1: Logo y datos de empresa -->
             <td width="33%" style="padding: 5px; vertical-align: middle;">

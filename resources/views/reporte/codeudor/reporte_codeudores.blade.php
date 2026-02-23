@@ -21,8 +21,8 @@
         /* Table Styles */
         .data-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
         .data-table th, .data-table td { padding: 4px; text-align: left; font-size: 11px; }
-        .data-table th { padding: 10px 4px; border-bottom: 1px solid #000000; border-top: 1px solid #000000; background-color: #fffcd6cc; color: #000000; font-weight: bold; vertical-align: middle; }
-        .data-table tr:nth-child(even) { background-color: #f9fafb; }
+        .data-table th { padding: 10px 4px; border-bottom: 1px solid #000000; border-top: 1px solid #000000; background-color: #ffffffcc; color: #000000; font-weight: bold; vertical-align: middle; }
+        .data-table tr:nth-child(even) { background-color: #f1f1f1; }
     </style>
 </head>
 <body>

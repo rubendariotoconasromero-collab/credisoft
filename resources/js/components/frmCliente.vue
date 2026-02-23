@@ -33,7 +33,7 @@
                             </div>
                         </div>
 
-                        <div class="table-responsive" style="font-size: 11px">
+                        <div class="table-responsive table-customers" style="font-size: 11px">
                             <table class="table table-hover table-striped table-sm">
                                 <thead class="table-success text-white text-uppercase fw-bold">
                                     <tr>
@@ -230,7 +230,6 @@ export default {
             }
         },
         
-        // --- Reportes y PDF ---
         imprimirReporte() {
             Swal.fire({
                 title: 'Generando Reporte',
@@ -239,21 +238,20 @@ export default {
                 showConfirmButton: false,
                 didOpen: () => { Swal.showLoading(); }
             });
+
             axios.get('/cliente/reporte', {
                 params: { buscar: this.searchQuery, criterio: this.searchCriteria },
                 responseType: 'blob'
             }).then((response) => {
-                const url = window.URL.createObjectURL(new Blob([response.data]));
-                const link = document.createElement('a');
-                link.href = url;
-                link.setAttribute('download', 'reporte_clientes.pdf');
-                document.body.appendChild(link);
-                link.click();
+                const file = new Blob([response.data], { type: 'application/pdf' });
+                const url = window.URL.createObjectURL(file);
+                window.open(url, '_blank');
                 Swal.close();
             }).catch(() => {
                 Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo generar el reporte.' });
             });
         },
+        
         async viewCustomerPdf(customer) {
             this.preloader = true;
             try {

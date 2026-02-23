@@ -36,7 +36,7 @@
                         </div>
 
                         <div class="table-responsive" style="font-size: 11px">
-                            <table class="table table-hover table-striped table-sm">
+                            <table class="table table-hover table-striped table-sm table-guarantors">
                                 <thead class="table-success text-dark text-uppercase">
                                     <tr>
                                         <th>Nombre</th>
@@ -97,7 +97,7 @@
                                 </tbody>
                             </table>
                             <template v-if="guarantors.length <= 7">
-                                <br><br><br><br><br><br><br><br><br><br><br><br><br>
+                                <br><br><br><br><br><br><br><br><br><br>
                             </template>
                         </div>
                     </div>
@@ -228,15 +228,27 @@ export default {
         },
         
         // --- Reportes y PDF ---
+        
         imprimirReporteCodeudores() {
-             Swal.fire({ title: 'Generando Reporte', text: 'Espere...', icon: 'info', showConfirmButton: false, didOpen: () => Swal.showLoading() });
-             axios.get('/codeudor/reporte', { params: { buscar: this.searchQuery, criterio: this.searchCriteria }, responseType: 'blob' })
-             .then((res) => {
-                 const url = window.URL.createObjectURL(new Blob([res.data]));
-                 const link = document.createElement('a'); link.href = url; link.setAttribute('download', 'reporte_codeudores.pdf');
-                 document.body.appendChild(link); link.click(); document.body.removeChild(link); Swal.close();
-             }).catch(() => Swal.fire('Error', 'No se pudo generar el reporte.', 'error'));
+            Swal.fire({
+                title: 'Generando Reporte',
+                text: 'Por favor espere...',
+                icon: 'info',
+                showConfirmButton: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            axios.get('/codeudor/reporte', { params: { buscar: this.searchQuery, criterio: this.searchCriteria }, responseType: 'blob' })
+                .then((response) => {
+                    const file = new Blob([response.data], { type: 'application/pdf' });
+                    const url = window.URL.createObjectURL(file);
+                    window.open(url, '_blank');
+                    Swal.close();
+                }).catch(() => {
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo generar el reporte.' });
+                });
         },
+        
         async viewGuarantorPdf(item) {
             this.preloader = true;
             try {
