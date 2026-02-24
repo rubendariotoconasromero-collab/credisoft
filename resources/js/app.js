@@ -47,6 +47,7 @@ import repDesembolsosPendientes from './components/repDesembolsosPendientes.vue'
 import frmConfiguracion from './components/frmConfiguracion.vue';
 import frmBoveda from './components/frmBoveda.vue';
 import frmHistorialPagos from './components/frmHistorialPagos.vue';
+import frmConsultaFinanciera from './components/frmConsultaFinanciera.vue';
 import PerfilUsuarioComponent from './components/PerfilUsuarioComponent.vue';
 
 
@@ -79,6 +80,7 @@ app.component('rep-desembolsospendientes', repDesembolsosPendientes);
 app.component('frm-configuracion', frmConfiguracion);
 app.component('frm-boveda', frmBoveda);
 app.component('frm-historialpagos', frmHistorialPagos);
+app.component('frm-consultafinanciera', frmConsultaFinanciera);
 app.component('perfil-usuario-component', PerfilUsuarioComponent);
 
 

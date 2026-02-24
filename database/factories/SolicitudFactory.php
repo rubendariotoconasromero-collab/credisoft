@@ -26,10 +26,10 @@ class SolicitudFactory extends Factory
             'destino_prestamo' => $this->faker->randomElement(['Capital de Inversión', 'Gastos Médicos', 'Compra de Vehículo', 'Refacción de Vivienda']),
             'tipo_garantia' => $this->faker->randomElement(['Personal', 'Prendaria', 'Hipotecaria', 'A Sola Firma']),
             'tipo_desembolso' => 'Efectivo',
-            'tipo_tasa' => 'Fija',
+            'tipo_tasa' => 'amortizable',
             'desembolso' => 1,
             'monto_pago_adm' => $this->faker->randomFloat(2, 50, 300), // Gastos administrativos
-            'estado' => $this->faker->randomElement([1, 2]), // 1: Pendiente/Activo, 2: Finalizado, etc.
+            'estado' => $this->faker->randomElement([1, 2]), // 1: Nuevo, 2: Aprobado
             'observacion' => $this->faker->optional()->sentence(),
             'tipo_solicitud' => 'Nuevo',
             'cantidad_reprogramaciones' => 0,

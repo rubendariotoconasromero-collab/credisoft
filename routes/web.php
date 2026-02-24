@@ -284,6 +284,9 @@ Route::get('/get_codeudores_solicitudes', 'App\Http\Controllers\CodeudorControll
 Route::get('/get_actividades', 'App\Http\Controllers\CodeudorController@getActividades');
 Route::get('/codeudor/reporte', [CodeudorController::class, 'imprimirReporteCodeudores']);
 
+// Consultas Financieras
+Route::get('/consultas_financieras', 'App\Http\Controllers\ConsultaFinancieraController@index')->middleware('auth');
+
 
 // exporte excels
 Route::get('/export-planes_pago', 'App\Http\Controllers\ExportController@exportPlanPago');

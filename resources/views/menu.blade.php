@@ -273,6 +273,15 @@
                 </li>
                 @endif
 
+                @if($login_controller->permisoSistema('consultasfinancieras', auth()->user()->id_rol))
+                <li>
+                    <a href="/consultas_financieras" class="nav-link waves-effect {{ $current_route == 'consultas_financieras' ? 'mm-active' : '' }}">
+                        <i class="fas fa-search-dollar"></i>
+                        <span>Consultas Financieras</span>
+                    </a>
+                </li>
+                @endif
+
                 @if($login_controller->permisoSistema('solicitudprestamos', auth()->user()->id_rol))
                 <li>
                     <a href="javascript: void(0);" class="nav-link has-arrow waves-effect {{ in_array($current_route, ['solicitud', 'plan_pago', 'pago']) ? 'mm-active' : '' }}">
