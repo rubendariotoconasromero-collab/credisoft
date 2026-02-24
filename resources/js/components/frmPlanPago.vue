@@ -723,6 +723,7 @@ import ListaPlanPagos from './PlanPago/ListaPlanPagos.vue';
 import ModalHistorialOriginal from './PlanPago/ModalHistorialOriginal.vue';
 import moment from 'moment';
 import Swal from 'sweetalert2'
+import {formas_pago, lista_monedas, tipos_desembolsos, lapso_capitales} from '../constants';
 
 
 export default {
@@ -783,17 +784,7 @@ export default {
             en_proceso: false,
             cancelado: false,
             criterio_asesor: '0',
-            formas_pago: [
-                {
-                    nombre: 'efectivo'
-                },
-                {
-                    nombre: 'transferencia - QR'
-                },
-                {
-                    nombre: 'Depósito banco'
-                }
-            ],
+            formas_pago: formas_pago,
             prueba: 0,
             estado_caja: false,
             solicitud: {
@@ -815,22 +806,9 @@ export default {
                 enviado: 0,
                 accion: 0,
             },
-            lista_monedas: [
-                { nombre: 'Bolivianos' },
-                { nombre: 'Dolares' },
-            ],
-            tipos_desembolsos: [
-                { nombre: 'Efectivo' },
-                { nombre: 'Depósito' },
-                { nombre: 'Transferencia' },
-                { nombre: 'QR' },
-            ],
-            lapso_capitales: [
-                // { nombre: 'Diario' },
-                { nombre: 'Semanal' },
-                { nombre: 'Quincenal' },
-                { nombre: 'Mensual' },
-            ],
+            lista_monedas: lista_monedas,
+            tipos_desembolsos: tipos_desembolsos,
+            lapso_capitales: lapso_capitales,
             buscar: '',
             lista_cuotas_plan: [],
             lista_planespago: [],

@@ -1,0 +1,69 @@
+{
+    "lista_monedas": [
+        {
+            "nombre": "Bolivianos"
+        },
+        {
+            "nombre": "Dolares"
+        }
+    ],
+    "lapso_capitales": [
+        {
+            "nombre": "Semanal"
+        },
+        {
+            "nombre": "Quincenal"
+        },
+        {
+            "nombre": "Mensual"
+        }
+    ],
+    "tipos_desembolsos": [
+        {
+            "nombre": "Efectivo"
+        },
+        {
+            "nombre": "Depósito"
+        },
+        {
+            "nombre": "Transferencia"
+        },
+        {
+            "nombre": "QR"
+        }
+    ],
+    "tipos_garantias": [
+        {
+            "nombre": "Garante Personal"
+        },
+        {
+            "nombre": "Prendario o Quirografaria"
+        },
+        {
+            "nombre": "Custodia de Papeles de Moto"
+        },
+        {
+            "nombre": "Custodia Inmueble o Lote terreno"
+        },
+        {
+            "nombre": "Custodia de Vehículo Automovil"
+        },
+        {
+            "nombre": "Empeño Joyas (oro)"
+        },
+        {
+            "nombre": "Empeño de electrodoméstico u Otros"
+        }
+    ],
+    "formas_pago": [
+        {
+            "nombre": "efectivo"
+        },
+        {
+            "nombre": "transferencia - QR"
+        },
+        {
+            "nombre": "Depósito banco"
+        }
+    ]
+}

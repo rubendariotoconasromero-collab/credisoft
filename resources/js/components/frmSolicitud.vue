@@ -233,88 +233,6 @@
                                     </div>
                                 </div>
 
-                                <!-- <div class="card-body" v-show="!sinCodeudor">
-                               
-                                    <div v-for="(
-item, index
-                                            ) in lista_codeudores" :key="index" class="row g-3 mb-3">
-                                        <div class="col-md-4 position-relative">
-                                            <div class="input-group">
-                                                <input v-model="item.select_codeudor
-                                                    .codeudor
-                                                    .idd_codeudor
-                                                    " type="text" class="form-control text-uppercase"
-                                                    placeholder="Buscar codeudor..." :disabled="solicitud.accion === 2
-                                                        " @input="
-                                                        filteredItemsCodeudorMetodo(
-                                                            item.select_codeudor
-                                                                .codeudor
-                                                                .idd_codeudor,
-                                                            index
-                                                        )
-                                                        " />
-                                                <button v-if="
-                                                    solicitud.accion !== 2
-                                                " @click="addCodeudor" type="button"
-                                                    class="btn btn-success me-1 rounded-circle ms-2"
-                                                    data-bs-toggle="tooltip" title="Agregar codeudor"
-                                                    style="width: 50px; height:50px; padding:0px;">
-                                                    <i class="fas fa-plus"></i>
-                                                </button>
-                                                <button v-if="
-                                                    solicitud.accion !==
-                                                    2 &&
-                                                    lista_codeudores.length >
-                                                    1
-                                                " @click="
-                                                deleteCodeudor(index)
-                                                " type="button" class="btn btn-danger rounded-circle"
-                                                    data-bs-toggle="tooltip" title="Eliminar codeudor"
-                                                    style="width: 50px; height:50px; padding:0px;">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </div>
-
-                                            <div v-if="
-                                                item.select_codeudor
-                                                    .codeudor
-                                                    .filteredItemsCodeudorAux
-                                                    .length > 0
-                                            " class="dropdown-menu show w-100" style="
-                                                        max-height: 200px;
-                                                        overflow-y: auto;
-                                                        cursor: pointer;
-                                                    ">
-                                                <a v-for="codeudorItem in item
-                                                    .select_codeudor
-                                                    .codeudor
-                                                    .filteredItemsCodeudorAux" :key="codeudorItem.id"
-                                                    class="dropdown-item text-uppercase" @click="
-                                                        seleccionarCodeudor(
-                                                            codeudorItem,
-                                                            index
-                                                        )
-                                                        ">{{
-                                                    codeudorItem.nombre
-                                                    }}
-                                                    (CI:
-                                                    {{ codeudorItem.ci }})</a>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <input v-model="item.select_codeudor
-                                                .codeudor.ci
-                                                " type="text" class="form-control" disabled />
-                                        </div>
-                                        <div class="col-md-5">
-                                            <textarea v-model="item.select_codeudor.codeudor.actividad"
-                                                class="form-control" disabled rows="2">
-                            </textarea>
-                                        </div>
-                                    </div>
-
-                                </div> -->
-
                                 <div class="card-body" v-show="!sinCodeudor">
                                     <div v-for="(item, index) in lista_codeudores" :key="index" class="row g-3 mb-3 align-items-center">
                                         
@@ -1145,6 +1063,8 @@ import ModalRespaldos from './Solicitud/ModalRespaldos.vue';
 import ModalCalculadoraCredito from './Solicitud/ModalCalculadoraCredito.vue';
 import ClienteForm from './Cliente/ClienteForm.vue'; 
 
+import {lista_monedas, lapso_capitales, tipos_desembolsos, tipos_garantias} from '../constants';
+
 
 
 export default {
@@ -1165,6 +1085,10 @@ export default {
     },
     data() {
         return {
+            lista_monedas:lista_monedas,
+            tipos_garantias:tipos_garantias,
+            lapso_capitales:lapso_capitales,
+            tipos_desembolsos:tipos_desembolsos,
             mostrarModalCliente: false, // Controla si se renderiza el componente
             clienteFormAccion: 0,       // 0: Nuevo, 1: Editar
             clienteFormId: 0,
@@ -1208,65 +1132,6 @@ export default {
             lista_solicitudes: [],
             lista_cuotas: [],
             items_cliente: [],
-            lista_monedas: [
-                {
-                    nombre: "Bolivianos",
-                },
-                {
-                    nombre: "Dolares",
-                },
-            ],
-            lapso_capitales: [
-                // {
-                //     nombre: "Diario",
-                // },
-                {
-                    nombre: "Semanal",
-                },
-                {
-                    nombre: "Quincenal",
-                },
-                {
-                    nombre: "Mensual",
-                },
-            ],
-            tipos_desembolsos: [
-                {
-                    nombre: "Efectivo",
-                },
-                {
-                    nombre: "Depósito",
-                },
-                {
-                    nombre: "Transferencia",
-                },
-                {
-                    nombre: "QR",
-                },
-            ],
-            tipos_garantias: [
-                {
-                    nombre: "Garante Personal",
-                },
-                {
-                    nombre: "Prendario o Quirografaria",
-                },
-                {
-                    nombre: "Custodia de Papeles de Moto",
-                },
-                {
-                    nombre: "Custodia Inmueble o Lote terreno",
-                },
-                {
-                    nombre: "Custodia de Vehículo Automovil",
-                },
-                {
-                    nombre: "Empeño Joyas (oro)",
-                },
-                {
-                    nombre: "Empeño de electrodoméstico u Otros",
-                },
-            ],
             solicitud: {
                 id_solicitud: 0,
                 importe_solicitud: 0,
