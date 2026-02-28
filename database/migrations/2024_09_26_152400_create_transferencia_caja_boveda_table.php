@@ -13,15 +13,19 @@ return new class extends Migration
     {
         Schema::create('transferencia_caja_boveda', function (Blueprint $table) {
             $table->id();
-            $table->string('tipo_transferencia'); // interno
+            $table->string('tipo_transferencia'); // Ej: boveda_a_caja, caja_a_boveda
             $table->string('descripcion');
-            $table->decimal('monto', 10, 2);
-            $table->datetime('fecha'); // interno
+            
+            // Subimos la precisión a 12,2 para mantener el estándar
+            $table->decimal('monto', 12, 2); 
+            
+            $table->datetime('fecha');
 
-            $table->foreignId('id_boveda');
+            // Definición estructurada de llaves foráneas
+            $table->unsignedBigInteger('id_boveda');
             $table->foreign('id_boveda')->references('id')->on('boveda');
 
-            $table->foreignId('id_caja');
+            $table->unsignedBigInteger('id_caja');
             $table->foreign('id_caja')->references('id')->on('caja');
                         
             $table->timestamps();

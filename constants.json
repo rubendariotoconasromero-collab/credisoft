@@ -65,5 +65,42 @@
         {
             "nombre": "Depósito banco"
         }
+    ],
+
+    "expeditionPlaces": [
+        { "sigla": "LP", "nombre": "La Paz" },
+        { "sigla": "CB", "nombre": "Cochabamba" },
+        { "sigla": "SC", "nombre": "Santa Cruz" },
+        { "sigla": "OR", "nombre": "Oruro" },
+        { "sigla": "PT", "nombre": "Potosí" },
+        { "sigla": "TJ", "nombre": "Tarija" },
+        { "sigla": "BN", "nombre": "Beni" },
+        { "sigla": "PD", "nombre": "Pando" },
+        { "sigla": "CH", "nombre": "Chuquisaca" },
+        { "sigla": "Sin Expedición", "nombre": "Sin Expedición" }
+    ],
+
+    "genders": [
+        {
+            "nombre": "Masculino"
+        },
+        {
+            "nombre": "Femenino"
+        }
+    ],
+
+    "maritalStatuses": [
+        { "nombre": "soltero/a" },
+        { "nombre": "Casado/a" },
+        { "nombre": "divorciado/a" },
+        { "nombre": "viudo/a" },
+        { "nombre": "separado/a" },
+        { "nombre": "conviviente/a" }
+    ],
+
+    "housingTypes": [
+        { "nombre": "Casa propia" },
+        { "nombre": "Alquiler" },
+        { "nombre": "Vivienda familiar" }
     ]
 }

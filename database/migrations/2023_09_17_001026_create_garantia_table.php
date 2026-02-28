@@ -14,8 +14,11 @@ return new class extends Migration
         Schema::create('garantia', function (Blueprint $table) {
             $table->id();
             $table->string('descripcion');
-            $table->foreignId('id_solicitud');
+            
+            // Definición segura de la llave foránea (consistente con el resto del proyecto)
+            $table->unsignedBigInteger('id_solicitud');
             $table->foreign('id_solicitud')->references('id')->on('solicitud');
+            
             $table->timestamps();
         });
     }

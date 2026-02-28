@@ -18,11 +18,20 @@ return new class extends Migration
             $table->string('ciudad')->nullable();
             $table->string('zona')->nullable();
             $table->string('descripcion');
+            
+            // Campos de coordenadas agregados según tu SQL
+            $table->decimal('lat', 10, 8)->nullable();
+            $table->decimal('lng', 11, 8)->nullable();
+            
             $table->string('referencia')->nullable();
-            $table->foreignId('id_cliente')->nullable();
+            
+            // Llaves foráneas
+            $table->unsignedBigInteger('id_cliente')->nullable();
             $table->foreign('id_cliente')->references('id')->on('cliente');
-            $table->foreignId('id_codeudor')->nullable();
+            
+            $table->unsignedBigInteger('id_codeudor')->nullable();
             $table->foreign('id_codeudor')->references('id')->on('codeudor');
+            
             $table->timestamps();
         });
     }

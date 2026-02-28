@@ -23,7 +23,7 @@ return new class extends Migration
             $table->string('vivienda');
             $table->string('imagen')->nullable();
             $table->float('ingreso_mensual');
-            $table->string('tipo');
+            $table->string('tipo', 50);
             $table->integer('estado')->default(1);
         });
     }

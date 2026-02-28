@@ -19,14 +19,13 @@ return new class extends Migration
             $table->integer('estado')->default(1);
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            
-            // Asumimos que la tabla 'rol' ya existe
             $table->unsignedBigInteger('id_rol');
             $table->foreign('id_rol')->references('id')->on('rol'); 
-
             $table->rememberToken();
             $table->string('ci', 30)->nullable()->default('0');
             $table->string('telefono', 20)->nullable()->default('0');
+            $table->date('fecha_cambio_password')->nullable()->default('0');
+            $table->integer('dias_vigencia')->default(1);
             $table->timestamps();
         });
     }

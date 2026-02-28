@@ -18,8 +18,16 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'name', 'personal', 'email', 'estado', 'password', 
-        'id_rol', 'ci', 'telefono'
+        'name',
+        'personal',
+        'email',
+        'estado',
+        'password',
+        'id_rol',
+        'ci',
+        'telefono',
+        'fecha_cambio_password',
+        'dias_vigencia'
     ];
 
     /**
@@ -39,11 +47,14 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'password' => 'hashed',
+        'password' => 'hashed', // Laravel 10+ hashea automáticamente si usas esto
+        'fecha_cambio_password' => 'date',
     ];
 
+    // Relación: Un usuario pertenece a un rol
     public function rol()
     {
+        // El segundo parámetro es la llave foránea en esta tabla
         return $this->belongsTo(Rol::class, 'id_rol');
     }
 }

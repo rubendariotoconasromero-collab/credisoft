@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('actividades', function (Blueprint $table) {
             $table->id();
             $table->text('nombre');
-            $table->integer('estado')->default(1);// 1: activado
+            $table->integer('estado')->default(1); // 1: activado
             $table->timestamps();
         });
     }

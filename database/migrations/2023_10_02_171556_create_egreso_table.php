@@ -13,14 +13,21 @@ return new class extends Migration
     {
         Schema::create('egreso', function (Blueprint $table) {
             $table->id();
-            $table->float('monto');
+            
+            // Cambiado a decimal para cálculos exactos de dinero
+            $table->decimal('monto', 12, 2); 
+            
             $table->string('descripcion');
-            $table->string('estado')->default(1);
+            $table->string('estado')->default('1'); // Nota: se queda como string según tu SQL
             $table->date('fecha');
-            $table->foreignId('id_usuario');
+            
+            // Definición estructurada de llaves foráneas
+            $table->unsignedBigInteger('id_usuario');
             $table->foreign('id_usuario')->references('id')->on('users');
-            $table->foreignId('id_caja');
+            
+            $table->unsignedBigInteger('id_caja');
             $table->foreign('id_caja')->references('id')->on('caja');
+            
             $table->timestamps();
         });
     }

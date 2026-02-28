@@ -13,9 +13,14 @@ return new class extends Migration
     {
         Schema::create('imagen', function (Blueprint $table) {
             $table->id();
-            $table->string('imagen');
-            $table->foreignId('id_garantia');
+            
+            // Este campo guardará la ruta o el nombre del archivo de imagen
+            $table->string('imagen'); 
+            
+            // Definición segura de la llave foránea
+            $table->unsignedBigInteger('id_garantia');
             $table->foreign('id_garantia')->references('id')->on('garantia');
+            
             $table->timestamps();
         });
     }

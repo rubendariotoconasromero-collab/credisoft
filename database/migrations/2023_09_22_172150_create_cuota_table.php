@@ -14,20 +14,22 @@ return new class extends Migration
         Schema::create('cuota', function (Blueprint $table) {
             $table->id();
             $table->integer('numero');
-            $table->date('fecha');// FECHA PAGO
+            $table->date('fecha'); // FECHA PAGO
             
-            // CAMBIO CRITICO: Todo a Decimal
-            $table->decimal('capital', 12, 2);
-            $table->decimal('interes', 12, 2);
-            $table->decimal('saldo_capital', 12, 2);
-            $table->decimal('ahorro', 12, 2)->nullable();
-            $table->decimal('seguro', 12, 2)->nullable();
-            $table->decimal('total', 12, 2);
+            // CORREGIDO: Ajustado a double(8,2) según tu SQL original
+            $table->double('capital', 8, 2);
+            $table->double('interes', 8, 2);
+            $table->double('saldo_capital', 8, 2);
+            $table->double('ahorro', 8, 2)->nullable();
+            $table->double('seguro', 8, 2)->nullable();
+            $table->double('total', 8, 2);
             
             $table->integer('estado')->default(1);
             $table->integer('amortizado')->default(0);
             
-            $table->foreignId('id_plan_pago')->constrained('plan_pago');
+            // Definición consistente de la llave foránea
+            $table->unsignedBigInteger('id_plan_pago');
+            $table->foreign('id_plan_pago')->references('id')->on('plan_pago');
 
             $table->timestamps();
         });

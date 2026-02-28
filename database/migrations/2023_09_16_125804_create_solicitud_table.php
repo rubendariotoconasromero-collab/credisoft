@@ -14,14 +14,15 @@ return new class extends Migration
         
         Schema::create('solicitud', function (Blueprint $table) {
             $table->id();
-            // CAMBIO: Importes y Tasas a Decimal
-            $table->decimal('importe_solicitud', 12, 2);
+            
+            // Ajustado a double(8,2) según tu SQL
+            $table->double('importe_solicitud', 8, 2); 
             $table->string('moneda');
             $table->string('lapso_capital');
             $table->integer('nro_cuotas');
             
-            // Tasa: (5,2) permite ej: 12.50, 100.00
-            $table->decimal('tasa', 5, 2);
+            // Ajustado a decimal(11,2) según tu SQL
+            $table->decimal('tasa', 11, 2);
             
             $table->date('fecha')->nullable();
             $table->date('fecha_desembolso');
@@ -29,13 +30,14 @@ return new class extends Migration
             $table->string('destino_prestamo');
             $table->string('tipo_garantia');
             $table->string('tipo_desembolso');
-            $table->integer('estado')->default(1);// 1 nuevo -> 2 -> aprobado -> 3 -> anulado
+            $table->integer('estado')->default(1);
             
-            // Asumiendo tabla 'cliente' existe
+            // Llave foránea para Cliente (descomentada y asegurada)
             $table->unsignedBigInteger('id_cliente');
-            // $table->foreign('id_cliente')->references('id')->on('cliente');
+            $table->foreign('id_cliente')->references('id')->on('cliente');
 
-            $table->foreignId('id_usuario')->constrained('users');
+            $table->unsignedBigInteger('id_usuario');
+            $table->foreign('id_usuario')->references('id')->on('users');
 
             $table->decimal('monto_pago_adm', 10, 2)->nullable()->default(0.00);
             $table->string('tipo_tasa', 50)->nullable()->default('amortizable');
@@ -44,8 +46,11 @@ return new class extends Migration
             $table->integer('cantidad_reprogramaciones')->nullable()->default(0);
             $table->integer('cantidad_refinanciamientos')->nullable()->default(0);
             
-            // Refinanciamiento también es dinero
-            $table->decimal('monto_refinanciamiento', 12, 2)->nullable()->default(0);
+            // Ajustado a integer según tu SQL (en la migración lo tenías como decimal)
+            // Si manejas dinero aquí, te recomiendo cambiarlo a decimal(12,2) en la BD, 
+            // pero para igualar tu SQL lo dejo como integer.
+            $table->integer('monto_refinanciamiento')->nullable()->default(0); 
+            
             $table->integer('desembolso')->nullable()->default(0);
             
             $table->unsignedBigInteger('id_solicitud_origen')->nullable();

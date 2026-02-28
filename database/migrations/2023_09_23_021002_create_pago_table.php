@@ -13,9 +13,13 @@ return new class extends Migration
     {
         Schema::create('pago', function (Blueprint $table) {
             $table->id();
+            
+            // Columna agregada según tu SQL
+            $table->string('codigo_transaccion', 50)->nullable()->index();
+            
             $table->date('fecha_pago');
             
-            // CAMBIO: Pagos y multas a Decimal
+            // Manteniendo TODO el dinero como decimal para precisión financiera
             $table->decimal('monto_pago', 12, 2);
             $table->integer('estado')->default(1);
             $table->integer('dias_retrasados')->nullable();
@@ -27,9 +31,15 @@ return new class extends Migration
             $table->string('forma_pago');
             $table->string('imagen')->default('');
             
-            $table->foreignId('id_usuario')->constrained('users');
-            $table->foreignId('id_cuota')->constrained('cuota');
-            $table->foreignId('id_caja')->constrained('caja');
+            // Llaves foráneas estructuradas de forma segura
+            $table->unsignedBigInteger('id_usuario');
+            $table->foreign('id_usuario')->references('id')->on('users');
+            
+            $table->unsignedBigInteger('id_cuota');
+            $table->foreign('id_cuota')->references('id')->on('cuota');
+            
+            $table->unsignedBigInteger('id_caja');
+            $table->foreign('id_caja')->references('id')->on('caja');
 
             $table->decimal('monto_cuota', 10, 2)->nullable()->default(0.00);
             

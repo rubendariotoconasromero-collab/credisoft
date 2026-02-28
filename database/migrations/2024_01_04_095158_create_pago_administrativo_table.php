@@ -13,18 +13,27 @@ return new class extends Migration
     {
         Schema::create('pago_administrativo', function (Blueprint $table) {
             $table->id();
-            $table->float('monto');
-            $table->datetime('fecha')->default(now());
+            
+            // Cambiado a decimal para cálculos exactos de dinero
+            $table->decimal('monto', 12, 2);
+            
+            // Usamos useCurrent() para asignar la fecha/hora actual por defecto
+            $table->datetime('fecha')->useCurrent();
+            
             $table->integer('estado')->default(0);
             $table->string('descripcion');
 
-            $table->foreignId('id_plan_pago');
+            // Definición estructurada de llaves foráneas
+            $table->unsignedBigInteger('id_plan_pago');
             $table->foreign('id_plan_pago')->references('id')->on('plan_pago');
-            $table->foreignId('id_usuario');
+            
+            $table->unsignedBigInteger('id_usuario');
             $table->foreign('id_usuario')->references('id')->on('users');
-            $table->foreignId('id_caja');
+            
+            $table->unsignedBigInteger('id_caja');
             $table->foreign('id_caja')->references('id')->on('caja');
-            //$table->timestamps();
+            
+            // Se omiten los timestamps tal como está en tu base de datos
         });
     }
 

@@ -15,14 +15,20 @@ return new class extends Migration
             $table->id();
             $table->string('tipo');
             $table->string('numero');
-            $table->string('nombre')->nullable();
-            $table->string('apellidos')->nullable();
-            $table->string('relacion')->nullable();
             $table->string('observacion')->nullable();
-            $table->foreignId('id_cliente')->nullable();
+            
+            // Ajustamos la longitud a 100 caracteres para coincidir con tu SQL
+            $table->string('nombre', 100)->nullable();
+            $table->string('apellidos', 100)->nullable();
+            $table->string('relacion', 100)->nullable();
+            
+            // Definición segura de llaves foráneas
+            $table->unsignedBigInteger('id_cliente')->nullable();
             $table->foreign('id_cliente')->references('id')->on('cliente');
-            $table->foreignId('id_codeudor')->nullable();
+            
+            $table->unsignedBigInteger('id_codeudor')->nullable();
             $table->foreign('id_codeudor')->references('id')->on('codeudor');
+            
             $table->timestamps();
         });
     }
@@ -32,6 +38,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('direccion');
+        Schema::dropIfExists('telefono');
     }
 };

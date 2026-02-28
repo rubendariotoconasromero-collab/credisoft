@@ -29,4 +29,9 @@ class Garantia extends Model
     {
         return $this->belongsTo(Solicitud::class, 'id_solicitud');
     }
+
+    public function imagenes()
+    {
+        return $this->hasMany(Imagen::class, 'id_garantia');
+    }
 }

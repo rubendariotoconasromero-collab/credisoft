@@ -14,27 +14,32 @@ return new class extends Migration
         Schema::create('cuota_respaldo', function (Blueprint $table) {
             $table->id();
 
-            // Datos de la cuota original
+            // --- Datos de la cuota original ---
             $table->integer('numero')->nullable();
             $table->date('fecha')->nullable();
-            $table->float('capital')->nullable();
-            $table->float('interes')->nullable();
-            $table->float('saldo_capital')->nullable();
-            $table->float('ahorro')->nullable();
-            $table->float('seguro')->nullable();
-            $table->float('total')->nullable();
+            
+            // Cambiados a decimal para precisión financiera en la auditoría
+            $table->decimal('capital', 12, 2)->nullable();
+            $table->decimal('interes', 12, 2)->nullable();
+            $table->decimal('saldo_capital', 12, 2)->nullable();
+            $table->decimal('ahorro', 12, 2)->nullable();
+            $table->decimal('seguro', 12, 2)->nullable();
+            $table->decimal('total', 12, 2)->nullable();
+            
             $table->integer('estado')->default(1);
             $table->integer('amortizado')->default(0);
 
-            // Relación con plan_pago_respaldo
+            // --- Relación con plan_pago_respaldo ---
             $table->unsignedBigInteger('plan_pago_respaldo_id');
             $table->foreign('plan_pago_respaldo_id')->references('id')->on('plan_pago_respaldo');
 
-            // Información de auditoría
-            $table->unsignedBigInteger('cuota_original_id'); // ID de la cuota original
+            // --- Información de auditoría ---
+            $table->unsignedBigInteger('cuota_original_id'); // ID de la cuota original en la tabla `cuota`
             $table->string('accion'); // create, update, delete
+            
             $table->unsignedBigInteger('usuario_accion')->nullable();
             $table->foreign('usuario_accion')->references('id')->on('users')->onDelete('set null');
+            
             $table->ipAddress('ip_address')->nullable();
             $table->text('user_agent')->nullable();
 

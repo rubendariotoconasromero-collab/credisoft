@@ -13,15 +13,21 @@ return new class extends Migration
     {
         Schema::create('movimientos_caja', function (Blueprint $table) {
             $table->id();
-            $table->string('tipo_movimiento');
+            $table->string('tipo_movimiento'); // Ej: ingreso, egreso, apertura
             $table->string('descripcion');
-            $table->decimal('monto', 10, 2);
+            
+            // Ajustado a 12,2 para mantener consistencia con tus otras tablas financieras
+            $table->decimal('monto', 12, 2); 
+            
             $table->datetime('fecha');
-            $table->foreignId('id_caja');
+            
+            // Definición estructurada de llaves foráneas (¡que faltaban en tu SQL original!)
+            $table->unsignedBigInteger('id_caja');
             $table->foreign('id_caja')->references('id')->on('caja');
             
-            $table->foreignId('id_usuario');
+            $table->unsignedBigInteger('id_usuario');
             $table->foreign('id_usuario')->references('id')->on('users');
+            
             $table->timestamps();
         });
     }

@@ -12,9 +12,21 @@ class Pago extends Model
     protected $table = 'pago';
 
     protected $fillable = [
-        'fecha_pago', 'monto_pago', 'estado', 'dias_retrasados',
-        'multa_dia', 'multa_total', 'monto_condonado', 'motivo_condonacion',
-        'forma_pago', 'imagen', 'id_usuario', 'id_cuota', 'id_caja', 'monto_cuota'
+        'codigo_transaccion', // <--- Agregado
+        'fecha_pago', 
+        'monto_pago', 
+        'estado', 
+        'dias_retrasados',
+        'multa_dia', 
+        'multa_total', 
+        'monto_condonado', 
+        'motivo_condonacion',
+        'forma_pago', 
+        'imagen', 
+        'id_usuario', 
+        'id_cuota', 
+        'id_caja', 
+        'monto_cuota'
     ];
 
     public function usuario()

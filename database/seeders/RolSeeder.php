@@ -13,6 +13,7 @@ class RolSeeder extends Seeder
             ['nombre' => 'Administrador', 'estado' => 1],
             ['nombre' => 'Cajero', 'estado' => 1],
             ['nombre' => 'Oficial de Credito', 'estado' => 1],
+            ['nombre' => 'Encargado de Agencia', 'estado' => 1],
         ]);
     }
 }

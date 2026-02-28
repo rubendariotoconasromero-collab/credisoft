@@ -15,8 +15,11 @@ return new class extends Migration
             $table->id();
             $table->string('descripcion');
             $table->string('imagen');
-            $table->foreignId('id_solicitud');
+            
+            // Definición segura de la llave foránea
+            $table->unsignedBigInteger('id_solicitud');
             $table->foreign('id_solicitud')->references('id')->on('solicitud');
+            
             $table->timestamps();
         });
     }

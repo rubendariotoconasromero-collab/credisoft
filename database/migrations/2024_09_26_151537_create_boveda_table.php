@@ -13,8 +13,11 @@ return new class extends Migration
     {
         Schema::create('boveda', function (Blueprint $table) {
             $table->id();
-            $table->decimal('saldo_actual', 10, 2)->default(0);
+            
+            // Ajustado a 12, 2 para mantener la consistencia con el resto del sistema
+            $table->decimal('saldo_actual', 12, 2)->default(0.00);
             $table->datetime('fecha_apertura');
+            
             $table->timestamps();
         });
     }

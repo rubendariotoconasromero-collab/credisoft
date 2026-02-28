@@ -13,16 +13,20 @@ return new class extends Migration
     {
         Schema::create('movimientos_boveda', function (Blueprint $table) {
             $table->id();
-            $table->string('tipo_movimiento');
-            $table->decimal('monto', 10, 2);
+            $table->string('tipo_movimiento'); // Ej: ingreso, salida
+            
+            // Subimos la precisión a 12,2 para mantener el estándar del proyecto
+            $table->decimal('monto', 12, 2); 
             $table->string('descripcion');
             $table->datetime('fecha');
 
-            $table->foreignId('id_boveda');
+            // Definición estructurada de llaves foráneas (para proteger la integridad de datos)
+            $table->unsignedBigInteger('id_boveda');
             $table->foreign('id_boveda')->references('id')->on('boveda');
             
-            $table->foreignId('id_usuario');
+            $table->unsignedBigInteger('id_usuario');
             $table->foreign('id_usuario')->references('id')->on('users');
+            
             $table->timestamps();
         });
     }

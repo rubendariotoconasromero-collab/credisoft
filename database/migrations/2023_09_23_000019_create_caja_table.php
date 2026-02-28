@@ -16,7 +16,7 @@ return new class extends Migration
             $table->dateTime('fechahora_apertura');
             $table->dateTime('fechahora_cierre')->nullable();
             
-            // CAMBIO: Decimal para precisión monetaria
+            // ¡Cambiado a decimal(12, 2) para cálculos monetarios exactos!
             $table->decimal('monto_inicial', 12, 2);
             $table->decimal('monto_final', 12, 2)->nullable();
             $table->decimal('efectivo_total', 12, 2)->nullable();
@@ -30,7 +30,11 @@ return new class extends Migration
             $table->decimal('diferencia', 12, 2)->nullable();
             
             $table->integer('estado')->default(1);
-            $table->foreignId('id_usuario')->constrained('users');
+            
+            // Llave foránea
+            $table->unsignedBigInteger('id_usuario');
+            $table->foreign('id_usuario')->references('id')->on('users');
+            
             $table->timestamps();
         });
     }
