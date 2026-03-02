@@ -19,16 +19,24 @@ class SolicitudFactory extends Factory
         $nombresListaMonedas = array_column($constants['lista_monedas'], 'nombre');
         $nombresTiposDesembolsos = array_column($constants['tipos_desembolsos'], 'nombre');
         $nombresFormasPago = array_column($constants['formas_pago'], 'nombre');
-        $importeSolicitud = $this->faker->randomFloat(2, 1000, 50000);
+        $importeSolicitud = $this->faker->numberBetween(3000, 50000);
         $montoPagoAdm = $importeSolicitud * 0.01;
         $fechaDesembolso = $this->faker->dateTimeBetween('-1 year', 'now');
+
+        $lapsoSeleccionado = $this->faker->randomElement($nombresLapsos);
+        $mesesBase = $this->faker->numberBetween(1, 12);
+        $nroCuotas = match($lapsoSeleccionado) {
+            'Semanal'   => $mesesBase * 4, // Múltiplo de 4
+            'Quincenal' => $mesesBase * 2, // Múltiplo de 2
+            default     => $mesesBase,     // Valor entero normal para Mensual
+        };
         
         return [
             'importe_solicitud' => $importeSolicitud,
-            'moneda' => 'Bs',
-            'lapso_capital' => $this->faker->randomElement($nombresLapsos),
-            'nro_cuotas' => $this->faker->numberBetween(1, 24),
-            'tasa' => $this->faker->randomFloat(2, 1.5, 5.0), // Tasa entre 1.5% y 5%
+            'moneda' => 'Bolivianos',
+            'lapso_capital' => $lapsoSeleccionado,
+            'nro_cuotas' => $nroCuotas,
+            'tasa' =>  $this->faker->numberBetween(10, 12),
             'fecha' => $fechaDesembolso,
             'fecha_desembolso' => $fechaDesembolso,
             'fecha_primera_cuota' => Carbon::parse($fechaDesembolso)->addMonth(),
@@ -38,8 +46,8 @@ class SolicitudFactory extends Factory
             'tipo_tasa' => $this->faker->randomElement(['fija','amortizable']),
             'desembolso' => 1,
             'monto_pago_adm' => $montoPagoAdm, // Gastos administrativos
-            'estado' => $this->faker->randomElement([1, 2]), // 1: Nuevo, 2: Aprobado
-            'observacion' => $this->faker->optional()->sentence(),
+            'estado' => 1, // 1: Nuevo, 2: Aprobado
+            // 'observacion' => $this->faker->optional()->sentence(),
             'tipo_solicitud' => 'Nuevo',
             'cantidad_reprogramaciones' => 0,
             'cantidad_refinanciamientos' => 0,

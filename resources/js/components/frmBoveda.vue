@@ -161,7 +161,7 @@
                                 <label class="fw-bold mb-1">Monto a Ingresar</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-success text-white fw-bold">Bs.</span>
-                                    <input type="number" class="form-control form-control-lg fw-bold text-success" v-model="montoIngreso" placeholder="0.00" step="0.01" min="0" required>
+                                    <input type="number" class="form-control form-control-lg fw-bold text-dark" v-model="montoIngreso" placeholder="0.00" step="0.01" min="0" required>
                                 </div>
                             </div>
                             <div class="form-group mb-3">
@@ -536,5 +536,9 @@
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+.table-responsive .badge{
+    border-radius:20px;
 }
 </style>

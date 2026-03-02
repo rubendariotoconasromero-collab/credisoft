@@ -23,6 +23,8 @@ class CodeudorFactory extends Factory
     public function definition()
     {
         $jsonPath = base_path('constants.json');
+        $constants = json_decode(file_get_contents($jsonPath), true);
+
         $expeditionPlaces = array_column($constants['expeditionPlaces'], 'nombre');
         $genders = array_column($constants['genders'], 'nombre');
         $maritalStatuses = array_column($constants['maritalStatuses'], 'nombre');

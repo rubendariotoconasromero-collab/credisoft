@@ -563,116 +563,6 @@ class PagoController extends Controller
         }
     }
 
-
-    /*public function pagarCuotas(Request $request)
-    {
-        //dias_pasados
-        $id_plan_pago = $request->input('id_plan_pago');
-        $cuotas = $request->input('cuotas');
-
-        if (empty($cuotas)) {
-            return response()->json(['error' => 'No se seleccionaron cuotas para pagar'], 400);
-        }
-
-        DB::beginTransaction();
-
-        try {
-            // Get active caja
-            $id_caja = DB::table('caja')->where('estado', 1)->first()->id;
-
-            // Validate that cuotas are consecutive
-            $cuotaIds = array_column($cuotas, 'id_cuota');
-            $dbCuotas = DB::table('cuota')
-                ->where('id_plan_pago', $id_plan_pago)
-                ->whereIn('id', $cuotaIds)
-                ->orderBy('numero', 'asc')
-                ->get();
-
-            // Check if selected cuotas are consecutive and unpaid
-            $firstUnpaidCuota = DB::table('cuota')
-                ->where('id_plan_pago', $id_plan_pago)
-                ->where('estado', 1)
-                ->orderBy('numero', 'asc')
-                ->first();
-
-            if (!$firstUnpaidCuota || $cuotaIds[0] != $firstUnpaidCuota->id) {
-                throw new \Exception('Las cuotas seleccionadas deben comenzar con la primera cuota impaga.');
-            }
-
-            $previousNumero = $firstUnpaidCuota->numero - 1;
-            foreach ($dbCuotas as $index => $dbCuota) {
-                if ($index > 0 && $dbCuota->numero != $previousNumero + 1) {
-                    throw new \Exception('Las cuotas seleccionadas deben ser correlativas.');
-                }
-                if ($dbCuota->estado != 1) {
-                    throw new \Exception('Solo se pueden pagar cuotas con estado "Por pagar".');
-                }
-                $previousNumero = $dbCuota->numero;
-            }
-
-            // Process each cuota payment
-            foreach ($cuotas as $cuotaData) {
-                $id_cuota = $cuotaData['id_cuota'];
-                $cuota = $dbCuotas->firstWhere('id', $id_cuota);
-
-                $multa_mora = $cuotaData['dias_pasados'] > 0 ? ($cuotaData['multa_mora'] ?? 0) : 0;
-                $monto_condonado = $cuotaData['monto_condonado'] ?? 0;
-
-                $datos_pago = [
-                    'fecha_pago' => $cuotaData['fecha_pago'],
-                    'monto_pago' => $cuotaData['dias_pasados'] > 0
-                        ? ($cuotaData['monto_pago'] + ($multa_mora * $cuotaData['dias_pasados'])) - $monto_condonado
-                        : $cuotaData['monto_pago'],
-                    'monto_cuota' => $cuotaData['monto_pago'],
-                    'id_usuario' => Auth::id(),
-                    'id_cuota' => $id_cuota,
-                    'id_caja' => $id_caja,
-                    'monto_condonado' => $monto_condonado,
-                    'forma_pago' => $cuotaData['forma_pago'],
-                ];
-
-                if ($cuotaData['dias_pasados'] > 0) {
-                    $datos_pago['dias_retrasados'] = $cuotaData['dias_pasados'];
-                    $datos_pago['multa_dia'] = $multa_mora;
-                    $datos_pago['multa_total'] = $multa_mora * $cuotaData['dias_pasados'];
-                    $datos_pago['motivo_condonacion'] = $cuotaData['motivo_condonacion'] ?? 'No se ingresó motivo';
-                }
-
-                // Insert payment
-                DB::table('pago')->insert($datos_pago);
-
-                // Update cuota estado
-                DB::table('cuota')->where('id', $id_cuota)->update(['estado' => 2]);
-
-                // Register movement in caja
-                DB::table('movimientos_caja')->insert([
-                    'tipo_movimiento' => 'ingreso',
-                    'monto' => $datos_pago['monto_pago'],
-                    'descripcion' => 'Pago de cuota ' . $cuota->numero,
-                    'fecha' => now(),
-                    'id_caja' => $id_caja,
-                    'id_usuario' => Auth::id(),
-                ]);
-            }
-
-            // Check if there are any unpaid cuotas left
-            $no_hay_sin_pagar = DB::table('cuota')
-                ->where('id_plan_pago', $id_plan_pago)
-                ->where('estado', 1)
-                ->doesntExist();
-
-            if ($no_hay_sin_pagar) {
-                DB::table('plan_pago')->where('id', $id_plan_pago)->update(['estado' => 2]);
-            }
-
-            DB::commit();
-            return ['estado_plan' => $no_hay_sin_pagar ? 2 : 1];
-        } catch (\Exception $e) {
-            DB::rollback();
-            return response()->json(['error' => $e->getMessage()], 400);
-        }
-    }*/
-
     public function pagarCuotas(Request $request)
     {
         $id_plan_pago = $request->input('id_plan_pago');
@@ -778,6 +668,14 @@ class PagoController extends Controller
             if ($no_hay_sin_pagar) {
                 DB::table('plan_pago')->where('id', $id_plan_pago)->update(['estado' => 2]);
             }
+
+            // ACTUALIZACIÓN CLAVE: 
+            // Siempre actualizamos la fecha de última amortización para "resetear" el contador de mora.
+            // Y si ya no hay cuotas, cambiamos el estado a 2 (Finalizado).
+            DB::table('plan_pago')->where('id', $id_plan_pago)->update([
+                'fecha_ultima_amortizacion' => now(), // Resetea el reloj de mora
+                'estado' => $no_hay_sin_pagar ? 2 : 1
+            ]);
 
             DB::commit();
             

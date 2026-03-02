@@ -50,3 +50,8 @@ p {
     color: white;
     margin-top: 10px;
 }
+
+.table-responsive .badge{
+    border-radius:20px;
+    min-width:100px;
+}

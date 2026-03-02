@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Plan de pagos</title>
+    <title>Plan de pagos.</title>
     <style>
         body {
             font-family: 'DejaVu Sans', Arial, sans-serif;

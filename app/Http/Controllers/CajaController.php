@@ -88,21 +88,43 @@ class CajaController extends Controller
         ->paginate(15);
         return $caja;
     }
-    public function save(Request $request) {
+
+    public function save(Request $request) 
+    {
         $request->validate([
             'monto_inicial' => 'required|numeric|min:0',
         ]);
 
-        // Opcional: Verificar si el usuario ya tiene una caja abierta
-        $cajaAbierta = DB::table('caja')->where('id_usuario', Auth::id())->whereNull('fechahora_cierre')->exists();
-        if($cajaAbierta) return response()->json(['message' => 'Ya tienes una caja abierta'], 422);
+        // 1. NUEVO: Verificar si existe al menos una bóveda registrada
+        $existeBoveda = DB::table('boveda')->exists();
+        
+        if (!$existeBoveda) {
+            // Retornamos error 422. Tu frontend leerá el 'message' y lo mostrará en el SweetAlert
+            return response()->json([
+                'success' => false,
+                'message' => 'No se puede abrir la caja: Aún no existe una Bóveda aperturada en el sistema.'
+            ], 422);
+        }
+
+        // 2. Verificar si el usuario ya tiene una caja abierta
+        $cajaAbierta = DB::table('caja')
+            ->where('id_usuario', Auth::id())
+            ->whereNull('fechahora_cierre')
+            ->exists();
+            
+        if ($cajaAbierta) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ya tienes una caja abierta actualmente.'
+            ], 422);
+        }
 
         DB::beginTransaction();
 
         try {
-            // 2. Insertar usando Carbon::now() para la fecha exacta del servidor
+            // 3. Insertar la nueva caja
             DB::table('caja')->insert([
-                'fechahora_apertura' => Carbon::now(), // FECHA SERVIDOR (Más seguro)
+                'fechahora_apertura' => Carbon::now(), // FECHA SERVIDOR
                 'monto_inicial'      => $request->monto_inicial,
                 'monto_final'        => 0,
                 'efectivo_total'     => 0,
@@ -115,24 +137,23 @@ class CajaController extends Controller
                 'total_egreso'       => 0,
                 'diferencia'         => 0,
                 'id_usuario'         => Auth::id(),
-                // 'created_at'      => Carbon::now() // Si usas timestamps
+                'estado'             => 1,
+                'created_at'         => Carbon::now(), // Importante si usas timestamps() en tu migración
+                'updated_at'         => Carbon::now()
             ]);
 
             DB::commit();
 
-            // 3. RETORNAR RESPUESTA JSON (Crucial para Axios)
             return response()->json([
                 'success' => true,
                 'message' => 'Caja aperturada correctamente'
             ], 200);
 
-        } catch (\Throwable $th) { // Usar Throwable captura más errores que Exception
+        } catch (\Throwable $th) {
             DB::rollback();
             
-            // Registrar el error real en el log de Laravel (storage/logs/laravel.log)
-            Log::error('Error al abrir caja: ' . $th->getMessage());
+            \Log::error('Error al abrir caja: ' . $th->getMessage());
 
-            // Retornar error al frontend
             return response()->json([
                 'success' => false,
                 'message' => 'Error interno al intentar abrir la caja.'
@@ -310,23 +331,6 @@ class CajaController extends Controller
             'fecha_inicio' => $request->fecha_inicio,
             'fecha_final' => $request->fecha_final,
         ];
-
-        /*
-        // Carga el contenido HTML en Dompdf
-        $dompdf->loadHtml($html);
-
-        // Renderiza el PDF (esto puede tomar un tiempo si el contenido es grande)
-        $dompdf->render();
-
-        // Obtén el contenido del PDF como una cadena
-        
-
-        // Establece las cabeceras para mostrar el PDF en una nueva pestaña
-        return response($dompdf->output())
-
-        ->header('Content-Type', 'application/pdf')
-        ->header('Content-Disposition', 'inline; filename="reporte_pagos_caja.pdf"');
-        */
         $this->generatePDF($html, 'reporte.reporte_pagos_caja', 'reporte_pagos_caja');
     }
     

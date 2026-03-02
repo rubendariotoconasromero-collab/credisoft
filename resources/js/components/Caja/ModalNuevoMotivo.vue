@@ -13,7 +13,7 @@
                         <form @submit.prevent="guardar">
                             <div class="mb-3">
                                 <label class="form-label small fw-bold text-muted">Nombre del Motivo</label>
-                                <input v-model="nombre" type="text" class="form-control text-uppercase" 
+                                <input v-model="nombre" type="text" class="form-control" 
                                     :placeholder="placeholderInput" 
                                     required ref="inputNombre">
                             </div>

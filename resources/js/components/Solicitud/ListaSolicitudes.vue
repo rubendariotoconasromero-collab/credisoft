@@ -282,19 +282,19 @@ export default {
                    item.estado !== 2 &&
                    item.tipo_solicitud !== 'Reprogramacion' &&
                    item.tipo_solicitud !== 'Refinanciamiento' &&
-                   this.rolUsuario === 'administrador' &&
+                   this.rolUsuario === 'Administrador' &&
                    (!item.observacion || item.observacion.trim() === '');
         },
         esReprogramable(item) {
             return item.estado == 1 &&
                    item.tipo_solicitud == 'Reprogramacion' &&
-                   this.rolUsuario === 'administrador' &&
+                   this.rolUsuario === 'Administrador' &&
                    (!item.observacion || item.observacion.trim() === '');
         },
         esRefinanciable(item) {
             return item.estado == 1 &&
                    item.tipo_solicitud == 'Refinanciamiento' &&
-                   this.rolUsuario === 'administrador' &&
+                   this.rolUsuario === 'Administrador' &&
                    (!item.observacion || item.observacion.trim() === '');
         },
         tieneGarantias(item) {

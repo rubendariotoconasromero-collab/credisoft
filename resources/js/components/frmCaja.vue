@@ -24,7 +24,6 @@
                     </div>
                 </div>
 
-
                 <div v-if="view == 1" class="row">
                     <div class="col-12">
                         <GestionDesembolsos 

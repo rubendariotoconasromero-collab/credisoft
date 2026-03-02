@@ -16,11 +16,11 @@ class UserSeeder extends Seeder
     {
         $now = Carbon::now();
         // La contraseña por defecto será 'password123' para todos
-        $password = Hash::make('password123'); 
+        $password = Hash::make('admin123'); 
 
         $users = [
             [
-                'name' => 'admin_user',
+                'name' => 'administrador',
                 'personal' => 'Juan Perez (Administrador)',
                 'email' => 'admin@empresa.com',
                 'estado' => 1,

@@ -13,19 +13,32 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            
+            // Sugerencia: Si 'name' es el usuario de login, ponle ->unique()
+            $table->string('name')->unique(); 
             $table->string('personal');
-            $table->string('email')->nullable();
-            $table->integer('estado')->default(1);
+            
+            // Sugerencia: El email en los sistemas de Laravel suele ser único
+            $table->string('email')->unique()->nullable(); 
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            
+            $table->integer('estado')->default(1);
+            
+            // Llave foránea segura
             $table->unsignedBigInteger('id_rol');
             $table->foreign('id_rol')->references('id')->on('rol'); 
-            $table->rememberToken();
-            $table->string('ci', 30)->nullable()->default('0');
-            $table->string('telefono', 20)->nullable()->default('0');
-            $table->date('fecha_cambio_password')->nullable()->default('0');
+            
+            // OPTIMIZACIÓN: Quitamos el default('0'). Si no hay dato, que sea NULL.
+            $table->string('ci', 30)->nullable();
+            $table->string('telefono', 20)->nullable();
+            
+            // CORRECCIÓN CRÍTICA: Quitamos el default('0') porque causaba error SQL en tipo 'date'
+            $table->date('fecha_cambio_password')->nullable();
+            
             $table->integer('dias_vigencia')->default(1);
+            
+            $table->rememberToken();
             $table->timestamps();
         });
     }

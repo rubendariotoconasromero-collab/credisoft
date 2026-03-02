@@ -49,52 +49,58 @@ class PlanPagoController extends Controller
                 'solicitud.id_solicitud_origen',
                 'cliente.nombre as cliente',
                 'users.personal as asesor',
-                'plan_pago.fecha_registro',
+                // OJO AQUÍ: Verifica si esta columna existe en tu BD, si no, usa 'plan_pago.created_at'
+                'plan_pago.fecha_registro', 
                 'plan_pago.fecha_inicio as fecha_inicio_plan',
                 'plan_pago.fecha_fin as fecha_fin_plan',
                 'plan_pago.total_pagar as total_pagar_plan',
                 'plan_pago.estado as estado_plan',
                 'plan_pago.id',
                 'cliente.ci',
-                'cliente.id as id_cliente',
                 'cliente.lugar_expedicion',
-
                 'cliente.imagen',
                 'cliente.sexo',
                 'cliente.estado_civil',
                 'cliente.vivienda',
                 'cliente.ingreso_mensual',
                 'cliente.actividad',
-
                 'plan_pago.desembolso',
                 'plan_pago.pago_administrativo',
-                'plan_pago.fecha_ultima_amortizacion',
+                'plan_pago.fecha_ultima_amortizacion'
             )
-            //->where('plan_pago.id_plan_aux', '=', 0)
-            ->where('plan_pago.desembolso', '=', 0) // se muestran solo los que tienen montos desembolsados
-            ->where($request->criterio, 'like', '%'.$request->buscar.'%');
+            ->where('plan_pago.desembolso', '=', 0); // se muestran solo los que tienen montos desembolsados
+
+        // --- SEGURIDAD: Lista blanca para el buscador ---
+        // Define aquí exactamente qué columnas permites que el usuario use para buscar
+        $criteriosPermitidos = ['cliente.nombre', 'cliente.ci', 'solicitud.id']; 
+        
+        if (in_array($request->criterio, $criteriosPermitidos) && !empty($request->buscar)) {
+            $planes_pago->where($request->criterio, 'like', '%' . $request->buscar . '%');
+        }
 
         // Filtro por fechas
         if ($request->fecha_inicio && $request->fecha_fin) {
-            $planes_pago->whereBetween('plan_pago.fecha_registro', [
+            $planes_pago->whereBetween('plan_pago.fecha_registro', [ // Cambia a created_at si fecha_registro no existe
                 $request->fecha_inicio, 
                 $request->fecha_fin
             ]);
         }
 
-        // Filtros existentes (asesor y estado)
+        // Filtros de estado del crédito
         if ($request->estado_credito == 'vigentes') {
             $planes_pago->where('plan_pago.estado', 1)
-                    ->whereDate('plan_pago.fecha_fin', '>=', $fechaActual);
+                        ->whereDate('plan_pago.fecha_fin', '>=', $fechaActual);
         } elseif ($request->estado_credito == 'vencidos') {
             $planes_pago->where('plan_pago.estado', 1)
-                    ->whereDate('plan_pago.fecha_fin', '<', $fechaActual);
+                        ->whereDate('plan_pago.fecha_fin', '<', $fechaActual);
         }
 
+        // Filtro de roles (Si no es admin, solo ve los suyos)
         if (Auth::user()->id_rol != 1) {
-            $planes_pago->where('users.id', Auth::id()); // Optimización: Auth::id() es más conciso
+            $planes_pago->where('users.id', Auth::id());
         }
 
+        // Filtro por asesor específico
         if ($request->opcion_asesor != 0) {
             $planes_pago->where('users.id', $request->opcion_asesor);
         }
@@ -873,19 +879,40 @@ class PlanPagoController extends Controller
         $id_plan_pago = $request->input('id_plan_pago');
 
         // Fetch cuotas and plan_pago details
+        // $cuotas = DB::table('cuota')
+        //     ->join('plan_pago', 'cuota.id_plan_pago', '=', 'plan_pago.id')
+        //     ->select(
+        //         'cuota.*',
+        //         'plan_pago.fecha_inicio',
+        //         'plan_pago.lapso_capital',
+        //         DB::raw('CASE 
+        //                     WHEN cuota.estado = 1 AND cuota.id = (
+        //                         SELECT MIN(id) FROM cuota 
+        //                         WHERE id_plan_pago = ? AND estado = 1
+        //                     ) THEN DATEDIFF(NOW(), cuota.fecha) 
+        //                     ELSE 0 
+        //                 END as dias_pasados')
+        //     )
+        //     ->where('cuota.id_plan_pago', $id_plan_pago)
+        //     ->addBinding($id_plan_pago, 'select')
+        //     ->orderBy('cuota.numero', 'asc')
+        //     ->get();
+
         $cuotas = DB::table('cuota')
             ->join('plan_pago', 'cuota.id_plan_pago', '=', 'plan_pago.id')
             ->select(
                 'cuota.*',
                 'plan_pago.fecha_inicio',
                 'plan_pago.lapso_capital',
+                // OPTIMIZACIÓN DE MORA:
                 DB::raw('CASE 
-                            WHEN cuota.estado = 1 AND cuota.id = (
-                                SELECT MIN(id) FROM cuota 
-                                WHERE id_plan_pago = ? AND estado = 1
-                            ) THEN DATEDIFF(NOW(), cuota.fecha) 
-                            ELSE 0 
-                        END as dias_pasados')
+                    WHEN cuota.estado = 1 AND cuota.id = (
+                        SELECT MIN(id) FROM cuota 
+                        WHERE id_plan_pago = ? AND estado = 1
+                    ) THEN 
+                        GREATEST(0, DATEDIFF(NOW(), GREATEST(cuota.fecha, COALESCE(plan_pago.fecha_ultima_amortizacion, cuota.fecha))))
+                    ELSE 0 
+                END as dias_pasados')
             )
             ->where('cuota.id_plan_pago', $id_plan_pago)
             ->addBinding($id_plan_pago, 'select')

@@ -28,7 +28,7 @@ class Desembolso extends Model
      */
     protected $casts = [
         'monto' => 'decimal:2',
-        'fecha' => 'datetime',
+        'fecha' => 'date',
         'estado' => 'integer',
     ];
 

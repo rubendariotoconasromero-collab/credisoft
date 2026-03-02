@@ -55,7 +55,7 @@ class PlanPago extends Model
         'tasa' => 'integer',
         'fecha_ultima_amortizacion' => 'date',
         'saldo_pendiente' => 'decimal:2',
-        'fecha_registro' => 'date',
+        // 'fecha_registro' => 'date',
     ];
 
     // ---

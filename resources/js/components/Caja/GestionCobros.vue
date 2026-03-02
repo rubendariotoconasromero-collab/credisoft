@@ -13,18 +13,17 @@
             
             <div class="card-body">
                 
-                <ul class="nav nav-pills nav-justified mb-4 bg-light rounded">
+                <ul class="nav nav-pills nav-justified mb-4 bg-white rounded list-header-pay">
                     <li class="nav-item text-dark">
-                        <a class="text-decoration-none py-1 w-100 fw-bold text-uppercase d-flex align-items-center justify-content-center" 
-                        :class="tabActual === 'normal' ? 'bg-warning text-white' : 'text-dark bg-transparent hover-effect'" 
+                        <a class="text-decoration-none py-1 w-100 fw-bold text-uppercase d-flex align-items-center justify-content-center border border-1" 
+                        :class="tabActual === 'normal' ? 'bg-warning text-white border-warning' : 'text-dark bg-white hover-effect border-secondary'" 
                         href="#" @click.prevent="tabActual = 'normal'" style="cursor: pointer; transition: all 0.2s;">
-                            <!-- <i class="fas fa-file-invoice-dollar me-2"></i>  -->
                             Cuotas Normales
                         </a>
                     </li>
-                    <li class="nav-item me-0 pe-0 text-dark">
-                        <a class="text-decoration-none py-1 w-100 fw-bold text-uppercase d-flex align-items-center justify-content-center" 
-                        :class="tabActual === 'repro' ? 'bg-info text-white' : 'text-dark bg-transparent hover-effect'"
+                    <li class="nav-item text-dark">
+                        <a class="text-decoration-none py-1 w-100 fw-bold text-uppercase d-flex align-items-center justify-content-center border border-1" 
+                        :class="tabActual === 'repro' ? 'bg-info text-white border-info' : 'text-dark bg-white hover-effect border-secondary'"
                         href="#" @click.prevent="cambiarTabRepro" style="cursor: pointer; transition: all 0.2s;">
                             <!-- <i class="fas fa-history me-2"></i>  -->
                             Ordenes de pago
@@ -309,94 +308,7 @@
             </div>
         </div>
 
-        <!-- <div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-            <div class="modal-dialog modal-lg modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header bg-success text-white">
-                        <h5 class="modal-title" id="paymentModalLabel">Detalles del Pago</h5>
-                        <button type="button" class="btn-close btn-close-white" @click="cerrarModalCobrarCuotas"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="fw-bold">Cliente</label>
-                                <input type="text" class="form-control" :value="plan_pago.cliente" disabled>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="fw-bold">Fecha de Pago</label>
-                                <input type="date" class="form-control" v-model="paymentDetails.fecha_pago">
-                            </div>
-
-                            <div class="col-md-12">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="card bg-light border-warning mb-2">
-                                            <div class="card-body p-2">
-                                                <h6 class="fw-bold text-warning">Intereses</h6>
-                                                <div class="input-group input-group-sm mb-2">
-                                                    <span class="input-group-text">Total</span>
-                                                    <input type="text" class="form-control text-center" :value="totalInteres" disabled>
-                                                </div>
-                                                <div class="input-group input-group-sm mb-2">
-                                                    <span class="input-group-text">Condonar</span>
-                                                    <input type="number" class="form-control text-center" v-model.number="paymentDetails.monto_condonado_interes" min="0" :max="totalInteres">
-                                                </div>
-                                                <textarea class="form-control form-control-sm" v-model="paymentDetails.motivo_condonacion_interes" placeholder="Motivo condonación..." rows="1"></textarea>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="card bg-light border-danger mb-2">
-                                            <div class="card-body p-2">
-                                                <h6 class="fw-bold text-danger">Multas ({{ dias_mora }} días)</h6>
-                                                <div class="input-group input-group-sm mb-2">
-                                                    <span class="input-group-text">Total</span>
-                                                    <input type="text" class="form-control text-center" :value="totalMulta" disabled>
-                                                </div>
-                                                <div class="input-group input-group-sm mb-2">
-                                                    <span class="input-group-text">Condonar</span>
-                                                    <input type="number" class="form-control text-center" v-model.number="paymentDetails.monto_condonado_multa" min="0" :max="totalMulta">
-                                                </div>
-                                                <textarea class="form-control form-control-sm" v-model="paymentDetails.motivo_condonacion_multa" placeholder="Motivo condonación..." rows="1"></textarea>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-md-4">
-                                <label class="fw-bold small">Capital</label>
-                                <input type="text" class="form-control fw-bold" :value="totalCapital" disabled>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="fw-bold small text-primary">Total a Pagar</label>
-                                <input type="text" class="form-control fw-bold text-primary" :value="totalPagar" disabled>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="fw-bold small text-success">Líquido (Con Dscto)</label>
-                                <input type="text" class="form-control fw-bold text-success border-success" :value="totalLiquido" disabled>
-                            </div>
-
-                            <div class="col-12">
-                                <label class="fw-bold">Forma de Pago</label>
-                                <select v-model="paymentDetails.forma_pago" class="form-select">
-                                    <option value="efectivo">Efectivo</option>
-                                    <option value="transferencia - QR">Transferencia - QR</option>
-                                    <option value="Depósito banco">Depósito banco</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" @click="cerrarModalCobrarCuotas">Cancelar</button>
-                        <button type="button" class="btn btn-primary fw-bold" @click="procesarPagoCuotas">
-                            <i class="fas fa-check-circle me-1"></i> Cobrar {{ totalLiquido }}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div> -->
-
+       
         <div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content">
@@ -417,58 +329,6 @@
 
                             <div class="col-md-12">
                                 <div class="row">
-
-                                    <!-- <div class="col-md-6">
-                                        <div class="card bg-light border-warning mb-2">
-                                            <div class="card-body p-2">
-                                                <h6 class="fw-bold text-warning">Intereses</h6>
-                                                <div class="input-group input-group-sm mb-2">
-                                                    <span class="input-group-text">Total</span>
-                                                    <input type="text" class="form-control text-center" :value="totalInteres" disabled>
-                                                </div>
-                                                <div class="input-group input-group-sm mb-2">
-                                                    <span class="input-group-text">Condonar</span>
-                                                    <input type="number" 
-                                                        class="form-control text-center" 
-                                                        v-model.number="paymentDetails.monto_condonado_interes" 
-                                                        min="0" 
-                                                        :disabled="parseFloat(totalInteres) <= 0"
-                                                        @input="validarMonto('interes')"
-                                                        placeholder="0">
-                                                </div>
-                                                <textarea class="form-control form-control-sm" 
-                                                        v-model="paymentDetails.motivo_condonacion_interes" 
-                                                        :disabled="!paymentDetails.monto_condonado_interes || paymentDetails.monto_condonado_interes <= 0"
-                                                        placeholder="Motivo condonación..." rows="1"></textarea>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <div class="card bg-light border-danger mb-2">
-                                            <div class="card-body p-2">
-                                                <h6 class="fw-bold text-danger">Multas ({{ dias_mora }} días)</h6>
-                                                <div class="input-group input-group-sm mb-2">
-                                                    <span class="input-group-text">Total</span>
-                                                    <input type="text" class="form-control text-center" :value="totalMulta" disabled>
-                                                </div>
-                                                <div class="input-group input-group-sm mb-2">
-                                                    <span class="input-group-text">Condonar</span>
-                                                    <input type="number" 
-                                                        class="form-control text-center" 
-                                                        v-model.number="paymentDetails.monto_condonado_multa" 
-                                                        min="0" 
-                                                        :disabled="parseFloat(totalMulta) <= 0"
-                                                        @input="validarMonto('multa')"
-                                                        placeholder="0">
-                                                </div>
-                                                <textarea class="form-control form-control-sm" 
-                                                        v-model="paymentDetails.motivo_condonacion_multa" 
-                                                        :disabled="!paymentDetails.monto_condonado_multa || paymentDetails.monto_condonado_multa <= 0"
-                                                        placeholder="Motivo condonación..." rows="1"></textarea>
-                                            </div>
-                                        </div>
-                                    </div> -->
 
                                     <div class="col-md-6">
                                         <div class="card bg-light border-warning mb-2">
@@ -919,6 +779,13 @@ export default {
     .badge{
         border-radius:10px;
         min-width: 100px;
+    }
+
+    .list-header-pay li{
+        padding-left: 0;
+        margin-left: 0;
+        padding-right: 0;
+        margin-right: 0;
     }
 
 </style>

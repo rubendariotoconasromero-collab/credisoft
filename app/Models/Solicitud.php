@@ -53,11 +53,10 @@ class Solicitud extends Model
      * @var array
      */
     protected $casts = [
-        'fecha' => 'date',
-        'fecha_desembolso' => 'date',
-        'fecha_primera_cuota' => 'date',
+        // 'fecha' => 'date',
+        // 'fecha_desembolso' => 'date',
+        // 'fecha_primera_cuota' => 'date',
         'importe_solicitud' => 'float',
-        'tasa' => 'float', // Se usa float o decimal(11,2) en BD, cambiamos a float para evitar problemas
         'monto_pago_adm' => 'float',
     ];
     

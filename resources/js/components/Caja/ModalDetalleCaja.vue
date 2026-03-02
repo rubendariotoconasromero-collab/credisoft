@@ -235,3 +235,10 @@ export default {
     }
 }
 </script>
+
+<style scoped>
+    .table-responsive .badge{
+        border-radius:20px;
+        min-width:100px;
+    }
+</style>

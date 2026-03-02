@@ -10,6 +10,8 @@ use App\Http\Controllers\CodeudorController;
 use App\Http\Controllers\HistorialPagosController;
 use App\Http\Controllers\CajaController;
 use App\Http\Controllers\PerfilController;
+use App\Http\Controllers\CajaMovimientosController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -220,7 +222,10 @@ Route::get('/get_planes_pago_sin_pago_adm', 'App\Http\Controllers\CajaController
 Route::post('/actualizar_desembolso', 'App\Http\Controllers\CajaController@actualizarDesembolso');
 Route::post('/guardar_pago_adm', 'App\Http\Controllers\CajaController@guardarPagoAdministrativo');
 Route::get('/reporte_cajas_fecha', 'App\Http\Controllers\CajaController@reporteCajasFecha');
+
+
 Route::get('/get_desembolsos', 'App\Http\Controllers\CajaController@getDesembolsos');
+
 Route::get('/exportar_desembolsos_caja_pdf', 'App\Http\Controllers\CajaController@exportarDesembolsosCaja');
 
 Route::get('/generar_comprobante_cliente', 'App\Http\Controllers\CajaController@generarComprobanteCliente');
@@ -396,7 +401,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/perfil/get_datos', [PerfilController::class, 'getPerfil']);
     Route::post('/perfil/update_info', [PerfilController::class, 'updateInformacion']);
     Route::post('/perfil/update_password', [PerfilController::class, 'updatePassword']);
+
+    // caja nuevo
+    Route::get('/caja/movimientos/listado', [CajaMovimientosController::class, 'getListado']);
+    Route::get('/caja/movimientos/reporte-pdf', [CajaMovimientosController::class, 'generarReporteLista']);
 });
+
+
 
 
 
