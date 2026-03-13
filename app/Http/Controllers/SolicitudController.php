@@ -389,20 +389,26 @@ class SolicitudController extends Controller
     }
 
     public function ListaCuotasPdf(Request $request){
-        $informacion=DB::table('solicitud')
-        ->join('cliente', 'cliente.id', '=', 'solicitud.id_cliente')
-        ->join('users', 'users.id', '=', 'solicitud.id_usuario')
-        ->where('solicitud.id', $request->id_solicitud)
-        ->select('solicitud.id','solicitud.importe_solicitud', 'solicitud.moneda', 'solicitud.lapso_capital', 'solicitud.nro_cuotas',
-        'solicitud.tasa', 'solicitud.fecha_desembolso', 'solicitud.fecha_primera_cuota', 'solicitud.destino_prestamo',
-        'solicitud.tipo_garantia','solicitud.tipo_desembolso','solicitud.id_cliente', 'solicitud.id_usuario', 'cliente.nombre as cliente',
-        'cliente.ci', 'cliente.lugar_expedicion', 'solicitud.monto_pago_adm',
-        'users.name as asesor', 'solicitud.estado', 'solicitud.fecha as fecha_solicitud')
-        ->get();
-       
+        // 1. Obtenemos la información de la base de datos
+        $informacion = DB::table('solicitud')
+            ->join('cliente', 'cliente.id', '=', 'solicitud.id_cliente')
+            ->join('users', 'users.id', '=', 'solicitud.id_usuario')
+            ->where('solicitud.id', $request->id_solicitud)
+            ->select('solicitud.id','solicitud.importe_solicitud', 'solicitud.moneda', 'solicitud.lapso_capital', 'solicitud.nro_cuotas',
+            'solicitud.tasa', 'solicitud.fecha_desembolso', 'solicitud.fecha_primera_cuota', 'solicitud.destino_prestamo',
+            'solicitud.tipo_garantia','solicitud.tipo_desembolso','solicitud.id_cliente', 'solicitud.id_usuario', 'cliente.nombre as cliente',
+            'cliente.ci', 'cliente.lugar_expedicion', 'solicitud.monto_pago_adm',
+            'users.name as asesor', 'solicitud.estado', 'solicitud.fecha as fecha_solicitud')
+            ->get();
+
+        // Validamos que se haya encontrado la solicitud para evitar errores
+        if ($informacion->isEmpty()) {
+            return redirect()->back()->with('error', 'No se encontró la solicitud.');
+        }
+
+        // 2. Preparamos los detalles y la data para la vista
         $detalles = json_decode($request->detalles, true);
 
-        // Carga la vista HTML para el reporte
         $html = [
             'informacion' => $informacion,
             'detalles' => $detalles,
@@ -410,13 +416,17 @@ class SolicitudController extends Controller
             'fecha_reporte' => now()->format('d/m/Y'),
         ];
 
+        // 3. Obtenemos el estado de la solicitud
+        $estadoSolicitud = $informacion[0]->estado;
 
-        $this->generatePDF($html, 'reporte.simulacion_plan_pago', 'plan_de_pagos');
-
-
-
-        // Muestra el contenido del PDF
-        //echo $output;
+        // 4. Evaluamos el estado para generar el PDF correspondiente
+        if ($estadoSolicitud == 1) {
+            // Genera el reporte con la marca de agua
+            return $this->generatePDFMarcaAgua($html, 'reporte.simulacion_plan_pago', 'plan_de_pagos', 'SIN APROBAR - NO VÁLIDO');
+        } else {
+            // Genera el reporte normal (aplica para estado == 1 y otros)
+            return $this->generatePDF($html, 'reporte.simulacion_plan_pago', 'plan_de_pagos');
+        }
     }
 
     public function savePlanPagosCuotas(Request $request){
@@ -427,11 +437,9 @@ class SolicitudController extends Controller
             ->get();
     
             $detalles = json_decode($request->detalles, true);
-            //save planpagos
             $plan_pagoId = DB::table('plan_pago')->insertGetId([
-                //'fecha_inicio'=>$request->fecha_inicio_plan_pago,
                 'fecha_inicio'=>$request->fecha_inicio_plan_pago,
-                'fecha_ultima_amortizacion'=>now(),
+                'fecha_ultima_amortizacion'=>$request->fecha_primera_cuota,
                 'fecha_fin'=>$request->fecha_final,
 
                 'tasa'=>$request->tasa,
@@ -443,9 +451,7 @@ class SolicitudController extends Controller
                 'total_pagar'=>$solicitud[0]->importe_solicitud,
                 'id_solicitud'=>$request->id_solicitud,
             ]);
-    
-            //save cuotas
-    
+
             foreach($detalles as $detalle){
                 DB::table('cuota')->insert([
                     'numero'=>$detalle['nro'],
@@ -460,7 +466,6 @@ class SolicitudController extends Controller
                 ]);
             }
 
-            // update solicitud
             DB::table('solicitud')->where('id', $request->id_solicitud)->update([
                 'estado'=>2
             ]);
@@ -492,8 +497,6 @@ class SolicitudController extends Controller
         $this->generatePDFMarcaAgua($html, 'reporte.calculo_cuotas_simulacion', 'calculo_cuotas_simulacion');
     }
 
-    
-    
     public function guardarGarantiasImagenes(Request $request)
     {
         try {
@@ -931,7 +934,7 @@ class SolicitudController extends Controller
     }
     
 
-    private function generatePDFMarcaAgua($data, $url_vista, $nombre_reporte)
+    private function generatePDFMarcaAgua($data, $url_vista, $nombre_reporte, $marcaAguaTexto = 'SIMULACIÓN - NO VÁLIDO')
     {
         try {
             // Configuración inicial de MPDF
@@ -948,7 +951,7 @@ class SolicitudController extends Controller
             // --- INICIO AGREGAR ESTO ---
             
             // 1. Establecer el texto de la marca de agua
-            $mpdf->SetWatermarkText('SIMULACIÓN - NO VÁLIDO');
+            $mpdf->SetWatermarkText($marcaAguaTexto, 0.1); // El segundo parámetro es el tamaño del texto (opcional)
             
             // 2. Hacer visible la marca de agua (True)
             $mpdf->showWatermarkText = true;

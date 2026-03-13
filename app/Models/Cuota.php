@@ -33,6 +33,10 @@ class Cuota extends Model
         'estado',
         'amortizado',
         'id_plan_pago',
+
+        'capital_pagado',
+        'interes_pagado',
+        'mora_pagada',
     ];
 
     /**
@@ -51,6 +55,10 @@ class Cuota extends Model
         'total' => 'decimal:2',
         'estado' => 'integer',
         'amortizado' => 'integer',
+
+        'capital_pagado' => 'decimal:2',
+        'interes_pagado' => 'decimal:2',
+        'mora_pagada'    => 'decimal:2',
     ];
 
     // ---

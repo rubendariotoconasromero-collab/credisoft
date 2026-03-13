@@ -15,35 +15,63 @@
                             </h5>
                         </div>
 
-                        <div class="row mb-3 mt-3">
-                            <div class="col-md-4">
-                                <div class="card bg-primary text-white mb-3 h-100">
-                                    <div class="card-body py-3">
-                                        <h6 class="card-title text-uppercase font-size-12 mb-2">Total Recaudado (Caja)</h6>
-                                        <h4 class="mb-0 fw-bold">{{ formatMonto(kpis.total_recaudado) }} Bs.</h4>
-                                        <small class="text-white-50">Suma de Pagos + Multas</small>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="card bg-warning text-white mb-3 h-100">
-                                    <div class="card-body py-3">
-                                        <h6 class="card-title text-uppercase font-size-12 mb-2">Total Multas Cobradas</h6>
-                                        <h4 class="mb-0 fw-bold">{{ formatMonto(kpis.total_multas) }} Bs.</h4>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="card bg-danger text-white mb-3 h-100">
-                                    <div class="card-body py-3">
-                                        <h6 class="card-title text-uppercase font-size-12 mb-2">Total Condonado</h6>
-                                        <h4 class="mb-0 fw-bold">{{ formatMonto(kpis.total_condonado) }} Bs.</h4>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
+                        
                         <div class="card-body">
+                            <div class="row mb-3 mt-3">
+                                
+                                <div class="col-md-4 mb-3 mb-md-0">
+                                    <div class="card border-success border-opacity-25 shadow-sm h-100 bg-success bg-opacity-10">
+                                        <div class="card-body p-3 d-flex align-items-center">
+                                            <!-- <div class="bg-success text-white rounded-circle d-flex justify-content-center align-items-center me-3 shadow-sm" style="width: 48px; height: 48px;">
+                                                <i class="fas fa-cash-register fs-5"></i>
+                                            </div> -->
+                                            <div>
+                                                <h6 class="text-uppercase text-dark fw-bold mb-1" style="font-size: 0.75rem; letter-spacing: 0.5px;">
+                                                    Total Recaudado (Caja)
+                                                </h6>
+                                                <h4 class="mb-0 fw-bold text-dark">{{ formatMonto(kpis.total_recaudado) }} <small class="fs-6 text-muted text-capitalize">Bs.</small></h4>
+                                                <div class="text-dark small" style="font-size: 0.7rem; opacity: 0.8;">Efectivo real ingresado</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4 mb-3 mb-md-0">
+                                    <div class="card border-warning border-opacity-50 shadow-sm h-100 bg-warning bg-opacity-10">
+                                        <div class="card-body p-3 d-flex align-items-center">
+                                            <!-- <div class="bg-warning text-dark rounded-circle d-flex justify-content-center align-items-center me-3 shadow-sm" style="width: 48px; height: 48px;">
+                                                <i class="fas fa-exclamation-triangle fs-5"></i>
+                                            </div> -->
+                                            <div>
+                                                <h6 class="text-uppercase text-warning-emphasis fw-bold mb-1" style="font-size: 0.75rem; letter-spacing: 0.5px;">
+                                                    Total Multas Cobradas
+                                                </h6>
+                                                <h4 class="mb-0 fw-bold text-dark">{{ formatMonto(kpis.total_multas) }} <small class="fs-6 text-muted text-capitalize">Bs.</small></h4>
+                                                <div class="text-warning-emphasis small" style="font-size: 0.7rem; opacity: 0.8;">Incluidas en lo recaudado</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="card border-danger border-opacity-25 shadow-sm h-100 bg-danger bg-opacity-10">
+                                        <div class="card-body p-3 d-flex align-items-center">
+                                            <!-- <div class="bg-danger text-white rounded-circle d-flex justify-content-center align-items-center me-3 shadow-sm" style="width: 48px; height: 48px;">
+                                                <i class="fas fa-hand-holding-heart fs-5"></i>
+                                            </div> -->
+                                            <div>
+                                                <h6 class="text-uppercase text-danger fw-bold mb-1" style="font-size: 0.75rem; letter-spacing: 0.5px;">
+                                                    Total Condonado
+                                                </h6>
+                                                <h4 class="mb-0 fw-bold text-dark">{{ formatMonto(kpis.total_condonado) }} <small class="fs-6 text-muted text-capitalize">Bs.</small></h4>
+                                                <div class="text-danger small" style="font-size: 0.7rem; opacity: 0.8;">Descuentos aplicados</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+
                             <div class="row mb-3">
                                 <div class="col-md-6">
                                     <div class="input-group">
@@ -101,24 +129,22 @@
                                                     <i class="fas fa-exclamation-circle"></i> Datos no disp.
                                                 </div>
                                             </td>
-                                            <td class="text-center">
-                                                <span class="badge bg-info text-dark text-uppercase rounded text-white">
+                                            <td class="text-center text-uppercase fw-semibold">
                                                     Cuotas: {{ item.detalles_cuotas }}
-                                                </span>
                                             </td>
                                             <td class="text-center fw-bold">{{ item.cantidad_cuotas }}</td>
                                             
-                                            <td class="text-end fw-bold fs-6">
-                                                {{ calcularTotalFila(item.total_pagado, item.total_multa) }}
+                                            <td class="text-end fw-bold fs-6 text-success">
+                                                {{ formatMonto(item.total_pagado) }} Bs.
                                             </td>
 
                                             <td class="text-center">
                                                 <span class="badge rounded-pill text-dark border text-uppercase">{{ item.forma_pago }}</span>
                                             </td>
-                                            <td>{{ item.usuario ? item.usuario.name : 'Sistema' }}</td>
+                                            <td class="text-uppercase fw-bold">{{ item.usuario ? item.usuario.name : 'Sistema' }}</td>
                                             <td class="text-center">
-                                                <span v-if="item.estado == 0" class="badge bg-danger">ANULADO</span>
-                                                <span v-else class="badge bg-success">COMPLETADO</span>
+                                                <span v-if="item.estado == 0" class="badge bg-danger">Anulado</span>
+                                                <span v-else class="badge bg-success">Completado</span>
                                             </td>
                                             <td class="text-center">
                                                 <div class="btn-group">
@@ -186,7 +212,7 @@
                         <button @click="cerrarDetalles()" type="button" class="btn-close btn-close-white"></button>
                     </div>
 
-                    <div class="card-body bg-light">
+                    <div class="card-body bg-white">
                         <div class="row mb-4 bg-white p-3 border rounded mx-1">
                             <div class="col-md-6 border-end">
                                 <h6 class="text-muted text-uppercase fw-bold font-size-12">Datos del Cliente</h6>
@@ -208,31 +234,51 @@
                             </div>
                         </div>
 
-                        <h6 class="fw-bold ms-2 text-uppercase mb-2">Desglose de Cuotas Pagadas</h6>
-                        <div class="table-responsive bg-white border rounded">
-                            <table class="table table-bordered table-striped mb-0 text-center">
-                                <thead class="bg-secondary text-white">
+                        <h6 class="fw-bold ms-2 text-uppercase mb-2 text-secondary">
+                            <i class="fas fa-list-ul me-1"></i> Desglose de Cuotas
+                        </h6>
+                        <div class="table-responsive bg-white border rounded shadow-sm">
+                            <table class="table table-hover table-striped table-bordered mb-0 text-center align-middle" style="font-size: 0.85rem;">
+                                <thead class="bg-dark text-white">
                                     <tr>
-                                        <th>Cuota #</th>
-                                        <th>Monto Cuota</th>
-                                        <th>Multa / Mora</th>
-                                        <th>Condonado</th>
-                                        <th>Subtotal Pagado</th>
+                                        <th class="text-start text-dark">Cuota #</th>
+                                        <th class="text-end text-dark">A Capital</th>
+                                        <th class="text-end text-dark">A Interés</th>
+                                        <th class="text-end text-warning">A Mora</th>
+                                        <th class="text-end text-info">Condonado</th>
+                                        <th class="text-end bg-success text-white">Efectivo Ingresado</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr v-for="pago in detalleTransaccion.detalles" :key="pago.id">
-                                        <td class="fw-bold">Cuota {{ pago.cuota.numero }}</td>
-                                        <td class="text-end">{{ formatMonto(pago.monto_cuota) }}</td>
-                                        <td class="text-end text-danger">
-                                            {{ formatMonto(pago.multa_total) }}
-                                            <div v-if="pago.dias_retrasados > 0" class="badge bg-warning text-dark font-size-10">
-                                                {{ pago.dias_retrasados }} días retraso
+                                        <td class="fw-bold">
+                                            Cuota {{ pago.cuota?.numero }}
+                                            <div class="mt-1">
+                                                <span v-if="pago.cuota?.estado == 2" class="badge bg-success" style="font-size: 0.65rem;">Cancelada</span>
+                                                <span v-else-if="pago.cuota?.estado == 3" class="badge border border-info text-info bg-light" style="font-size: 0.65rem;">Parcial</span>
                                             </div>
                                         </td>
-                                        <td class="text-end text-success">-{{ formatMonto(pago.monto_condonado) }}</td>
-                                        <td class="text-end fw-bold bg-light">
-                                            {{ calcularTotalFila(pago.monto_pago, pago.multa_total) }}
+                                        
+                                        <td class="text-end text-dark">{{ formatMonto(pago.pago_capital) }} Bs.</td>
+                                        
+                                        <td class="text-end text-dark">{{ formatMonto(pago.pago_interes) }} Bs.</td>
+                                        
+                                        <td class="text-end text-danger fw-semibold">
+                                            {{ formatMonto(pago.pago_mora) }} Bs.
+                                        </td>
+                                        
+                                        <td class="text-end text-muted">
+                                            <div v-if="pago.monto_condonado > 0">
+                                                <span class="text-info fw-bold">-{{ formatMonto(pago.monto_condonado) }} Bs.</span>
+                                                <div v-if="pago.motivo_condonacion" style="font-size: 0.6rem;" class="fst-italic mt-1" :title="pago.motivo_condonacion">
+                                                    <i class="fas fa-info-circle"></i> Ver motivo
+                                                </div>
+                                            </div>
+                                            <span v-else>---</span>
+                                        </td>
+                                        
+                                        <td class="text-end fw-bold bg-success bg-opacity-10 text-success fs-6">
+                                            {{ formatMonto(pago.monto_pago) }} Bs.
                                         </td>
                                     </tr>
                                 </tbody>
@@ -459,7 +505,9 @@ export default {
 }
 
 .badge {
-    font-size:11px;
+    font-size:0.65rem;
+    min-width:100px;
+    border-radius:15px;
 }
 
 .table th {
@@ -467,6 +515,5 @@ export default {
 }
 .table td {
     vertical-align: middle;
-    text-transform: uppercase;
 }
 </style>

@@ -76,7 +76,7 @@
                             <span>{{ formatearFecha(solicitud.fecha_desembolso) }}</span>
                         </div>
                         <div class="d-flex justify-content-between mb-2">
-                            <span class="fw-bold text-dark">Fecha Inicio Cuota:</span>
+                            <span class="fw-bold text-dark">Fecha Primera Cuota:</span>
                             <span>{{ formatearFecha(solicitud.fecha_primera_cuota) }}</span>
                         </div>
                     </div>

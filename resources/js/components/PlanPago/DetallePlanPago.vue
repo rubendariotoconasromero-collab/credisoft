@@ -1,5 +1,5 @@
 <template>
-    <div class="card shadow-lg border-0">
+    <div class="card border-0">
         <div class="card-header bg-primary text-white py-2 d-flex justify-content-between align-items-center">
             <div class="flex-grow-1 text-center">
                 <h5 class="header-title my-0 fw-bold text-uppercase">
@@ -9,8 +9,8 @@
             <button @click="$emit('cerrar')" type="button" class="btn-close btn-close-white"></button>
         </div>
 
-        <div class="card-body p-4 bg-light">
-            <div class="card mb-3 border-start border-4 border-primary shadow-sm">
+        <div class="card-body p-4 bg-white">
+            <div class="card mb-3 border-start border-4 border-primary">
                 <div class="card-body py-3">
                     <div class="row align-items-center">
                         <div class="col-auto">
@@ -40,7 +40,7 @@
                 </div>
             </div>
 
-            <div class="card mb-3 border-0 shadow-sm">
+            <div class="card mb-3 border-0">
                 <div class="card-header bg-white fw-bold text-uppercase small border-bottom">
                     Datos Generales del Crédito
                 </div>
@@ -94,7 +94,7 @@
                 </div>
             </div>
 
-            <div v-if="plan.id_solicitud_origen" class="alert alert-warning d-flex align-items-center justify-content-between shadow-sm py-2 px-3 mb-3">
+            <div v-if="plan.id_solicitud_origen" class="alert alert-warning d-flex align-items-center justify-content-between py-2 px-3 mb-3">
                 <div class="small">
                     <i class="fas fa-history fa-lg me-2"></i>
                     <strong>Antecedente:</strong> Este crédito proviene de una reprogramación.
@@ -105,7 +105,7 @@
                 </button>
             </div>
 
-            <div class="card border-secondary shadow-sm">
+            <div class="card border-secondary">
                 <div class="card-header bg-warning bg-opacity-75 text-white py-1 d-flex justify-content-between align-items-center">
                     <h5 class="text-dark fw-bold text-uppercase">Listado de Cuotas</h5>
                     <button @click="generarPdfCuotasPlanPago()" class="btn btn-light btn-sm fw-bold" style="font-size: 0.7rem;">
@@ -114,37 +114,58 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
+                       
                         <table class="table table-striped table-hover table-sm mb-0 small">
                             <thead class="table-warning text-center">
                                 <tr>
                                     <th>#</th>
                                     <th>Fecha Venc.</th>
                                     <th class="text-end">Capital</th>
-                                    <th class="text-end">Interés</th>
-                                    <th class="text-end">Total</th>
-                                    <th class="text-end">Saldo</th>
+                                    <th class="text-end">Interés Fijo</th>
+                                    
+                                    <th class="text-end text-primary">Int. Devengado</th>
+                                    <th class="text-end text-danger">Int. Moratorio</th>
+                                    
+                                    <th class="text-end fw-bold">Total Acumulado</th>
+                                    <th class="text-end">Saldo Cap.</th>
                                     <th>Estado</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="(cuota, index) in cuotas" :key="index">
+                                <tr v-for="(cuota, index) in cuotas" :key="index" class="align-middle">
                                     <td class="text-center fw-bold">{{ cuota.numero }}</td>
                                     <td class="text-center">{{ formatFecha(cuota.fecha) }}</td>
-                                    <td class="text-end">{{ formatNumero(cuota.capital) }}</td>
+                                    
+                                    <td class="text-end fw-bold text-dark">{{ formatNumero(cuota.capital_neto) }}</td>
                                     <td class="text-end">{{ formatNumero(cuota.interes) }}</td>
-                                    <td class="text-end fw-bold">{{ formatNumero(cuota.total) }}</td>
+                                    
+                                    <td class="text-end text-primary">
+                                        {{ cuota.estado == 0 ? '---' : formatNumero(cuota.interes_devengado_neto) }}
+                                    </td>
+                                    <td class="text-end text-danger fw-bold">
+                                        {{ cuota.estado == 0 ? '---' : formatNumero(cuota.interes_moratorio_neto) }}
+                                    </td>
+                                    
+                                    <td class="text-end fw-bold text-primary border-start border-end">
+                                        {{ cuota.estado == 0 ? '---' : formatNumero(cuota.interes_acumulado_neto) }}
+                                    </td>
+                                    
                                     <td class="text-end text-muted">{{ formatNumero(cuota.saldo_capital) }}</td>
+                                    
                                     <td class="text-center">
-                                        <div v-if="esPrimerRegistroConMora(index, cuota) && cuota.dias_pasados > 0">
-                                            <span class="badge rounded bg-danger mb-1">MORA ({{ cuota.dias_pasados }}d)</span>
+                                        <div v-if="cuota.mora_fija_neta > 0 && cuota.estado != 2" class="mb-1">
+                                            <span class="badge bg-danger text-white">
+                                                {{ cuota.dias_pasados }}d - EN MORA
+                                            </span>
                                         </div>
+                                        
                                         <span class="badge rounded-pill" :class="getEstadoCuota(cuota).clase" style="min-width: 80px;">
                                             {{ getEstadoCuota(cuota).texto }}
                                         </span>
                                     </td>
                                 </tr>
                                 <tr v-if="!cuotas || cuotas.length === 0">
-                                    <td colspan="7" class="text-center p-4 text-muted fst-italic">
+                                    <td colspan="9" class="text-center p-4 text-muted fst-italic">
                                         No hay cuotas registradas para este plan.
                                     </td>
                                 </tr>
@@ -172,7 +193,6 @@ export default {
             default: () => []
         }
     },
-    // Definimos los eventos que este componente envía al padre
     emits: ['cerrar', 'ver-ficha', 'ver-original'],
     methods: {
         formatFecha(fechaISO) {
@@ -180,27 +200,32 @@ export default {
             return moment(fechaISO).format('DD/MM/YYYY');
         },
         formatNumero(numero) {
+            if (numero === undefined || numero === null) return '0.00';
             return new Intl.NumberFormat('es-BO', { minimumFractionDigits: 2 }).format(numero);
         },
         generarPdfCuotasPlanPago() {
-            // Usamos la prop 'plan'
             const url = '/lista_cuotas_planpago_pdf?id_planpago=' + this.plan.id_plan_pago;
             window.open(url, '_blank');
         },
         getEstadoCuota(cuota) {
-            if (cuota.estado === 2) return { texto: 'Pagado', clase: 'bg-success' };
-            if (cuota.estado === 0) return { texto: 'Anulado', clase: 'bg-dark' };
-            if (cuota.estado === 1) {
-                return cuota.dias_pasados > 0 
-                    ? { texto: `Vencida (${cuota.dias_pasados}d)`, clase: 'bg-danger' }
-                    : { texto: 'Pendiente', clase: 'bg-warning text-dark' };
+            if (cuota.estado == 2) {
+                return { texto: 'Pagado', clase: 'bg-success' };
+            }
+            if (cuota.estado == 3) {
+                // Nuevo estado parcial
+                return { texto: 'Pago Parcial', clase: 'bg-warning text-dark shadow-sm border border-warning' };
+            }
+            if (cuota.estado == 0) {
+                return { texto: 'Anulado', clase: 'bg-dark' };
+            }
+            if (cuota.estado == 1) {
+                if (cuota.dias_pasados > 0) {
+                    return { texto: 'En Mora', clase: 'bg-danger shadow-sm' }; 
+                } else {
+                    return { texto: 'Pendiente', clase: 'bg-info text-white' }; 
+                }
             }
             return { texto: 'Indefinido', clase: 'bg-light text-dark' };
-        },
-        esPrimerRegistroConMora(index, cuotaActual) {
-            // Lógica para mostrar la etiqueta MORA solo en la primera cuota vencida
-            const primerIndiceConMora = this.cuotas.findIndex(c => c.dias_pasados > 0);
-            return index === primerIndiceConMora;
         }
     }
 }

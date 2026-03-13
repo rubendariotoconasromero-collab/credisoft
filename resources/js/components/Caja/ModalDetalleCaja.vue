@@ -187,7 +187,6 @@ export default {
 
         async cargarDetallesFrescos(id) {
             try {
-                // Aquí usamos tu endpoint de movimientos para llenar la tabla derecha
                 const res = await axios.get('/movimientos_caja', { params: { id_caja: id, per_page: 50 } });
                 this.movimientos = res.data.movimientos.data;
                 // Si necesitas refrescar los totales de la caja (porque el item de la lista puede estar viejo),
@@ -197,32 +196,51 @@ export default {
             }
         },
         async cerrarCaja() {
-            const check = await axios.get('/caja_abierta');
-            // Validar que soy el dueño
-            if (check.data.usuario_actual != 1) { 
-                Swal.fire('Error', 'Solo el usuario que abrió la caja puede cerrarla.', 'error');
-                return;
-            }
-
-            Swal.fire({
-                title: '¿Cerrar Caja?',
-                text: `El saldo final calculado es: ${this.format(this.saldoFinal)}. Esta acción no se puede deshacer.`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Sí, Cerrar',
-                confirmButtonColor: '#d33'
-            }).then(async (res) => {
-                if (res.isConfirmed) {
-                    try {
-                        await axios.post('/close_caja', { id_caja: this.caja.id, monto_final: this.saldoFinal });
-                        Swal.fire('Cerrada', 'La caja se ha cerrado correctamente.', 'success');
-                        this.cerrar();
-                        this.$emit('cerrada');
-                    } catch (e) {
-                        Swal.fire('Error', 'No se pudo cerrar la caja.', 'error');
-                    }
+            try {
+                const check = await axios.get('/caja_abierta');
+                if (check.data.usuario_actual != 1) { 
+                    Swal.fire('Error', 'Solo el usuario que abrió la caja puede cerrarla.', 'error');
+                    return;
                 }
-            });
+                Swal.fire({
+                    title: '¿Cerrar Caja?',
+                    text: `El saldo final calculado es: ${this.format(this.saldoFinal)}. Esta acción no se puede deshacer.`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, Cerrar',
+                    confirmButtonColor: '#d33'
+                }).then(async (res) => {
+                    if (res.isConfirmed) {
+                        try {
+                            const payload = {
+                                id_caja:            this.caja.id,
+                                fechahora_apertura: this.caja.fechahora_apertura,
+                                monto_inicial:      this.caja.monto_inicial,
+                                monto_final:        this.saldoFinal,
+                                efectivo_total:     this.caja.efectivo_total || 0,
+                                deposito_total:     this.caja.deposito_total || 0,
+                                efectivo_venta:     this.caja.efectivo_venta || 0,
+                                deposito_venta:     this.caja.deposito_venta || 0,
+                                efectivo_gasto:     this.caja.efectivo_gasto || 0,
+                                deposito_gasto:     this.caja.deposito_gasto || 0,
+                                total_ingreso:      this.caja.total_ingreso || 0,
+                                total_egreso:       this.caja.total_egreso || 0,
+                                diferencia:         this.caja.diferencia || 0
+                            };
+                            await axios.post('/close_caja', payload);
+                            Swal.fire('Cerrada', 'La caja se ha cerrado correctamente.', 'success');
+                            this.cerrar();
+                            this.$emit('cerrada');
+                            
+                        } catch (e) {
+                            console.error("Error al cerrar caja:", e);
+                            Swal.fire('Error', 'No se pudo cerrar la caja.', 'error');
+                        }
+                    }
+                });
+            } catch (error) {
+                Swal.fire('Error', 'No se pudo verificar el estado de la caja.', 'error');
+            }
         },
         format(val) {
             return new Intl.NumberFormat('es-BO', { minimumFractionDigits: 2 }).format(val || 0);

@@ -866,6 +866,7 @@ export default {
             lista_motivos_ingresos: [],
             lista_motivos_gastos: [],
 
+            aperturada: false,
             
         }
     },
@@ -1044,8 +1045,27 @@ export default {
         },
     },
     methods: {
-        abrirModalAperturaCaja() {
-        this.$refs.modalAperturaRef.abrir();
+        async verificarBoveda() {
+            try {
+                const response = await axios.get('/verificar-boveda');
+                this.aperturada = response.data.aperturada;
+            } catch (error) {
+                console.error("Error al verificar boveda:", error);
+            }
+        },
+
+        async abrirModalAperturaCaja() {
+            await this.verificarBoveda();
+            if(this.aperturada){
+                this.$refs.modalAperturaRef.abrir();
+            }else{
+                Swal.fire({
+                    title: '¡Bóveda no aperturada!',
+                    text: 'No se puede abrir la caja porque la bóveda no ha sido aperturada. Por favor, contacte al administrador.',
+                    icon: 'warning',
+                    confirmButtonText: 'Aceptar'
+                });
+            }
         },
         abrirModalIngreso() {
             this.$refs.modalIngresoRef.abrir();
@@ -1111,7 +1131,10 @@ export default {
             this.view=0;
         },
         async gestionarPago(){
-            this.view=2;
+            await this.consultarCajaAbiertaTransaccion();
+            if (!this.estado_caja) { 
+                this.view = 2; 
+            }
         },
     
         seleccionarMotivoEgreso(item) {

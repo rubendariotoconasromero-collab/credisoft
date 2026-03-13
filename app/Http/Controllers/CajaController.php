@@ -201,9 +201,10 @@ class CajaController extends Controller
 
     public function closeCaja(Request $request){
 
+    
         DB::table('caja')->where('id', $request->id_caja)->update([
             'fechahora_apertura'=>$request->fechahora_apertura,
-            'fechahora_cierre'=>$request->fechahora_cierre,
+            'fechahora_cierre'=>Carbon::now(),
             'monto_inicial'=>$request->monto_inicial,
             'monto_final'=>$request->monto_final,
             'efectivo_total'=>$request->efectivo_total,
@@ -813,27 +814,21 @@ class CajaController extends Controller
             ->join('users', 'users.id', '=', 'movimientos_caja.id_usuario')
             ->select('movimientos_caja.*', 'users.personal')
             ->where('id_caja', $request->id_caja);
-
-        // Filtrar por tipo de movimiento (ingreso/salida/todos)
         if ($request->has('tipo') && $request->tipo != 'todos') {
             $query->where('movimientos_caja.tipo_movimiento', $request->tipo);
         }
 
-        // Filtrar por rango de fechas
         if ($request->has('fecha_inicio') && $request->has('fecha_fin')) {
             $query->whereDate('movimientos_caja.fecha', '>=', $request->fecha_inicio)
                 ->whereDate('movimientos_caja.fecha', '<=', $request->fecha_fin);
         }
 
-        // Clonar el query para usar en los cálculos de totales antes de paginar
         $queryTotalesIngreso = clone $query;
         $queryTotalesSalida = clone $query;
 
-        // Calcular totales
         $salidas = $queryTotalesSalida->where('movimientos_caja.tipo_movimiento', 'salida')->sum('monto');
         $ingresos = $queryTotalesIngreso->where('movimientos_caja.tipo_movimiento', 'ingreso')->sum('monto');
 
-        // Paginación
         $registros = $query->orderBy('movimientos_caja.id', 'desc')->paginate(30);
 
         return response()->json([
@@ -1215,5 +1210,14 @@ class CajaController extends Controller
         });
 
         return response()->json($data);
+    }
+
+    public function verificarBoveda()
+    {
+        $existeBoveda = DB::table('boveda')->exists();
+
+        return response()->json([
+            'aperturada' => $existeBoveda
+        ]);
     }
 }

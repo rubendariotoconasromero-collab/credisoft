@@ -2364,6 +2364,7 @@ export default {
                             nro_cuotas: this.solicitud.nro_cuotas,
                             lapso_capital: this.solicitud.lapso_capital,
                             moneda: this.solicitud.moneda,
+                            fecha_primera_cuota: this.solicitud.fecha_primera_cuota,
                         })
                             .then((response) => {
                                 console.log('respuesta:', response);

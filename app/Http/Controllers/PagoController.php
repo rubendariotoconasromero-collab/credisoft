@@ -482,53 +482,65 @@ class PagoController extends Controller
         return $pagos;
     }
 
-    public function generarTicketPago(Request $request){
+    public function generarTicketPago($codigo_transaccion)
+    {
+        // 1. Buscamos TODOS los pagos asociados a ese código de transacción
+        $pagos = DB::table('pago')
+            ->join('cuota', 'cuota.id', '=', 'pago.id_cuota')
+            ->join('plan_pago', 'plan_pago.id', '=', 'cuota.id_plan_pago')
+            ->join('solicitud', 'solicitud.id', '=', 'plan_pago.id_solicitud')
+            ->join('cliente', 'cliente.id', '=', 'solicitud.id_cliente')
+            ->join('users', 'users.id', '=', 'pago.id_usuario')
+            ->select(
+                'pago.monto_pago', 'pago.pago_capital', 'pago.pago_interes', 'pago.pago_mora', 
+                'pago.monto_condonado', 'pago.forma_pago', 'pago.fecha_pago',
+                'cliente.nombre as cliente_nombre', 'cliente.ci',
+                'cuota.numero as nro_cuota', 'solicitud.nro_cuotas as cantidad_cuotas',
+                'plan_pago.id as codigo_plan', 'users.name as cajero'
+            )
+            ->where('pago.codigo_transaccion', $codigo_transaccion)
+            ->where('pago.estado', 1) // Solo pagos no anulados
+            ->get();
+
+        if ($pagos->isEmpty()) {
+            return response("Error: Transacción no encontrada o anulada.", 404);
+        }
+
+        // 2. Agrupamos los datos comunes
+        $info_base = $pagos->first(); // Tomamos el primer registro para datos generales
+        $total_pagado = $pagos->sum('monto_pago');
+        $total_mora = $pagos->sum('pago_mora');
+        $total_condonado = $pagos->sum('monto_condonado');
         
+        // Unimos los números de cuotas en un texto (Ej: "1, 2, 3")
+        $numeros_cuotas = $pagos->pluck('nro_cuota')->toArray();
+        $cuotas_texto = implode(', ', $numeros_cuotas);
 
-        $informacion=DB::table('pago')
-        ->join('cuota', 'cuota.id', '=', 'pago.id_cuota')
-        ->join('plan_pago', 'plan_pago.id', '=', 'cuota.id_plan_pago')
-        ->join('solicitud', 'solicitud.id', '=', 'plan_pago.id_solicitud')
-        ->join('cliente', 'cliente.id', '=', 'solicitud.id_cliente')
-        ->select('pago.monto_pago', 'pago.forma_pago', 'pago.fecha_pago', 'cliente.nombre as nombre_cliente'
-        ,'cuota.numero as nro_cuota', 'solicitud.nro_cuotas as cantidad_cuotas', 'plan_pago.id as codigo_plan'
-        ,'cuota.saldo_capital', 'pago.multa_total as multa')
-        ->where('pago.id', $request->id_pago)
-        ->get();
-       
+        $empresa = DB::table('mi_empresa')->first();
 
-
-        // Crea una instancia de Dompdf
-        $dompdf = new Dompdf();
-
-        // Opciones de configuración de Dompdf
+        // 3. Generamos el PDF
         $options = new Options();
-        $options->set('isHtml5ParserEnabled', true); // Habilita el parser HTML5
-        $options->set('isPhpEnabled', true); // Habilita la ejecución de código PHP en la vista (si es necesario)
-        $dompdf->setOptions($options);
+        $options->set('isHtml5ParserEnabled', true);
+        $options->set('isPhpEnabled', true);
+        $dompdf = new Dompdf($options);
 
-        // Carga la vista HTML para el reporte
         $html = view('reporte.ticket_pago', [
-            'informacion' => $informacion,
+            'codigo_transaccion' => $codigo_transaccion,
+            'pagos' => $pagos,
+            'info_base' => $info_base,
+            'total_pagado' => $total_pagado,
+            'total_mora' => $total_mora,
+            'total_condonado' => $total_condonado,
+            'cuotas_texto' => $cuotas_texto,
+            'empresa' => $empresa
         ])->render();
 
-        // Carga el contenido HTML en Dompdf
         $dompdf->loadHtml($html);
-
-        // Renderiza el PDF (esto puede tomar un tiempo si el contenido es grande)
         $dompdf->render();
 
-        // Obtén el contenido del PDF como una cadena
-        
-
-        // Establece las cabeceras para mostrar el PDF en una nueva pestaña
         return response($dompdf->output())
-
-        ->header('Content-Type', 'application/pdf')
-        ->header('Content-Disposition', 'inline; filename="simulacion_plan_pago.pdf"');
-
-        // Muestra el contenido del PDF
-        //echo $output;
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'inline; filename="Recibo_'.$codigo_transaccion.'.pdf"');
     }
 
     public function imagenRespaldo(Request $request){
@@ -563,10 +575,18 @@ class PagoController extends Controller
         }
     }
 
+
     public function pagarCuotas(Request $request)
     {
         $id_plan_pago = $request->input('id_plan_pago');
         $cuotas = $request->input('cuotas');
+        
+        $bolsa_efectivo = (float) $request->input('monto_recibido'); 
+        $bolsa_condonacion_interes = (float) $request->input('condonacion_interes');
+        $bolsa_condonacion_mora = (float) $request->input('condonacion_mora');
+        
+        $forma_pago = $request->input('forma_pago');
+        $fecha_pago = $request->input('fecha_pago');
 
         if (empty($cuotas)) {
             return response()->json(['error' => 'No se seleccionaron cuotas para pagar'], 400);
@@ -576,8 +596,7 @@ class PagoController extends Controller
 
         try {
             $id_caja = DB::table('caja')->where('estado', 1)->first()->id;
-
-            // --- VALIDACIONES (Mismo código que tenías) ---
+            
             $cuotaIds = array_column($cuotas, 'id_cuota');
             $dbCuotas = DB::table('cuota')
                 ->where('id_plan_pago', $id_plan_pago)
@@ -587,99 +606,164 @@ class PagoController extends Controller
 
             $firstUnpaidCuota = DB::table('cuota')
                 ->where('id_plan_pago', $id_plan_pago)
-                ->where('estado', 1)
+                ->whereIn('estado', [1, 3]) 
                 ->orderBy('numero', 'asc')
                 ->first();
 
             if (!$firstUnpaidCuota || $cuotaIds[0] != $firstUnpaidCuota->id) {
-                throw new \Exception('Las cuotas seleccionadas deben comenzar con la primera cuota impaga.');
+                throw new \Exception('Las cuotas deben pagarse en orden empezando por la primera pendiente o parcial.');
             }
 
-            $previousNumero = $firstUnpaidCuota->numero - 1;
-            foreach ($dbCuotas as $index => $dbCuota) {
-                if ($index > 0 && $dbCuota->numero != $previousNumero + 1) {
-                    throw new \Exception('Las cuotas seleccionadas deben ser correlativas.');
-                }
-                if ($dbCuota->estado != 1) {
-                    throw new \Exception('Solo se pueden pagar cuotas con estado "Por pagar".');
-                }
-                $previousNumero = $dbCuota->numero;
-            }
-            // --- FIN VALIDACIONES ---
-
-
-            // 1. GENERAMOS EL CÓDIGO ÚNICO DE TRANSACCIÓN PARA ESTE GRUPO
-            // Ejemplo formato: TRX-Time-UserID-Random (ej: TRX-1698777-1-450)
             $codigo_transaccion = 'TRX-' . time() . '-' . Auth::id() . '-' . rand(100, 999);
+            $alguna_cuota_pagada_totalmente = false; // <-- Control para el reloj de mora
 
+            // ==========================================
+            // ESCUDO DE SEGURIDAD: PREVENIR COBRO EXCESIVO
+            // ==========================================
+            $deuda_total_seleccionada = 0;
+            foreach ($cuotas as $c) {
+                $deuda_total_seleccionada += max(0, $c['mora_adeudada']) + max(0, $c['interes_adeudado']) + max(0, $c['capital_adeudado']);
+            }
+            
+            // Calculamos el máximo dinero físico que deberíamos aceptar
+            $deuda_liquida_maxima = $deuda_total_seleccionada - $bolsa_condonacion_mora - $bolsa_condonacion_interes;
 
-            // Process each cuota payment
+            // Tolerancia de 1 centavo por redondeos flotantes
+            if (round($bolsa_efectivo, 2) > round($deuda_liquida_maxima, 2) + 0.01) {
+                throw new \Exception('Alerta de Seguridad: El monto recibido (' . $bolsa_efectivo . ' Bs) supera la deuda total líquida de las cuotas seleccionadas (' . round($deuda_liquida_maxima, 2) . ' Bs).');
+            }
+            // ==========================================
+
             foreach ($cuotas as $cuotaData) {
-                $id_cuota = $cuotaData['id_cuota'];
-                $cuota = $dbCuotas->firstWhere('id', $id_cuota);
-
-                $multa_mora = $cuotaData['dias_pasados'] > 0 ? ($cuotaData['multa_mora'] ?? 0) : 0;
-                $monto_condonado = $cuotaData['monto_condonado'] ?? 0;
-
-                $datos_pago = [
-                    'codigo_transaccion' => $codigo_transaccion, // <--- GUARDAMOS EL CÓDIGO
-                    'fecha_pago' => $cuotaData['fecha_pago'],
-                    'monto_pago' => $cuotaData['dias_pasados'] > 0
-                        ? ($cuotaData['monto_pago'] + ($multa_mora * $cuotaData['dias_pasados'])) - $monto_condonado
-                        : $cuotaData['monto_pago'],
-                    'monto_cuota' => $cuotaData['monto_pago'],
-                    'id_usuario' => Auth::id(),
-                    'id_cuota' => $id_cuota,
-                    'id_caja' => $id_caja,
-                    'monto_condonado' => $monto_condonado,
-                    'forma_pago' => $cuotaData['forma_pago'],
-                ];
-
-                if ($cuotaData['dias_pasados'] > 0) {
-                    $datos_pago['dias_retrasados'] = $cuotaData['dias_pasados'];
-                    $datos_pago['multa_dia'] = $multa_mora;
-                    $datos_pago['multa_total'] = $multa_mora * $cuotaData['dias_pasados'];
-                    $datos_pago['motivo_condonacion'] = $cuotaData['motivo_condonacion'] ?? 'No se ingresó motivo';
+                if ($bolsa_efectivo <= 0 && $bolsa_condonacion_interes <= 0 && $bolsa_condonacion_mora <= 0) {
+                    break; 
                 }
 
-                // Insert payment
-                DB::table('pago')->insert($datos_pago);
+                $id_cuota = $cuotaData['id_cuota'];
+                $dbCuota = $dbCuotas->firstWhere('id', $id_cuota);
 
-                // Update cuota estado
-                DB::table('cuota')->where('id', $id_cuota)->update(['estado' => 2]);
+                $deuda_mora = max(0, $cuotaData['mora_adeudada']);
+                $deuda_interes = max(0, $cuotaData['interes_adeudado']);
+                $deuda_capital = max(0, $cuotaData['capital_adeudado']);
 
-                // Register movement in caja (OJO: Aquí podrías agrupar también, pero por ahora está bien individual)
-                DB::table('movimientos_caja')->insert([
-                    'tipo_movimiento' => 'ingreso',
-                    'monto' => $datos_pago['monto_pago'],
-                    'descripcion' => 'Pago de cuota ' . $cuota->numero . ' (' . $codigo_transaccion . ')',
-                    'fecha' => now(),
-                    'id_caja' => $id_caja,
-                    'id_usuario' => Auth::id(),
-                ]);
+                $pago_mora = 0; $pago_interes = 0; $pago_capital = 0;
+                $condonado_mora_cuota = 0; $condonado_interes_cuota = 0;
+
+                // --- 1. APLICAMOS CONDONACIONES ---
+                if ($bolsa_condonacion_mora > 0 && $deuda_mora > 0) {
+                    $aplicar = min($bolsa_condonacion_mora, $deuda_mora);
+                    $condonado_mora_cuota = $aplicar;
+                    $deuda_mora -= $aplicar;
+                    $bolsa_condonacion_mora -= $aplicar;
+                }
+
+                if ($bolsa_condonacion_interes > 0 && $deuda_interes > 0) {
+                    $aplicar = min($bolsa_condonacion_interes, $deuda_interes);
+                    $condonado_interes_cuota = $aplicar;
+                    $deuda_interes -= $aplicar;
+                    $bolsa_condonacion_interes -= $aplicar;
+                }
+
+                // --- 2. CASCADA DEL EFECTIVO ---
+                if ($bolsa_efectivo > 0 && $deuda_mora > 0) {
+                    $aplicar = min($bolsa_efectivo, $deuda_mora);
+                    $pago_mora = $aplicar;
+                    $deuda_mora -= $aplicar;
+                    $bolsa_efectivo -= $aplicar;
+                }
+
+                if ($bolsa_efectivo > 0 && $deuda_interes > 0) {
+                    $aplicar = min($bolsa_efectivo, $deuda_interes);
+                    $pago_interes = $aplicar;
+                    $deuda_interes -= $aplicar;
+                    $bolsa_efectivo -= $aplicar;
+                }
+
+                if ($bolsa_efectivo > 0 && $deuda_capital > 0) {
+                    $aplicar = min($bolsa_efectivo, $deuda_capital);
+                    $pago_capital = $aplicar;
+                    $deuda_capital -= $aplicar;
+                    $bolsa_efectivo -= $aplicar;
+                }
+
+                $total_pagado_esta_cuota = $pago_mora + $pago_interes + $pago_capital;
+                $total_condonado_esta_cuota = $condonado_mora_cuota + $condonado_interes_cuota;
+
+                // --- 3. REGISTRO EN BD ---
+                if ($total_pagado_esta_cuota > 0 || $total_condonado_esta_cuota > 0) {
+                    
+                    $motivos = [];
+                    if ($condonado_mora_cuota > 0) $motivos[] = "Mora: " . $request->input('motivo_condonacion_mora');
+                    if ($condonado_interes_cuota > 0) $motivos[] = "Interés: " . $request->input('motivo_condonacion_interes');
+
+                    DB::table('pago')->insert([
+                        'codigo_transaccion' => $codigo_transaccion,
+                        'fecha_pago' => $fecha_pago,
+                        'monto_pago' => $total_pagado_esta_cuota,
+                        'pago_capital' => $pago_capital,
+                        'pago_interes' => $pago_interes,
+                        'pago_mora' => $pago_mora,
+                        'monto_condonado' => $total_condonado_esta_cuota,
+                        'monto_condonado_interes' => $condonado_interes_cuota,
+                        'monto_condonado_mora' => $condonado_mora_cuota,
+                        'motivo_condonacion' => implode(' | ', $motivos),
+                        'forma_pago' => $forma_pago,
+                        'estado' => 1,
+                        'id_usuario' => Auth::id(),
+                        'id_cuota' => $id_cuota,
+                        'id_caja' => $id_caja,
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]);
+
+                    $nuevo_capital_pagado = $dbCuota->capital_pagado + $pago_capital;
+                    $nuevo_interes_pagado = $dbCuota->interes_pagado + $pago_interes + $condonado_interes_cuota;
+                    $nueva_mora_pagada = $dbCuota->mora_pagada + $pago_mora + $condonado_mora_cuota;
+
+                    // CORRECCIÓN: Ahora evalúa si REALMENTE la deuda restante es 0
+                    $estado_cuota = ($deuda_mora <= 0 && $deuda_interes <= 0 && $deuda_capital <= 0) ? 2 : 3;
+
+                    if ($estado_cuota == 2) {
+                        $alguna_cuota_pagada_totalmente = true;
+                    }
+
+                    DB::table('cuota')->where('id', $id_cuota)->update([
+                        'capital_pagado' => $nuevo_capital_pagado,
+                        'interes_pagado' => $nuevo_interes_pagado,
+                        'mora_pagada' => $nueva_mora_pagada,
+                        'estado' => $estado_cuota,
+                        'updated_at' => now()
+                    ]);
+
+                    if ($total_pagado_esta_cuota > 0) {
+                        DB::table('movimientos_caja')->insert([
+                            'tipo_movimiento' => 'ingreso',
+                            'monto' => $total_pagado_esta_cuota,
+                            'descripcion' => 'Pago ' . ($estado_cuota == 3 ? 'Parcial' : 'Total') . ' cuota ' . $dbCuota->numero . ' (' . $codigo_transaccion . ')',
+                            'fecha' => now(),
+                            'id_caja' => $id_caja,
+                            'id_usuario' => Auth::id(),
+                        ]);
+                    }
+                }
             }
 
-            // Check if there are any unpaid cuotas left
             $no_hay_sin_pagar = DB::table('cuota')
                 ->where('id_plan_pago', $id_plan_pago)
-                ->where('estado', 1)
+                ->whereIn('estado', [1, 3])
                 ->doesntExist();
 
-            if ($no_hay_sin_pagar) {
-                DB::table('plan_pago')->where('id', $id_plan_pago)->update(['estado' => 2]);
+            $datos_actualizar_plan = ['estado' => $no_hay_sin_pagar ? 2 : 1];
+
+            // CORRECCIÓN: SOLO reseteamos el reloj de mora si se logró pagar por completo la cuota
+            if ($alguna_cuota_pagada_totalmente) {
+                $datos_actualizar_plan['fecha_ultima_amortizacion'] = now();
             }
 
-            // ACTUALIZACIÓN CLAVE: 
-            // Siempre actualizamos la fecha de última amortización para "resetear" el contador de mora.
-            // Y si ya no hay cuotas, cambiamos el estado a 2 (Finalizado).
-            DB::table('plan_pago')->where('id', $id_plan_pago)->update([
-                'fecha_ultima_amortizacion' => now(), // Resetea el reloj de mora
-                'estado' => $no_hay_sin_pagar ? 2 : 1
-            ]);
+            DB::table('plan_pago')->where('id', $id_plan_pago)->update($datos_actualizar_plan);
 
             DB::commit();
             
-            // Devolvemos el código para que el front pueda imprimir el recibo agrupado
             return [
                 'estado_plan' => $no_hay_sin_pagar ? 2 : 1,
                 'codigo_transaccion' => $codigo_transaccion 

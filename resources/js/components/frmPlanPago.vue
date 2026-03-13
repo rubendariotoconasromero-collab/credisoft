@@ -207,7 +207,7 @@
 
                                                 <dt class="col-sm-5 col-md-4">Monto:</dt>
                                                 <dd class="col-sm-7 col-md-8 fw-bold fs-5 text-dark">
-                                                    {{ plan_pago.importe_solicitud }} {{ plan_pago.moneda }} 
+                                                    {{ formatNumero(plan_pago.importe_solicitud) }} {{ plan_pago.moneda }} 
                                                 </dd>
 
                                                 <dt class="col-sm-5 col-md-4">Tasa de Interés:</dt>
@@ -257,9 +257,6 @@
                                                 
                                             </dl>
                                         </div>
-
-                                        
-
                                     </div>
                                 </div>
                             </div>
@@ -477,14 +474,17 @@
                                             <tbody>
                                                 <tr v-for="(cuota, index) in lista_cuotas_plan" :key="cuota.id" 
                                                     :class="{'opacity-50': !esFilaHabilitada(index) && cuota.estado !== 2}">
+                                                    
                                                     <td class="text-center fw-bold">{{ cuota.numero }}</td>
                                                     <td class="text-center">{{ formatFecha(cuota.fecha) }}</td>
+                                                    
                                                     <td class="text-end text-muted border-start bg-primary bg-opacity-10">
                                                         {{ formatNumero(cuota.interes) }}
                                                     </td>
+                                                    
                                                     <td class="text-center border-end bg-primary bg-opacity-10">
                                                         <div v-if="cuota.estado !== 2">
-                                                            <div v-if="calcularInteresALaFecha(cuota, index) > 0" 
+                                                            <div v-if="parseFloat(cuota.interes_acumulado_neto) > 0" 
                                                                 class="d-flex flex-column align-items-center">
                                                                 
                                                                 <input class="form-check-input m-0 shadow-none border-primary" 
@@ -493,12 +493,14 @@
                                                                     :disabled="!esFilaHabilitada(index)"
                                                                     :checked="esInteresMarcado(index)"
                                                                     @change="clickCheckInteres(index)">
+                                                                
                                                                 <small class="fw-bold text-primary mt-1" style="font-size: 0.75rem;">
-                                                                    {{ formatNumero(calcularInteresALaFecha(cuota, index)) }}
+                                                                    {{ formatNumero(cuota.interes_acumulado_neto) }}
                                                                 </small>
-                                                                <span v-if="calcularInteresALaFecha(cuota, index) < parseFloat(cuota.interes) && cuota.dias_pasados <= 0" 
-                                                                    class="badge bg-info text-white border border-primary py-1 px-2 mt-1" 
-                                                                    style="font-size: 0.6rem;">
+                                                                
+                                                                <span v-if="cuota.estado == 3" 
+                                                                    class="badge bg-info text-white border border-primary py-0 px-2 mt-1" 
+                                                                    style="font-size: 0.55rem;">
                                                                     Parcial
                                                                 </span>
                                                             </div>
@@ -508,7 +510,7 @@
 
                                                     <td class="text-center border-end bg-danger bg-opacity-10">
                                                         <div v-if="cuota.estado !== 2">
-                                                            <div v-if="calcularMoraFila(cuota) > 0 && (index === 0 || calcularMoraFila(lista_cuotas_plan[index-1]) <= 0)" class="d-flex flex-column align-items-center">
+                                                            <div v-if="parseFloat(cuota.mora_fija_neta) > 0 && (index === 0 || parseFloat(lista_cuotas_plan[index-1].mora_fija_neta) <= 0)" class="d-flex flex-column align-items-center">
                                                                 <input class="form-check-input m-0 shadow-none border-danger" 
                                                                     type="checkbox" 
                                                                     style="cursor: pointer; transform: scale(1.15);"
@@ -517,20 +519,21 @@
                                                                     @change="clickCheckMora(index)">
                                                                 
                                                                 <small class="fw-bold text-danger mt-1" style="font-size: 0.75rem;">
-                                                                    {{ formatNumero(calcularMoraFila(cuota)) }}
+                                                                    {{ formatNumero(cuota.mora_fija_neta) }}
                                                                 </small>
                                                             </div>
                                                             <div v-else class="text-muted small">-</div>
                                                         </div>
                                                     </td>
 
-                                                    <td class="text-end text-muted">Bs. {{ formatNumero(cuota.capital) }}</td>
+                                                    <td class="text-end fw-bold text-dark">Bs. {{ formatNumero(cuota.capital_neto) }}</td>
                                                     
                                                     <td class="text-center">
-                                                        <span class="badge rounded-pill" :class="getEstadoCuota(cuota).clase" style="font-size:0.65rem; min-width: 115px;">
+                                                        <span class="badge rounded-pill" :class="getEstadoCuota(cuota).clase" style="font-size:0.65rem; min-width: 90px;">
                                                             {{ getEstadoCuota(cuota).texto }}
                                                         </span>
                                                     </td>
+                                                    
                                                     <td class="text-center text-muted">Bs. {{ formatNumero(cuota.total) }}</td>
                                                     <td class="text-center text-muted">Bs. {{ formatNumero(cuota.saldo_capital) }}</td>
                                                 </tr>
@@ -704,15 +707,10 @@
                         </div>
                     </form>
                 </div>
-
             </div>
         </div>
-
         <ModalHistorialOriginal :datos="datos_original_modal" />
-
         <ModalDetalleCliente ref="modalClienteRef" />
-
-
     </main>
 </template>
 
@@ -725,7 +723,6 @@ import moment from 'moment';
 import Swal from 'sweetalert2'
 import {formas_pago, lista_monedas, tipos_desembolsos, lapso_capitales} from '../constants';
 
-
 export default {
     components: {
         ModalDetalleCliente,
@@ -737,7 +734,6 @@ export default {
         return {
             idx_sel_interes: -1, 
             idx_sel_mora: -1,
-
             pago_previo: {
                 seleccionado: false,
                 total_pagar: 0,
@@ -802,7 +798,6 @@ export default {
                 id_usuario: 0,
                 tipo_garantia: '0',
                 tipo_desembolso: '0',
-
                 enviado: 0,
                 accion: 0,
             },
@@ -843,7 +838,6 @@ export default {
                 id_solicitud_origen: '',
                 estado: 1,
                 monto_original_historico:0,
-
                 forma_pago_reprogramacion: '',
                 plazo_meses: null,
                 numero_cuotas_reprogramacion: 0,
@@ -854,7 +848,6 @@ export default {
                 actividad:'',
                 asesor:'',
                 tipo_tasa:'',
-
             },
             cuota: {
                 id_cuota: 0,
@@ -878,58 +871,30 @@ export default {
         }
     },
     computed: {
+    
         saldoTotalParaReprogramar() {
             if (!this.lista_cuotas_plan || this.lista_cuotas_plan.length === 0) return 0;
+            
             let totalDeuda = 0;
-            let sumMulta = false;
-            const hoy = moment();
-            // 1. CALCULAR LA DEUDA BRUTA TOTAL (Según tus criterios)
-            this.lista_cuotas_plan.forEach((cuota, index) => {
+            
+            // 1. SUMAR LA DEUDA NETA ACTUAL
+            this.lista_cuotas_plan.forEach((cuota) => {
                 // Ignorar cuotas ya pagadas completamente
                 if (cuota.estado === 2) return; 
-                const fechaCuota = moment(cuota.fecha);
-                const esVencida = fechaCuota.isBefore(hoy, 'day');
 
-                if (esVencida) {
-                    // A) CRITERIO: Cuota Vencida -> Sumar Total (Capital + Interés)
-                    totalDeuda += parseFloat(cuota.total || 0);
-
-                    // B) CRITERIO: Sumar Multa (Días pasados * 3)
-                    if (cuota.dias_pasados > 0 && !sumMulta) {
-                        totalDeuda += (cuota.dias_pasados * 3);
-                        sumMulta = true;
-                    }
-                } else {
-                    // C) CRITERIO: Cuota No Vencida -> Sumar Capital Base
-                    totalDeuda += parseFloat(cuota.capital || 0);
-
-                    // D) CRITERIO: Sumar Interés Acumulado (Devengado a la fecha)
-                    // Usamos tu método existente que calcula por días transcurridos
-                    totalDeuda += this.calcularInteresALaFecha(cuota, index);
-                }
+                // Sumamos los saldos restantes netos (Capital + Interés Acumulado + Mora Fija)
+                totalDeuda += parseFloat(cuota.capital_neto || 0);
+                totalDeuda += parseFloat(cuota.interes_acumulado_neto || 0);
+                totalDeuda += parseFloat(cuota.mora_fija_neta || 0);
             });
 
-            // 2. RESTAR LO SELECCIONADO EN LOS CHECKBOXES
-            // Si el usuario selecciona pagar/condonar intereses o mora, esos montos
-            // se quitan de la bolsa de la deuda nueva, porque se extinguen.
+            // 2. RESTAR LO SELECCIONADO EN LOS CHECKBOXES DE PAGOS PREVIOS
             if (this.pago_previo.seleccionado) {
-                // Restamos el total de interés seleccionado (sea pagado o condonado)
-                totalDeuda -= this.pago_previo.detalle_interes;
-                
-                // Restamos el total de mora seleccionada (sea pagada o condonada)
-                totalDeuda -= this.pago_previo.detalle_mora;
-
-                // if (this.pago_previo.condonar_interes) {
-                //     totalDeuda += parseFloat(this.pago_previo.monto_condonar_interes || 0);
-                // }
-                
-                // if (this.pago_previo.condonar_mora) {
-                //     totalDeuda += parseFloat(this.pago_previo.monto_condonar_mora || 0);
-                // }
+                totalDeuda -= parseFloat(this.pago_previo.detalle_interes || 0);
+                totalDeuda -= parseFloat(this.pago_previo.detalle_mora || 0);
             }
 
             // Evitar negativos por seguridad
-            console.log('calculando saldo');
             return this.formatNumero(totalDeuda) > 0 ? this.formatNumero(totalDeuda) : 0;
         },
 
@@ -1044,35 +1009,7 @@ export default {
             this.pago_previo.motivo_condonacion = '';
         },
         calcularInteresALaFecha(cuota, index) {
-            if (cuota.estado == 1 && cuota.dias_pasados > 0) {
-                return parseFloat(cuota.interes || 0);
-            }
-            let fechaInicioPeriodo;
-            if (index === 0) {
-                fechaInicioPeriodo = moment(this.plan_pago.fecha_desembolso);
-            } else {
-                const cuotaAnterior = this.lista_cuotas_plan[index - 1];
-                fechaInicioPeriodo = moment(cuotaAnterior.fecha);
-            }
-
-            const fechaVencimiento = moment(cuota.fecha);
-            const hoy = moment();
-
-            if (fechaInicioPeriodo.isAfter(hoy, 'day')) return 0;
-            const diasTotalesPeriodo = fechaVencimiento.diff(fechaInicioPeriodo, 'days');
-        
-            const diasTranscurridos = hoy.diff(fechaInicioPeriodo, 'days');
-
-            if (diasTotalesPeriodo <= 0) return 0;
-
-            const interesDiario = parseFloat(cuota.interes) / diasTotalesPeriodo;
-            let interesAcumulado = interesDiario * diasTranscurridos;
-
-            if (interesAcumulado > parseFloat(cuota.interes)) {
-                interesAcumulado = parseFloat(cuota.interes);
-            }
-
-            return interesAcumulado > 0 ? interesAcumulado : 0;
+            return parseFloat(cuota.interes_acumulado || 0);
         },
         
         esFilaHabilitada(index) {
@@ -1086,6 +1023,8 @@ export default {
 
         clickCheckInteres(index) {
             if (!this.esFilaHabilitada(index)) return;
+            // Validamos que haya interés neto para cobrar
+            if (parseFloat(this.lista_cuotas_plan[index].interes_acumulado_neto) <= 0) return;
 
             if (index === this.idx_sel_interes) {
                 this.idx_sel_interes = index - 1;
@@ -1099,8 +1038,8 @@ export default {
 
         clickCheckMora(index) {
             if (!this.esFilaHabilitada(index)) return;
-            const cuota = this.lista_cuotas_plan[index];
-            if (this.calcularMoraFila(cuota) <= 0) return;
+            // Validamos que haya mora neta para cobrar
+            if (parseFloat(this.lista_cuotas_plan[index].mora_fija_neta) <= 0) return;
 
             if (index === this.idx_sel_mora) {
                 this.idx_sel_mora = index - 1;
@@ -1113,8 +1052,6 @@ export default {
         },
 
         calcularTotalesPago() {
-            // 1. Guardamos el estado actual de los inputs de condonación
-            // (Para no perder lo que el usuario escribió al reiniciar el objeto)
             const inputState = {
                 condonar_interes: this.pago_previo.condonar_interes,
                 monto_condonar_interes: this.pago_previo.monto_condonar_interes,
@@ -1123,38 +1060,31 @@ export default {
                 motivo_condonacion: this.pago_previo.motivo_condonacion
             };
 
-            // 2. Reseteamos el objeto base pero RESTAURAMOS los inputs guardados
             this.pago_previo = {
-                seleccionado: false,
-                total_pagar: 0,
-                detalle_interes: 0,
-                detalle_mora: 0,
-                descripcion: '',
-                ids_cuotas_interes: [],
-                ids_cuotas_mora: [],
-                ...inputState // Restauramos flags y montos
+                seleccionado: false, total_pagar: 0, detalle_interes: 0, detalle_mora: 0,
+                descripcion: '', ids_cuotas_interes: [], ids_cuotas_mora: [],
+                ...inputState 
             };
 
             let sumaInteres = 0;
             let sumaMora = 0;
             let ultimaCuotaInt = 0;
 
-            // 3. Calcular suma de INTERESES seleccionados
+            // Sumar Intereses Netos seleccionados
             if (this.idx_sel_interes > -1) {
                 for (let i = 0; i <= this.idx_sel_interes; i++) {
                     const c = this.lista_cuotas_plan[i];
-                    // Usamos tu método calcularInteresALaFecha para obtener el monto exacto
-                    sumaInteres += this.calcularInteresALaFecha(c, i);
+                    sumaInteres += parseFloat(c.interes_acumulado_neto || 0);
                     this.pago_previo.ids_cuotas_interes.push(c.id);
                     ultimaCuotaInt = c.numero;
                 }
             }
 
-            // 4. Calcular suma de MORAS seleccionadas
+            // Sumar Moras Netas seleccionadas
             if (this.idx_sel_mora > -1) {
                 for (let i = 0; i <= this.idx_sel_mora; i++) {
                     const c = this.lista_cuotas_plan[i];
-                    const mora = this.calcularMoraFila(c);
+                    const mora = parseFloat(c.mora_fija_neta || 0);
                     if (mora > 0) {
                         sumaMora += mora;
                         this.pago_previo.ids_cuotas_mora.push(c.id);
@@ -1162,47 +1092,26 @@ export default {
                 }
             }
 
-            // 5. Procesar totales finales y condonaciones
+            // Procesar totales y validaciones de condonación
             if (sumaInteres > 0 || sumaMora > 0) {
                 this.pago_previo.seleccionado = true;
                 this.pago_previo.detalle_interes = sumaInteres;
                 this.pago_previo.detalle_mora = sumaMora;
                 
-                // --- VALIDACIÓN DE CONDONACIÓN ---
-
-                // a) Validar Interés: Si el monto a condonar supera el total, se ajusta al tope.
+                // Validaciones (Se mantienen igual a como las tenías)
                 if (this.pago_previo.condonar_interes) {
-                    if (this.pago_previo.monto_condonar_interes > sumaInteres) {
-                        this.pago_previo.monto_condonar_interes = sumaInteres;
-                    }
+                    if (this.pago_previo.monto_condonar_interes > sumaInteres) this.pago_previo.monto_condonar_interes = sumaInteres;
+                    if(this.pago_previo.monto_condonar_interes <= 0) this.pago_previo.monto_condonar_interes = 1;
+                } else { this.pago_previo.monto_condonar_interes = 0; }
 
-                    if(this.pago_previo.monto_condonar_interes<=0){
-                        this.pago_previo.monto_condonar_interes = 1;
-                    }
-                } else {
-                    this.pago_previo.monto_condonar_interes = 0;
-                }
-
-                // b) Validar Mora: Si el monto a condonar supera el total, se ajusta al tope.
                 if (this.pago_previo.condonar_mora) {
-                    if (this.pago_previo.monto_condonar_mora > sumaMora) {
-                        this.pago_previo.monto_condonar_mora = sumaMora;
-                    }
+                    if (this.pago_previo.monto_condonar_mora > sumaMora) this.pago_previo.monto_condonar_mora = sumaMora;
+                    if(this.pago_previo.monto_condonar_mora <= 0) this.pago_previo.monto_condonar_mora = 1;
+                } else { this.pago_previo.monto_condonar_mora = 0; }
 
-                    if(this.pago_previo.monto_condonar_mora<=0){
-                        this.pago_previo.monto_condonar_mora = 1;
-                    }
-                } else {
-                    this.pago_previo.monto_condonar_mora = 0;
-                }
-
-                // c) Cálculo del Total Neto (Total - Condonaciones)
-                const totalNeto = (sumaInteres - this.pago_previo.monto_condonar_interes) +
-                                (sumaMora - this.pago_previo.monto_condonar_mora);
-
+                const totalNeto = (sumaInteres - this.pago_previo.monto_condonar_interes) + (sumaMora - this.pago_previo.monto_condonar_mora);
                 this.pago_previo.total_pagar = totalNeto > 0 ? totalNeto : 0;
 
-                // 6. Generar Descripción
                 let txt = [];
                 if (sumaInteres > 0) txt.push(`Interés Acum. (Cuotas 1-${ultimaCuotaInt})`);
                 if (sumaMora > 0) txt.push(`Multas Mora`);
@@ -1292,30 +1201,16 @@ export default {
                 this.preloader = false;
             }
         },
+   
         getEstadoCuota(cuota) {
-            // Asumiendo que tu data de ejemplo es correcta:
-            // estado: 2 = Pagado/Cancelado
-            // estado: 1 = Pendiente
-            // estado: 0 = Anulado
-            // dias_pasados: > 0 = Vencida (En Mora)
-            if (cuota.estado === 2) {
-                return { texto: 'Pagado', clase: 'bg-success' };
+            if (cuota.estado == 2) return { texto: 'Pagado', clase: 'bg-success' };
+            if (cuota.estado == 3) return { texto: 'Parcial', clase: 'bg-warning text-dark' };
+            if (cuota.estado == 0) return { texto: 'Anulado', clase: 'bg-dark' };
+            if (cuota.estado == 1) {
+                return cuota.dias_pasados > 0 
+                    ? { texto: `Vencida (${cuota.dias_pasados}d)`, clase: 'bg-danger' }
+                    : { texto: 'Pendiente', clase: 'bg-info text-white' };
             }
-            
-            if (cuota.estado === 0) {
-                return { texto: 'Anulado', clase: 'bg-dark' };
-            }
-            if (cuota.estado === 1) {
-                if (cuota.dias_pasados > 0) {
-                    // Está pendiente Y han pasado días
-                    return { texto: `Vencida (${cuota.dias_pasados} días)`, clase: 'bg-danger' };
-                } else {
-                    // Está pendiente, pero aún no se ha vencido
-                    return { texto: 'Pendiente', clase: 'bg-warning text-dark' };
-                }
-            }
-            
-            // Estado desconocido
             return { texto: 'Indefinido', clase: 'bg-light text-dark' };
         },
         formatFecha(fechaISO) {
@@ -2098,10 +1993,12 @@ export default {
         },
         async getCuotas(item) {
             this.lista_cuotas_plan = [];
+            // Llama al endpoint unificado que acabamos de ajustar
             await axios.get('/listar_amortizaciones_cuotas_planpago?id_plan_pago=' + item.id_plan_pago)
                 .then((response) => {
-                    console.log(response);
-                    this.lista_cuotas_plan = response.data;
+                    console.log("Cuotas cargadas unificadas:", response.data);
+                    // Como el backend ahora retorna $resultado['cuotas'], data ya es el array
+                    this.lista_cuotas_plan = response.data; 
                 })
                 .catch((error) => {
                     console.log(error.message);

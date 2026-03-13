@@ -12,8 +12,7 @@
             </div>
             
             <div class="card-body">
-                
-                <ul class="nav nav-pills nav-justified mb-4 bg-white rounded list-header-pay">
+                <ul class="nav nav-pills nav-justified mb-4 bg-white rounded list-header-pay p-3">
                     <li class="nav-item text-dark">
                         <a class="text-decoration-none py-1 w-100 fw-bold text-uppercase d-flex align-items-center justify-content-center border border-1" 
                         :class="tabActual === 'normal' ? 'bg-warning text-white border-warning' : 'text-dark bg-white hover-effect border-secondary'" 
@@ -74,11 +73,11 @@
                                         <td class="fw-bold text-center">{{ item.id }}</td>
                                         <td class="fw-bold">{{ item.cliente }}</td>
                                         <td>{{ item.ci }}</td>
-                                        <td class="text-center">{{ item.fecha_desembolso }}</td>
+                                        <td class="text-center">{{ formatDate(item.fecha_desembolso) }}</td>
                                         <td class="fw-bold text-end">{{ item.total_pagar_plan }}</td>
                                         <td class="text-center">{{ item.asesor }}</td>
-                                        <td class="text-center">{{ item.fecha_inicio_plan }}</td>
-                                        <td class="text-center">{{ item.fecha_fin_plan }}</td>
+                                        <td class="text-center">{{ formatDate(item.fecha_inicio_plan) }}</td>
+                                        <td class="text-center">{{ formatDate(item.fecha_fin_plan) }}</td>
                                         <td class="text-center">
                                             {{ item.nro_cuotas }} <span class="text-muted" style="font-size:10px;">({{ item.lapso_capital }})</span>
                                         </td>
@@ -185,6 +184,8 @@
                                             <span v-else-if="orden.estado == 2" class="badge bg-success">PAGADO</span>
                                             <span v-else class="badge bg-secondary">NO DISP.</span>
                                         </td>
+
+                                        
                                         
                                         <td>
                                             <button v-if="orden.estado == 1" 
@@ -253,8 +254,8 @@
                     </div>
                     <div class="col-md-4">
                         <div class="p-3 rounded border bg-light h-100">
-                            <div class="d-flex justify-content-between mb-2"><strong>Inicio:</strong> <span>{{ plan_pago.fecha_inicio_plan }}</span></div>
-                            <div class="d-flex justify-content-between mb-2"><strong>Fin:</strong> <span>{{ plan_pago.fecha_fin_plan }}</span></div>
+                            <div class="d-flex justify-content-between mb-2"><strong>Inicio:</strong> <span>{{ formatDate(plan_pago.fecha_inicio_plan) }}</span></div>
+                            <div class="d-flex justify-content-between mb-2"><strong>Fin:</strong> <span>{{ formatDate(plan_pago.fecha_fin_plan) }}</span></div>
                             <div v-if="dias_mora > 0" class="d-flex justify-content-between">
                                 <span class="fw-bold text-danger">Mora:</span>
                                 <span class="fw-bold text-danger">{{ dias_mora }} Días</span>
@@ -265,41 +266,89 @@
 
                 <div class="table-responsive" style="font-size:12px;">
                     <table class="table mb-4 table-striped table-sm table-hover border">
+                        
                         <thead class="text-dark table-warning">
                             <tr>
-                                <th class="text-center">Nro</th>
+                                <th class="text-center">#</th>
                                 <th class="text-center">Fecha</th>
                                 <th class="text-center">Capital</th>
                                 <th class="text-center">Interes</th>
                                 <th class="text-center">Saldo Cap.</th>
                                 <th class="text-center">Total Bs</th>
                                 <th class="text-center">Días Trans.</th>
-                                <th class="text-center">Int. Acumulado</th>
+                                
+                                <th class="text-center text-primary">Int. Devengado</th>
+                                <th class="text-center text-danger">Int. Moratorio</th>
+                                
+                                <th class="text-center">Int. Total Acumulado</th>
                                 <th class="text-center">Estado</th>
                                 <th class="text-center">Pagar</th>
                             </tr>
                         </thead>
+
                         <tbody>
                             <tr v-for="(cuota, index) in lista_cuotas_plan" :key="index" class="align-middle">
                                 <td class="text-center">{{ cuota.numero }}</td>
-                                <td class="text-center">{{ formatFecha(cuota.fecha) }}</td>
-                                <td class="text-center">{{ formatNumero(cuota.capital) }}</td>
+                                <td class="text-center">{{ formatDate(cuota.fecha) }}</td>
+                                
+                                <!-- <td class="text-center fw-bold text-dark">{{ formatNumero(cuota.capital_neto) }}</td> -->
+                                 <td class="text-center align-middle">
+                                    <div class="fw-bold text-dark fs-6">{{ formatNumero(cuota.capital_neto) }}</div>
+                                    <div v-if="cuota.capital_pagado_total > 0" class="text-success fw-bold lh-1 mt-1" style="font-size: 0.65rem;">
+                                        Pagado: {{ formatNumero(cuota.capital_pagado_total) }} <br>
+                                        ({{ cuota.porcentaje_capital_pagado }}%)
+                                    </div>
+                                </td>
+                                
                                 <td class="text-center">{{ formatNumero(cuota.interes) }}</td>
                                 <td class="text-center">{{ formatNumero(cuota.saldo_capital) }}</td>
-                                <td class="text-center fw-bold">{{ formatNumero(cuota.total) }}</td>
+                                <td class="text-center">{{ formatNumero(cuota.total) }}</td>
                                 <td class="text-center">{{ cuota.estado == 0 ? '---' : cuota.dias_transcurridos }}</td>
-                                <td class="text-center">{{ cuota.estado == 0 ? '---' : formatNumero(cuota.interes_acumulado) }}</td>
-                                <td class="text-center">
-                                    <span v-if="esPrimerRegistroConMora(index) && cuota.dias_pasados > 0" class="badge bg-danger text-white">
-                                        {{ cuota.dias_pasados }} - EN MORA
-                                    </span>
-                                    <span v-else-if="cuota.estado == 1" class="badge bg-info text-white">Por pagar</span>
-                                    <span v-else-if="cuota.estado == 2" class="badge bg-success text-white">Pagado</span>
-                                    <span v-else-if="cuota.estado == 0" class="badge bg-dark text-white">Anulado</span>
+                                
+                                <td class="text-center text-primary">
+                                    {{ cuota.estado == 0 ? '---' : formatNumero(cuota.interes_devengado_neto) }}
                                 </td>
+                                <td class="text-center text-danger fw-bold">
+                                    {{ cuota.estado == 0 ? '---' : formatNumero(cuota.interes_moratorio_neto) }}
+                                </td>
+                                
+                                <!-- <td class="text-center fw-bold text-primary border-start border-end">
+                                    {{ cuota.estado == 0 ? '---' : formatNumero(cuota.interes_acumulado_neto) }}
+                                </td> -->
+                                <td class="text-center align-middle border-start border-end">
+                                    <div class="fw-bold text-primary fs-6">
+                                        {{ cuota.estado == 0 ? '---' : formatNumero(cuota.interes_acumulado_neto) }}
+                                    </div>
+                                    <div v-if="cuota.interes_pagado_total > 0" class="text-success fw-bold lh-1 mt-1" style="font-size: 0.65rem;">
+                                        Pagado: {{ formatNumero(cuota.interes_pagado_total) }} <br>
+                                        ({{ cuota.porcentaje_interes_pagado }}%)
+                                    </div>
+                                </td>
+                                
                                 <td class="text-center">
+                                    <div v-if="cuota.mora_fija_neta > 0 && cuota.estado != 2" class="mb-1">
+                                        <span class="badge bg-danger text-white">
+                                            Multa - {{ cuota.dias_pasados }} Dias
+                                        </span>
+                                    </div>
+                                    <span class="badge rounded-pill" :class="getEstadoCuota(cuota).clase">
+                                        {{ getEstadoCuota(cuota).texto }}
+                                    </span>
+                                </td>
+                                
+                                <!-- <td class="text-center">
                                     <input type="checkbox" v-model="selectedCuotas" :value="cuota.id" 
-                                           :disabled="!isCheckboxEnabled(index)" v-if="cuota.estado == 1">
+                                        :disabled="!isCheckboxEnabled(index)" 
+                                        v-if="cuota.estado == 1 || cuota.estado == 3"
+                                        style="transform: scale(1.3); cursor: pointer;">
+                                </td> -->
+                                <td class="text-center">
+                                    <input type="checkbox" 
+                                        :checked="selectedCuotas.includes(cuota.id)"
+                                        :disabled="!isCheckboxEnabled(index)" 
+                                        v-if="cuota.estado == 1 || cuota.estado == 3"
+                                        @change="toggleCuotaSelection(index, cuota.id, $event.target.checked)"
+                                        style="transform: scale(1.3); cursor: pointer;">
                                 </td>
                             </tr>
                         </tbody>
@@ -311,116 +360,136 @@
        
         <div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
             <div class="modal-dialog modal-lg modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header bg-success text-white">
-                        <h5 class="modal-title" id="paymentModalLabel">Detalles del Pago</h5>
+                <div class="modal-content border-0 shadow-lg">
+                    
+                    <div class="modal-header bg-success text-white py-3">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-white text-success rounded-circle d-flex justify-content-center align-items-center me-3" style="width: 40px; height: 40px;">
+                                <i class="fas fa-hand-holding-usd fs-5"></i>
+                            </div>
+                            <div>
+                                <h5 class="modal-title fw-bold mb-0" id="paymentModalLabel">Procesar Cobro de Cuota(s)</h5>
+                                <small class="opacity-75">Cliente: {{ plan_pago.cliente }}</small>
+                            </div>
+                        </div>
                         <button type="button" class="btn-close btn-close-white" @click="cerrarModalCobrarCuotas"></button>
                     </div>
-                    <div class="modal-body">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="fw-bold">Cliente</label>
-                                <input type="text" class="form-control" :value="plan_pago.cliente" disabled>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="fw-bold">Fecha de Pago</label>
-                                <input type="date" class="form-control" v-model="paymentDetails.fecha_pago">
-                            </div>
 
-                            <div class="col-md-12">
-                                <div class="row">
-
-                                    <div class="col-md-6">
-                                        <div class="card bg-light border-warning mb-2">
-                                            <div class="card-body p-2">
-                                                <h6 class="fw-bold text-warning">Intereses</h6>
-                                                <div class="input-group input-group-sm mb-2">
-                                                    <span class="input-group-text">Total</span>
-                                                    <input type="text" class="form-control text-center" :value="totalInteres" disabled>
-                                                </div>
-                                                <div class="input-group input-group-sm mb-2">
-                                                    <span class="input-group-text">Condonar</span>
-                                                    
-                                                    <input type="number" 
-                                                        class="form-control text-center" 
-                                                        v-model.number="paymentDetails.monto_condonado_interes" 
-                                                        min="0" 
-                                                        :max="totalInteres"
-                                                        :disabled="!totalInteres || parseFloat(totalInteres) <= 0"
-                                                        @focus="$event.target.select()"
-                                                        @blur="verificarVacio('interes')" 
-                                                        @input="validarMonto('interes')"
-                                                        placeholder="0">
-                                                </div>
-                                                <textarea class="form-control form-control-sm" 
-                                                        v-model="paymentDetails.motivo_condonacion_interes" 
-                                                        :disabled="!paymentDetails.monto_condonado_interes || paymentDetails.monto_condonado_interes <= 0"
-                                                        placeholder="Motivo condonación..." rows="1"></textarea>
-                                            </div>
-                                        </div>
+                    <div class="modal-body p-4 bg-light">
+                        <div class="row g-4">
+                            
+                            <div class="col-md-5">
+                                <div class="card border-0 shadow-sm h-100">
+                                    <div class="card-header bg-white border-bottom-0 pt-3 pb-0">
+                                        <h6 class="fw-bold text-uppercase text-muted mb-0"><i class="fas fa-receipt me-2"></i>Resumen de Deuda</h6>
                                     </div>
-
-                                    <div class="col-md-6">
-                                        <div class="card bg-light border-danger mb-2">
-                                            <div class="card-body p-2">
-                                                <h6 class="fw-bold text-danger">Multas ({{ dias_mora }} días)</h6>
-                                                <div class="input-group input-group-sm mb-2">
-                                                    <span class="input-group-text">Total</span>
-                                                    <input type="text" class="form-control text-center" :value="totalMulta" disabled>
-                                                </div>
-                                                <div class="input-group input-group-sm mb-2">
-                                                    <span class="input-group-text">Condonar</span>
-                                                    
-                                                    <input type="number" 
-                                                        class="form-control text-center" 
-                                                        v-model.number="paymentDetails.monto_condonado_multa" 
-                                                        min="0" 
-                                                        :max="totalMulta"
-                                                        :disabled="!totalMulta || parseFloat(totalMulta) <= 0"
-                                                        @focus="$event.target.select()"
-                                                        @blur="verificarVacio('multa')"
-                                                        @input="validarMonto('multa')"
-                                                        placeholder="0">
-                                                </div>
-                                                <textarea class="form-control form-control-sm" 
-                                                        v-model="paymentDetails.motivo_condonacion_multa" 
-                                                        :disabled="!paymentDetails.monto_condonado_multa || paymentDetails.monto_condonado_multa <= 0"
-                                                        placeholder="Motivo condonación..." rows="1"></textarea>
-                                            </div>
+                                    <div class="card-body">
+                                        <ul class="list-group list-group-flush mb-3">
+                                            <li class="list-group-item d-flex justify-content-between align-items-center px-0 bg-transparent">
+                                                <span class="text-muted">Capital</span>
+                                                <span class="fw-bold">{{ formatNumero(totalCapital) }}</span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center px-0 bg-transparent">
+                                                <span class="text-muted">Interés Acumulado</span>
+                                                <span class="fw-bold">{{ formatNumero(totalInteres) }}</span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center px-0 bg-transparent border-bottom border-2">
+                                                <span class="text-muted text-danger">Multa por Mora</span>
+                                                <span class="fw-bold text-danger">{{ formatNumero(totalMulta) }}</span>
+                                            </li>
+                                        </ul>
+                                        
+                                        <div class="d-flex justify-content-between align-items-end mt-2">
+                                            <span class="text-uppercase fw-bold text-secondary small">Total Bruto</span>
+                                            <span class="fs-4 fw-bold text-dark">{{ plan_pago.moneda }} {{ formatNumero(totalPagar) }}</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="col-md-4">
-                                <label class="fw-bold small">Capital</label>
-                                <input type="text" class="form-control fw-bold" :value="totalCapital" disabled>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="fw-bold small text-primary">Total a Pagar</label>
-                                <input type="text" class="form-control fw-bold text-primary" :value="totalPagar" disabled>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="fw-bold small text-success">Líquido (Con Dscto)</label>
-                                <input type="text" class="form-control fw-bold text-success border-success" :value="totalLiquido" disabled>
-                            </div>
+                            <div class="col-md-7">
+                                
+                                <div class="card border-warning border-opacity-50 shadow-sm mb-3" v-if="totalInteres > 0 || totalMulta > 0">
+                                    <div class="card-header bg-warning bg-opacity-10 py-2">
+                                        <h6 class="fw-bold text-warning-emphasis mb-0 small text-uppercase">
+                                            <i class="fas fa-gift me-2"></i>Opciones de Condonación
+                                        </h6>
+                                    </div>
+                                    <div class="card-body p-3">
+                                        <div class="row g-2">
+                                            <div class="col-sm-6" v-if="totalInteres > 0">
+                                                <label class="form-label small fw-bold text-muted mb-1">Desc. Interés (Bs)</label>
+                                                <input type="number" class="form-control form-control-sm border-warning" 
+                                                    v-model.number="paymentDetails.monto_condonado_interes" 
+                                                    min="0" :max="totalInteres"
+                                                    @focus="$event.target.select()" @blur="verificarVacio('interes')" @input="validarMonto('interes')" placeholder="0.00">
+                                            </div>
+                                            <div class="col-sm-6" v-if="totalMulta > 0">
+                                                <label class="form-label small fw-bold text-danger mb-1">Desc. Mora (Bs)</label>
+                                                <input type="number" class="form-control form-control-sm border-danger" 
+                                                    v-model.number="paymentDetails.monto_condonado_multa" 
+                                                    min="0" :max="totalMulta"
+                                                    @focus="$event.target.select()" @blur="verificarVacio('multa')" @input="validarMonto('multa')" placeholder="0.00">
+                                            </div>
+                                            <div class="col-12 mt-2" v-if="paymentDetails.monto_condonado_interes > 0 || paymentDetails.monto_condonado_multa > 0">
+                                                <input type="text" class="form-control form-control-sm bg-light" 
+                                                    v-model="paymentDetails.motivo_condonacion_interes" 
+                                                    placeholder="Escriba el motivo de la condonación...">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
 
-                            <div class="col-12">
-                                <label class="fw-bold">Forma de Pago</label>
-                                <select v-model="paymentDetails.forma_pago" class="form-select">
-                                    <option value="efectivo">Efectivo</option>
-                                    <option value="transferencia - QR">Transferencia - QR</option>
-                                    <option value="Depósito banco">Depósito banco</option>
-                                </select>
+                                <div class="card border-primary shadow-sm">
+                                    <div class="card-body p-3">
+                                        
+                                        <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-primary bg-opacity-10 rounded">
+                                            <span class="text-primary fw-bold text-uppercase small">A Cobrar (Líquido)</span>
+                                            <span class="fs-4 fw-bold text-primary">{{ plan_pago.moneda }} {{ formatNumero(totalLiquido) }}</span>
+                                        </div>
+
+                                        <div class="row g-3">
+                                            <div class="col-12">
+                                                <label class="form-label fw-bold text-dark mb-1">Efectivo a Recibir (Bs) *</label>
+                                                <div class="input-group input-group-lg shadow-sm">
+                                                    <span class="input-group-text bg-white border-primary"><i class="fas fa-money-bill-wave text-success"></i></span>
+                                                    <input type="number" class="form-control fw-bold fs-4 text-end border-primary" 
+                                                        v-model.number="paymentDetails.monto_recibido" 
+                                                        min="1" step="0.01" style="color: #198754;">
+                                                </div>
+                                                <div v-if="paymentDetails.monto_recibido < totalLiquido" class="form-text text-warning fw-bold mt-1">
+                                                    <i class="fas fa-info-circle"></i> Pago Parcial. Quedará un saldo de {{ formatNumero(totalLiquido - paymentDetails.monto_recibido) }} Bs.
+                                                </div>
+                                            </div>
+
+                                            <div class="col-sm-6">
+                                                <label class="form-label small fw-bold text-muted mb-1">Fecha de Transacción</label>
+                                                <input type="date" class="form-control form-control-sm" v-model="paymentDetails.fecha_pago">
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <label class="form-label small fw-bold text-muted mb-1">Método de Pago</label>
+                                                <select v-model="paymentDetails.forma_pago" class="form-select form-select-sm">
+                                                    <option value="efectivo">Efectivo Físico</option>
+                                                    <option value="transferencia - QR">Transferencia / QR</option>
+                                                    <option value="Depósito banco">Depósito Bancario</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" @click="cerrarModalCobrarCuotas">Cancelar</button>
-                        <button type="button" class="btn btn-primary fw-bold" @click="procesarPagoCuotas">
-                            <i class="fas fa-check-circle me-1"></i> Cobrar {{ totalLiquido }}
+                    
+                    <div class="modal-footer bg-white border-top-0 py-3 d-flex justify-content-end">
+                        <button type="button" class="btn btn-light px-4 border" @click="cerrarModalCobrarCuotas">Cancelar</button>
+                        <button type="button" class="btn btn-success px-4 fw-bold shadow-sm" @click="procesarPagoCuotas">
+                            <i class="fas fa-check-circle me-2"></i> CONFIRMAR COBRO: Bs {{ paymentDetails.monto_recibido ? formatNumero(paymentDetails.monto_recibido) : '0.00' }}
                         </button>
                     </div>
+
                 </div>
             </div>
         </div>
@@ -473,61 +542,85 @@ export default {
         };
     },
     computed: {
-        totalLiquido() {
-            // Función auxiliar: convierte cualquier valor inválido a 0
-            const getVal = (v) => {
-                if (v === '' || v === null || v === undefined) return 0;
-                const parsed = parseFloat(v);
-                return isNaN(parsed) ? 0 : parsed;
-            };
-
-            const total = getVal(this.totalPagar);
-            const descInteres = getVal(this.paymentDetails.monto_condonado_interes);
-            const descMulta = getVal(this.paymentDetails.monto_condonado_multa);
-
-            let liquido = total - descInteres - descMulta;
-
-            if (liquido < 0) liquido = 0;
-
-            return liquido.toFixed(2);
-        },
-        // --- Computed de Pagos (Complejo) ---
         selectedCuotasDetails() {
             return this.lista_cuotas_plan.filter(cuota => this.selectedCuotas.includes(cuota.id));
         },
         totalCapital() {
-            return this.selectedCuotasDetails.reduce((sum, c) => sum + parseFloat(c.capital), 0).toFixed(2);
+            // Vue ya no resta, solo lee la variable limpia
+            return this.selectedCuotasDetails.reduce((sum, c) => sum + parseFloat(c.capital_neto || 0), 0).toFixed(2);
         },
         totalInteres() {
-            const today = moment();
-            return this.selectedCuotasDetails.reduce((sum, c) => {
-                const fCuota = moment(c.fecha, 'YYYY-MM-DD');
-                if (!fCuota.isValid()) return sum;
-                // Si fecha es futura, usar interes acumulado (devengado parcial) si existe, sino normal
-                // Nota: Tu lógica original usaba interes_acumulado si isAfter. Ajusta según negocio.
-                return sum + (fCuota.isAfter(today) 
-                    ? parseFloat(c.interes_acumulado || 0) 
-                    : parseFloat(c.interes || 0));
-            }, 0).toFixed(2);
+            return this.selectedCuotasDetails.reduce((sum, c) => sum + parseFloat(c.interes_acumulado_neto || 0), 0).toFixed(2);
         },
         totalMulta() {
-            // Multa fija global (dias_mora * tarifa) aplicada una vez por transacción o por cuota? 
-            // Tu código original sumaba (dias_mora * multa) EN CADA CUOTA en computed, 
-            // pero luego en 'totalMulta' solo usaba (dias_mora * multa) una vez. Usaré la segunda lógica.
-            return (this.dias_mora * this.multa_dia).toFixed(2);
+            return this.selectedCuotasDetails.reduce((sum, c) => sum + parseFloat(c.mora_fija_neta || 0), 0).toFixed(2);
         },
         totalPagar() {
             return (parseFloat(this.totalCapital) + parseFloat(this.totalInteres) + parseFloat(this.totalMulta)).toFixed(2);
         },
         totalLiquido() {
-            const desc = parseFloat(this.paymentDetails.monto_condonado_interes) + parseFloat(this.paymentDetails.monto_condonado_multa);
-            return (parseFloat(this.totalPagar) - desc).toFixed(2);
+            const getVal = (v) => {
+                if (v === '' || v === null || v === undefined) return 0;
+                const parsed = parseFloat(v);
+                return isNaN(parsed) ? 0 : parsed;
+            };
+            let liquido = getVal(this.totalPagar) - getVal(this.paymentDetails.monto_condonado_interes) - getVal(this.paymentDetails.monto_condonado_multa);
+            return (liquido > 0 ? liquido : 0).toFixed(2);
         }
+    },
+
+    watch: {
+        // Observamos el total a pagar calculado. Si cambia, actualizamos el input
+        // de "Monto a Recibir" para que por defecto sugiera el pago total.
+        /*totalLiquido: {
+            handler(nuevoValor) {
+                // Solo auto-rellenamos si el valor es válido y mayor a cero
+                if (nuevoValor && parseFloat(nuevoValor) > 0) {
+                    this.paymentDetails.monto_recibido = parseFloat(nuevoValor);
+                }
+            },
+            immediate: true // Se ejecuta apenas se carga el componente
+        }*/
     },
     mounted() {
         this.buscarPlanPago(); // Cargar inicial
     },
     methods: {
+        formatDate(date) {
+            if (!date) return '';
+            return moment(date, 'YYYY-MM-DD').format('DD-MM-YYYY');
+        },
+        getEstadoCuota(cuota) {
+            // 1. Estados cerrados
+            if (cuota.estado == 2) {
+                return { texto: 'Pagado', clase: 'bg-success text-white' };
+            }
+            if (cuota.estado == 0) {
+                return { texto: 'Anulado', clase: 'bg-dark text-white' };
+            }
+
+            // 2. Verificamos si la cuota está vencida comparando fechas
+            // Comparamos si la fecha de la cuota es estrictamente menor a HOY
+            const hoy = moment().startOf('day');
+            const fechaVencimiento = moment(cuota.fecha, 'YYYY-MM-DD').startOf('day');
+            const estaVencida = fechaVencimiento.isBefore(hoy);
+
+            // 3. Estado Parcial
+            if (cuota.estado == 3) {
+                return estaVencida 
+                    ? { texto: 'Pago Parcial', clase: 'bg-danger text-white shadow-sm' } // Parcial y fecha pasada (Rojo)
+                    : { texto: 'Pago Parcial', clase: 'bg-warning text-dark border border-warning' }; // Parcial a tiempo (Amarillo)
+            }
+
+            // 4. Estado Pendiente
+            if (cuota.estado == 1) {
+                return estaVencida 
+                    ? { texto: 'Por pagar', clase: 'bg-danger text-white shadow-sm' } // Pendiente y fecha pasada (Rojo)
+                    : { texto: 'Por pagar', clase: 'bg-info text-white' };            // Pendiente a tiempo (Celeste)
+            }
+
+            return { texto: 'Indefinido', clase: 'bg-light text-dark' };
+        },
         verificarVacio(tipo) {
             if (tipo === 'interes') {
                 if (this.paymentDetails.monto_condonado_interes === '' || 
@@ -632,7 +725,6 @@ export default {
                 this.lista_cuotas_plan = response.data.cuotas;
                 this.dias_mora = response.data.dias_pasados_mora;
                 this.multa_dia = response.data.multa_dia || 3;
-                
                 // Limpiar selección
                 this.selectedCuotas = [];
                 this.resetPaymentDetails();
@@ -644,16 +736,37 @@ export default {
             }
         },
 
-        // --- LÓGICA DE PAGO ---
         isCheckboxEnabled(index) {
-            const firstUnpaid = this.lista_cuotas_plan.findIndex(c => c.estado == 1);
+            const firstUnpaid = this.lista_cuotas_plan.findIndex(c => c.estado == 1 || c.estado == 3);
             if (index === firstUnpaid) return true;
             // Permitir seleccionar si la anterior ya está seleccionada
-            if (index > 0 && this.lista_cuotas_plan[index].estado == 1) {
+            if (index > 0 && (this.lista_cuotas_plan[index - 1].estado == 1 || this.lista_cuotas_plan[index - 1].estado == 3)) {
                 return this.selectedCuotas.includes(this.lista_cuotas_plan[index - 1].id);
             }
             return false;
         },
+
+        toggleCuotaSelection(index, cuotaId, isChecked) {
+            if (isChecked) {
+                // Si el usuario MARCA la casilla, simplemente agregamos el ID al arreglo
+                if (!this.selectedCuotas.includes(cuotaId)) {
+                    this.selectedCuotas.push(cuotaId);
+                }
+            } else {
+                // Si el usuario DESMARCA la casilla, debemos quitar esta cuota 
+                // Y TODAS LAS QUE LE SIGUEN HACIA ABAJO.
+                
+                // 1. Recopilamos todos los IDs desde este índice hasta el final de la tabla
+                const idsParaQuitar = [];
+                for (let i = index; i < this.lista_cuotas_plan.length; i++) {
+                    idsParaQuitar.push(this.lista_cuotas_plan[i].id);
+                }
+                
+                // 2. Filtramos el arreglo original quitando todos esos IDs
+                this.selectedCuotas = this.selectedCuotas.filter(id => !idsParaQuitar.includes(id));
+            }
+        },
+
         esPrimerRegistroConMora(index) {
             const primerConMora = this.lista_cuotas_plan.findIndex(c => c.dias_pasados > 0);
             return index === primerConMora;
@@ -686,39 +799,61 @@ export default {
             if (modalInstance) modalInstance.hide();
         },
         
+        calcularMoraFila(cuota) {
+            // Retorna la mora total calculada para esa fila (antes de condonaciones o pagos parciales)
+            // Se calcula usando los dias_pasados multiplicados por la tarifa diaria (multa_dia)
+            // Solo aplica si la cuota está Pendiente (1) o Pagada Parcialmente (3)
+            return (cuota.estado == 1 || cuota.estado == 3) && cuota.dias_pasados > 0 
+                ? (cuota.dias_pasados * this.multa_dia) 
+                : 0;
+        },
+
         async procesarPagoCuotas() {
             try {
-                // Mapear datos para backend
                 const cuotasData = this.selectedCuotas.map(id => {
                     const c = this.selectedCuotasDetails.find(x => x.id === id);
                     return {
                         id_cuota: id,
-                        fecha_pago: this.paymentDetails.fecha_pago,
-                        monto_pago: c.total, // El backend espera el monto total nominal
-                        dias_pasados: c.dias_pasados,
-                        forma_pago: this.paymentDetails.forma_pago,
-                        // Condonaciones se envían globales o prorrateadas, aquí lo enviamos tal cual tu lógica original
-                        // OJO: Tu lógica original enviaba los campos de condonación repetidos en cada cuota.
-                        monto_condonado_interes: parseFloat(this.paymentDetails.monto_condonado_interes) || 0,
-                        motivo_condonacion_interes: this.paymentDetails.motivo_condonacion_interes || '',
-                        monto_condonado_multa: parseFloat(this.paymentDetails.monto_condonado_multa) || 0,
-                        motivo_condonacion_multa: this.paymentDetails.motivo_condonacion_multa || ''
+                        capital_adeudado: parseFloat(c.capital_neto || 0),
+                        interes_adeudado: parseFloat(c.interes_acumulado_neto || 0),
+                        mora_adeudada: parseFloat(c.mora_fija_neta || 0)
                     };
                 });
 
-                const response = await axios.post('/pagar_cuotas', {
+                const payload = {
                     id_plan_pago: this.plan_pago.id,
-                    cuotas: cuotasData
-                });
+                    cuotas: cuotasData,
+                    monto_recibido: parseFloat(this.paymentDetails.monto_recibido || 0),
+                    fecha_pago: this.paymentDetails.fecha_pago,
+                    forma_pago: this.paymentDetails.forma_pago,
+                    condonacion_interes: parseFloat(this.paymentDetails.monto_condonado_interes) || 0,
+                    motivo_condonacion_interes: this.paymentDetails.motivo_condonacion_interes || '',
+                    condonacion_mora: parseFloat(this.paymentDetails.monto_condonado_multa) || 0,
+                    motivo_condonacion_mora: this.paymentDetails.motivo_condonacion_multa || ''
+                };
 
-                Swal.fire('Pago Exitoso', 'Las cuotas han sido cobradas.', 'success');
+                if (payload.monto_recibido <= 0 && payload.condonacion_interes <= 0 && payload.condonacion_mora <= 0) {
+                    Swal.fire('Atención', 'Debe ingresar un monto a recibir o aplicar una condonación.', 'warning');
+                    return;
+                }
+
+                if (payload.monto_recibido > (parseFloat(this.totalLiquido) + 0.01)) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Monto Inválido',
+                        text: `El cliente solo debe ${this.totalLiquido} Bs en las cuotas seleccionadas. No puede cobrar de más.`
+                    });
+                    return;
+                }
+
+                const response = await axios.post('/pagar_cuotas', payload);
+                Swal.fire('Transacción Exitosa', 'El pago se procesó correctamente.', 'success');
                 this.cerrarModalCobrarCuotas();
-                // Recargar tabla
                 this.verDetallePlan(this.plan_pago);
 
             } catch (error) {
                 console.error(error);
-                Swal.fire('Error', 'No se pudo procesar el pago.', 'error');
+                Swal.fire('Error', error.response?.data?.error || 'No se pudo procesar el pago.', 'error');
             }
         },
 
@@ -749,13 +884,10 @@ export default {
             window.open(`/lista_cuotas_pdf_caja?id_plan_pago=${id}`, '_blank');
         },
 
-        // --- UTILS ---
         formatNumero(val) {
             return new Intl.NumberFormat('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val);
         },
-        formatFecha(f) {
-            return moment(f).format('DD/MM/YYYY');
-        }
+
     }
 };
 </script>
@@ -777,8 +909,8 @@ export default {
     }
 
     .badge{
-        border-radius:10px;
-        min-width: 100px;
+        border-radius:15px !important;
+        min-width: 100px !important;
     }
 
     .list-header-pay li{

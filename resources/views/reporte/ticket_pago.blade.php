@@ -1,292 +1,213 @@
-
 <?php
 use Carbon\Carbon;
 use Luecano\NumeroALetras\NumeroALetras;
 
-$url = empty(DB::table('mi_empresa')->get()[0]->logo)?'logo_sistema_codesoft.png': DB::table('mi_empresa')->get()[0]->logo;
-$image = file_get_contents('img/'.$url);
+$url = empty($empresa->logo) ? 'logo_sistema_codesoft.png' : $empresa->logo;
+$path = public_path('img/'.$url);
+$html_logo = '';
 
-$html = '<img src="data:image/png;base64,' . base64_encode($image) . '" height="30px">';
+if (file_exists($path)) {
+    $image = file_get_contents($path);
+    $html_logo = '<img src="data:image/png;base64,' . base64_encode($image) . '" height="50px">';
+}
 
-function evaluandoEstado($estado){
-    if($estado==1){
-        return 'En proceso';
-    }else{
-        if($estado==0){
-            return 'Anulado';
-        }else{
-            if($estado==2){
-                return 'Cancelado';
-            }
-        }
-    }
-}
-function evaluandoEstadoCuota($estado){
-    if($estado==1){
-        return 'Sin pagar';
-    }else{
-        if($estado==0){
-            return 'Anulado';
-        }else{
-            if($estado==2){
-                return 'Cancelado';
-            }
-        }
-    }
-}
+$formatter = new NumeroALetras();
+$monto_pago_literal = $formatter->toInvoice($total_pagado, 2, 'Bolivianos');
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boleta de pago</title>
-    <!-- Bootstrap Css -->
-    <link href="assets/css/bootstrap.min.css" id="bootstrap-style" rel="stylesheet" type="text/css" />
-    
+    <title>Recibo de Pago</title>
     <style>
-    /* Estilos CSS para el informe */
-    body {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        padding: 20px; /* Espaciado general */
-        padding-top:0px;
-    }
-
-    .informe {
-        font-size: 14px;
-        margin-bottom: 10px;
-        width: 50%; /* Ancho del informe */
-        margin: 0 auto; /* Centra el informe en la página */
-    }
-
-    .titulo-seccion {
-        font-weight: bold;
-        font-size: 16px;
-        text-align: left;
-        padding-top: 5px;
-        padding-bottom: 5px;
-        background-color: #ddd;
-    }
-
-    .company-container {
-        display: grid;
-        grid-template-columns: 50% 50%;
-    }
-
-    .company-container>div {
-        width: 100%;
-    }
-
-    table {
-        border-collapse: collapse;
-        width: 100%;
-    }
-
-    table,
-    th,
-    td {
-        border: none;
-    }
-
-    th,
-    td {
-        padding: 3px;
-    }
-
-    /* Nuevo estilo para que el contenido inicie desde la izquierda */
-    .informe {
-        margin: 0; /* Elimina el margen para que inicie desde la izquierda */
-    }
-
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .ticket-container {
+            width: 100%;
+            max-width: 400px; /* Ancho simulado de ticketera grande o media hoja */
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px dashed #ddd; /* Quitar border si imprimes en ticketera real */
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .header h2 {
+            margin: 10px 0 5px 0;
+            font-size: 18px;
+            letter-spacing: 1px;
+        }
+        .header p {
+            margin: 2px 0;
+            font-size: 11px;
+            color: #555;
+        }
+        .divider {
+            border-top: 1px dashed #000;
+            margin: 15px 0;
+        }
+        .info-row {
+            width: 100%;
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+        .info-row td {
+            vertical-align: top;
+        }
+        .info-label {
+            font-weight: bold;
+            width: 35%;
+        }
+        .table-items {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 11px;
+        }
+        .table-items th {
+            border-bottom: 1px solid #000;
+            border-top: 1px solid #000;
+            padding: 5px 0;
+            text-align: right;
+        }
+        .table-items th.left { text-align: left; }
+        .table-items td {
+            padding: 5px 0;
+            text-align: right;
+        }
+        .table-items td.left { text-align: left; }
+        .total-row {
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .literal {
+            font-size: 11px;
+            font-style: italic;
+            text-align: center;
+            margin-top: 10px;
+            padding: 5px;
+            background-color: #f9f9f9;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 10px;
+        }
+        .firmas {
+            margin-top: 50px;
+            width: 100%;
+            text-align: center;
+            font-size: 11px;
+        }
+        .firmas td { width: 50%; }
     </style>
 </head>
-<?php
-    $date = Carbon::now();
-    $monto_pago= (int )$informacion[0]->monto_pago;
-    //dd($monto_pago);
-    $formatter = new NumeroALetras();
-    $monto_pago_literal= $formatter->toInvoice($monto_pago, 2, 'bs');
-    //$monto_pago_literal = NumeroALetras::toLetters($monto_pago);
-
-
-  
-
-?>
-  
-
-
 <body>
-    {{-- <table style="border:none">
-        <tr>
-            <td style="border:none" style="display: flex; align-items:center">
-             
+
+    <div class="ticket-container">
         
-           
-             
-            </td>
-            <td style="text-align:end; border:none">
-                <p style="text-align:right; margin:0; text-transform: uppercase;"><strong>{{empty(DB::table('mi_empresa')->get()[0]->nombre)?'Nombre de la empresa': DB::table('mi_empresa')->get()[0]->nombre}}</strong></p>
-                <p style="text-align:right; margin:0"><strong>Dirección: </strong>  {{empty(DB::table('mi_empresa')->get()[0]->direccion)?'Dirección de la empresa':DB::table('mi_empresa')->get()[0]->direccion}}</p>
-                <p style="text-align:right; margin:0"><strong>Teléfono: </strong>  {{empty(DB::table('mi_empresa')->get()[0]->telefono)?'Telefono de la empresa': DB::table('mi_empresa')->get()[0]->telefono}}</p>
-                <p style="text-align:right; margin:0"><strong>Correo Electrónico: </strong>  {{empty(DB::table('mi_empresa')->get()[0]->email)?'Correo de la empresa': DB::table('mi_empresa')->get()[0]->email}}</p>
-            </td>
-        </tr>
-    </table> --}}
-    <br>
-    {{-- $clientes[0]->fecha_nacimiento --}}
-    <div class="informe">
-        <div class="seccion">
-            <table>
-                <tr style="text-align: center; margin-bottom:0">
-                    <?php echo $html?>
-                        <p style="font-size:12px; text-align:center; margin:0; text-transform: uppercase; margin-top:10px;"><strong>{{empty(DB::table('mi_empresa')->get()[0]->nombre)?'Nombre de la empresa': DB::table('mi_empresa')->get()[0]->nombre}}</strong></p>
-                        <p style="font-size:12px; text-align:center; margin:0"><strong>Dirección: </strong>  {{empty(DB::table('mi_empresa')->get()[0]->direccion)?'Dirección de la empresa':DB::table('mi_empresa')->get()[0]->direccion}}</p>
-                        <p style="font-size:12px; text-align:center; margin:0"><strong>Teléfono: </strong>  {{empty(DB::table('mi_empresa')->get()[0]->telefono)?'Telefono de la empresa': DB::table('mi_empresa')->get()[0]->telefono}}</p>
-                        <p style="font-size:12px; text-align:center; margin:0"><strong>Correo Electrónico: </strong>  {{empty(DB::table('mi_empresa')->get()[0]->email)?'Correo de la empresa': DB::table('mi_empresa')->get()[0]->email}}</p>
-                    <h2 style="margin-bottom:0; font-size:15px;">
-                        <strong>
-                            BOLETA DE PAGO
-                        </strong>
-                    </h2>
-                    
-                </tr>
-                {{-- <tr style="text-align: center; margin-bottom:0">
-                    <h3 style="font-size:13px; margin-top:0; margin-bottom:0">
-                        Creditos
-                    </h3>
-                </tr> --}}
-                <tr style="text-align: center; margin-bottom:0; margin-top:0px">
-                    <h3>
-                        Bs. {{ number_format($informacion[0]->monto_pago, 2, '.', ',')}}
-                    </h3>
-                </tr>
-            </table>
-            <table style="font-size:12px">
-                <tr>
-                    <td colspan="1">
-                        <strong>
-                            Fecha pago:
-                        </strong>
-                        {{-- {{$date}} --}}
-                        {{$informacion[0]->fecha_pago}}
-                    </td>
-                </tr>
-            </table>
-            <table style="font-size:12px">
-                <tr>
-                    <td>
-                        <i>
-                            Recibi de: <strong>{{strtoupper($informacion[0]->nombre_cliente)}} </strong>
-                        </i>
-                    </td>
-                </tr>
-            </table>
-            <hr>
-            <table style="font-size:12px">
-                <tr>
-                    <td>
-                        <i>
-                            la suma de : <strong>{{strtoupper($monto_pago_literal)}} </strong>
-                        </i>
-                    </td>
-                </tr>
-            </table>
-            
-            <hr>
-            <table style="font-size:12px">
-                <tr>
-                    <td>
-                        <i>
-                            Por concepto de : 
-                        </i>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <i>
-                            Pago de cuota N° 
-                            <strong>{{$informacion[0]->nro_cuota}}</strong>
-                            de
-                            <strong>{{$informacion[0]->cantidad_cuotas}}</strong>
-
-                        </i>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <i>
-                            Codigo de plan de pago:
-                            <strong>{{$informacion[0]->codigo_plan}}</strong>
-                        
-
-                        </i>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <i>
-                            Forma de pago:
-                            <strong>{{$informacion[0]->forma_pago}}</strong>
-                        
-
-                        </i>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <i>
-                            Saldo capital:
-                            <strong>{{$informacion[0]->saldo_capital}}</strong>
-                        
-
-                        </i>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <i>
-                            Multa:
-                            <strong>{{empty($informacion[0]->multa)?0:$informacion[0]->multa}}</strong>
-                        
-
-                        </i>
-                    </td>
-                </tr>
-            </table>
-            <hr>
-
-            <br><br>
-
-            <table style="font-size:12px">
-                <tr>
-                    <td style="text_align:center">
-                        ______________________
-                    </td>
-                    <td>
-                        
-                    </td>
-                    <td style="text_align:center">
-                        ______________________
-                    </td>
-                </tr>
-                <tr>
-                    <td style="text_align:center">
-                        CLIENTE
-                    </td>
-                    <td>
-                        
-                    </td>
-                    <td style="text_align:center">
-                        CAJERO
-                    </td>
-                </tr>
-            </table>
-            
+        <div class="header">
+            {!! $html_logo !!}
+            <h2>RECIBO DE PAGO</h2>
+            <p><strong>{{ strtoupper(empty($empresa->nombre) ? 'EMPRESA DEMO' : $empresa->nombre) }}</strong></p>
+            <p>{{ empty($empresa->direccion) ? '' : $empresa->direccion }}</p>
+            <p>Telf: {{ empty($empresa->telefono) ? '' : $empresa->telefono }}</p>
         </div>
-   
-        
+
+        <div class="divider"></div>
+
+        <table class="info-row">
+            <tr>
+                <td class="info-label">Transacción:</td>
+                <td>{{ $codigo_transaccion }}</td>
+            </tr>
+            <tr>
+                <td class="info-label">Fecha / Hora:</td>
+                <td>{{ Carbon::parse($info_base->fecha_pago)->format('d/m/Y H:i') }}</td>
+            </tr>
+            <tr>
+                <td class="info-label">Cliente:</td>
+                <td>{{ strtoupper($info_base->cliente_nombre) }}</td>
+            </tr>
+            <tr>
+                <td class="info-label">CI:</td>
+                <td>{{ $info_base->ci }}</td>
+            </tr>
+            <tr>
+                <td class="info-label">Cajero:</td>
+                <td>{{ $info_base->cajero }}</td>
+            </tr>
+            <tr>
+                <td class="info-label">Método Pago:</td>
+                <td>{{ strtoupper($info_base->forma_pago) }}</td>
+            </tr>
+            <tr>
+                <td class="info-label">N° Crédito:</td>
+                <td><strong>{{ $info_base->codigo_plan }}</strong> (Abono a Cuotas: {{ $cuotas_texto }})</td>
+            </tr>
+        </table>
+
+        <table class="table-items">
+            <thead>
+                <tr>
+                    <th class="left">Detalle</th>
+                    <th>Subtotal (Bs)</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($pagos as $p)
+                <tr>
+                    <td class="left">
+                        <strong>Cuota {{ $p->nro_cuota }}</strong><br>
+                        <span style="font-size: 9px; color:#555;">
+                            Cap: {{ number_format($p->pago_capital, 2) }} | 
+                            Int: {{ number_format($p->pago_interes, 2) }}
+                            @if($p->pago_mora > 0) | Mora: {{ number_format($p->pago_mora, 2) }} @endif
+                        </span>
+                    </td>
+                    <td>{{ number_format($p->monto_pago, 2) }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+
+        <div class="divider"></div>
+
+        <table style="width: 100%; text-align: right; font-size: 13px;">
+            @if($total_condonado > 0)
+            <tr>
+                <td>Descuentos Aplicados:</td>
+                <td>- {{ number_format($total_condonado, 2) }}</td>
+            </tr>
+            @endif
+            <tr class="total-row">
+                <td style="padding-top: 5px;">TOTAL COBRADO:</td>
+                <td style="padding-top: 5px;">Bs. {{ number_format($total_pagado, 2) }}</td>
+            </tr>
+        </table>
+
+        <div class="literal">
+            Son: {{ strtoupper($monto_pago_literal) }}
+        </div>
+
+        <table class="firmas">
+            <tr>
+                <td>_______________________<br>Firma Cliente</td>
+                <td>_______________________<br>Firma Cajero</td>
+            </tr>
+        </table>
+
+        <div class="footer">
+            <p>¡Gracias por su pago y su puntualidad!</p>
+            <p style="color:#888;">Impreso el {{ Carbon::now()->format('d/m/Y H:i') }}</p>
+        </div>
+
     </div>
+
 </body>
 </html>

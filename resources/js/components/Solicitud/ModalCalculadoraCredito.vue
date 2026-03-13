@@ -66,7 +66,7 @@
                             <button @click="generarPlanPagoSimulacionGeneral" class="btn btn-success me-2">
                                 Generar Plan pago
                             </button>
-                            <button @click="listaCuotasPdfSimulacion()" class="btn btn-info">
+                            <button @click="listaCuotasPdfSimulacion()" class="btn btn-warning text-dark">
                                 <i class="fas fa-print me-1"></i> Imprimir
                             </button>
                         </div>

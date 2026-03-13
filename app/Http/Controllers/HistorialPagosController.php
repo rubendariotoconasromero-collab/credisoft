@@ -16,25 +16,25 @@ class HistorialPagosController extends Controller
         $criterio = $request->input('criterio');
         $buscar = $request->input('buscar');
 
-        // CONSTRUIMOS LA CONSULTA AGRUPADA
-        // Seleccionamos el codigo y SUMAMOS los montos
+        // 1. CONSTRUIMOS LA CONSULTA AGRUPADA LEYENDO LAS NUEVAS COLUMNAS DE CASCADA
         $query = Pago::select(
             'codigo_transaccion',
-            DB::raw('MAX(id) as id_referencia'), // Usamos esto para relaciones
+            DB::raw('MAX(id) as id_referencia'), 
             DB::raw('MAX(fecha_pago) as fecha_pago'),
-            DB::raw('MAX(id_usuario) as id_usuario'), // Asumimos mismo cajero
-            DB::raw('SUM(monto_pago) as total_pagado'), // Suma total dinero
-            DB::raw('SUM(monto_cuota) as total_capital'),
-            DB::raw('SUM(multa_total) as total_multa'),
-            DB::raw('COUNT(id) as cantidad_cuotas'), // Cuántas cuotas pagó
-            DB::raw('GROUP_CONCAT(id_cuota) as ids_cuotas'), // (Opcional) IDs separados por coma
+            DB::raw('MAX(id_usuario) as id_usuario'),
+            DB::raw('SUM(monto_pago) as total_pagado'), // EFECTIVO REAL
+            DB::raw('SUM(pago_capital) as total_capital'), // CUÁNTO FUE A CAPITAL
+            DB::raw('SUM(pago_interes) as total_interes'), // CUÁNTO FUE A INTERÉS
+            DB::raw('SUM(pago_mora) as total_mora'),       // CUÁNTO FUE A MORA
+            DB::raw('SUM(monto_condonado) as total_condonado'), 
+            DB::raw('COUNT(id) as cantidad_cuotas'), 
+            DB::raw('GROUP_CONCAT(id_cuota) as ids_cuotas'), 
             DB::raw('MAX(forma_pago) as forma_pago'),
             DB::raw('MAX(estado) as estado')
         )
         ->groupBy('codigo_transaccion');
 
-
-        // 2. Filtros de Fecha (Sobre los agregados o where simple)
+        // 2. Filtros de Fecha
         if ($fechaInicio && $fechaFinal) {
             $query->whereBetween('fecha_pago', [$fechaInicio . ' 00:00:00', $fechaFinal . ' 23:59:59']);
         }
@@ -42,7 +42,6 @@ class HistorialPagosController extends Controller
         // 3. Filtros de Búsqueda
         if (!empty($buscar)) {
             if ($criterio == 'pago.id' || $criterio == 'codigo') {
-                // Buscamos por el código de transacción
                 $query->where('codigo_transaccion', 'like', "%$buscar%");
             } 
             elseif ($criterio == 'users.name') {
@@ -51,8 +50,6 @@ class HistorialPagosController extends Controller
                 });
             }
             elseif (str_contains($criterio, 'cliente')) {
-                // Buscamos en los pagos que tengan cuotas de ese cliente
-                // Esta es una subconsulta "whereExists" para no romper el group by
                 $query->whereHas('cuota.planPago.solicitud.cliente', function($q) use ($buscar) {
                     $q->where(DB::raw("CONCAT(nombre, ' ', apellido)"), 'like', "%$buscar%")
                     ->orWhere('ci', 'like', "%$buscar%");
@@ -60,32 +57,24 @@ class HistorialPagosController extends Controller
             }
         }
 
-        // Ordenar por fecha reciente
         $query->orderBy('fecha_pago', 'desc');
 
-        // 4. KPIS (Totales globales antes de paginar)
-        // Nota: Para sumar totales de una query agrupada, es mejor hacer una query separada simple
+        // 4. KPIS (Totales globales)
         $kpiQuery = Pago::query();
         if ($fechaInicio && $fechaFinal) {
             $kpiQuery->whereBetween('fecha_pago', [$fechaInicio . ' 00:00:00', $fechaFinal . ' 23:59:59']);
         }
-        // (Aquí podrías replicar los filtros de búsqueda si fuera necesario para exactitud extrema)
         
-        $totalRecaudado = $kpiQuery->where('estado', 1)->sum('monto_pago'); // + Multas si ya estan incluidas en monto_pago o sumar aparte
-        $totalMultas = $kpiQuery->where('estado', 1)->sum('multa_total');
-        $totalCondonado = $kpiQuery->where('estado', 1)->sum('monto_condonado');
-
+        // Ahora usamos las columnas correctas
+        $totalRecaudado = $kpiQuery->where('estado', 1)->sum('monto_pago'); // Dinero total que entró a caja
+        $totalMultas = $kpiQuery->where('estado', 1)->sum('pago_mora'); // Dinero de caja que fue a multas
+        $totalCondonado = $kpiQuery->where('estado', 1)->sum('monto_condonado'); // Descuentos
 
         // 5. Paginación
         $pagos = $query->paginate(10);
 
-        // 6. Cargar Relaciones (Cliente) DESPUÉS de paginar
-        // Como $pagos es una colección agrupada, no tiene la relación directa.
-        // Usamos 'id_referencia' (que es un ID real de pago) para cargar la data del cliente.
-        
-        // Transformamos la colección para inyectar el cliente
+        // 6. Cargar Relaciones
         $pagos->getCollection()->transform(function ($pagoGroup) {
-            // Buscamos UN pago real de este grupo para sacar datos del cliente
             $pagoReal = Pago::with('usuario', 'cuota.planPago.solicitud.cliente')
                             ->find($pagoGroup->id_referencia);
             
@@ -93,7 +82,6 @@ class HistorialPagosController extends Controller
             $pagoGroup->cliente_data = $pagoReal->cuota->planPago->solicitud->cliente ?? null;
             $pagoGroup->credito_id = $pagoReal->cuota->planPago->id ?? null;
             
-            // Obtenemos los números de cuota (ej: "1, 2, 3")
             $numerosCuotas = Cuota::whereIn('id', explode(',', $pagoGroup->ids_cuotas))->pluck('numero')->toArray();
             $pagoGroup->detalles_cuotas = implode(', ', $numerosCuotas);
 
@@ -103,10 +91,46 @@ class HistorialPagosController extends Controller
         return response()->json([
             'pagos' => $pagos,
             'kpis' => [
-                'total_recaudado' => $totalRecaudado + $totalMultas, 
+                'total_recaudado' => $totalRecaudado, // Ya no sumamos la multa aquí, monto_pago ya la incluye
                 'total_multas' => $totalMultas,
                 'total_condonado' => $totalCondonado
             ]
+        ]);
+    }
+
+    public function show($codigo)
+    {
+        $pagos = Pago::with([
+                'cuota', 
+                'usuario', 
+                'cuota.planPago.solicitud.cliente'
+            ])
+            ->where('codigo_transaccion', $codigo)
+            ->orderBy('id', 'asc') 
+            ->get();
+
+        if ($pagos->isEmpty()) {
+            return response()->json(['message' => 'Transacción no encontrada'], 404);
+        }
+
+        $referencia = $pagos->first();
+        
+        // El monto total es directamente la suma de "monto_pago" (el efectivo). 
+        // Ya no sumamos multa_total para evitar duplicar
+        $totalMonto = $pagos->sum('monto_pago');
+
+        $cabecera = [
+            'codigo'            => $codigo,
+            'fecha'             => $referencia->fecha_pago,
+            'cajero'            => $referencia->usuario ? $referencia->usuario->name : 'Sistema',
+            'cliente'           => $referencia->cuota->planPago->solicitud->cliente, 
+            'plan_pago_id'      => $referencia->cuota->planPago->id, 
+            'total_transaccion' => $totalMonto 
+        ];
+
+        return response()->json([
+            'cabecera' => $cabecera,
+            'detalles' => $pagos
         ]);
     }
 
@@ -149,51 +173,4 @@ class HistorialPagosController extends Controller
         }
     }
 
-    /**
-     * Obtener detalles de una transacción agrupada por código
-     * * @param string $codigo El código de transacción (ej. TRX-123...)
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function show($codigo)
-    {
-        // 1. Buscamos TODOS los pagos que pertenezcan a ese código de transacción
-        // Cargamos las relaciones necesarias para mostrar nombres y datos del crédito
-        $pagos = Pago::with([
-                'cuota', 
-                'usuario', 
-                'cuota.planPago.solicitud.cliente'
-            ])
-            ->where('codigo_transaccion', $codigo)
-            ->orderBy('id', 'asc') // Ordenamos para que las cuotas salgan en orden (1, 2, 3...)
-            ->get();
-
-        // Validación: Si no existe el código
-        if ($pagos->isEmpty()) {
-            return response()->json(['message' => 'Transacción no encontrada'], 404);
-        }
-
-        // 2. Preparamos la CABECERA (Datos compartidos por todo el grupo)
-        // Tomamos el primer registro como referencia para sacar cliente, fecha y cajero
-        $referencia = $pagos->first();
-        
-        // Calculamos los totales sumando la columna de todos los registros encontrados
-        $totalMonto = $pagos->sum('monto_pago');
-        $totalMulta = $pagos->sum('multa_total');
-
-        $cabecera = [
-            'codigo'            => $codigo,
-            'fecha'             => $referencia->fecha_pago,
-            'cajero'            => $referencia->usuario ? $referencia->usuario->name : 'Sistema',
-            // Obtenemos el objeto cliente completo para mostrar Nombre, CI, etc.
-            'cliente'           => $referencia->cuota->planPago->solicitud->cliente, 
-            'plan_pago_id'      => $referencia->cuota->planPago->id, // ID del crédito
-            'total_transaccion' => $totalMonto + $totalMulta // Total global pagado en ese momento
-        ];
-
-        // 3. Retornamos la respuesta JSON estructurada
-        return response()->json([
-            'cabecera' => $cabecera,
-            'detalles' => $pagos // Aquí va la lista completa de cuotas individuales
-        ]);
-    }
 }

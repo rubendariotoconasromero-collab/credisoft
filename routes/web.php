@@ -151,7 +151,7 @@ Route::get('/get_pagos_fecha', 'App\Http\Controllers\PagoController@getPagosFech
 Route::get('/get_pagos_lista_cuotas_fecha', 'App\Http\Controllers\PagoController@getPagosListaCuotasFecha');
 Route::get('/get_pagos_lista_anulados_fecha', 'App\Http\Controllers\PagoController@getPagosListaAnuladosFecha');
 Route::get('/get_pagos_lista_cuotas_total_fecha', 'App\Http\Controllers\PagoController@getPagosListaCuotasTotalFecha');
-Route::get('/generar_ticket_pdf', 'App\Http\Controllers\PagoController@generarTicketPago');
+Route::get('/imprimir/recibo/{codigo_transaccion}', 'App\Http\Controllers\PagoController@generarTicketPago');
 
 
 
@@ -395,6 +395,8 @@ Route::get('/historial-pagos/detalles/{codigo}', [HistorialPagosController::clas
 
 
 Route::get('/caja/get-ordenes-reprogramacion', [CajaController::class, 'getOrdenesReprogramacion']);
+Route::get('/verificar-boveda', [CajaController::class, 'verificarBoveda']);
+
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/perfil', [PerfilController::class, 'index']);

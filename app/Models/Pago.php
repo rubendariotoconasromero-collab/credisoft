@@ -26,7 +26,13 @@ class Pago extends Model
         'id_usuario', 
         'id_cuota', 
         'id_caja', 
-        'monto_cuota'
+        'monto_cuota',
+
+        'pago_capital',
+        'pago_interes',
+        'pago_mora',
+        'monto_condonado_interes',
+        'monto_condonado_mora',
     ];
 
     public function usuario()
