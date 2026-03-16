@@ -75,7 +75,7 @@
 
                         <div class="card border-0 shadow-sm">
                             <div class="table-responsive table-desembolso" style="font-size:12px">
-                                <table class="table table-hover table-striped mb-0 align-middle">
+                                <table class="table table-hover table-striped mb-0 align-middle table-sm">
                                     <thead class="bg-dark text-white text-uppercase table-success" style="font-size: 11px;">
                                         <tr>
                                             <th class="text-center py-3">Crédito</th>
@@ -379,7 +379,7 @@ export default {
             })
                 .then((response) => {
                     this.detalles = response.data;
-                    // $('#modalDetalles').modal('show');
+                    this.detalles.desembolso.id_cliente = response.data.desembolso.codcli;
                     this.view=1;
                 })
                 .catch((error) => {

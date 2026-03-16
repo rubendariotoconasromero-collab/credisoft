@@ -6,512 +6,466 @@
 
         <div class="page-content">
             <div class="container-fluid">
-                <div v-if="view==0" class="card">
-                    <div class="card-header bg-success py-2">
-                        <h5 class="header-title my-0 text-center fw-semibold text-white text-uppercase">
-                            Historial de Ingresos y Gastos
+                <div v-if="view==0" class="card border-0">
+                    
+                    <div class="card-header bg-success py-3 d-flex justify-content-center align-items-center">
+                        <h5 class="header-title my-0 fw-bold text-white text-uppercase">
+                            <i class="fas fa-balance-scale me-2"></i> Historial de Ingresos y Gastos
                         </h5>
                     </div>
-                    <!-- Nav Tabs -->
-                    <ul class="nav nav-tabs mb-3 mt-2 d-flex justify-content-center" id="seccionesTab" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="ingresos-caja-tab" data-bs-toggle="tab"
-                                data-bs-target="#ingresos-caja" type="button" role="tab" aria-controls="ingresos-caja"
-                                aria-selected="true">
-                                <!-- <i class="fas fa-cash-register me-1"></i> -->
-                                Ingresos Caja Actual
+
+                    <ul class="nav nav-pills mb-4 mt-3 d-flex justify-content-center px-2 custom-tabs" id="seccionesTab" role="tablist">
+                        <li class="nav-item mx-1" role="presentation">
+                            <button class="nav-link active px-4 py-2 fw-bold text-uppercase" id="ingresos-caja-tab" data-bs-toggle="pill"
+                                data-bs-target="#ingresos-caja" type="button" role="tab" aria-controls="ingresos-caja" aria-selected="true">
+                                <i class="fas fa-arrow-down me-1"></i> Ingresos (Caja Actual)
                             </button>
                         </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="egresos-caja-tab" data-bs-toggle="tab"
-                                data-bs-target="#egresos-caja" type="button" role="tab" aria-controls="egresos-caja"
-                                aria-selected="false">
-                                <!-- <i class="fas fa-cash-register me-1"></i> -->
-                                Egresos Caja Actual
+                        <li class="nav-item mx-1" role="presentation">
+                            <button class="nav-link px-4 py-2 fw-bold text-uppercase" id="egresos-caja-tab" data-bs-toggle="pill"
+                                data-bs-target="#egresos-caja" type="button" role="tab" aria-controls="egresos-caja" aria-selected="false">
+                                <i class="fas fa-arrow-up me-1"></i> Egresos (Caja Actual)
                             </button>
                         </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="historial-ingresos-tab" data-bs-toggle="tab"
-                                data-bs-target="#historial-ingresos" type="button" role="tab"
-                                aria-controls="historial-ingresos" aria-selected="false">
-                                <!-- <i class="fas fa-history me-1"></i> -->
-                                Historial de Ingresos
+                        <li class="nav-item mx-1" role="presentation">
+                            <button class="nav-link px-4 py-2 fw-bold text-uppercase" id="historial-ingresos-tab" data-bs-toggle="pill"
+                                data-bs-target="#historial-ingresos" type="button" role="tab" aria-controls="historial-ingresos" aria-selected="false">
+                                <i class="fas fa-history me-1"></i> Hist. General Ingresos
                             </button>
                         </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="historial-gastos-tab" data-bs-toggle="tab"
-                                data-bs-target="#historial-gastos" type="button" role="tab"
-                                aria-controls="historial-gastos" aria-selected="false">
-                                <!-- <i class="fas fa-history me-1"></i> -->
-                                Historial de Gastos
+                        <li class="nav-item mx-1" role="presentation">
+                            <button class="nav-link px-4 py-2 fw-bold text-uppercase" id="historial-gastos-tab" data-bs-toggle="pill"
+                                data-bs-target="#historial-gastos" type="button" role="tab" aria-controls="historial-gastos" aria-selected="false">
+                                <i class="fas fa-history me-1"></i> Hist. General Gastos
                             </button>
                         </li>
                     </ul>
 
-                    <!-- Tab Content -->
-                    <div class="tab-content" id="seccionesTabContent">
-                        <!-- Ingresos Caja Actual -->
-                        <div class="tab-pane fade show active" id="ingresos-caja" role="tabpanel"
-                            aria-labelledby="ingresos-caja-tab">
-                            <div class="card-body">
-                                <!-- Filtros -->
-                                <div class="row mb-1">
-                                    <div class="col-md-6">
-                                        <div class="input-group">
-                                            <input @input="buscarIngresosCaja" type="date" v-model="filtros_caja.fecha_inicio"
-                                                class="form-control">
-                                            <input @input="buscarIngresosCaja" type="date" v-model="filtros_caja.fecha_final"
-                                                class="form-control">
+                    <div class="tab-content bg-white p-3 rounded-bottom" id="seccionesTabContent">
+                        
+                        <div class="tab-pane fade show active fade-in-animation" id="ingresos-caja" role="tabpanel" aria-labelledby="ingresos-caja-tab">
+                            
+                            <div class="row mb-3">
+                                <div class="col-lg-8 mb-2 mb-lg-0">
+                                    <div class="row g-2">
+                                        <div class="col-md-6">
+                                            <div class="input-group shadow-sm">
+                                                <span class="input-group-text bg-white text-muted fw-bold" style="font-size: 11px;">DESDE</span>
+                                                <input @change="buscarIngresosCaja" type="date" v-model="filtros_caja.fecha_inicio" class="form-control border-start-0">
+                                                <span class="input-group-text bg-white text-muted fw-bold border-start-0" style="font-size: 11px;">HASTA</span>
+                                                <input @change="buscarIngresosCaja" type="date" v-model="filtros_caja.fecha_final" class="form-control border-start-0">
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="input-group">
-                                            <select v-model="filtros_caja.criterio" class="form-select"
-                                                @change="buscarIngresosCaja">
-                                                <option value="users.name">Nombre del Asesor</option>
-                                                <option value="users.personal">Personal del Asesor</option>
-                                            </select>
-                                            <input type="text" v-model="filtros_caja.buscar" class="form-control"
-                                                @input="buscarIngresosCaja">
-                                            <button class="btn btn-success" @click="buscarIngresosCaja">
-                                                <i class="fas fa-search"></i>
-                                            </button>
+                                        <div class="col-md-6">
+                                            <div class="input-group shadow-sm">
+                                                <select v-model="filtros_caja.criterio" class="form-select bg-white" style="max-width: 140px;" @change="buscarIngresosCaja">
+                                                    <option value="users.name">Asesor</option>
+                                                    <option value="users.personal">Personal</option>
+                                                </select>
+                                                <input type="text" v-model="filtros_caja.buscar" class="form-control border-start-0" placeholder="Buscar..." @keyup.enter="buscarIngresosCaja">
+                                                <button class="btn btn-success px-3" @click="buscarIngresosCaja"><i class="fas fa-search"></i></button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- Totales en Tabla -->
-                                <div class="table-responsive" style="border:none">
-                                    <table class="table align-middle mb-0 w-50">
-                                        <tbody>
+                                <div class="col-lg-4">
+                                    <div class="card border-primary border-opacity-25 shadow-sm bg-primary bg-opacity-10 h-100 mb-0">
+                                        <div class="card-body p-2 d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <span class="text-uppercase text-primary fw-bold d-block" style="font-size: 0.7rem;">Total Ingresos Caja Actual</span>
+                                                <h4 class="mb-0 fw-bold text-dark">{{ formatNumero(totalIngresosCaja) }} <small class="fs-6 text-muted">Bs.</small></h4>
+                                            </div>
+                                            <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center shadow-sm" style="width: 40px; height: 40px;">
+                                                <i class="fas fa-plus fs-5"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card border-0 shadow-sm mb-3">
+                                <div class="table-responsive" style="font-size:12px">
+                                    <table class="table table-hover table-striped mb-0 align-middle table-sm">
+                                        <thead class="table-success text-white text-uppercase" style="font-size: 11px;">
                                             <tr>
-                                                <th class="text-uppercase text-dark fw-semibold ms-0 ps-0">
-                                                    Total Ingresos Caja Actual
-                                                    <br><small class="text-secondary fw-normal">Monto total de Ingresos Caja Actual</small>
-                                                </th>
-                                                <td class="text-end ms-0 ps-0">
-                                                    <span class="fs-5 fw-bold text-dark">{{ totalIngresosCaja }}</span>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-
-                                <!-- Tabla de Ingresos -->
-                                <div class="table-responsive mt-2" style="font-size:12px">
-                                    <table class="table table-hover table-striped table-sm">
-                                        <thead class="text-white">
-                                            <tr class="table-success">
-                                                <th class="text-uppercase fw-bold" style="width: 18%;">Asesor/a</th>
-                                                <th class="text-uppercase fw-bold" style="width: 18%;">Personal</th>
-                                                <th class="text-uppercase fw-bold" style="width: 10%;">Fecha</th>
-                                                <th class="text-uppercase fw-bold" style="width: 10%;">Monto Ing.</th>
-                                                <th class="text-uppercase fw-bold" style="width: 26%;">Descripción</th>
-                                                <th class="text-uppercase fw-bold text-center" style="width: 8%;">Estado</th>
-                                                <th class="text-uppercase fw-bold text-center" style="width: 10%;">Op.</th>
+                                                <th class="py-3 ps-3">Asesor/a</th>
+                                                <th class="py-3">Personal</th>
+                                                <th class="py-3">Fecha</th>
+                                                <th class="py-3 text-end text-white bg-success border-success">Monto (Bs)</th>
+                                                <th class="py-3 ps-3">Descripción</th>
+                                                <th class="py-3 text-center">Estado</th>
+                                                <th class="py-3 text-center">Op.</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <tr v-for="item in listaIngresosCaja" :key="item.id">
-                                                <td>{{ item.asesor }}</td>
+                                                <td class="ps-3 fw-bold">{{ item.asesor }}</td>
                                                 <td>{{ item.personal }}</td>
                                                 <td>{{ formatearFecha(item.fecha) }}</td>
-                                                <td>{{ parseFloat(item.monto_ingreso).toFixed(2) }}</td>
-                                                <td>{{ item.descripcion }}</td>
+                                                <td class="text-end fw-bold text-success bg-success bg-opacity-10 fs-6">{{ formatNumero(item.monto_ingreso) }}</td>
+                                                <td class="ps-3 text-muted">{{ item.descripcion }}</td>
                                                 <td class="text-center">
-                                                    <span v-if="item.estado == 1" class="text-white text-uppercase badge bg-success badge-fixed-width" style="width:110px;">Cancelado</span>
-                                                    <span v-else class="text-white text-uppercase badge bg-danger badge-fixed-width" style="width:110px;">Anulado</span>
+                                                    <span v-if="item.estado == 1" class="badge bg-success">CANCELADO</span>
+                                                    <span v-else class="badge bg-danger">ANULADO</span>
                                                 </td>
                                                 <td class="text-center">
                                                     <div class="btn-group">
-                                                        <a style="cursor:pointer;" class="text-success dropdown-toggle btn-sm"
-                                                            data-bs-toggle="dropdown" aria-expanded="false">
-                                                            <i class="fas fa-ellipsis-h fs-4"></i>
+                                                        <a style="cursor:pointer;" class="text-success dropdown-toggle btn-sm" data-bs-toggle="dropdown">
+                                                            <i class="fas fa-ellipsis-h fs-5"></i>
                                                         </a>
-                                                        <ul class="dropdown-menu">
+                                                        <ul class="dropdown-menu shadow">
                                                             <li @click="anularIngreso(item)">
-                                                                <a class="dropdown-item text-danger" href="#">
-                                                                    <i class="fas fa-times"></i> Anular
+                                                                <a class="dropdown-item text-danger fw-bold" href="#">
+                                                                    <i class="fas fa-times me-2"></i> Anular Ingreso
                                                                 </a>
                                                             </li>
                                                         </ul>
                                                     </div>
                                                 </td>
                                             </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <template v-if="listaIngresosCaja.length<7">
-                                    <br><br><br><br><br><br><br>
-                                </template>
-
-                                <!-- Paginación -->
-                                <div class="d-flex justify-content-end">
-                                    <nav>
-                                        <ul class="pagination">
-                                            <li class="page-item" v-if="paginationCaja.current_page > 1">
-                                                <a class="page-link" href="#"
-                                                    @click.prevent="cambiarPaginaCaja(paginationCaja.current_page - 1)">Ant</a>
-                                            </li>
-                                            <li class="page-item" v-for="page in pagesNumberCaja" :key="page"
-                                                :class="[page == isActivedCaja ? 'active' : '']">
-                                                <a class="page-link" href="#" @click.prevent="cambiarPaginaCaja(page)">{{ page }}</a>
-                                            </li>
-                                            <li class="page-item" v-if="paginationCaja.current_page < paginationCaja.last_page">
-                                                <a class="page-link" href="#"
-                                                    @click.prevent="cambiarPaginaCaja(paginationCaja.current_page + 1)">Sig</a>
-                                            </li>
-                                        </ul>
-                                    </nav>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Egresos Caja Actual -->
-                        <div class="tab-pane fade" id="egresos-caja" role="tabpanel"
-                            aria-labelledby="egresos-caja-tab">
-                            <div class="card-body">
-                                <!-- Filtros -->
-                                <div class="row mb-1">
-                                    <div class="col-md-6">
-                                        <div class="input-group">
-                                            <input @input="buscarEgresosCaja" type="date" v-model="filtros_egresos_caja.fecha_inicio"
-                                                class="form-control">
-                                            <input @input="buscarEgresosCaja" type="date" v-model="filtros_egresos_caja.fecha_final"
-                                                class="form-control">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="input-group">
-                                            <select v-model="filtros_egresos_caja.criterio" class="form-select"
-                                                @change="buscarEgresosCaja">
-                                                <option value="users.name">Nombre del Asesor</option>
-                                                <option value="users.personal">Personal del Asesor</option>
-                                            </select>
-                                            <input type="text" v-model="filtros_egresos_caja.buscar" class="form-control"
-                                                @input="buscarEgresosCaja">
-                                            <button class="btn btn-success" @click="buscarEgresosCaja">
-                                                <i class="fas fa-search"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Totales en Tabla -->
-                                <div class="table-responsive" style="border:none">
-                                    <table class="table align-middle mb-0 w-50">
-                                        <tbody>
-                                            <tr>
-                                                <th class="text-uppercase text-dark fw-semibold ms-0 ps-0">
-                                                    Total Egresos Caja Actual
-                                                    <br><small class="text-secondary fw-normal">Monto total de Egresos Caja Actual</small>
-                                                </th>
-                                                <td class="text-end ms-0 ps-0">
-                                                    <span class="fs-5 fw-bold text-dark">{{ totalEgresosCaja }}</span>
+                                            <tr v-if="listaIngresosCaja.length === 0">
+                                                <td colspan="7" class="text-center py-5 text-muted fst-italic">
+                                                    <i class="fas fa-folder-open fa-2x mb-2 d-block text-secondary"></i> No hay ingresos registrados.
                                                 </td>
                                             </tr>
                                         </tbody>
                                     </table>
                                 </div>
+                            </div>
+                            <div class="d-flex justify-content-end" v-if="paginationCaja.last_page > 1">
+                                <nav><ul class="pagination shadow-sm mb-0">
+                                    <li class="page-item" :class="{disabled: paginationCaja.current_page <= 1}">
+                                        <a class="page-link" href="#" @click.prevent="cambiarPaginaCaja(paginationCaja.current_page - 1)">Ant</a>
+                                    </li>
+                                    <li class="page-item" v-for="page in pagesNumberCaja" :key="page" :class="[page == isActivedCaja ? 'active' : '']">
+                                        <a class="page-link" href="#" @click.prevent="cambiarPaginaCaja(page)">{{ page }}</a>
+                                    </li>
+                                    <li class="page-item" :class="{disabled: paginationCaja.current_page >= paginationCaja.last_page}">
+                                        <a class="page-link" href="#" @click.prevent="cambiarPaginaCaja(paginationCaja.current_page + 1)">Sig</a>
+                                    </li>
+                                </ul></nav>
+                            </div>
+                        </div>
 
-                                <!-- Tabla de Egresos -->
-                                <div class="table-responsive mt-2" style="font-size:12px">
-                                    <table class="table table-hover table-striped table-sm">
-                                        <thead class="text-white">
-                                            <tr class="bg-success">
-                                                <th class="text-uppercase fw-bold">Asesor/a</th>
-                                                <th class="text-uppercase fw-bold">Personal</th>
-                                                <th class="text-uppercase fw-bold"> nmolFecha</th>
-                                                <th class="text-uppercase fw-bold">Monto Gasto</th>
-                                                <th class="text-uppercase fw-bold">Descripción</th>
-                                                <th class="text-uppercase fw-bold">Estado</th>
-                                                <th class="text-uppercase fw-bold">Opciones</th>
+                        <div class="tab-pane fade fade-in-animation" id="egresos-caja" role="tabpanel" aria-labelledby="egresos-caja-tab">
+                            
+                            <div class="row mb-3">
+                                <div class="col-lg-8 mb-2 mb-lg-0">
+                                    <div class="row g-2">
+                                        <div class="col-md-6">
+                                            <div class="input-group shadow-sm">
+                                                <span class="input-group-text bg-white text-muted fw-bold" style="font-size: 11px;">DESDE</span>
+                                                <input @change="buscarEgresosCaja" type="date" v-model="filtros_egresos_caja.fecha_inicio" class="form-control border-start-0">
+                                                <span class="input-group-text bg-white text-muted fw-bold border-start-0" style="font-size: 11px;">HASTA</span>
+                                                <input @change="buscarEgresosCaja" type="date" v-model="filtros_egresos_caja.fecha_final" class="form-control border-start-0">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="input-group shadow-sm">
+                                                <select v-model="filtros_egresos_caja.criterio" class="form-select bg-white" style="max-width: 140px;" @change="buscarEgresosCaja">
+                                                    <option value="users.name">Asesor</option>
+                                                    <option value="users.personal">Personal</option>
+                                                </select>
+                                                <input type="text" v-model="filtros_egresos_caja.buscar" class="form-control border-start-0" placeholder="Buscar..." @keyup.enter="buscarEgresosCaja">
+                                                <button class="btn btn-success px-3" @click="buscarEgresosCaja"><i class="fas fa-search"></i></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-4">
+                                    <div class="card border-danger border-opacity-25 shadow-sm bg-danger bg-opacity-10 h-100 mb-0">
+                                        <div class="card-body p-2 d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <span class="text-uppercase text-danger fw-bold d-block" style="font-size: 0.7rem;">Total Egresos Caja Actual</span>
+                                                <h4 class="mb-0 fw-bold text-dark">{{ formatNumero(totalEgresosCaja) }} <small class="fs-6 text-muted">Bs.</small></h4>
+                                            </div>
+                                            <div class="bg-danger text-white rounded-circle d-flex justify-content-center align-items-center shadow-sm" style="width: 40px; height: 40px;">
+                                                <i class="fas fa-minus fs-5"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card border-0 shadow-sm mb-3">
+                                <div class="table-responsive" style="font-size:12px">
+                                    <table class="table table-sm table-hover table-striped mb-0 align-middle">
+                                        <thead class="table-danger text-white text-uppercase" style="font-size: 11px;">
+                                            <tr>
+                                                <th class="py-3 ps-3">Asesor/a</th>
+                                                <th class="py-3">Personal</th>
+                                                <th class="py-3">Fecha</th>
+                                                <th class="py-3 text-end text-white bg-danger border-danger">Monto (Bs)</th>
+                                                <th class="py-3 ps-3">Descripción</th>
+                                                <th class="py-3 text-center">Estado</th>
+                                                <th class="py-3 text-center">Op.</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <tr v-for="item in listaEgresosCaja" :key="item.id">
-                                                <td>{{ item.asesor }}</td>
+                                                <td class="ps-3 fw-bold">{{ item.asesor }}</td>
                                                 <td>{{ item.personal }}</td>
                                                 <td>{{ formatearFecha(item.fecha) }}</td>
-                                                <td>{{ parseFloat(item.monto_gasto).toFixed(2) }}</td>
-                                                <td>{{ item.descripcion }}</td>
-                                                <td>
-                                                    <span v-if="item.estado == 1" class="text-success">Cancelado</span>
-                                                    <span v-else class="text-danger">Anulado</span>
+                                                <td class="text-end fw-bold text-danger bg-danger bg-opacity-10 fs-6">{{ formatNumero(item.monto_gasto) }}</td>
+                                                <td class="ps-3 text-muted">{{ item.descripcion }}</td>
+                                                <td class="text-center">
+                                                    <span v-if="item.estado == 1" class="badge bg-success">CANCELADO</span>
+                                                    <span v-else class="badge bg-danger">ANULADO</span>
                                                 </td>
-                                                <td>
+                                                <td class="text-center">
                                                     <div class="btn-group">
-                                                        <a style="cursor:pointer;" class="text-success dropdown-toggle btn-sm"
-                                                            data-bs-toggle="dropdown" aria-expanded="false">
-                                                            <i class="fas fa-ellipsis-h fs-4"></i>
+                                                        <a style="cursor:pointer;" class="text-success dropdown-toggle btn-sm" data-bs-toggle="dropdown">
+                                                            <i class="fas fa-ellipsis-h fs-5"></i>
                                                         </a>
-                                                        <ul class="dropdown-menu">
+                                                        <ul class="dropdown-menu shadow">
                                                             <li @click="anularEgresoCaja(item)">
-                                                                <a class="dropdown-item text-danger" href="#">
-                                                                    <i class="fas fa-times"></i> Anular
+                                                                <a class="dropdown-item text-danger fw-bold" href="#">
+                                                                    <i class="fas fa-times me-2"></i> Anular Egreso
                                                                 </a>
                                                             </li>
                                                         </ul>
                                                     </div>
                                                 </td>
                                             </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-
-                                <!-- Paginación -->
-                                <div class="d-flex justify-content-end">
-                                    <nav>
-                                        <ul class="pagination">
-                                            <li class="page-item" v-if="paginationEgresosCaja.current_page > 1">
-                                                <a class="page-link" href="#"
-                                                    @click.prevent="cambiarPaginaEgresosCaja(paginationEgresosCaja.current_page - 1)">Ant</a>
-                                            </li>
-                                            <li class="page-item" v-for="page in pagesNumberEgresosCaja" :key="page"
-                                                :class="[page == isActivedEgresosCaja ? 'active' : '']">
-                                                <a class="page-link" href="#" @click.prevent="cambiarPaginaEgresosCaja(page)">{{ page }}</a>
-                                            </li>
-                                            <li class="page-item" v-if="paginationEgresosCaja.current_page < paginationEgresosCaja.last_page">
-                                                <a class="page-link" href="#"
-                                                    @click.prevent="cambiarPaginaEgresosCaja(paginationEgresosCaja.current_page + 1)">Sig</a>
-                                            </li>
-                                        </ul>
-                                    </nav>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Historial de Ingresos -->
-                        <div class="tab-pane fade" id="historial-ingresos" role="tabpanel"
-                            aria-labelledby="historial-ingresos-tab">
-                            <div class="card-body">
-                                <!-- Filtros -->
-                                <div class="row mb-1">
-                                    <div class="col-md-6">
-                                        <div class="input-group">
-                                            <input @input="buscarIngresos" type="date" v-model="filtros.fecha_inicio"
-                                                class="form-control">
-                                            <input @input="buscarIngresos" type="date" v-model="filtros.fecha_final"
-                                                class="form-control">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="input-group">
-                                            <select v-model="filtros.criterio" class="form-select"
-                                                @change="buscarIngresos">
-                                                <option value="users.name">Nombre del Asesor</option>
-                                                <option value="users.personal">Personal del Asesor</option>
-                                            </select>
-                                            <input type="text" v-model="filtros.buscar" class="form-control"
-                                                @input="buscarIngresos">
-                                            <button class="btn btn-success" @click="buscarIngresos">
-                                                <i class="fas fa-search"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Totales en Tabla -->
-                                <div class="table-responsive" style="border:none">
-                                    <table class="table align-middle mb-0 w-50">
-                                        <tbody>
-                                            <tr>
-                                                <th class="text-uppercase text-dark fw-semibold ms-0 ps-0">
-                                                    Total Ingresos
-                                                    <br><small class="text-secondary fw-normal">Monto total de Ingresos</small>
-                                                </th>
-                                                <td class="text-end ms-0 ps-0">
-                                                    <span class="fs-5 fw-bold text-dark">{{ totalIngresos }}</span>
+                                            <tr v-if="listaEgresosCaja.length === 0">
+                                                <td colspan="7" class="text-center py-5 text-muted fst-italic">
+                                                    <i class="fas fa-folder-open fa-2x mb-2 d-block text-secondary"></i> No hay egresos registrados.
                                                 </td>
                                             </tr>
                                         </tbody>
                                     </table>
                                 </div>
+                            </div>
+                            <div class="d-flex justify-content-end" v-if="paginationEgresosCaja.last_page > 1">
+                                <nav><ul class="pagination shadow-sm mb-0">
+                                    <li class="page-item" :class="{disabled: paginationEgresosCaja.current_page <= 1}">
+                                        <a class="page-link" href="#" @click.prevent="cambiarPaginaEgresosCaja(paginationEgresosCaja.current_page - 1)">Ant</a>
+                                    </li>
+                                    <li class="page-item" v-for="page in pagesNumberEgresosCaja" :key="page" :class="[page == isActivedEgresosCaja ? 'active' : '']">
+                                        <a class="page-link" href="#" @click.prevent="cambiarPaginaEgresosCaja(page)">{{ page }}</a>
+                                    </li>
+                                    <li class="page-item" :class="{disabled: paginationEgresosCaja.current_page >= paginationEgresosCaja.last_page}">
+                                        <a class="page-link" href="#" @click.prevent="cambiarPaginaEgresosCaja(paginationEgresosCaja.current_page + 1)">Sig</a>
+                                    </li>
+                                </ul></nav>
+                            </div>
+                        </div>
 
-                                <!-- Tabla de Ingresos -->
-                                <div class="table-responsive mt-2" style="font-size:12px">
-                                    <table class="table table-hover table-striped table-sm">
-                                        <thead class="text-white">
-                                            <tr class="bg-success">
-                                                <th class="text-uppercase fw-bold">Asesor/a</th>
-                                                <th class="text-uppercase fw-bold">Personal</th>
-                                                <th class="text-uppercase fw-bold">Fecha</th>
-                                                <th class="text-uppercase fw-bold">Monto Ingreso</th>
-                                                <th class="text-uppercase fw-bold">Descripción</th>
-                                                <th class="text-uppercase fw-bold">Estado</th>
-                                                <th class="text-uppercase fw-bold">Opciones</th>
+                        <div class="tab-pane fade fade-in-animation" id="historial-ingresos" role="tabpanel" aria-labelledby="historial-ingresos-tab">
+                            
+                            <div class="row mb-3">
+                                <div class="col-lg-8 mb-2 mb-lg-0">
+                                    <div class="row g-2">
+                                        <div class="col-md-6">
+                                            <div class="input-group shadow-sm">
+                                                <span class="input-group-text bg-white text-muted fw-bold" style="font-size: 11px;">DESDE</span>
+                                                <input @change="buscarIngresos" type="date" v-model="filtros.fecha_inicio" class="form-control border-start-0">
+                                                <span class="input-group-text bg-white text-muted fw-bold border-start-0" style="font-size: 11px;">HASTA</span>
+                                                <input @change="buscarIngresos" type="date" v-model="filtros.fecha_final" class="form-control border-start-0">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="input-group shadow-sm">
+                                                <select v-model="filtros.criterio" class="form-select bg-white" style="max-width: 140px;" @change="buscarIngresos">
+                                                    <option value="users.name">Asesor</option>
+                                                    <option value="users.personal">Personal</option>
+                                                </select>
+                                                <input type="text" v-model="filtros.buscar" class="form-control border-start-0" placeholder="Buscar..." @keyup.enter="buscarIngresos">
+                                                <button class="btn btn-success px-3" @click="buscarIngresos"><i class="fas fa-search"></i></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-4">
+                                    <div class="card border-primary border-opacity-25 shadow-sm bg-primary bg-opacity-10 h-100 mb-0">
+                                        <div class="card-body p-2 d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <span class="text-uppercase text-primary fw-bold d-block" style="font-size: 0.7rem;">Total Histórico Ingresos</span>
+                                                <h4 class="mb-0 fw-bold text-dark">{{ formatNumero(totalIngresos) }} <small class="fs-6 text-muted">Bs.</small></h4>
+                                            </div>
+                                            <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center shadow-sm" style="width: 40px; height: 40px;">
+                                                <i class="fas fa-chart-line fs-5"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card border-0 shadow-sm mb-3">
+                                <div class="table-responsive" style="font-size:12px">
+                                    <table class="table table-sm table-hover table-striped mb-0 align-middle">
+                                        <thead class="table-success text-white text-uppercase" style="font-size: 11px;">
+                                            <tr>
+                                                <th class="py-3 ps-3">Asesor/a</th>
+                                                <th class="py-3">Personal</th>
+                                                <th class="py-3">Fecha</th>
+                                                <th class="py-3 text-end text-white bg-success border-success">Monto Ing. (Bs)</th>
+                                                <th class="py-3 ps-3">Descripción</th>
+                                                <th class="py-3 text-center">Estado</th>
+                                                <th class="py-3 text-center">Op.</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <tr v-for="item in listaIngresos" :key="item.id">
-                                                <td>{{ item.asesor }}</td>
+                                                <td class="ps-3 fw-bold">{{ item.asesor }}</td>
                                                 <td>{{ item.personal }}</td>
                                                 <td>{{ formatearFecha(item.fecha) }}</td>
-                                                <td>{{ parseFloat(item.monto_ingreso).toFixed(2) }}</td>
-                                                <td>{{ item.descripcion }}</td>
-                                                <td>
-                                                    <span v-if="item.estado == 1" class="text-success">Cancelado</span>
-                                                    <span v-else class="text-danger">Anulado</span>
+                                                <td class="text-end fw-bold text-success bg-success bg-opacity-10 fs-6">{{ formatNumero(item.monto_ingreso) }}</td>
+                                                <td class="ps-3 text-muted">{{ item.descripcion }}</td>
+                                                <td class="text-center">
+                                                    <span v-if="item.estado == 1" class="badge bg-success">CANCELADO</span>
+                                                    <span v-else class="badge bg-danger">ANULADO</span>
                                                 </td>
-                                                <td>
+                                                <td class="text-center">
                                                     <div class="btn-group">
-                                                        <a style="cursor:pointer;" class="text-success dropdown-toggle btn-sm"
-                                                            data-bs-toggle="dropdown" aria-expanded="false">
-                                                            <i class="fas fa-ellipsis-h fs-4"></i>
+                                                        <a style="cursor:pointer;" class="text-success dropdown-toggle btn-sm" data-bs-toggle="dropdown">
+                                                            <i class="fas fa-ellipsis-h fs-5"></i>
                                                         </a>
-                                                        <ul class="dropdown-menu">
+                                                        <ul class="dropdown-menu shadow">
                                                             <li @click="anularIngreso(item)">
-                                                                <a class="dropdown-item text-danger" href="#">
-                                                                    <i class="fas fa-times"></i> Anular
+                                                                <a class="dropdown-item text-danger fw-bold" href="#">
+                                                                    <i class="fas fa-times me-2"></i> Anular Ingreso
                                                                 </a>
                                                             </li>
                                                         </ul>
                                                     </div>
                                                 </td>
                                             </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-
-                                <!-- Paginación -->
-                                <div class="d-flex justify-content-end">
-                                    <nav>
-                                        <ul class="pagination">
-                                            <li class="page-item" v-if="pagination.current_page > 1">
-                                                <a class="page-link" href="#"
-                                                    @click.prevent="cambiarPagina(pagination.current_page - 1)">Ant</a>
-                                            </li>
-                                            <li class="page-item" v-for="page in pagesNumber" :key="page"
-                                                :class="[page == isActived ? 'active' : '']">
-                                                <a class="page-link" href="#" @click.prevent="cambiarPagina(page)">{{ page }}</a>
-                                            </li>
-                                            <li class="page-item" v-if="pagination.current_page < pagination.last_page">
-                                                <a class="page-link" href="#"
-                                                    @click.prevent="cambiarPagina(pagination.current_page + 1)">Sig</a>
-                                            </li>
-                                        </ul>
-                                    </nav>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Historial de Gastos -->
-                        <div class="tab-pane fade" id="historial-gastos" role="tabpanel"
-                            aria-labelledby="historial-gastos-tab">
-                            <div class="card-body">
-                                <!-- Filtros -->
-                                <div class="row mb-1">
-                                    <div class="col-md-6">
-                                        <div class="input-group">
-                                            <input @input="buscarGastos" type="date" v-model="filtros_gastos.fecha_inicio"
-                                                class="form-control">
-                                            <input @input="buscarGastos" type="date" v-model="filtros_gastos.fecha_final"
-                                                class="form-control">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="input-group">
-                                            <select v-model="filtros_gastos.criterio" class="form-select"
-                                                @change="buscarGastos">
-                                                <option value="users.name">Nombre del Asesor</option>
-                                                <option value="users.personal">Personal del Asesor</option>
-                                            </select>
-                                            <input type="text" v-model="filtros_gastos.buscar" class="form-control"
-                                                @input="buscarGastos">
-                                            <button class="btn btn-success" @click="buscarGastos">
-                                                <i class="fas fa-search"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Totales en Tabla -->
-                                <div class="table-responsive" style="border:none">
-                                    <table class="table align-middle mb-0 w-50">
-                                        <tbody>
-                                            <tr>
-                                                <th class="text-uppercase text-dark fw-semibold ms-0 ps-0">
-                                                    Total Gastos Bs.
-                                                    <br><small class="text-secondary fw-normal">Monto total de Gastos</small>
-                                                </th>
-                                                <td class="text-end ms-0 ps-0">
-                                                    <span class="fs-5 fw-bold text-dark">{{ totalGastos }}</span>
+                                            <tr v-if="listaIngresos.length === 0">
+                                                <td colspan="7" class="text-center py-5 text-muted fst-italic">
+                                                    <i class="fas fa-folder-open fa-2x mb-2 d-block text-secondary"></i> No hay ingresos registrados.
                                                 </td>
                                             </tr>
                                         </tbody>
                                     </table>
                                 </div>
+                            </div>
+                            <div class="d-flex justify-content-end" v-if="pagination.last_page > 1">
+                                <nav><ul class="pagination shadow-sm mb-0">
+                                    <li class="page-item" :class="{disabled: pagination.current_page <= 1}">
+                                        <a class="page-link" href="#" @click.prevent="cambiarPagina(pagination.current_page - 1)">Ant</a>
+                                    </li>
+                                    <li class="page-item" v-for="page in pagesNumber" :key="page" :class="[page == isActived ? 'active' : '']">
+                                        <a class="page-link" href="#" @click.prevent="cambiarPagina(page)">{{ page }}</a>
+                                    </li>
+                                    <li class="page-item" :class="{disabled: pagination.current_page >= pagination.last_page}">
+                                        <a class="page-link" href="#" @click.prevent="cambiarPagina(pagination.current_page + 1)">Sig</a>
+                                    </li>
+                                </ul></nav>
+                            </div>
+                        </div>
 
-                                <!-- Tabla de Gastos -->
-                                <div class="table-responsive mt-2" style="font-size:12px">
-                                    <table class="table table-hover table-striped table-sm">
-                                        <thead class="text-white">
-                                            <tr class="bg-success">
-                                                <th class="text-uppercase fw-bold">Asesor/a</th>
-                                                <th class="text-uppercase fw-bold">Personal</th>
-                                                <th class="text-uppercase fw-bold">Fecha</th>
-                                                <th class="text-uppercase fw-bold">Monto Gasto</th>
-                                                <th class="text-uppercase fw-bold">Descripción</th>
-                                                <th class="text-uppercase fw-bold">Estado</th>
-                                                <th class="text-uppercase fw-bold">Opciones</th>
+                        <div class="tab-pane fade fade-in-animation" id="historial-gastos" role="tabpanel" aria-labelledby="historial-gastos-tab">
+                            
+                            <div class="row mb-3">
+                                <div class="col-lg-8 mb-2 mb-lg-0">
+                                    <div class="row g-2">
+                                        <div class="col-md-6">
+                                            <div class="input-group shadow-sm">
+                                                <span class="input-group-text bg-white text-muted fw-bold" style="font-size: 11px;">DESDE</span>
+                                                <input @change="buscarGastos" type="date" v-model="filtros_gastos.fecha_inicio" class="form-control border-start-0">
+                                                <span class="input-group-text bg-white text-muted fw-bold border-start-0" style="font-size: 11px;">HASTA</span>
+                                                <input @change="buscarGastos" type="date" v-model="filtros_gastos.fecha_final" class="form-control border-start-0">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="input-group shadow-sm">
+                                                <select v-model="filtros_gastos.criterio" class="form-select bg-white" style="max-width: 140px;" @change="buscarGastos">
+                                                    <option value="users.name">Asesor</option>
+                                                    <option value="users.personal">Personal</option>
+                                                </select>
+                                                <input type="text" v-model="filtros_gastos.buscar" class="form-control border-start-0" placeholder="Buscar..." @keyup.enter="buscarGastos">
+                                                <button class="btn btn-success px-3" @click="buscarGastos"><i class="fas fa-search"></i></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-4">
+                                    <div class="card border-danger border-opacity-25 shadow-sm bg-danger bg-opacity-10 h-100 mb-0">
+                                        <div class="card-body p-2 d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <span class="text-uppercase text-danger fw-bold d-block" style="font-size: 0.7rem;">Total Histórico Gastos</span>
+                                                <h4 class="mb-0 fw-bold text-dark">{{ formatNumero(totalGastos) }} <small class="fs-6 text-muted">Bs.</small></h4>
+                                            </div>
+                                            <div class="bg-danger text-white rounded-circle d-flex justify-content-center align-items-center shadow-sm" style="width: 40px; height: 40px;">
+                                                <i class="fas fa-chart-pie fs-5"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card border-0 shadow-sm mb-3">
+                                <div class="table-responsive" style="font-size:12px">
+                                    <table class="table table-sm table-hover table-striped mb-0 align-middle">
+                                        <thead class="table-danger text-white text-uppercase" style="font-size: 11px;">
+                                            <tr>
+                                                <th class="py-3 ps-3">Asesor/a</th>
+                                                <th class="py-3">Personal</th>
+                                                <th class="py-3">Fecha</th>
+                                                <th class="py-3 text-end text-white bg-danger border-danger">Monto (Bs)</th>
+                                                <th class="py-3 ps-3">Descripción</th>
+                                                <th class="py-3 text-center">Estado</th>
+                                                <th class="py-3 text-center">Op.</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <tr v-for="item in listaGastos" :key="item.id">
-                                                <td>{{ item.asesor }}</td>
+                                                <td class="ps-3 fw-bold">{{ item.asesor }}</td>
                                                 <td>{{ item.personal }}</td>
                                                 <td>{{ formatearFecha(item.fecha) }}</td>
-                                                <td>{{ parseFloat(item.monto_gasto).toFixed(2) }}</td>
-                                                <td>{{ item.descripcion }}</td>
-                                                <td>
-                                                    <span v-if="item.estado == 1" class="text-success">Cancelado</span>
-                                                    <span v-else class="text-danger">Anulado</span>
+                                                <td class="text-end fw-bold text-danger bg-danger bg-opacity-10 fs-6">{{ formatNumero(item.monto_gasto) }}</td>
+                                                <td class="ps-3 text-muted">{{ item.descripcion }}</td>
+                                                <td class="text-center">
+                                                    <span v-if="item.estado == 1" class="badge bg-success">CANCELADO</span>
+                                                    <span v-else class="badge bg-danger">ANULADO</span>
                                                 </td>
-                                                <td>
+                                                <td class="text-center">
                                                     <div class="btn-group">
-                                                        <a style="cursor:pointer;" class="text-success dropdown-toggle btn-sm"
-                                                            data-bs-toggle="dropdown" aria-expanded="false">
-                                                            <i class="fas fa-ellipsis-h fs-4"></i>
+                                                        <a style="cursor:pointer;" class="text-success dropdown-toggle btn-sm" data-bs-toggle="dropdown">
+                                                            <i class="fas fa-ellipsis-h fs-5"></i>
                                                         </a>
-                                                        <ul class="dropdown-menu">
+                                                        <ul class="dropdown-menu shadow">
                                                             <li @click="anularGasto(item)">
-                                                                <a class="dropdown-item text-danger" href="#">
-                                                                    <i class="fas fa-times"></i> Anular
+                                                                <a class="dropdown-item text-danger fw-bold" href="#">
+                                                                    <i class="fas fa-times me-2"></i> Anular Gasto
                                                                 </a>
                                                             </li>
                                                         </ul>
                                                     </div>
                                                 </td>
                                             </tr>
+                                            <tr v-if="listaGastos.length === 0">
+                                                <td colspan="7" class="text-center py-5 text-muted fst-italic">
+                                                    <i class="fas fa-folder-open fa-2x mb-2 d-block text-secondary"></i> No hay gastos registrados.
+                                                </td>
+                                            </tr>
                                         </tbody>
                                     </table>
                                 </div>
-
-                                <!-- Paginación -->
-                                <div class="d-flex justify-content-end">
-                                    <nav>
-                                        <ul class="pagination">
-                                            <li class="page-item" v-if="paginationGastos.current_page > 1">
-                                                <a class="page-link" href="#"
-                                                    @click.prevent="cambiarPaginaGastos(paginationGastos.current_page - 1)">Ant</a>
-                                            </li>
-                                            <li class="page-item" v-for="page in pagesNumberGastos" :key="page"
-                                                :class="[page == isActivedGastos ? 'active' : '']">
-                                                <a class="page-link" href="#" @click.prevent="cambiarPaginaGastos(page)">{{ page }}</a>
-                                            </li>
-                                            <li class="page-item" v-if="paginationGastos.current_page < paginationGastos.last_page">
-                                                <a class="page-link" href="#"
-                                                    @click.prevent="cambiarPaginaGastos(paginationGastos.current_page + 1)">Sig</a>
-                                            </li>
-                                        </ul>
-                                    </nav>
-                                </div>
+                            </div>
+                            <div class="d-flex justify-content-end" v-if="paginationGastos.last_page > 1">
+                                <nav><ul class="pagination shadow-sm mb-0">
+                                    <li class="page-item" :class="{disabled: paginationGastos.current_page <= 1}">
+                                        <a class="page-link" href="#" @click.prevent="cambiarPaginaGastos(paginationGastos.current_page - 1)">Ant</a>
+                                    </li>
+                                    <li class="page-item" v-for="page in pagesNumberGastos" :key="page" :class="[page == isActivedGastos ? 'active' : '']">
+                                        <a class="page-link" href="#" @click.prevent="cambiarPaginaGastos(page)">{{ page }}</a>
+                                    </li>
+                                    <li class="page-item" :class="{disabled: paginationGastos.current_page >= paginationGastos.last_page}">
+                                        <a class="page-link" href="#" @click.prevent="cambiarPaginaGastos(paginationGastos.current_page + 1)">Sig</a>
+                                    </li>
+                                </ul></nav>
                             </div>
                         </div>
+
                     </div>
                 </div>
             </div>
-            <!-- Container-fluid -->
         </div>
     </main>
 </template>
@@ -686,6 +640,10 @@ export default {
         }
     },
     methods: {
+        formatNumero(numero) {
+            if (numero === undefined || numero === null) return '0.00';
+            return new Intl.NumberFormat('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(numero);
+        },
         formatearFecha(fecha) {
             return moment(fecha).format('DD/MM/YYYY');
         },
@@ -928,83 +886,80 @@ export default {
 </script>
 
 <style scoped>
+/* Tabs Personalizados y Modernos */
+.custom-tabs {
+    border-bottom: 2px solid #e9ecef;
+}
+.custom-tabs .nav-link {
+    color: #6c757d !important;
+    background-color: transparent !important;
+    border: none !important;
+    border-bottom: 3px solid transparent !important;
+    border-radius: 0 !important;
+    transition: all 0.3s ease !important;
+    font-size: 0.85rem !important;
+}
+
+.custom-tabs .nav-link i {
+    color: #6c757d !important;
+}
+.custom-tabs .nav-link:hover {
+    color: #198754 !important;
+    background-color: rgba(25, 135, 84, 0.05) !important;
+    border-bottom-color: rgba(25, 135, 84, 0.3) !important;
+}
+.custom-tabs .nav-link.active {
+    color: #198754 !important;
+    background-color: rgba(25, 135, 84, 0.1) !important;
+    border-bottom-color: #198754 !important;
+}
+
+.custom-tabs .nav-link.active i{
+    color: #198754 !important;
+}
+
+
+/* Animación Suave entre Pestañas */
+.fade-in-animation {
+    animation: fadeIn 0.3s ease-in-out;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Menú de los 3 puntos */
 .dropdown-toggle::after {
   display: none !important;
 }
 
-.nav-item .nav-link{
-    background-color: #ffffff;
-    border: 2px solid #4bbf73;
-    color:#000000 !important;
-    font-weight: 500;
-    padding-top:10px;
-    padding-bottom:10px;
-}
-
-.nav-item .nav-link:hover{
-    background-color: #4bbf73 !important;
-    border: 2px solid #4bbf73;
-    color:#ffffff !important;
-    font-weight: 500;
-    padding-top:10px;
-    padding-bottom:10px;
-    transition: none;
-}
-
-.nav-item .nav-link.active{
-    background-color: #4bbf73 !important;
-    border: 2px solid #4bbf73;
-    color:#ffffff !important;
-    font-weight: 500;
-    padding-top:10px;
-    padding-bottom:10px;
-    transition: none;
-}
-
-.nav-item .nav-link i{
-    color:#000000 !important;
-    font-weight: 400;
-}
-
-.nav-item .nav-link i:hover{
-    color:#ffffff !important;
-}
-
+/* Preloader */
 .preloader {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(4px);
     display: flex;
-    flex-direction: column;
     justify-content: center;
     align-items: center;
     z-index: 9999;
 }
-
 .spinner {
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #3498db;
+    border: 4px solid rgba(25, 135, 84, 0.2);
+    border-top: 4px solid #198754;
     border-radius: 50%;
-    width: 40px;
-    height: 40px;
+    width: 50px;
+    height: 50px;
     animation: spin 1s linear infinite;
 }
-
 @keyframes spin {
-    0% {
-        transform: rotate(0deg);
-    }
-
-    100% {
-        transform: rotate(360deg);
-    }
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
-p {
-    color: white;
-    margin-top: 10px;
-}
+.table th { vertical-align: middle; }
+.table td { vertical-align: middle; }
 </style>
