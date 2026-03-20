@@ -392,7 +392,13 @@ Route::get('/get_orden_pago_reprogramacion', [SolicitudController::class, 'getOr
 Route::get('/historial-pagos', [HistorialPagosController::class, 'index']);
 Route::post('/pagos/anular/{id}', [HistorialPagosController::class, 'anular']);
 Route::get('/historial-pagos/detalles/{codigo}', [HistorialPagosController::class, 'show']);
-
+Route::get('/libro-mayor', [HistorialPagosController::class, 'getLibroMayor']);
+Route::get('/reportes/libro-mayor', [HistorialPagosController::class, 'imprimirLibroMayor']);
+Route::get('/reportes/ingresos', [HistorialPagosController::class, 'imprimirReporteIngresos']);
+Route::get('/reportes/egresos', [HistorialPagosController::class, 'imprimirReporteEgresos']);
+Route::get('/reportes/libro-mayor/excel', [HistorialPagosController::class, 'exportarExcelLibroMayor']);
+Route::get('/reportes/ingresos/excel', [HistorialPagosController::class, 'exportarExcelIngresos']);
+Route::get('/reportes/egresos/excel', [HistorialPagosController::class, 'exportarExcelEgresos']);
 
 Route::get('/caja/get-ordenes-reprogramacion', [CajaController::class, 'getOrdenesReprogramacion']);
 Route::get('/verificar-boveda', [CajaController::class, 'verificarBoveda']);
