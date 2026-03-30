@@ -282,6 +282,7 @@
                 </li>
                 @endif
 
+            
                 @if($login_controller->permisoSistema('solicitudprestamos', auth()->user()->id_rol))
                 <li>
                     <a href="javascript: void(0);" class="nav-link has-arrow waves-effect {{ in_array($current_route, ['solicitud', 'plan_pago', 'pago']) ? 'mm-active' : '' }}">
@@ -304,6 +305,7 @@
                     <ul class="sub-menu" aria-expanded="false">
                         <li><a href="/informacion" class="{{ $current_route == 'informacion' ? 'mm-active' : '' }}">Información Empresa</a></li>
                         <li><a href="/usuarios" class="{{ $current_route == 'usuarios' ? 'mm-active' : '' }}">Gestión de usuarios</a></li>
+                        <li><a href="/socio" class="{{ $current_route == 'socio' ? 'mm-active' : '' }}">Gestión de socios</a></li>
                         <li><a href="/roles" class="{{ $current_route == 'roles' ? 'mm-active' : '' }}">Roles</a></li>
                         <li><a href="/configuracion" class="{{ $current_route == 'configuracion' ? 'mm-active' : '' }}">Configuración</a></li>
                         <li><a href="/boveda" class="{{ $current_route == 'boveda' ? 'mm-active' : '' }}">Boveda</a></li>

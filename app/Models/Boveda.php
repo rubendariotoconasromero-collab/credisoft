@@ -16,6 +16,7 @@ class Boveda extends Model
     protected $fillable = [
         'saldo_actual',
         'fecha_apertura',
+        'id_usuario',
     ];
 
     /**

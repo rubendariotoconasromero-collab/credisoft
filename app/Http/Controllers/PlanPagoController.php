@@ -875,139 +875,7 @@ class PlanPagoController extends Controller
         return response()->json($resultado['cuotas']);
     }
 
-
     /*public function listarAmortizaciones(Request $request)
-    {
-        $id_plan_pago = $request->input('id_plan_pago');
-
-        $cuotas = DB::table('cuota')
-            ->join('plan_pago', 'cuota.id_plan_pago', '=', 'plan_pago.id')
-            ->select(
-                'cuota.*',
-                'plan_pago.fecha_inicio',
-                'plan_pago.lapso_capital',
-                'plan_pago.tasa',
-                DB::raw('(SELECT MAX(fecha_pago) FROM pago WHERE pago.id_cuota = cuota.id) as fecha_pago_real'),
-                DB::raw('CASE 
-                    WHEN cuota.estado IN (1, 3) AND cuota.id = (
-                        SELECT MIN(id) FROM cuota 
-                        WHERE id_plan_pago = ? AND estado IN (1, 3)
-                    ) THEN 
-                        GREATEST(0, DATEDIFF(NOW(), GREATEST(cuota.fecha, COALESCE(plan_pago.fecha_ultima_amortizacion, cuota.fecha))))
-                    ELSE 0 
-                END as dias_pasados')
-            )
-            ->where('cuota.id_plan_pago', $id_plan_pago)
-            ->addBinding($id_plan_pago, 'select')
-            ->orderBy('cuota.numero', 'asc')
-            ->get();
-
-        $lapso_capital = $cuotas->first()->lapso_capital ?? 'Mensual';
-        $totalDiasCuota = match ($lapso_capital) {
-            'Semanal' => 7,
-            'Quincenal' => 15,
-            'Mensual' => 30,
-            default => 30,
-        };
-
-        $firstUnpaidIndex = $cuotas->search(function ($cuota) {
-            return in_array($cuota->estado, [1, 3]);
-        });
-
-        $dias_pasados_mora = 0;
-
-        $cuotas = $cuotas->map(function ($cuota, $index) use ($cuotas, $firstUnpaidIndex, $totalDiasCuota, &$dias_pasados_mora) {
-            $fechaCuota = Carbon::parse($cuota->fecha);
-            
-            if ($cuota->estado == 2 && !empty($cuota->fecha_pago_real)) {
-                $fechaCalculo = Carbon::parse($cuota->fecha_pago_real);
-            } else {
-                $fechaCalculo = Carbon::now();
-            }
-            
-            $diasTranscurridosNormales = 0;
-            $diasRetrasoCuota = 0; 
-            
-            $fechaInicioCuota = $index === 0
-                ? Carbon::parse($cuotas->first()->fecha_inicio)
-                : Carbon::parse($cuotas[$index - 1]->fecha);
-
-            // 1. DÍAS TRANSCURRIDOS
-            if ($index === $firstUnpaidIndex && in_array($cuota->estado, [1, 3])) {
-                $diasTranscurridosNormales = ($fechaCalculo->diffInDays($fechaInicioCuota) > $totalDiasCuota) ? $totalDiasCuota : $fechaCalculo->diffInDays($fechaInicioCuota);
-                $dias_pasados_mora = $cuota->dias_pasados > 0 ? $cuota->dias_pasados : 0;
-            } else {
-                if ($fechaCalculo->isAfter($fechaCuota)) {
-                    $diasTranscurridosNormales = $totalDiasCuota;
-                } elseif ($fechaCalculo->isBetween($fechaInicioCuota, $fechaCuota, true)) {
-                    $diasTranscurridosNormales = $fechaCalculo->diffInDays($fechaInicioCuota);
-                }
-            }
-
-            // 2. DÍAS DE RETRASO ESTRICTO
-            if ($fechaCalculo->isAfter($fechaCuota)) {
-                $diasRetrasoCuota = $fechaCalculo->diffInDays($fechaCuota);
-            }
-
-            // 3. CÁLCULO BRUTO HISTÓRICO
-            $interesPorDiaNormal = $cuota->interes / $totalDiasCuota;
-            $interesDevengadoBruto = $interesPorDiaNormal * $diasTranscurridosNormales;
-
-            $cap_pagado = isset($cuota->capital_pagado) ? (float)$cuota->capital_pagado : 0;
-            $int_pagado = isset($cuota->interes_pagado) ? (float)$cuota->interes_pagado : 0;
-            $mora_pagada = isset($cuota->mora_pagada) ? (float)$cuota->mora_pagada : 0;
-
-            $capitalParaMora = in_array($cuota->estado, [1, 3]) ? max(0, $cuota->capital - $cap_pagado) : $cuota->capital;
-            $interesPorDiaMora = 0;
-
-            if ($cuota->lapso_capital == 'Mensual') {
-                $baseCalculo = $cuota->saldo_capital + $capitalParaMora;
-                $tasaPorcentaje = $cuota->tasa / 100;
-                $interesPorDiaMora = ($baseCalculo * $tasaPorcentaje) / 30;
-            } else if (in_array($cuota->lapso_capital, ['Semanal', 'Quincenal'])) {
-                $interesBaseMora = ($cuota->numero == 1 && isset($cuotas[$index + 1])) ? $cuotas[$index + 1]->interes : $cuota->interes;
-                $proporcionDeuda = ($cuota->capital > 0) ? ($capitalParaMora / $cuota->capital) : 1;
-                $interesPorDiaMora = ($interesBaseMora * $proporcionDeuda) / $totalDiasCuota;
-            } else {
-                $proporcionDeuda = ($cuota->capital > 0) ? ($capitalParaMora / $cuota->capital) : 1;
-                $interesPorDiaMora = ($cuota->interes * $proporcionDeuda) / $totalDiasCuota;
-            }
-
-            $interesMoratorioBruto = $interesPorDiaMora * $diasRetrasoCuota;
-
-            // 4. MAGIA: CÁLCULO DE RESTANTES (NETOS)
-            $capitalRestante = max(0, $cuota->capital - $cap_pagado);
-            
-            // Distribuir el interés pagado (Paga devengado primero, luego moratorio)
-            $intDevengadoRestante = max(0, $interesDevengadoBruto - $int_pagado);
-            $excesoInt = max(0, $int_pagado - $interesDevengadoBruto);
-            $intMoratorioRestante = max(0, $interesMoratorioBruto - $excesoInt);
-            $interesTotalAcumuladoRestante = $intDevengadoRestante + $intMoratorioRestante;
-
-            // Calcular Mora de 3 Bs/Día restante
-            $moraFijaBruta = (in_array($cuota->estado, [1, 3]) && $cuota->dias_pasados > 0) ? ($cuota->dias_pasados * 3) : 0;
-            $moraFijaRestante = max(0, $moraFijaBruta - $mora_pagada);
-
-            // 5. ASIGNACIÓN
-            $cuota->dias_transcurridos = round($diasTranscurridosNormales);
-            
-            // Guardamos las variables NETAS listas para Vue
-            $cuota->capital_neto = round($capitalRestante, 2);
-            $cuota->interes_devengado_neto = round($intDevengadoRestante, 2);
-            $cuota->interes_moratorio_neto = round($intMoratorioRestante, 2);
-            $cuota->interes_acumulado_neto = round($interesTotalAcumuladoRestante, 2);
-            $cuota->mora_fija_neta = round($moraFijaRestante, 2);
-
-            return $cuota;
-        });
-
-        return [
-            'cuotas' => $cuotas,
-            'dias_pasados_mora' => $dias_pasados_mora
-        ];
-    }*/
-
-    public function listarAmortizaciones(Request $request)
     {
         $id_plan_pago = $request->input('id_plan_pago');
 
@@ -1132,6 +1000,446 @@ class PlanPagoController extends Controller
             $cuota->porcentaje_interes_pagado = $porcentaje_interes;
 
             // Stats de Deuda Neta
+            $cuota->capital_neto = round($capitalRestante, 2);
+            $cuota->interes_devengado_neto = round($intDevengadoRestante, 2);
+            $cuota->interes_moratorio_neto = round($intMoratorioRestante, 2);
+            $cuota->interes_acumulado_neto = round($interesTotalAcumuladoRestante, 2);
+            $cuota->mora_fija_neta = round($moraFijaRestante, 2);
+
+            return $cuota;
+        });
+
+        return [
+            'cuotas' => $cuotas,
+            'dias_pasados_mora' => $dias_pasados_mora
+        ];
+    }*/
+    
+    /*public function listarAmortizaciones(Request $request)
+    {
+        $id_plan_pago = $request->input('id_plan_pago');
+
+        $cuotas = DB::table('cuota')
+            ->join('plan_pago', 'cuota.id_plan_pago', '=', 'plan_pago.id')
+            ->select(
+                'cuota.*',
+                'plan_pago.fecha_inicio',
+                'plan_pago.lapso_capital',
+                'plan_pago.tasa',
+                DB::raw('(SELECT MAX(fecha_pago) FROM pago WHERE pago.id_cuota = cuota.id) as fecha_pago_real'),
+                DB::raw('CASE 
+                    WHEN cuota.estado IN (1, 3) AND cuota.id = (
+                        SELECT MIN(id) FROM cuota 
+                        WHERE id_plan_pago = ? AND estado IN (1, 3)
+                    ) THEN 
+                        GREATEST(0, DATEDIFF(NOW(), GREATEST(cuota.fecha, COALESCE(plan_pago.fecha_ultima_amortizacion, cuota.fecha))))
+                    ELSE 0 
+                END as dias_pasados')
+            )
+            ->where('cuota.id_plan_pago', $id_plan_pago)
+            ->addBinding($id_plan_pago, 'select')
+            ->orderBy('cuota.numero', 'asc')
+            ->get();
+
+        // Base fija solo se mantiene como referencia para las fórmulas de mora bancaria estándar
+        $lapso_capital = $cuotas->first()->lapso_capital ?? 'Mensual';
+        $diasBaseMora = match ($lapso_capital) {
+            'Semanal' => 7,
+            'Quincenal' => 15,
+            'Mensual' => 30,
+            default => 30,
+        };
+
+        $firstUnpaidIndex = $cuotas->search(function ($cuota) {
+            return in_array($cuota->estado, [1, 3]);
+        });
+
+        $dias_pasados_mora = 0;
+
+        $cuotas = $cuotas->map(function ($cuota, $index) use ($cuotas, $firstUnpaidIndex, $diasBaseMora, &$dias_pasados_mora) {
+            $fechaCuota = Carbon::parse($cuota->fecha);
+            
+            $fechaInicioCuota = $index === 0
+                ? Carbon::parse($cuotas->first()->fecha_inicio)
+                : Carbon::parse($cuotas[$index - 1]->fecha);
+
+            // CORRECCIÓN CLAVE: Calculamos cuántos días reales dura exactamente ESTA cuota
+            $diasPeriodoCuota = max(1, $fechaInicioCuota->diffInDays($fechaCuota));
+            
+            if ($cuota->estado == 2 && !empty($cuota->fecha_pago_real)) {
+                $fechaCalculo = Carbon::parse($cuota->fecha_pago_real);
+            } else {
+                $fechaCalculo = Carbon::now();
+            }
+            
+            $diasTranscurridosNormales = 0;
+            $diasRetrasoCuota = 0; 
+
+            // 1. DÍAS TRANSCURRIDOS (Ahora el tope es $diasPeriodoCuota, no 30)
+            if ($index === $firstUnpaidIndex && in_array($cuota->estado, [1, 3])) {
+                $diasTranscurridosNormales = ($fechaCalculo->diffInDays($fechaInicioCuota) > $diasPeriodoCuota) 
+                    ? $diasPeriodoCuota 
+                    : $fechaCalculo->diffInDays($fechaInicioCuota);
+                $dias_pasados_mora = $cuota->dias_pasados > 0 ? $cuota->dias_pasados : 0;
+            } else {
+                if ($fechaCalculo->isAfter($fechaCuota)) {
+                    $diasTranscurridosNormales = $diasPeriodoCuota;
+                } elseif ($fechaCalculo->isBetween($fechaInicioCuota, $fechaCuota, true)) {
+                    $diasTranscurridosNormales = $fechaCalculo->diffInDays($fechaInicioCuota);
+                }
+            }
+
+            // 2. DÍAS DE RETRASO ESTRICTO
+            if ($fechaCalculo->isAfter($fechaCuota)) {
+                $diasRetrasoCuota = $fechaCalculo->diffInDays($fechaCuota);
+            }
+
+            // 3. VARIABLES DE PAGO ACUMULADO
+            $cap_pagado = isset($cuota->capital_pagado) ? (float)$cuota->capital_pagado : 0;
+            $int_pagado = isset($cuota->interes_pagado) ? (float)$cuota->interes_pagado : 0;
+            $mora_pagada = isset($cuota->mora_pagada) ? (float)$cuota->mora_pagada : 0;
+
+            // 4. CÁLCULO BRUTO HISTÓRICO
+            // Ahora el interés normal se divide entre los días REALES del mes, no entre 30.
+            $interesPorDiaNormal = $cuota->interes / $diasPeriodoCuota;
+            $interesDevengadoBruto = $interesPorDiaNormal * $diasTranscurridosNormales;
+
+            $capitalParaMora = in_array($cuota->estado, [1, 3]) ? max(0, $cuota->capital - $cap_pagado) : $cuota->capital;
+            $interesPorDiaMora = 0;
+
+            // La mora bancaria suele seguir usando base 30 por convención legal
+            if ($cuota->lapso_capital == 'Mensual') {
+                $baseCalculo = $cuota->saldo_capital + $capitalParaMora;
+                $tasaPorcentaje = $cuota->tasa / 100;
+                $interesPorDiaMora = ($baseCalculo * $tasaPorcentaje) / 30;
+            } else if (in_array($cuota->lapso_capital, ['Semanal', 'Quincenal'])) {
+                $interesBaseMora = ($cuota->numero == 1 && isset($cuotas[$index + 1])) ? $cuotas[$index + 1]->interes : $cuota->interes;
+                $proporcionDeuda = ($cuota->capital > 0) ? ($capitalParaMora / $cuota->capital) : 1;
+                $interesPorDiaMora = ($interesBaseMora * $proporcionDeuda) / $diasBaseMora;
+            } else {
+                $proporcionDeuda = ($cuota->capital > 0) ? ($capitalParaMora / $cuota->capital) : 1;
+                $interesPorDiaMora = ($cuota->interes * $proporcionDeuda) / $diasBaseMora;
+            }
+
+            $interesMoratorioBruto = $interesPorDiaMora * $diasRetrasoCuota;
+            $interesTotalAcumuladoBruto = $interesDevengadoBruto + $interesMoratorioBruto;
+
+            // 5. CÁLCULO DE PORCENTAJES
+            $porcentaje_capital = ($cuota->capital > 0) ? round(($cap_pagado / $cuota->capital) * 100, 1) : 0;
+            $porcentaje_interes = ($interesTotalAcumuladoBruto > 0) ? round(($int_pagado / $interesTotalAcumuladoBruto) * 100, 1) : 0;
+
+            // 6. CÁLCULO DE RESTANTES (NETOS)
+            $capitalRestante = max(0, $cuota->capital - $cap_pagado);
+            $intDevengadoRestante = max(0, $interesDevengadoBruto - $int_pagado);
+            $excesoInt = max(0, $int_pagado - $interesDevengadoBruto);
+            $intMoratorioRestante = max(0, $interesMoratorioBruto - $excesoInt);
+            $interesTotalAcumuladoRestante = $intDevengadoRestante + $intMoratorioRestante;
+
+            $moraFijaBruta = (in_array($cuota->estado, [1, 3]) && $cuota->dias_pasados > 0) ? ($cuota->dias_pasados * 3) : 0;
+            $moraFijaRestante = max(0, $moraFijaBruta - $mora_pagada);
+
+            // 7. ASIGNACIÓN AL OBJETO
+            $cuota->dias_transcurridos = round($diasTranscurridosNormales); // <<-- ¡AQUÍ ESTARÁ EL ARREGLO!
+            
+            $cuota->capital_pagado_total = round($cap_pagado, 2);
+            $cuota->interes_pagado_total = round($int_pagado, 2);
+            $cuota->porcentaje_capital_pagado = $porcentaje_capital;
+            $cuota->porcentaje_interes_pagado = $porcentaje_interes;
+
+            $cuota->capital_neto = round($capitalRestante, 2);
+            $cuota->interes_devengado_neto = round($intDevengadoRestante, 2);
+            $cuota->interes_moratorio_neto = round($intMoratorioRestante, 2);
+            $cuota->interes_acumulado_neto = round($interesTotalAcumuladoRestante, 2);
+            $cuota->mora_fija_neta = round($moraFijaRestante, 2);
+
+            return $cuota;
+        });
+
+        return [
+            'cuotas' => $cuotas,
+            'dias_pasados_mora' => $dias_pasados_mora
+        ];
+    }*/
+
+    /*public function listarAmortizaciones(Request $request)
+    {
+        $id_plan_pago = $request->input('id_plan_pago');
+
+        // 1. OBTENER CUOTAS
+        $cuotas = DB::table('cuota')
+            ->join('plan_pago', 'cuota.id_plan_pago', '=', 'plan_pago.id')
+            ->select(
+                'cuota.*',
+                'plan_pago.fecha_inicio',
+                'plan_pago.lapso_capital',
+                'plan_pago.tasa',
+                DB::raw('(SELECT MAX(fecha_pago) FROM pago WHERE pago.id_cuota = cuota.id) as fecha_pago_real'),
+                // Esta subconsulta estricta solo sacará días para la PRIMERA cuota vencida.
+                // Le damos el alias 'dias_mora_cobro' para aislarla del dato informativo.
+                DB::raw('CASE 
+                    WHEN cuota.estado IN (1, 3) AND cuota.id = (
+                        SELECT MIN(id) FROM cuota 
+                        WHERE id_plan_pago = ? AND estado IN (1, 3)
+                    ) THEN 
+                        GREATEST(0, DATEDIFF(NOW(), GREATEST(cuota.fecha, COALESCE(plan_pago.fecha_ultima_amortizacion, cuota.fecha))))
+                    ELSE 0 
+                END as dias_mora_cobro')
+            )
+            ->where('cuota.id_plan_pago', $id_plan_pago)
+            ->addBinding($id_plan_pago, 'select')
+            ->orderBy('cuota.numero', 'asc')
+            ->get();
+
+        $lapso_capital = $cuotas->first()->lapso_capital ?? 'Mensual';
+        $diasBaseMora = match ($lapso_capital) {
+            'Semanal' => 7,
+            'Quincenal' => 15,
+            'Mensual' => 30,
+            default => 30,
+        };
+
+        $firstUnpaidIndex = $cuotas->search(function ($cuota) {
+            return in_array($cuota->estado, [1, 3]);
+        });
+
+        $dias_pasados_mora = 0; // KPI global superior
+
+        $cuotas = $cuotas->map(function ($cuota, $index) use ($cuotas, $firstUnpaidIndex, $diasBaseMora, &$dias_pasados_mora) {
+            $fechaCuota = Carbon::parse($cuota->fecha);
+            
+            $fechaInicioCuota = $index === 0
+                ? Carbon::parse($cuotas->first()->fecha_inicio)
+                : Carbon::parse($cuotas[$index - 1]->fecha);
+
+            // CORRECCIÓN MATEMÁTICA: Los días reales de duración del periodo (Ej: los 31 días)
+            $diasPeriodoCuota = max(1, $fechaInicioCuota->diffInDays($fechaCuota));
+            
+            if ($cuota->estado == 2 && !empty($cuota->fecha_pago_real)) {
+                $fechaCalculo = Carbon::parse($cuota->fecha_pago_real);
+            } else {
+                $fechaCalculo = Carbon::now();
+            }
+            
+            $diasTranscurridosNormales = 0;
+            $diasRetrasoCuota = 0; 
+
+            // ==========================================
+            // DÍAS PASADOS INFORMATIVOS (Para TODAS las cuotas)
+            // ==========================================
+            if ($fechaCalculo->isAfter($fechaCuota)) {
+                $diasRetrasoCuota = $fechaCalculo->diffInDays($fechaCuota);
+            }
+            // Aquí inyectamos la variable que tu frontend espera leer
+            $cuota->dias_pasados = in_array($cuota->estado, [1, 3]) ? $diasRetrasoCuota : 0;
+
+
+            // ==========================================
+            // DÍAS TRANSCURRIDOS NORMALES (Límite al periodo)
+            // ==========================================
+            if ($index === $firstUnpaidIndex && in_array($cuota->estado, [1, 3])) {
+                $diasTranscurridosNormales = ($fechaCalculo->diffInDays($fechaInicioCuota) > $diasPeriodoCuota) 
+                    ? $diasPeriodoCuota 
+                    : $fechaCalculo->diffInDays($fechaInicioCuota);
+                
+                // Guardamos la mora FINANCIERA (la oficial que se cobra) para la cabecera
+                $dias_pasados_mora = $cuota->dias_mora_cobro; 
+            } else {
+                if ($fechaCalculo->isAfter($fechaCuota)) {
+                    $diasTranscurridosNormales = $diasPeriodoCuota;
+                } elseif ($fechaCalculo->isBetween($fechaInicioCuota, $fechaCuota, true)) {
+                    $diasTranscurridosNormales = $fechaCalculo->diffInDays($fechaInicioCuota);
+                }
+            }
+
+            // PAGOS ACUMULADOS
+            $cap_pagado = isset($cuota->capital_pagado) ? (float)$cuota->capital_pagado : 0;
+            $int_pagado = isset($cuota->interes_pagado) ? (float)$cuota->interes_pagado : 0;
+            $mora_pagada = isset($cuota->mora_pagada) ? (float)$cuota->mora_pagada : 0;
+
+            // INTERÉS BRUTO HISTÓRICO (Usando diasPeriodoCuota para evitar saltos en pagos adelantados)
+            $interesPorDiaNormal = $cuota->interes / $diasPeriodoCuota;
+            $interesDevengadoBruto = $interesPorDiaNormal * $diasTranscurridosNormales;
+
+            // INTERÉS MORATORIO (Se aplica el porcentaje a todas las cuotas vencidas independientemente)
+            $capitalParaMora = in_array($cuota->estado, [1, 3]) ? max(0, $cuota->capital - $cap_pagado) : $cuota->capital;
+            $interesPorDiaMora = 0;
+
+            if ($cuota->lapso_capital == 'Mensual') {
+                $baseCalculo = $cuota->saldo_capital + $capitalParaMora;
+                $tasaPorcentaje = $cuota->tasa / 100;
+                $interesPorDiaMora = ($baseCalculo * $tasaPorcentaje) / 30; // La base bancaria suele quedar en 30 para mora
+            } else if (in_array($cuota->lapso_capital, ['Semanal', 'Quincenal'])) {
+                $interesBaseMora = ($cuota->numero == 1 && isset($cuotas[$index + 1])) ? $cuotas[$index + 1]->interes : $cuota->interes;
+                $proporcionDeuda = ($cuota->capital > 0) ? ($capitalParaMora / $cuota->capital) : 1;
+                $interesPorDiaMora = ($interesBaseMora * $proporcionDeuda) / $diasBaseMora;
+            } else {
+                $proporcionDeuda = ($cuota->capital > 0) ? ($capitalParaMora / $cuota->capital) : 1;
+                $interesPorDiaMora = ($cuota->interes * $proporcionDeuda) / $diasBaseMora;
+            }
+
+            $interesMoratorioBruto = $interesPorDiaMora * $diasRetrasoCuota;
+            $interesTotalAcumuladoBruto = $interesDevengadoBruto + $interesMoratorioBruto;
+
+            // PORCENTAJES AVANZADOS
+            $porcentaje_capital = ($cuota->capital > 0) ? round(($cap_pagado / $cuota->capital) * 100, 1) : 0;
+            $porcentaje_interes = ($interesTotalAcumuladoBruto > 0) ? round(($int_pagado / $interesTotalAcumuladoBruto) * 100, 1) : 0;
+
+            // CÁLCULO DE RESTANTES (CASCADA)
+            $capitalRestante = max(0, $cuota->capital - $cap_pagado);
+            $intDevengadoRestante = max(0, $interesDevengadoBruto - $int_pagado);
+            $excesoInt = max(0, $int_pagado - $interesDevengadoBruto);
+            $intMoratorioRestante = max(0, $interesMoratorioBruto - $excesoInt);
+            $interesTotalAcumuladoRestante = $intDevengadoRestante + $intMoratorioRestante;
+
+            // ==========================================
+            // MULTA FIJA (Solo afectará la cuota 1 económicamente)
+            // ==========================================
+            $moraFijaBruta = ($cuota->dias_mora_cobro > 0) ? ($cuota->dias_mora_cobro * 3) : 0;
+            $moraFijaRestante = max(0, $moraFijaBruta - $mora_pagada);
+
+            // ASIGNACIÓN AL OBJETO FINAL
+            $cuota->dias_transcurridos = round($diasTranscurridosNormales);
+            
+            $cuota->capital_pagado_total = round($cap_pagado, 2);
+            $cuota->interes_pagado_total = round($int_pagado, 2);
+            $cuota->porcentaje_capital_pagado = $porcentaje_capital;
+            $cuota->porcentaje_interes_pagado = $porcentaje_interes;
+
+            $cuota->capital_neto = round($capitalRestante, 2);
+            $cuota->interes_devengado_neto = round($intDevengadoRestante, 2);
+            $cuota->interes_moratorio_neto = round($intMoratorioRestante, 2);
+            $cuota->interes_acumulado_neto = round($interesTotalAcumuladoRestante, 2);
+            
+            // La multa monetaria será > 0 solo en la cuota más vieja impaga
+            $cuota->mora_fija_neta = round($moraFijaRestante, 2);
+
+            return $cuota;
+        });
+
+        return [
+            'cuotas' => $cuotas,
+            'dias_pasados_mora' => $dias_pasados_mora
+        ];
+    }*/
+
+
+    public function listarAmortizaciones(Request $request)
+    {
+        $id_plan_pago = $request->input('id_plan_pago');
+
+        // 1. OBTENER CUOTAS
+        $cuotas = DB::table('cuota')
+            ->join('plan_pago', 'cuota.id_plan_pago', '=', 'plan_pago.id')
+            ->select(
+                'cuota.*',
+                'plan_pago.fecha_inicio',
+                'plan_pago.lapso_capital',
+                'plan_pago.tasa',
+                DB::raw('(SELECT MAX(fecha_pago) FROM pago WHERE pago.id_cuota = cuota.id) as fecha_pago_real'),
+                DB::raw('CASE 
+                    WHEN cuota.estado IN (1, 3) AND cuota.id = (
+                        SELECT MIN(id) FROM cuota 
+                        WHERE id_plan_pago = ? AND estado IN (1, 3)
+                    ) THEN 
+                        GREATEST(0, DATEDIFF(NOW(), GREATEST(cuota.fecha, COALESCE(plan_pago.fecha_ultima_amortizacion, cuota.fecha))))
+                    ELSE 0 
+                END as dias_mora_cobro')
+            )
+            ->where('cuota.id_plan_pago', $id_plan_pago)
+            ->addBinding($id_plan_pago, 'select')
+            ->orderBy('cuota.numero', 'asc')
+            ->get();
+
+        $firstUnpaidIndex = $cuotas->search(function ($cuota) {
+            return in_array($cuota->estado, [1, 3]);
+        });
+
+        $dias_pasados_mora = 0; 
+
+        $cuotas = $cuotas->map(function ($cuota, $index) use ($cuotas, $firstUnpaidIndex, &$dias_pasados_mora) {
+            
+            // NORMALIZACIÓN DE FECHAS A 00:00:00 
+            $fechaCuota = Carbon::parse($cuota->fecha)->startOfDay();
+            
+            $fechaInicioCuota = $index === 0
+                ? Carbon::parse($cuotas->first()->fecha_inicio)->startOfDay()
+                : Carbon::parse($cuotas[$index - 1]->fecha)->startOfDay();
+
+            // DÍAS REALES DEL PERIODO 
+            $diasPeriodoCuota = max(1, $fechaInicioCuota->diffInDays($fechaCuota, false));
+            
+            if ($cuota->estado == 2 && !empty($cuota->fecha_pago_real)) {
+                $fechaCalculo = Carbon::parse($cuota->fecha_pago_real)->startOfDay();
+            } else {
+                $fechaCalculo = Carbon::now()->startOfDay();
+            }
+            
+            $diasTranscurridosNormales = 0;
+            $diasRetrasoCuota = 0; 
+
+            // CÁLCULO ESTRICTO DE DÍAS PASADOS (Informativo para Vue)
+            if ($fechaCalculo->isAfter($fechaCuota)) {
+                $diasRetrasoCuota = $fechaCuota->diffInDays($fechaCalculo, false);
+            }
+            $cuota->dias_pasados = in_array($cuota->estado, [1, 3]) ? $diasRetrasoCuota : 0;
+
+
+            // DÍAS TRANSCURRIDOS (Para interés normal)
+            if ($index === $firstUnpaidIndex && in_array($cuota->estado, [1, 3])) {
+                $diasDesdeInicio = $fechaInicioCuota->diffInDays($fechaCalculo, false);
+                $diasTranscurridosNormales = max(0, min($diasDesdeInicio, $diasPeriodoCuota));
+                $dias_pasados_mora = $cuota->dias_mora_cobro; 
+            } else {
+                if ($fechaCalculo->isAfter($fechaCuota) || $fechaCalculo->isSameDay($fechaCuota)) {
+                    $diasTranscurridosNormales = $diasPeriodoCuota;
+                } else {
+                    $diasDesdeInicio = $fechaInicioCuota->diffInDays($fechaCalculo, false);
+                    $diasTranscurridosNormales = max(0, min($diasDesdeInicio, $diasPeriodoCuota));
+                }
+            }
+
+            // PAGOS ACUMULADOS
+            $cap_pagado = isset($cuota->capital_pagado) ? (float)$cuota->capital_pagado : 0;
+            $int_pagado = isset($cuota->interes_pagado) ? (float)$cuota->interes_pagado : 0;
+            $mora_pagada = isset($cuota->mora_pagada) ? (float)$cuota->mora_pagada : 0;
+
+            // INTERÉS BRUTO HISTÓRICO NORMAL
+            $interesPorDiaNormal = $cuota->interes / $diasPeriodoCuota;
+            $interesDevengadoBruto = $interesPorDiaNormal * $diasTranscurridosNormales;
+
+            // INTERÉS MORATORIO UNIFICADO
+            $capitalParaMora = in_array($cuota->estado, [1, 3]) ? max(0, $cuota->capital - $cap_pagado) : $cuota->capital;
+            $proporcionDeuda = ($cuota->capital > 0) ? ($capitalParaMora / $cuota->capital) : 1;
+            
+            $interesPorDiaMora = $interesPorDiaNormal * $proporcionDeuda;
+            $interesMoratorioBruto = $interesPorDiaMora * $diasRetrasoCuota;
+
+            // ---> LÍNEA CORREGIDA (FALTABA ESTO) <---
+            $interesTotalAcumuladoBruto = $interesDevengadoBruto + $interesMoratorioBruto;
+
+            // PORCENTAJES AVANZADOS
+            $porcentaje_capital = ($cuota->capital > 0) ? round(($cap_pagado / $cuota->capital) * 100, 1) : 0;
+            $porcentaje_interes = ($interesTotalAcumuladoBruto > 0) ? round(($int_pagado / $interesTotalAcumuladoBruto) * 100, 1) : 0;
+
+            // CÁLCULO DE RESTANTES (NETOS CASCADA)
+            $capitalRestante = max(0, $cuota->capital - $cap_pagado);
+            $intDevengadoRestante = max(0, $interesDevengadoBruto - $int_pagado);
+            $excesoInt = max(0, $int_pagado - $interesDevengadoBruto);
+            $intMoratorioRestante = max(0, $interesMoratorioBruto - $excesoInt);
+            $interesTotalAcumuladoRestante = $intDevengadoRestante + $intMoratorioRestante;
+
+            // MULTA FIJA ECONÓMICA
+            $moraFijaBruta = ($cuota->dias_mora_cobro > 0) ? ($cuota->dias_mora_cobro * 3) : 0;
+            $moraFijaRestante = max(0, $moraFijaBruta - $mora_pagada);
+
+            // ASIGNACIÓN AL OBJETO FINAL
+            $cuota->dias_transcurridos = round($diasTranscurridosNormales);
+            
+            $cuota->capital_pagado_total = round($cap_pagado, 2);
+            $cuota->interes_pagado_total = round($int_pagado, 2);
+            $cuota->porcentaje_capital_pagado = $porcentaje_capital;
+            $cuota->porcentaje_interes_pagado = $porcentaje_interes;
+
             $cuota->capital_neto = round($capitalRestante, 2);
             $cuota->interes_devengado_neto = round($intDevengadoRestante, 2);
             $cuota->interes_moratorio_neto = round($intMoratorioRestante, 2);

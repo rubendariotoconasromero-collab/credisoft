@@ -31,6 +31,7 @@ class PermisoSeeder extends Seeder
             ['id' => 10, 'nombre' => 'reportes', 'descripcion' => 'Reportes', 'estado' => 1, 'created_at' => $now, 'updated_at' => $now],
             ['id' => 12, 'nombre' => 'codeudores', 'descripcion' => 'Gestion de codeudores', 'estado' => 1, 'created_at' => $now, 'updated_at' => $now],
             ['id' => 13, 'nombre' => 'consultasfinancieras', 'descripcion' => 'Consultas financieras y reportes', 'estado' => 1, 'created_at' => $now, 'updated_at' => $now],
+            ['id' => 14, 'nombre' => 'socios', 'descripcion' => 'Gestión de socios', 'estado' => 1, 'created_at' => $now, 'updated_at' => $now],
         ];
 
         // Insertamos los datos en la tabla 'permiso'

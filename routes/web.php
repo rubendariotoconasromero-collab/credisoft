@@ -11,6 +11,11 @@ use App\Http\Controllers\HistorialPagosController;
 use App\Http\Controllers\CajaController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\CajaMovimientosController;
+use App\Http\Controllers\ConsultaFinancieraController;
+use App\Http\Controllers\SocioController;
+use App\Http\Controllers\ConfiguracionController;
+
+
 
 
 /*
@@ -153,9 +158,6 @@ Route::get('/get_pagos_lista_anulados_fecha', 'App\Http\Controllers\PagoControll
 Route::get('/get_pagos_lista_cuotas_total_fecha', 'App\Http\Controllers\PagoController@getPagosListaCuotasTotalFecha');
 Route::get('/imprimir/recibo/{codigo_transaccion}', 'App\Http\Controllers\PagoController@generarTicketPago');
 
-
-
-
 // administracion
 Route::get('/cantidad_clientes', 'App\Http\Controllers\AdministracionController@cantidadClientes');
 Route::get('/cantidad_solicitudes', 'App\Http\Controllers\AdministracionController@cantidadSolicitudes');
@@ -173,12 +175,9 @@ Route::get('/estadisticas_prestamos', [AdministracionController::class, 'getEsta
 Route::get('/top_clientes', [AdministracionController::class, 'getTopClientes']);
 
 
-
-
 //Respaldos
 Route::post('/imagenRespaldo', 'App\Http\Controllers\RespaldoController@guardarRespaldo');
 Route::post('/guardar_respaldos_imagenes', 'App\Http\Controllers\RespaldoController@guardarRespaldosImagenes');
-
 Route::get('/get_respaldos', 'App\Http\Controllers\RespaldoController@getRespaldos');
 Route::get('/delete_respaldo', 'App\Http\Controllers\RespaldoController@deleteRespaldo');
 
@@ -198,9 +197,6 @@ Route::get('/reporte_general_planes_pago', 'App\Http\Controllers\ReporteControll
 Route::get('/reporte_planes_pago_en_proceso', 'App\Http\Controllers\ReporteController@reportePlanesPagoEnProceso');
 Route::get('/reporte_planes_pago_cancelados', 'App\Http\Controllers\ReporteController@reportePlanesPagoCancelados');
 
-
-
-
 //caja
 Route::get('/caja', 'App\Http\Controllers\CajaController@index')->middleware('auth');
 Route::get('/get_caja', 'App\Http\Controllers\CajaController@getCaja');
@@ -211,7 +207,6 @@ Route::get('/caja_abierta', 'App\Http\Controllers\CajaController@cajaAbierta');
 Route::get('/get_pagos_caja', 'App\Http\Controllers\CajaController@getPagos');
 
 Route::get('/get_pagos_caja_amortizaciones', 'App\Http\Controllers\CajaController@getPagosAmortizaciones');
-
 Route::get('/exportar_pagos_pdf', 'App\Http\Controllers\CajaController@exportarPagosCaja');
 Route::get('/exportar_pagos_amortizacion_pdf', 'App\Http\Controllers\CajaController@exportarPagosCajaAmortizacion');
 
@@ -225,9 +220,7 @@ Route::get('/reporte_cajas_fecha', 'App\Http\Controllers\CajaController@reporteC
 
 
 Route::get('/get_desembolsos', 'App\Http\Controllers\CajaController@getDesembolsos');
-
 Route::get('/exportar_desembolsos_caja_pdf', 'App\Http\Controllers\CajaController@exportarDesembolsosCaja');
-
 Route::get('/generar_comprobante_cliente', 'App\Http\Controllers\CajaController@generarComprobanteCliente');
 Route::get('/get_comprobante_cliente_data', 'App\Http\Controllers\CajaController@getComprobanteClienteData');
 
@@ -248,13 +241,8 @@ Route::get('/historial_egresos_listado_caja', 'App\Http\Controllers\GastoControl
 Route::post('/anular_gasto', 'App\Http\Controllers\GastoController@anularGasto');
 
 
-
-
-
 Route::get('/historial_pagos', 'App\Http\Controllers\CajaController@historialPagos');
 Route::get('/movimientos_caja', 'App\Http\Controllers\CajaController@getMovimientosCaja');
-
-
 // gasto
 Route::post('/save_gasto', 'App\Http\Controllers\GastoController@save');
 Route::get('/get_gastos_corrientes', 'App\Http\Controllers\GastoController@getGastosCorrientes');
@@ -292,15 +280,10 @@ Route::get('/codeudor/reporte', [CodeudorController::class, 'imprimirReporteCode
 // Consultas Financieras
 Route::get('/consultas_financieras', 'App\Http\Controllers\ConsultaFinancieraController@index')->middleware('auth');
 
-
 // exporte excels
 Route::get('/export-planes_pago', 'App\Http\Controllers\ExportController@exportPlanPago');
 
-
-
-
 // VISTAS REPORTES
-
 Route::get('/index_rep_extracto', 'App\Http\Controllers\VistasReporteController@indexExtracto');
 Route::get('/get_clientes_rep', 'App\Http\Controllers\VistasReporteController@getClientesRep');
 Route::get('/get_creditos_rep', 'App\Http\Controllers\VistasReporteController@getCreditosRep');
@@ -358,6 +341,10 @@ Route::post('/modificar_motivo_gasto', 'App\Http\Controllers\ConfiguracionContro
 Route::post('/desactivar_motivo_gasto', 'App\Http\Controllers\ConfiguracionController@desactivarMotivoGasto');
 Route::post('/activar_motivo_gasto', 'App\Http\Controllers\ConfiguracionController@activarMotivoGasto');
 
+// MOTIVOS
+Route::get('/get_motivos_ingresos_activos', [ConfiguracionController::class, 'getMotivosIngresoPorTipo']);
+Route::get('/get_motivos_gastos_activos', [ConfiguracionController::class, 'getMotivosGastoPorTipo']);
+
 
 // Boveda
 
@@ -392,16 +379,20 @@ Route::get('/get_orden_pago_reprogramacion', [SolicitudController::class, 'getOr
 Route::get('/historial-pagos', [HistorialPagosController::class, 'index']);
 Route::post('/pagos/anular/{id}', [HistorialPagosController::class, 'anular']);
 Route::get('/historial-pagos/detalles/{codigo}', [HistorialPagosController::class, 'show']);
-Route::get('/libro-mayor', [HistorialPagosController::class, 'getLibroMayor']);
-Route::get('/reportes/libro-mayor', [HistorialPagosController::class, 'imprimirLibroMayor']);
-Route::get('/reportes/ingresos', [HistorialPagosController::class, 'imprimirReporteIngresos']);
-Route::get('/reportes/egresos', [HistorialPagosController::class, 'imprimirReporteEgresos']);
-Route::get('/reportes/libro-mayor/excel', [HistorialPagosController::class, 'exportarExcelLibroMayor']);
-Route::get('/reportes/ingresos/excel', [HistorialPagosController::class, 'exportarExcelIngresos']);
-Route::get('/reportes/egresos/excel', [HistorialPagosController::class, 'exportarExcelEgresos']);
+
+Route::get('/libro-mayor', [ConsultaFinancieraController::class, 'getLibroMayor']);
+Route::get('/reportes/libro-mayor', [ConsultaFinancieraController::class, 'imprimirLibroMayor']);
+Route::get('/reportes/ingresos', [ConsultaFinancieraController::class, 'imprimirReporteIngresos']);
+Route::get('/reportes/egresos', [ConsultaFinancieraController::class, 'imprimirReporteEgresos']);
+Route::get('/reportes/libro-mayor/excel', [ConsultaFinancieraController::class, 'exportarExcelLibroMayor']);
+Route::get('/reportes/ingresos/excel', [ConsultaFinancieraController::class, 'exportarExcelIngresos']);
+Route::get('/reportes/egresos/excel', [ConsultaFinancieraController::class, 'exportarExcelEgresos']);
 
 Route::get('/caja/get-ordenes-reprogramacion', [CajaController::class, 'getOrdenesReprogramacion']);
 Route::get('/verificar-boveda', [CajaController::class, 'verificarBoveda']);
+
+
+
 
 
 Route::middleware(['auth'])->group(function () {
@@ -410,9 +401,19 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/perfil/update_info', [PerfilController::class, 'updateInformacion']);
     Route::post('/perfil/update_password', [PerfilController::class, 'updatePassword']);
 
-    // caja nuevo
     Route::get('/caja/movimientos/listado', [CajaMovimientosController::class, 'getListado']);
     Route::get('/caja/movimientos/reporte-pdf', [CajaMovimientosController::class, 'generarReporteLista']);
+
+    Route::prefix('socio')->group(function () {
+        Route::get('/activos', [SocioController::class, 'getSociosActivos']);
+        Route::get('/', [SocioController::class, 'indexAdmin']);
+        Route::get('/get_socios', [SocioController::class, 'index']);
+        Route::post('/registrar', [SocioController::class, 'store']);
+        Route::put('/actualizar', [SocioController::class, 'update']);
+        Route::put('/desactivar', [SocioController::class, 'desactivar']);
+        Route::put('/activar', [SocioController::class, 'activar']);
+        Route::get('/selectSocio', [SocioController::class, 'selectSocio']); // Útil para tu vista de Bóveda
+    });
 });
 
 

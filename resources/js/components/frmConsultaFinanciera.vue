@@ -18,35 +18,48 @@
                     <div class="card-body pt-3">
                         
                         <div class="row mb-4 g-2 align-items-end">
-                            <div class="col-md-6">
+                            
+                            <div class="col-md-2">
+                                <label class="form-label small fw-bold text-muted mb-1">Tipo de Libro</label>
+                                <select v-model="filtros.tipo_libro" class="form-select shadow-sm border-0" @change="buscarConFiltros()">
+                                    <option value="GENERAL">Libro General</option>
+                                    <option value="OPERATIVO">Libro Operativo (Caja)</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-4">
                                 <label class="form-label small fw-bold text-muted mb-1">Rango de Fechas</label>
                                 <div class="input-group shadow-sm">
                                     <span class="input-group-text bg-white text-muted fw-bold" style="font-size: 11px;">DESDE</span>
                                     <input type="date" @change="buscarConFiltros()" v-model="filtros.fecha_inicio" class="form-control border-start-0">
                                     <span class="input-group-text bg-white text-muted fw-bold border-start-0" style="font-size: 11px;">HASTA</span>
                                     <input type="date" @change="buscarConFiltros()" v-model="filtros.fecha_final" class="form-control border-start-0">
-                                    <button class="btn btn-success ms-1 shadow-sm fw-bold" @click="buscarConFiltros()"><i class="fas fa-search"></i></button>
-
                                 </div>
                             </div>
-                            <!-- <div class="col-md-3">
+                            <div class="col-md-3">
                                 <label class="form-label small fw-bold text-muted mb-1">Tipo de Movimiento</label>
-                                <select v-model="filtros.tipo" class="form-select shadow-sm border-0">
+                                <select v-model="filtros.tipo" class="form-select shadow-sm border-0" @change="buscarConFiltros()">
                                     <option value="TODOS">Todos los movimientos</option>
-                                    <option value="CAPITAL">Pago de Capital</option>
+                                    <option value="CAPITAL" v-if="filtros.tipo_libro === 'GENERAL'">Pago de Capital</option>
                                     <option value="INTERES">Pago de Interés</option>
                                     <option value="MORA">Multas / Mora</option>
-                                    <option value="DESEMBOLSO">Desembolsos</option>
+                                    <option value="DESEMBOLSO" v-if="filtros.tipo_libro === 'GENERAL'">Desembolsos</option>
                                     <option value="GASTOSADM">Gastos Administrativos</option>
                                     <option value="INGRESO_CAJA">Ingresos Extra</option>
                                     <option value="EGRESO_CAJA">Egresos Extra</option>
                                 </select>
-                            </div> -->
-                            <!-- <div class="col-md-3">
-                                <label class="form-label small fw-bold text-muted mb-1">Buscar (Descripción / Nro)</label>
-                                <input v-model="filtros.buscar" type="text" class="form-control shadow-sm border-0" placeholder="Ej. CREDITO: 5034" />
-                            </div> -->
-                            <div class="col-md-6 text-end">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small fw-bold text-muted mb-1">Buscar (Descripción)</label>
+                                <input v-model="filtros.buscar" @keyup.enter="buscarConFiltros()" type="text" class="form-control shadow-sm border-0" placeholder="Ej. CREDITO: 5034" />
+                            </div>
+                            <div class="col-md-1 text-end">
+                                <button class="btn btn-success w-100 shadow-sm fw-bold" @click="buscarConFiltros()"><i class="fas fa-search"></i></button>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-12 text-end">
                                 <button @click="exportarExcelDinamico" class="btn btn-success fw-bold me-2 text-white">
                                     <i class="fas fa-file-excel me-1"></i> Exportar Excel
                                 </button>
@@ -59,26 +72,26 @@
                         <ul class="nav nav-pills custom-tabs mb-0 d-flex justify-content-center" role="tablist">
                             <li class="nav-item mx-1" role="presentation">
                                 <button @click="tabActivo = 'GENERAL'" class="nav-link active px-4 fw-bold text-uppercase" data-bs-toggle="pill" data-bs-target="#tab-general" type="button" role="tab">
-                                    <i class="fas fa-list me-1"></i> General (Libro Mayor)
+                                    Tabla General
                                 </button>
                             </li>
                             <li class="nav-item mx-1" role="presentation">
                                 <button @click="tabActivo = 'INGRESOS'" class="nav-link px-4 fw-bold text-uppercase text-success" data-bs-toggle="pill" data-bs-target="#tab-ingresos" type="button" role="tab">
-                                    <i class="fas fa-arrow-down me-1"></i> Solo Ingresos
+                                    Solo Ingresos
                                 </button>
                             </li>
                             <li class="nav-item mx-1" role="presentation">
                                 <button @click="tabActivo = 'EGRESOS'" class="nav-link px-4 fw-bold text-uppercase text-danger" data-bs-toggle="pill" data-bs-target="#tab-egresos" type="button" role="tab">
-                                    <i class="fas fa-arrow-up me-1"></i> Solo Egresos
+                                    Solo Egresos
                                 </button>
                             </li>
                         </ul>
 
-                        <div class="tab-content bg-white py-3 border rounded-bottom">
+                        <div class="tab-content bg-white p-3 border rounded-bottom shadow-sm">
                             
                             <div class="tab-pane fade show active" id="tab-general" role="tabpanel">
                                 <div class="table-responsive">
-                                    <table class="table table-sm table-bordered table-hover align-middle ledger-table mb-0">
+                                    <table class="table table-sm table-bordered table-hover align-middle ledger-table mb-0 table-striped">
                                         <thead class="table-success text-center align-middle">
                                             <tr>
                                                 <th width="5%">Nro</th>
@@ -124,7 +137,7 @@
 
                             <div class="tab-pane fade" id="tab-ingresos" role="tabpanel">
                                 <div class="table-responsive">
-                                    <table class="table table-sm table-bordered table-hover align-middle ledger-table mb-0">
+                                    <table class="table table-sm table-bordered table-hover align-middle ledger-table mb-0 table-striped">
                                         <thead class="table-success bg-opacity-10 text-center align-middle">
                                             <tr>
                                                 <th width="5%">Nro</th>
@@ -143,7 +156,7 @@
                                                 <td class="text-end fw-bold text-dark fs-6 bg-success bg-opacity-10">{{ formatNumero(item.debe) }}</td>
                                             </tr>
                                         </tbody>
-                                        <tfoot class="tablke-secondary text-dark fw-bold">
+                                        <tfoot class="table-secondary text-dark fw-bold">
                                             <tr>
                                                 <td colspan="4" class="text-end pe-3 fs-6">TOTAL INGRESOS FILTRADOS:</td>
                                                 <td class="text-end fs-6">{{ formatNumero(totalIngresosPeriodo) }}</td>
@@ -155,7 +168,7 @@
 
                             <div class="tab-pane fade" id="tab-egresos" role="tabpanel">
                                 <div class="table-responsive">
-                                    <table class="table table-sm table-bordered table-hover align-middle ledger-table mb-0">
+                                    <table class="table table-sm table-bordered table-hover align-middle ledger-table mb-0 table-striped">
                                         <thead class="table-danger bg-opacity-10 text-center align-middle">
                                             <tr>
                                                 <th width="5%">Nro</th>
@@ -216,8 +229,7 @@
 <script>
 import moment from 'moment';
 import axios from 'axios';
-import Swal from 'sweetalert2'
-
+import Swal from 'sweetalert2';
 
 export default {
     data() {
@@ -228,6 +240,7 @@ export default {
             filtros: {
                 fecha_inicio: moment().subtract(1, 'month').format('YYYY-MM-DD'),
                 fecha_final: moment().format('YYYY-MM-DD'),
+                tipo_libro: 'GENERAL', // NUEVA VARIABLE
                 tipo: 'TODOS',
                 buscar: '',
                 page: 1
@@ -253,7 +266,6 @@ export default {
         egresosFiltrados() {
             return this.movimientos.filter(i => parseFloat(i.haber) > 0);
         },
-        // Calcula los números de página a mostrar [1, 2, 3, 4...]
         pagesNumber() {
             if (!this.pagination.last_page) return [];
             let from = this.pagination.current_page - this.offset;
@@ -277,6 +289,7 @@ export default {
             const queryParams = new URLSearchParams({
                 fecha_inicio: this.filtros.fecha_inicio,
                 fecha_final: this.filtros.fecha_final,
+                tipo_libro: this.filtros.tipo_libro, // Pasamos el tipo de libro
                 tipo: this.filtros.tipo,
                 buscar: this.filtros.buscar
             }).toString();
@@ -288,8 +301,8 @@ export default {
 
             window.open(`${endpoint}?${queryParams}`, '_blank');
         },
+        
         async imprimirReporteDinamico() {
-            // Determinar qué ruta llamar según la pestaña activa
             let endpoint = '';
             if (this.tabActivo === 'GENERAL') endpoint = '/reportes/libro-mayor';
             else if (this.tabActivo === 'INGRESOS') endpoint = '/reportes/ingresos';
@@ -306,6 +319,7 @@ export default {
                 const queryParams = new URLSearchParams({
                     fecha_inicio: this.filtros.fecha_inicio,
                     fecha_final: this.filtros.fecha_final,
+                    tipo_libro: this.filtros.tipo_libro, // Pasamos el tipo de libro
                     tipo: this.filtros.tipo,
                     buscar: this.filtros.buscar
                 }).toString();
@@ -323,14 +337,19 @@ export default {
 
             } catch (error) {
                 console.error(error);
-                Swal.fire('Error', 'No se pudo generar el reporte. Intente nuevamente.', 'error');
+                Swal.fire('Error', 'No se pudo generar el reporte.', 'error');
             }
         },
+
         formatNumero(numero) {
             if (numero === undefined || numero === null) return '0.00';
             return new Intl.NumberFormat('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(numero);
         },
         buscarConFiltros() {
+            // Si el usuario cambia de libro y tenía un filtro no válido, lo reseteamos
+            if (this.filtros.tipo_libro === 'OPERATIVO' && (this.filtros.tipo === 'CAPITAL' || this.filtros.tipo === 'DESEMBOLSO')) {
+                this.filtros.tipo = 'TODOS';
+            }
             this.fetchLibroMayor(1);
         },
         cambiarPagina(page) {
@@ -338,12 +357,11 @@ export default {
         },
         async fetchLibroMayor(page) {
             this.preloader = true;
-            this.filtros.page = page; // Asigna la página al objeto de filtros
+            this.filtros.page = page; 
             
             try {
                 const response = await axios.get('/libro-mayor', { params: this.filtros });
                 
-                // Asignamos la data mapeada del nuevo JSON
                 this.movimientos = response.data.movimientos.data;
                 this.pagination = response.data.movimientos;
                 this.totalIngresosPeriodo = response.data.totales.ingresos;
@@ -358,8 +376,9 @@ export default {
     }
 };
 </script>
+
 <style scoped>
-/* Tabs Personalizados para el Libro Mayor */
+/* Tabs Personalizados */
 .custom-tabs {
     border-bottom: 2px solid #dee2e6;
 }
@@ -371,7 +390,7 @@ export default {
     border-radius: 8px 8px 0 0;
     transition: all 0.05s ease;
     font-size: 0.85rem;
-    margin-bottom: -2px; /* Superpone el borde inferior */
+    margin-bottom: -2px;
 }
 .custom-tabs .nav-link:hover {
     background-color: #198754 !important;
@@ -379,22 +398,17 @@ export default {
 }
 .custom-tabs .nav-link.active {
     background-color: #ffffff;
-    color: #198754 !important; /* Verde success */
+    color: #198754 !important;
     border-color: #dee2e6;
     border-top: 3px solid #198754;
-    border-bottom: 3px solid #ffffff; /* Oculta la línea de la tabla */
+    border-bottom: 3px solid #ffffff;
     z-index: 2;
     position: relative;
 }
+.custom-tabs .nav-link.active:hover { color: #ffffff !important; }
 
-.custom-tabs .nav-link.active:hover {
-    color: #ffffff !important; /* Verde success */
-    
-}
-
-/* Estilo Contable Estricto para la Tabla (Ledger-style) */
+/* Tabla Ledger */
 .ledger-table {
-    font-family: 'Courier New', Courier, monospace; /* Opcional: Para darle un toque de sistema contable clásico */
     font-family: inherit;
     font-size: 0.8rem;
 }
@@ -409,16 +423,10 @@ export default {
     vertical-align: middle;
     padding: 6px 5px;
 }
-
-/* Bordes fuertes para separar Saldo */
-.border-start-2 {
-    border-left: 2px solid #dee2e6 !important;
-}
+.border-start-2 { border-left: 2px solid #dee2e6 !important; }
 
 /* Animaciones */
-.fade-in-animation {
-    animation: fadeIn 0.3s ease-in-out;
-}
+.fade-in-animation { animation: fadeIn 0.3s ease-in-out; }
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(5px); }
     to { opacity: 1; transform: translateY(0); }

@@ -10,7 +10,7 @@
                 <div v-if="view==0" class="card shadow-sm border-0">
                     <div class="card-header bg-success py-3 d-flex justify-content-center align-items-center">
                         <h5 class="header-title my-0 fw-bold text-white text-uppercase">
-                            <i class="fas fa-hand-holding-usd me-2"></i> Historial de Desembolsos
+                            Historial de Desembolsos
                         </h5>
                     </div>
 
@@ -19,9 +19,6 @@
                             <div class="col-md-6 mb-3 mb-md-0">
                                 <div class="card border-primary border-opacity-25 shadow-sm h-100 bg-primary bg-opacity-10">
                                     <div class="card-body p-3 d-flex align-items-center">
-                                        <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center me-3 shadow-sm" style="width: 48px; height: 48px;">
-                                            <i class="fas fa-money-bill-wave fs-5"></i>
-                                        </div>
                                         <div>
                                             <h6 class="text-uppercase text-primary fw-bold mb-1" style="font-size: 0.75rem; letter-spacing: 0.5px;">
                                                 Total Capital Desembolsado
@@ -35,9 +32,6 @@
                             <div class="col-md-6">
                                 <div class="card border-info border-opacity-50 shadow-sm h-100 bg-info bg-opacity-10">
                                     <div class="card-body p-3 d-flex align-items-center">
-                                        <div class="bg-info text-white rounded-circle d-flex justify-content-center align-items-center me-3 shadow-sm" style="width: 48px; height: 48px;">
-                                            <i class="fas fa-file-invoice-dollar fs-5"></i>
-                                        </div>
                                         <div>
                                             <h6 class="text-uppercase text-info-emphasis fw-bold mb-1" style="font-size: 0.75rem; letter-spacing: 0.5px;">
                                                 Gastos Administrativos Retenidos
@@ -125,7 +119,7 @@
                                                                 <i class="fas fa-print me-2 text-primary"></i> Imprimir Comprobante
                                                             </a>
                                                         </li>
-                                                        <li v-if="item.estado != 1" @click="anularDesembolso(item)">
+                                                        <li v-if="rolUsuario == 'Administrador' && item.estado != 1 && esHoy(item.fecha)" @click="anularDesembolso(item)">
                                                             <hr class="dropdown-divider">
                                                             <a class="dropdown-item text-danger fw-bold" href="#">
                                                                 <i class="fas fa-times me-2"></i> Anular Desembolso
@@ -143,6 +137,9 @@
                                         </tr>
                                     </tbody>
                                 </table>
+                                <template v-if="listaDesembolsos.length<=7">
+                                    <br><br><br><br><br><br>
+                                </template>
                             </div>
                         </div>
 
@@ -271,6 +268,12 @@ import moment from 'moment';
 import Swal from 'sweetalert2'
 
 export default {
+    props: {
+        rolUsuario: {
+            type: String,
+            required: true,
+        },
+    },
     data() {
         return {
             view:0,
@@ -330,6 +333,12 @@ export default {
         }
     },
     methods: {
+        esHoy(fechaDesembolso) {
+            if (!fechaDesembolso) return false;
+            const fechaItem = moment(fechaDesembolso, 'YYYY-MM-DD HH:mm:ss').format('YYYY-MM-DD');
+            const fechaActual = moment().format('YYYY-MM-DD');
+            return fechaItem === fechaActual;
+        },
         formatNumero(numero) {
             if (numero === undefined || numero === null) return '0.00';
             return new Intl.NumberFormat('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(numero);

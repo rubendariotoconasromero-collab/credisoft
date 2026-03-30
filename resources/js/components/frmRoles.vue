@@ -20,7 +20,7 @@
                             </div>
                         </div>
                         <div class="table-responsive">
-                            <table class="table table-sm table-hover table-striped align-middle"
+                            <table class="table table-sm table-hover table-striped align-middle table-roles"
                                 style="font-size: 12px;">
                                 <thead class="text-white text-uppercase table-success">
                                     <tr>
@@ -33,7 +33,7 @@
                                     <tr v-for="rol in array_roles" :key="rol.id">
                                         <td class="text-capitalize fw-bold">{{ rol.nombre }}</td>
                                         <td>
-                                            <span :class="rol.estado === 1 ? 'text-success' : 'text-danger'">
+                                            <span :class="rol.estado === 1 ? 'badge bg-success' : 'badge bg-danger'">
                                                 {{ rol.estado === 1 ? 'Activo' : 'Inactivo' }}
                                             </span>
                                         </td>
@@ -57,7 +57,7 @@
                                                     </li>
                                                     <li @click="editarRol(rol)">
                                                         <a class="dropdown-item text-primary" href="#">
-                                                            <i class="far fa-edit me-1"></i> Editar
+                                                            <i class="fas fa-pencil-alt me-1"></i> Editar
                                                         </a>
                                                     </li>
                                                 </ul>
@@ -294,6 +294,13 @@ export default {
 </script>
 
 <style scoped>
+.table-roles .badge {
+    font-size: 0.75rem;
+    padding: 0.25em 0.5em;
+    border-radius: 15px;
+    min-width: 100px;
+}
+
 .card {
     border: none;
     border-radius: 8px;
@@ -308,12 +315,13 @@ export default {
     min-width: 120px;
 }
 
-.modal-content {
-    /* border-radius: 10px; */
-}
-
 .form-check-input:checked {
     background-color: #52BE80;
     border-color: #52BE80;
+    border-radius:10px;
+}
+
+.dropdown-toggle::after {
+    display: none !important;
 }
 </style>

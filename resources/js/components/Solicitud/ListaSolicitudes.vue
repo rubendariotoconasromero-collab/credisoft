@@ -82,7 +82,7 @@
                                             <small class="text-muted">* </small>{{ codeudor.nombre }}
                                         </p>
                                     </div>
-                                    <div v-else class="text-center text-muted fst-italic">
+                                    <div v-else class="text-start text-muted fst-italic">
                                         Sin codeudores
                                     </div>
                                 </td>

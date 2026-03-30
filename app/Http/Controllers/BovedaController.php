@@ -15,13 +15,17 @@ class BovedaController extends Controller
     }
 
     public function getBoveda(Request $request){
-        $boveda=DB::table('boveda')
-        ->first();
+        $boveda = DB::table('boveda')
+            ->leftJoin('users', 'boveda.id_usuario', '=', 'users.id')
+            ->select('boveda.*', 'users.personal as nombre_usuario')
+            ->orderBy('boveda.id', 'desc')
+            ->first();
 
         return [
-            'saldo_actual'=>empty($boveda)?0:$boveda->saldo_actual,
-            'fecha_apertura'=>empty($boveda)?0:$boveda->fecha_apertura,
-            'id_boveda'=>empty($boveda)?0:$boveda->id,
+            'saldo_actual' => empty($boveda) ? 0 : $boveda->saldo_actual,
+            'fecha_apertura' => empty($boveda) ? 0 : $boveda->fecha_apertura,
+            'id_boveda' => empty($boveda) ? 0 : $boveda->id,
+            'usuario_apertura' => empty($boveda) ? 'Sin registro' : $boveda->nombre_usuario, // <--- NUEVO DATO
         ];
     }
 
@@ -29,7 +33,14 @@ class BovedaController extends Controller
         // 1. Construir la consulta base
         $query = DB::table('movimientos_boveda')
             ->join('users', 'users.id', '=', 'movimientos_boveda.id_usuario')
-            ->select('movimientos_boveda.*', 'users.personal');
+            ->select('movimientos_boveda.*', 'users.personal')
+            ->leftJoin('socios', 'socios.id', '=', 'movimientos_boveda.id_socio') // <--- NUEVO JOIN
+            ->select(
+                'movimientos_boveda.*', 
+                'users.personal',
+                'socios.nombres as socio_nombres', // <--- NUEVOS CAMPOS
+                'socios.apellidos as socio_apellidos'
+            );
 
         // 2. Aplicar filtros generales (Fechas y Tipo si viene en el request)
         if ($request->has('tipo') && $request->tipo != 'todos') {
@@ -84,6 +95,7 @@ class BovedaController extends Controller
                 'fecha'=>now(),
                 'id_boveda'=>$id_boveda,
                 'id_usuario'=>Auth::user()->id,
+                'id_socio' => $request->id_socio ?? null,
             ]);
             
 
@@ -118,6 +130,7 @@ class BovedaController extends Controller
                 'fecha'=>now(),
                 'id_boveda'=>$id_boveda,
                 'id_usuario'=>Auth::user()->id,
+                'id_socio' => $request->id_socio ?? null,
             ]);
 
             DB::table('boveda')->where('id', $id_boveda)->update([
@@ -132,21 +145,20 @@ class BovedaController extends Controller
     }
 
     public function aperturarBoveda(Request $request){
-        
-
         DB::beginTransaction();
         try{
-
-        
             DB::table('boveda')->insertGetId([
                 'saldo_actual' => 0,
                 'fecha_apertura' => now(),
+                'id_usuario' => Auth::user()->id,
             ]);
 
             DB::commit();
+            return response()->json(['message' => 'Bóveda aperturada con éxito'], 200);
 
-        }catch(Exception $e){
+        }catch(\Exception $e){
             DB::rollback();
+            return response()->json(['message' => 'Error al aperturar', 'error' => $e->getMessage()], 500);
         }
     }
 }

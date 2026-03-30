@@ -252,9 +252,7 @@
                         </div>
                     </div>
                 </div>
-                <!-- /.modal-content -->
             </div>
-            <!-- /.modal-dialog -->
         </div>
 
         <div id="modalVerRegistrosGastosCorrientes" class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog"
@@ -267,8 +265,6 @@
                             data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <!-- <div class="col-md-12"> -->
-
                         <div class="row mb-2">
                             <div class="col-md-8">
                                 <div class="input-group">
@@ -303,7 +299,6 @@
                                 </button>
                             </div>
                         </div>
-                        <!-- </div> -->
                         <div class="table-responsive" style="font-size:11px;">
                             <table class="table mb-4 table-sm table-striped table-hover">
                                 <thead class="bg-success text-white text-uppercase">
@@ -357,16 +352,13 @@
                         </div>
                     </div>
                 </div>
-                <!-- /.modal-content -->
             </div>
-            <!-- /.modal-dialog -->
         </div>
 
         <div id="modalCobrarPagoAdm" class="modal fade" tabindex="-1" aria-labelledby="modalCobrarPagoAdmLabel"
             aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content border-3 border-dark">
-                    <!-- Encabezado del modal -->
                     <div class="modal-header bg-success text-white">
                         <h5 class="modal-title fw-bold text-white" id="modalCobrarPagoAdmLabel">
                             <i class="fas fa-money-bill-wave me-2"></i>Desembolso del monto de crédito
@@ -375,13 +367,10 @@
                             data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
 
-                    <!-- Cuerpo del modal -->
                     <div class="modal-body">
-                        <!-- Sección de información -->
                         <div class="card mb-4">
                             <div class="card-body">
                                 <div class="row g-3">
-                                    <!-- Cliente -->
                                     <div class="col-12">
                                         <div class="d-flex justify-content-between align-items-center">
                                             <span class="fw-bold text-dark text-uppercase">Cliente:</span>
@@ -430,9 +419,6 @@
                                 </div>
                             </div>
                         </div>
-
-
-                        <!-- Botón de acción -->
                         <div class="d-grid">
 
                             <button :disabled="desembolsando" @click="guardarPagoAdm()"

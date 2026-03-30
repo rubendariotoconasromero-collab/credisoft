@@ -668,17 +668,17 @@
                             </button>
 
                             <button
-                                v-if="solicitud.estado != 2 && solicitud.accion === 2 && rolUsuario === 'administrador' && solicitud.observacion == ''"
+                                v-if="solicitud.estado != 2 && solicitud.accion === 2 && rolUsuario === 'Administrador' && solicitud.observacion == ''"
                                 type="button" class="btn btn-info" @click="abrirModalObservacion('guardar')">
                                 <i class="fas fa-eye"></i> Observar
                             </button>
                             <button
-                                v-if="solicitud.accion === 2 && rolUsuario === 'administrador' && solicitud.observacion != ''"
+                                v-if="solicitud.accion === 2 && rolUsuario === 'Administrador' && solicitud.observacion != ''"
                                 type="button" class="btn btn-info me-2" @click="abrirModalObservacion('modificar')">
                                 <i class="fas fa-pencil-alt"></i> Modificar Observación
                             </button>
                             <button @click="eliminarObservacion()"
-                                v-if="solicitud.accion === 2 && rolUsuario === 'administrador' && solicitud.observacion != ''"
+                                v-if="solicitud.accion === 2 && rolUsuario === 'Administrador' && solicitud.observacion != ''"
                                 type="button" class="btn btn-danger">
                                 <i class="fas fa-trash-alt"></i> Eliminar Observación
                             </button>
@@ -873,7 +873,7 @@
                                                 </div>
                                             </div>
             
-                                            <div class="col-md-3 text-end" v-if="rolUsuario === 'administrador'">
+                                            <div class="col-md-3 text-end" v-if="rolUsuario === 'Administrador'">
                                                 <button v-if="!solicitud_editar.observacion"
                                                     @click="abrirObservacionRepro('guardar')"
                                                     class="btn btn-outline-danger fw-bold btn-sm">
@@ -2197,7 +2197,7 @@ export default {
                 
                 if (cliente) this.seleccionarCliente(cliente);
                 await this.cargarCodeudores(item.id);
-                if (this.lista_codeudores.length <= 1 && this.lista_codeudores[0].select_codeudor.codeudor.nombre == 'SIN GARANTE') {
+                if (this.lista_codeudores.length <= 1 && this.lista_codeudores[0].select_codeudor.codeudor.idd_codeudor == '') {
                     this.sinCodeudor = true;
                 } else {
                     this.sinCodeudor = false;
@@ -2234,7 +2234,7 @@ export default {
                 );
                 if (cliente) this.seleccionarCliente(cliente);
                 await this.cargarCodeudores(item.id);
-                if (this.lista_codeudores.length <= 1 && this.lista_codeudores[0].select_codeudor.codeudor.nombre == 'SIN GARANTE') {
+                if (this.lista_codeudores.length <= 1 && this.lista_codeudores[0].select_codeudor.codeudor.idd_codeudor == '') {
                     this.sinCodeudor = true;
                 } else {
                     this.sinCodeudor = false;

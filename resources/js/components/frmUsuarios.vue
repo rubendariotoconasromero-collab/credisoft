@@ -32,9 +32,7 @@
                             </div>
 
                         </div>
-
-                        <!-- <h6 class="fw-bold">Listado de usuarios</h6> -->
-                        <div class="table-responsive" style="font-size:12px">
+                        <div class="table-responsive table-users" style="font-size:12px">
                             <table class="table table-striped table-hover table-sm ">
                                 <thead class="text-white text-uppercase table-success">
                                     <tr>
@@ -62,15 +60,15 @@
                                                 <span v-else-if="item.dias_restantes <= 7" class="badge bg-warning text-dark">
                                                     Vence en {{ item.dias_restantes }} días
                                                 </span>
-                                                <span v-else class="badge bg-success">
+                                                <span v-else class="badge bg-info">
                                                     Ok ({{ item.dias_restantes }} días)
                                                 </span>
                                             </div>
                                             <span v-else class="text-muted small">Indefinido</span>
                                         </td>
                                         <td class="text-capitalize text-center">
-                                            <span v-if="item.estado == 1" class="text-success">Activo</span>
-                                            <span v-else class="text-danger">Inactivo</span>
+                                            <span v-if="item.estado == 1" class="badge bg-success">Activo</span>
+                                            <span v-else class="badge bg-danger">Inactivo</span>
                                         </td>
                                         <td class="text-center">
                                             <div class="btn-group my-0 py-0">
@@ -545,5 +543,12 @@
 <style scoped>
     .dropdown-toggle::after {
         display: none !important;
+    }
+
+    .table-users .badge{
+        font-size: 12px;
+        padding: 0.25em 0.5em;
+        border-radius: 15px;
+        min-width:100px;
     }
 </style>

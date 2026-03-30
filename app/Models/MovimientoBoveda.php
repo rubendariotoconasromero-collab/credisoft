@@ -19,6 +19,7 @@ class MovimientoBoveda extends Model
         'fecha',
         'id_boveda',
         'id_usuario',
+        'id_socio',
     ];
 
     /**

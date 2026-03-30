@@ -30,13 +30,22 @@
 
                                 <div v-else class="alert alert-success border-success shadow-sm d-flex align-items-center mb-0 p-3" role="alert">
                                     <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
-                                        <i class="fas fa-vault fa-lg"></i>
+                                        <i class="fas fa-shield-alt fa-lg"></i>
                                     </div>
                                     <div>
                                         <h6 class="fw-bold text-uppercase mb-0 text-success" style="font-size: 0.8rem;">Saldo Actual en Bóveda</h6>
                                         <h3 class="fw-bold mb-0 text-dark">{{ boveda.saldo_actual }} <span class="fs-6 text-muted">Bs.</span></h3>
-                                        <small class="text-muted"><i class="fas fa-calendar-day me-1"></i> Apertura: {{ boveda.fecha_apertura }}</small>
+                                        <small class="text-muted">
+                                            <b><i class="fas fa-calendar-day me-1"></i> Fecha Apertura: </b>
+                                            {{ boveda.fecha_apertura }}</small>
+
+                                        <small class="text-muted ms-4">
+                                            <b><i class="fas fa-user me-1"></i> Aperturada por:</b>
+                                             {{ boveda.usuario_apertura }}
+                                        </small>
+                                            
                                     </div>
+                                 
                                 </div>
                             </div>
 
@@ -111,7 +120,12 @@
                                             </span>
                                         </td>
                                         <td class="fw-bold text-end pe-4 font-monospace fs-6 text-dark">{{ movimiento.monto }}</td>
-                                        <td class="text-uppercase">{{ movimiento.descripcion }}</td>
+                                        <td class="text-uppercase">
+                                            {{ movimiento.descripcion }}
+                                            <span v-if="movimiento.socio_nombres" class="d-block text-muted small fw-bold mt-1">
+                                                <i class="fas fa-handshake me-1"></i> SOCIO: {{ movimiento.socio_nombres }} {{ movimiento.socio_apellidos }}
+                                            </span>
+                                        </td>
                                         <td class="text-uppercase small"><i class="fas fa-user-circle me-1 text-muted"></i> {{ movimiento.personal }}</td>
                                         <td class="text-center">{{ movimiento.fecha }}</td>
                                     </tr>
@@ -149,7 +163,7 @@
         </div>
 
         <div class="modal fade" id="modalIngresoBoveda" tabindex="-1" data-bs-backdrop="static">
-            <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
                 <div class="modal-content border-2 border-dark">
                     <div class="modal-header bg-warning py-2">
                         <h5 class="modal-title text-dark fw-bold text-uppercase"><i class="fas fa-plus-circle me-2"></i> Ingresar a Bóveda</h5>
@@ -161,7 +175,7 @@
                                 <label class="fw-bold mb-1">Monto a Ingresar</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-success text-white fw-bold">Bs.</span>
-                                    <input type="number" class="form-control form-control-lg fw-bold text-dark" v-model="montoIngreso" placeholder="0.00" step="0.01" min="0" required>
+                                    <input type="number" class="form-control fw-bold text-dark" v-model="montoIngreso" placeholder="0.00" step="0.01" min="0" required>
                                 </div>
                             </div>
                             <div class="form-group mb-3">
@@ -169,6 +183,15 @@
                                 <select class="form-select" v-model="descripcionIngresoSeleccionada" required>
                                     <option value="" disabled selected>Seleccione una opción...</option>
                                     <option v-for="opcion in opcionesIngreso" :key="opcion" :value="opcion">{{ opcion }}</option>
+                                </select>
+                            </div>
+                            <div v-if="descripcionIngresoSeleccionada === 'Aporte de capital'" class="form-group mb-3 fade-in-animation">
+                                <label class="fw-bold mb-1 text-primary">Seleccionar Inversionista (Socio)</label>
+                                <select class="form-select border-primary" v-model="id_socio_ingreso" required>
+                                    <option value="" disabled selected>Seleccione al socio aportante...</option>
+                                    <option v-for="socio in lista_socios" :key="socio.id" :value="socio.id">
+                                        {{ socio.nombre_completo }} (CI: {{ socio.ci }})
+                                    </option>
                                 </select>
                             </div>
                             <div v-if="descripcionIngresoSeleccionada === 'otro'" class="form-group">
@@ -186,7 +209,7 @@
         </div>
 
         <div class="modal fade" id="modalRetiroBoveda" tabindex="-1" data-bs-backdrop="static">
-            <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
                 <div class="modal-content border-2 border-dark">
                     <div class="modal-header bg-warning py-2">
                         <h5 class="modal-title text-dark fw-bold text-uppercase"><i class="fas fa-minus-circle me-2"></i> Retirar de Bóveda</h5>
@@ -202,7 +225,7 @@
                                 <label class="fw-bold mb-1">Monto a Retirar</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-danger text-white fw-bold">Bs.</span>
-                                    <input type="number" class="form-control form-control-lg fw-bold text-danger" v-model="montoRetiro" placeholder="0.00" step="0.01" min="0" required>
+                                    <input type="number" class="form-control fw-bold text-danger" v-model="montoRetiro" placeholder="0.00" step="0.01" min="0" required>
                                 </div>
                             </div>
                             <div class="form-group mb-3">
@@ -210,6 +233,15 @@
                                 <select class="form-select" v-model="descripcionRetiroSeleccionada" required>
                                     <option value="" disabled selected>Seleccione una opción...</option>
                                     <option v-for="opcion in opcionesRetiro" :key="opcion" :value="opcion">{{ opcion }}</option>
+                                </select>
+                            </div>
+                            <div v-if="descripcionRetiroSeleccionada === 'Pago de dividendos'" class="form-group mb-3 fade-in-animation">
+                                <label class="fw-bold mb-1 text-danger">Seleccionar Beneficiario (Socio)</label>
+                                <select class="form-select border-danger" v-model="id_socio_retiro" required>
+                                    <option value="" disabled selected>Seleccione al socio que recibe...</option>
+                                    <option v-for="socio in lista_socios" :key="socio.id" :value="socio.id">
+                                        {{ socio.nombre_completo }} (CI: {{ socio.ci }})
+                                    </option>
                                 </select>
                             </div>
                             <div v-if="descripcionRetiroSeleccionada === 'otro'" class="form-group">
@@ -281,6 +313,7 @@
                     id_boveda:0,
                     saldo_actual:0,
                     fecha_apertura:moment().format('YYYY-MM-DD'),
+                    usuario_apertura: '',
                 },
 
                 movimientosBoveda:[],
@@ -295,10 +328,20 @@
                 },
                 offset_movimientos_boveda: 2,
                 fecha_fin:moment().format('YYYY-MM-DD'),
+
+                lista_socios: [],
+                id_socio_ingreso: '',
+                id_socio_retiro: '',
             }
         },
      
         methods: {
+            async getSocios() {
+                try {
+                    const response = await axios.get('/socio/activos'); 
+                    this.lista_socios = response.data;
+                } catch (error) { console.error('Error al traer socios:', error); }
+            },
             async aperturarBoveda(){
                 try {
                     await this.aperturarBovedaPrivate();
@@ -366,6 +409,11 @@
                     Swal.fire('Advertencia', 'Por favor complete todos los campos.', 'warning');
                     return;
                 }
+
+                if (this.descripcionIngresoSeleccionada === 'Aporte de capital' && !this.id_socio_ingreso) {
+                    Swal.fire('Advertencia', 'Debe seleccionar el Socio/Inversionista que hace el aporte.', 'warning');
+                    return;
+                }
                 let descripcionFinal = this.descripcionIngresoSeleccionada === 'otro'
                     ? `otro: ${this.otraDescripcionIngreso}`
                     : this.descripcionIngresoSeleccionada;
@@ -382,6 +430,12 @@
                     Swal.fire('Error', 'No tiene saldo suficiente para el retiro.', 'error');
                     return;
                 }
+
+                if (this.descripcionRetiroSeleccionada === 'Pago de dividendos' && !this.id_socio_retiro) {
+                    Swal.fire('Advertencia', 'Debe seleccionar al Socio que recibe los dividendos.', 'warning');
+                    return;
+                }
+
                 let descripcionFinal = this.descripcionRetiroSeleccionada === 'otro'
                     ? `otro: ${this.otraDescripcionRetiro}`
                     : this.descripcionRetiroSeleccionada;
@@ -394,6 +448,7 @@
                     await axios.post('/ingresar_boveda', {
                         monto: this.montoIngreso,
                         descripcion: descripcion,
+                        id_socio: this.descripcionIngresoSeleccionada === 'Aporte de capital' ? this.id_socio_ingreso : null
                     });
 
                     Swal.fire({title:'Éxito', text: 'Ingreso a bóveda registrado con éxito.', icon:'success', timer:1500});
@@ -402,6 +457,7 @@
                     await this.getMovimientosBoveda(); 
                     await this.getBoveda();
                     this.cerrarModalIngresoBoveda();
+                    this.id_socio_ingreso = '';
                 } catch (error) {
                     Swal.fire('Error', 'Ocurrió un error al ingresar a la bóveda.', 'error');
                     console.error('Error al ingresar a bóveda:', error);
@@ -413,6 +469,7 @@
                     await axios.post('/retirar_boveda', {
                         monto: this.montoRetiro,
                         descripcion: descripcion,
+                        id_socio: this.descripcionRetiroSeleccionada === 'Pago de dividendos' ? this.id_socio_retiro : null
                     });
 
                     Swal.fire({title:'Éxito', text:'Retiro de bóveda registrado con éxito.', icon:'success', timer:1500});
@@ -421,6 +478,7 @@
                     this.cerrarModalRetiroBoveda();
                     await this.getMovimientosBoveda(); 
                     await this.getBoveda();
+                    this.id_socio_retiro = '';
                 } catch (error) {
                     Swal.fire('Error', 'Ocurrió un error al retirar de la bóveda.', 'error');
                     console.error('Error al retirar de bóveda:', error);
@@ -432,6 +490,7 @@
                         this.boveda.id_boveda = response.data.id_boveda;
                         this.boveda.saldo_actual = response.data.saldo_actual;
                         this.boveda.fecha_apertura = response.data.fecha_apertura;
+                        this.boveda.usuario_apertura = response.data.usuario_apertura;
                     })
                     .catch((error) => {
                         console.error('Error al obtener la información de la bóveda:', error);
@@ -504,6 +563,7 @@
             this.preloader = true;
             await this.getBoveda();
             await this.getMovimientosBoveda();
+            await this.getSocios();
             this.preloader=false;
         }
     }

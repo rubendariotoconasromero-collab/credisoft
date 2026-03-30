@@ -53,9 +53,67 @@ class PermisoRolSeeder extends Seeder
             'created_at' => $now, 
             'updated_at' => $now
         ];
+
         $permisosRol[] = [
             'id_permiso' => 9, 
             'id_rol' => 3, 
+            'created_at' => $now, 
+            'updated_at' => $now
+        ];
+
+        $permisosRol[] = [
+            'id_permiso' => 12, 
+            'id_rol' => 3, 
+            'created_at' => $now, 
+            'updated_at' => $now
+        ];
+
+        $permisosRol[] = [
+            'id_permiso' => 5, 
+            'id_rol' => 3, 
+            'created_at' => $now, 
+            'updated_at' => $now
+        ];
+
+        // 3. ASIGNAR PERMISOS ESPECÍFICOS PARA EL ENCARGADO DE AGENCIA (id_rol = 4)
+        $permisosRol[] = [
+            'id_permiso' => 5, 
+            'id_rol' => 4, 
+            'created_at' => $now, 
+            'updated_at' => $now
+        ];
+
+        $permisosRol[] = [
+            'id_permiso' => 6, 
+            'id_rol' => 4, 
+            'created_at' => $now, 
+            'updated_at' => $now
+        ];
+
+        $permisosRol[] = [
+            'id_permiso' => 8, 
+            'id_rol' => 4, 
+            'created_at' => $now, 
+            'updated_at' => $now
+        ];
+
+        $permisosRol[] = [
+            'id_permiso' => 9, 
+            'id_rol' => 4, 
+            'created_at' => $now, 
+            'updated_at' => $now
+        ];
+
+        $permisosRol[] = [
+            'id_permiso' => 10, 
+            'id_rol' => 4, 
+            'created_at' => $now, 
+            'updated_at' => $now
+        ];
+
+        $permisosRol[] = [
+            'id_permiso' => 12, 
+            'id_rol' => 4, 
             'created_at' => $now, 
             'updated_at' => $now
         ];

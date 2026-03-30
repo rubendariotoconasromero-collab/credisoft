@@ -49,6 +49,7 @@ import frmBoveda from './components/frmBoveda.vue';
 import frmHistorialPagos from './components/frmHistorialPagos.vue';
 import frmConsultaFinanciera from './components/frmConsultaFinanciera.vue';
 import PerfilUsuarioComponent from './components/PerfilUsuarioComponent.vue';
+import frmSocio from './components/frmSocio.vue';
 
 
 
@@ -82,6 +83,7 @@ app.component('frm-boveda', frmBoveda);
 app.component('frm-historialpagos', frmHistorialPagos);
 app.component('frm-consultafinanciera', frmConsultaFinanciera);
 app.component('perfil-usuario-component', PerfilUsuarioComponent);
+app.component('frm-socio', frmSocio);
 
 
 

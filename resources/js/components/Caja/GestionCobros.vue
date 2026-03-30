@@ -257,7 +257,7 @@
                             <div class="d-flex justify-content-between mb-2"><strong>Inicio:</strong> <span>{{ formatDate(plan_pago.fecha_inicio_plan) }}</span></div>
                             <div class="d-flex justify-content-between mb-2"><strong>Fin:</strong> <span>{{ formatDate(plan_pago.fecha_fin_plan) }}</span></div>
                             <div v-if="dias_mora > 0" class="d-flex justify-content-between">
-                                <span class="fw-bold text-danger">Mora:</span>
+                                <span class="fw-bold text-danger">Mora General:</span>
                                 <span class="fw-bold text-danger">{{ dias_mora }} Días</span>
                             </div>
                         </div>
@@ -265,7 +265,7 @@
                 </div>
 
                 <div class="table-responsive" style="font-size:12px;">
-                    <table class="table mb-4 table-striped table-sm table-hover border">
+                    <table class="table mb-4 table-striped table-sm table-hover border table-cuotas">
                         
                         <thead class="text-dark table-warning">
                             <tr>
@@ -280,7 +280,7 @@
                                 <th class="text-center text-primary">Int. Devengado</th>
                                 <th class="text-center text-danger">Int. Moratorio</th>
                                 
-                                <th class="text-center">Int. Total Acumulado</th>
+                                <th class="text-center">Int. Acumulado</th>
                                 <th class="text-center">Estado</th>
                                 <th class="text-center">Pagar</th>
                             </tr>
@@ -326,9 +326,10 @@
                                 </td>
                                 
                                 <td class="text-center">
-                                    <div v-if="cuota.mora_fija_neta > 0 && cuota.estado != 2" class="mb-1">
+                                    <!-- <div v-if="cuota.mora_fija_neta > 0 && cuota.estado != 2" class="mb-1"> -->
+                                    <div v-if="cuota.dias_pasados > 0 && cuota.estado != 2" class="mb-1">
                                         <span class="badge bg-danger text-white">
-                                            Multa - {{ cuota.dias_pasados }} Dias
+                                            Mora - {{ cuota.dias_pasados }} Dias
                                         </span>
                                     </div>
                                     <span class="badge rounded-pill" :class="getEstadoCuota(cuota).clase">
@@ -393,7 +394,7 @@
                                                 <span class="text-muted">Interés Acumulado</span>
                                                 <span class="fw-bold">{{ formatNumero(totalInteres) }}</span>
                                             </li>
-                                            <li class="list-group-item d-flex justify-content-between align-items-center px-0 bg-transparent border-bottom border-2">
+                                            <li class="list-group-item d-flex justify-content-between align-items-center px-0 bg-transparent">
                                                 <span class="text-muted text-danger">Multa por Mora</span>
                                                 <span class="fw-bold text-danger">{{ formatNumero(totalMulta) }}</span>
                                             </li>
@@ -419,20 +420,20 @@
                                         <div class="row g-2">
                                             <div class="col-sm-6" v-if="totalInteres > 0">
                                                 <label class="form-label small fw-bold text-muted mb-1">Desc. Interés (Bs)</label>
-                                                <input type="number" class="form-control form-control-sm border-warning" 
+                                                <input type="number" class="form-control form-control-sm border-warning bg-white" 
                                                     v-model.number="paymentDetails.monto_condonado_interes" 
                                                     min="0" :max="totalInteres"
                                                     @focus="$event.target.select()" @blur="verificarVacio('interes')" @input="validarMonto('interes')" placeholder="0.00">
                                             </div>
                                             <div class="col-sm-6" v-if="totalMulta > 0">
-                                                <label class="form-label small fw-bold text-danger mb-1">Desc. Mora (Bs)</label>
-                                                <input type="number" class="form-control form-control-sm border-danger" 
+                                                <label class="form-label small fw-bold text-danger mb-1">Desc. Multa (Bs)</label>
+                                                <input type="number" class="form-control form-control-sm border-danger bg-white" 
                                                     v-model.number="paymentDetails.monto_condonado_multa" 
                                                     min="0" :max="totalMulta"
                                                     @focus="$event.target.select()" @blur="verificarVacio('multa')" @input="validarMonto('multa')" placeholder="0.00">
                                             </div>
                                             <div class="col-12 mt-2" v-if="paymentDetails.monto_condonado_interes > 0 || paymentDetails.monto_condonado_multa > 0">
-                                                <input type="text" class="form-control form-control-sm bg-light" 
+                                                <input type="text" class="form-control form-control-sm bg-white" 
                                                     v-model="paymentDetails.motivo_condonacion_interes" 
                                                     placeholder="Escriba el motivo de la condonación...">
                                             </div>
@@ -443,7 +444,7 @@
                                 <div class="card border-primary shadow-sm">
                                     <div class="card-body p-3">
                                         
-                                        <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-primary bg-opacity-10 rounded">
+                                        <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-success bg-opacity-10 rounded">
                                             <span class="text-primary fw-bold text-uppercase small">A Cobrar (Líquido)</span>
                                             <span class="fs-4 fw-bold text-primary">{{ plan_pago.moneda }} {{ formatNumero(totalLiquido) }}</span>
                                         </div>
@@ -464,11 +465,11 @@
 
                                             <div class="col-sm-6">
                                                 <label class="form-label small fw-bold text-muted mb-1">Fecha de Transacción</label>
-                                                <input type="date" class="form-control form-control-sm" v-model="paymentDetails.fecha_pago">
+                                                <input type="date" class="form-control form-control-sm bg-white" v-model="paymentDetails.fecha_pago">
                                             </div>
                                             <div class="col-sm-6">
                                                 <label class="form-label small fw-bold text-muted mb-1">Método de Pago</label>
-                                                <select v-model="paymentDetails.forma_pago" class="form-select form-select-sm">
+                                                <select v-model="paymentDetails.forma_pago" class="form-select form-select-sm bg-white">
                                                     <option value="efectivo">Efectivo Físico</option>
                                                     <option value="transferencia - QR">Transferencia / QR</option>
                                                     <option value="Depósito banco">Depósito Bancario</option>
@@ -918,6 +919,10 @@ export default {
         margin-left: 0;
         padding-right: 0;
         margin-right: 0;
+    }
+
+    .table-cuotas th{
+        font-size:11px !important;
     }
 
 </style>
