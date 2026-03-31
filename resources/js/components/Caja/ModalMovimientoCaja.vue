@@ -1,10 +1,9 @@
 <template>
     <div class="modal fade" :id="modalId" tabindex="-1" data-bs-backdrop="static">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content border-3" :class="esIngreso ? 'border-success' : 'border-danger'">
                 <div class="modal-header text-white" :class="esIngreso ? 'bg-success' : 'bg-danger'">
-                    <h5 class="modal-title fw-bold">
-                        <i :class="esIngreso ? 'fas fa-money-bill-trend-up' : 'fas fa-money-bill-wave'" class="me-2"></i>
+                    <h5 class="modal-title fw-bold text-white">
                         Registro de {{ esIngreso ? 'Ingreso' : 'Egreso' }}
                     </h5>
                     <button type="button" class="btn-close btn-close-white" @click="cerrar"></button>
@@ -14,39 +13,57 @@
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Monto</label>
                             <div class="input-group">
-                                <span class="input-group-text"><i class="fas fa-dollar-sign"></i></span>
-                                <input v-model="form.monto" type="number" class="form-control form-control-lg text-center" 
+                                <span class="input-group-text text-white" :class="esIngreso ? 'bg-success' : 'bg-danger'">Bs</span>
+                                <input v-model="form.monto" type="number" class="form-control text-center" 
                                     placeholder="0.00" required min="0.1" step="0.01">
                             </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Motivo</label>
-                            <div class="position-relative">
-                                <div class="input-group">
-                                    <input type="text" class="form-control text-uppercase" 
-                                        v-model="busqueda" 
-                                        :placeholder="`Buscar motivo de ${tipo}...`"
-                                        @input="filtrarMotivos" @focus="mostrarLista = true" required autocomplete="off">
-                                    
-                                    <button type="button" class="btn btn-outline-secondary" @click="mostrarLista = !mostrarLista">
-                                        <i class="fas fa-chevron-down"></i>
-                                    </button>
-                                    
-                                    <button type="button" class="btn" :class="esIngreso ? 'btn-success' : 'btn-danger'" 
-                                            @click="abrirModalNuevoMotivo" title="Crear Nuevo Motivo">
-                                        <i class="fas fa-plus"></i>
-                                    </button>
-                                </div>
+                        <div class="mb-3 position-relative">
+                            <label class="form-label fw-semibold">Motivo del {{ esIngreso ? 'Ingreso' : 'Egreso' }} <span class="text-danger">*</span></label>
+                            
+                            <div class="input-group shadow-sm rounded">
+                                <span class="input-group-text bg-white" :class="esIngreso ? 'border-success text-success' : 'border-danger text-danger'">
+                                    <i class="fas fa-list-ul"></i>
+                                </span>
+                                
+                                <input type="text" class="form-control fw-bold" 
+                                    :class="esIngreso ? 'border-success' : 'border-danger'"
+                                    v-model="busqueda" 
+                                    :placeholder="`Seleccione o busque un motivo...`"
+                                    @input="filtrarMotivos" 
+                                    @focus="abrirLista"
+                                    @blur="cerrarLista"
+                                    required autocomplete="off">
+                                
+                                <button type="button" class="btn bg-white border" 
+                                        :class="esIngreso ? 'border-success text-success' : 'border-danger text-danger'"
+                                        @mousedown.prevent="toggleLista">
+                                    <i class="fas" :class="mostrarLista ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                                </button>
+                                
+                                <!-- <button type="button" class="btn fw-bold text-white px-3" 
+                                        :class="esIngreso ? 'btn-success' : 'btn-danger'" 
+                                        @click="abrirModalNuevoMotivo" title="Crear Nuevo Motivo">
+                                    <i class="fas fa-plus"></i>
+                                </button> -->
+                            </div>
 
-                                <div v-if="mostrarLista && resultados.length > 0" class="dropdown-menu show w-100 shadow" 
-                                     style="max-height: 200px; overflow-y: auto;">
-                                    <a v-for="m in resultados" :key="m.id" class="dropdown-item text-uppercase" 
-                                       href="#" @click.prevent="seleccionarMotivo(m)">
+                            <ul v-if="mostrarLista" class="dropdown-menu show w-100 shadow-lg border-0 mt-1" 
+                                style="max-height: 220px; overflow-y: auto; position: absolute; z-index: 1050;">
+                                
+                                <li v-if="resultados.length === 0" class="dropdown-item text-muted fst-italic text-center py-2">
+                                    <i class="fas fa-search me-1"></i> No se encontraron coincidencias...
+                                </li>
+                                
+                                <li v-for="m in resultados" :key="m.id">
+                                    <a class="dropdown-item text-uppercase py-2 fw-semibold custom-dropdown-item" 
+                                    :class="esIngreso ? 'hover-success' : 'hover-danger'"
+                                    href="#" @mousedown.prevent="seleccionarMotivo(m)">
                                         {{ m.nombre }}
                                     </a>
-                                </div>
-                            </div>
+                                </li>
+                            </ul>
                         </div>
 
                         <div v-if="esMotivoVario" class="mb-3">
@@ -55,7 +72,7 @@
                         </div>
 
                         <div class="d-grid mt-4">
-                            <button type="submit" class="btn btn-lg fw-bold text-white" :class="esIngreso ? 'btn-success' : 'btn-danger'" :disabled="procesando">
+                            <button type="submit" class="btn fw-bold text-white" :class="esIngreso ? 'btn-success' : 'btn-danger'" :disabled="procesando">
                                 <span v-if="procesando" class="spinner-border spinner-border-sm"></span>
                                 <span v-else>Guardar {{ esIngreso ? 'Ingreso' : 'Egreso' }}</span>
                             </button>
@@ -105,8 +122,26 @@ export default {
         }
     },
     methods: {
+        abrirLista() {
+            this.filtrarMotivos(); 
+            this.mostrarLista = true;
+        },
+
+        toggleLista() {
+            if (this.mostrarLista) {
+                this.mostrarLista = false;
+            } else {
+                this.abrirLista();
+            }
+        },
+
+        cerrarLista() {
+            setTimeout(() => {
+                this.mostrarLista = false;
+            }, 150);
+        },
+
         async abrir() {
-            // Validar caja abierta
             const check = await axios.get('/caja_abierta');
             if (check.data.usuario_actual == -1) {
                 Swal.fire('Caja Cerrada', 'Debes abrir caja para registrar movimientos.', 'warning');
@@ -125,55 +160,48 @@ export default {
             this.mostrarLista = false;
         },
         
-        // --- Gestión de Motivos ---
         async cargarMotivos() {
-            const url = this.esIngreso ? '/get_motivos_ingresos' : '/get_motivos_gastos';
+            const url = this.esIngreso ? '/get_motivos_ingresos_activos?tipo=caja' : '/get_motivos_gastos_activos?tipo=caja';
             try {
                 const res = await axios.get(url);
                 this.motivos = res.data;
-                this.resultados = []; // Limpia resultados de búsqueda previos
+                this.resultados = this.motivos;
             } catch (e) {
                 console.error(e);
             }
         },
+        
         filtrarMotivos() {
             if (!this.busqueda) {
-                this.resultados = [];
-                return;
+                this.resultados = this.motivos;
+            } else {
+                const term = this.busqueda.toLowerCase();
+                this.resultados = this.motivos.filter(m => m.nombre.toLowerCase().includes(term));
             }
             this.mostrarLista = true;
-            const term = this.busqueda.toLowerCase();
-            this.resultados = this.motivos.filter(m => m.nombre.toLowerCase().includes(term));
         },
+
         seleccionarMotivo(item) {
             this.form.descripcion = item.nombre;
             this.busqueda = item.nombre;
             this.mostrarLista = false;
         },
 
-        // --- LÓGICA DEL NUEVO MODAL ---
         abrirModalNuevoMotivo() {
-            // Pasamos el tipo al hijo para que sepa si guardar en ingreso o gasto
             this.$refs.modalNuevoMotivoRef.abrir(this.tipo);
         },
         async onMotivoCreado(nombreMotivo) {
-            // 1. Recargamos la lista del servidor
             await this.cargarMotivos();
-            
-            // 2. Buscamos el objeto completo del nuevo motivo
             const nuevo = this.motivos.find(m => m.nombre === nombreMotivo);
-            
-            // 3. Lo seleccionamos automáticamente
+
             if (nuevo) {
                 this.seleccionarMotivo(nuevo);
             } else {
-                // Fallback por si acaso
                 this.form.descripcion = nombreMotivo;
                 this.busqueda = nombreMotivo;
             }
         },
 
-        // --- Guardado del Movimiento ---
         async guardar() {
             if(!this.form.descripcion) {
                 Swal.fire('Falta Motivo', 'Seleccione o cree un motivo.', 'warning');
@@ -197,3 +225,30 @@ export default {
     }
 }
 </script>
+
+<style scoped>
+
+.custom-dropdown-item {
+    transition: all 0.2s ease-in-out;
+    border-bottom: 1px solid #f8f9fa;
+}
+.custom-dropdown-item:last-child {
+    border-bottom: none;
+}
+.hover-success:hover {
+    background-color: #e8f5e9 !important;
+    color: #198754 !important;
+}
+.hover-danger:hover {
+    background-color: #fce4e4 !important;
+    color: #dc3545 !important;
+}
+
+.dropdown-menu::-webkit-scrollbar {
+    width: 6px;
+}
+.dropdown-menu::-webkit-scrollbar-thumb {
+    background-color: #ccc;
+    border-radius: 4px;
+}
+</style>

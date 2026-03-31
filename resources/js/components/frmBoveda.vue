@@ -178,12 +178,42 @@
                                     <input type="number" class="form-control fw-bold text-dark" v-model="montoIngreso" placeholder="0.00" step="0.01" min="0" required>
                                 </div>
                             </div>
-                            <div class="form-group mb-3">
-                                <label class="fw-bold mb-1">Concepto / Motivo</label>
-                                <select class="form-select" v-model="descripcionIngresoSeleccionada" required>
-                                    <option value="" disabled selected>Seleccione una opción...</option>
-                                    <option v-for="opcion in opcionesIngreso" :key="opcion" :value="opcion">{{ opcion }}</option>
-                                </select>
+                            <div class="form-group mb-3 position-relative">
+                                <label class="fw-bold mb-1 text-muted">Concepto / Motivo</label>
+                                
+                                <div class="input-group shadow-sm rounded">
+                                    <span class="input-group-text bg-white border-success text-success">
+                                        <i class="fas fa-list-ul"></i>
+                                    </span>
+                                    
+                                    <input type="text" class="form-control text-uppercase fw-bold border-success" 
+                                        v-model="busquedaIngreso" 
+                                        placeholder="Buscar o seleccionar motivo..."
+                                        @input="filtrarIngresos" 
+                                        @focus="abrirListaIngreso"
+                                        @blur="cerrarListaIngreso" 
+                                        required autocomplete="off">
+                                    
+                                    <button type="button" class="btn bg-white border border-success text-success" 
+                                            @mousedown.prevent="toggleListaIngreso">
+                                        <i class="fas" :class="mostrarListaIngreso ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                                    </button>
+                                </div>
+
+                                <ul v-if="mostrarListaIngreso" class="dropdown-menu show w-100 shadow-lg border-0 mt-1" 
+                                    style="max-height: 200px; overflow-y: auto; position: absolute; z-index: 1050;">
+                                    
+                                    <li v-if="resultadosIngreso.length === 0" class="dropdown-item text-muted fst-italic text-center py-2">
+                                        <i class="fas fa-search me-1"></i> No se encontraron coincidencias...
+                                    </li>
+                                    
+                                    <li v-for="(opcion, idx) in resultadosIngreso" :key="idx">
+                                        <a class="dropdown-item text-uppercase py-2 fw-semibold custom-dropdown-item hover-success" 
+                                           href="#" @mousedown.prevent="seleccionarIngreso(opcion)">
+                                            {{ opcion }}
+                                        </a>
+                                    </li>
+                                </ul>
                             </div>
                             <div v-if="descripcionIngresoSeleccionada === 'Aporte de capital'" class="form-group mb-3 fade-in-animation">
                                 <label class="fw-bold mb-1 text-primary">Seleccionar Inversionista (Socio)</label>
@@ -228,12 +258,42 @@
                                     <input type="number" class="form-control fw-bold text-danger" v-model="montoRetiro" placeholder="0.00" step="0.01" min="0" required>
                                 </div>
                             </div>
-                            <div class="form-group mb-3">
-                                <label class="fw-bold mb-1">Concepto / Motivo</label>
-                                <select class="form-select" v-model="descripcionRetiroSeleccionada" required>
-                                    <option value="" disabled selected>Seleccione una opción...</option>
-                                    <option v-for="opcion in opcionesRetiro" :key="opcion" :value="opcion">{{ opcion }}</option>
-                                </select>
+                            <div class="form-group mb-3 position-relative">
+                                <label class="fw-bold mb-1 text-muted">Concepto / Motivo</label>
+                                
+                                <div class="input-group shadow-sm rounded">
+                                    <span class="input-group-text bg-white border-danger text-danger">
+                                        <i class="fas fa-list-ul"></i>
+                                    </span>
+                                    
+                                    <input type="text" class="form-control text-uppercase fw-bold border-danger" 
+                                        v-model="busquedaRetiro" 
+                                        placeholder="Buscar o seleccionar motivo..."
+                                        @input="filtrarRetiros" 
+                                        @focus="abrirListaRetiro"
+                                        @blur="cerrarListaRetiro" 
+                                        required autocomplete="off">
+                                    
+                                    <button type="button" class="btn bg-white border border-danger text-danger" 
+                                            @mousedown.prevent="toggleListaRetiro">
+                                        <i class="fas" :class="mostrarListaRetiro ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                                    </button>
+                                </div>
+
+                                <ul v-if="mostrarListaRetiro" class="dropdown-menu show w-100 shadow-lg border-0 mt-1" 
+                                    style="max-height: 200px; overflow-y: auto; position: absolute; z-index: 1050;">
+                                    
+                                    <li v-if="resultadosRetiro.length === 0" class="dropdown-item text-muted fst-italic text-center py-2">
+                                        <i class="fas fa-search me-1"></i> No se encontraron coincidencias...
+                                    </li>
+                                    
+                                    <li v-for="(opcion, idx) in resultadosRetiro" :key="idx">
+                                        <a class="dropdown-item text-uppercase py-2 fw-semibold custom-dropdown-item hover-danger" 
+                                           href="#" @mousedown.prevent="seleccionarRetiro(opcion)">
+                                            {{ opcion }}
+                                        </a>
+                                    </li>
+                                </ul>
                             </div>
                             <div v-if="descripcionRetiroSeleccionada === 'Pago de dividendos'" class="form-group mb-3 fade-in-animation">
                                 <label class="fw-bold mb-1 text-danger">Seleccionar Beneficiario (Socio)</label>
@@ -268,7 +328,14 @@
     export default {
         data() {
             return {
-                // Filtros
+                busquedaIngreso: '',
+                mostrarListaIngreso: false,
+                resultadosIngreso: [],
+
+                busquedaRetiro: '',
+                mostrarListaRetiro: false,
+                resultadosRetiro: [],
+
                 filtroTipoMovimiento: 'todos', 
                 fechaInicio: moment().subtract(1, 'months').format('YYYY-MM-DD'), 
                 fechaFin: moment().format('YYYY-MM-DD'), 
@@ -289,24 +356,12 @@
                 otraDescripcionRetiro: '',
 
                 opcionesIngreso: [
-                    'Devolución de préstamo',
-                    'Aporte de capital',
-                    'Recuperación de deudas',
-                    'Inversión de terceros',
-                    'Subvenciones o donaciones',
-                    'otro'
                 ],
                 opcionesRetiro: [
-                    'Otorgamiento de préstamo',
-                    'Gastos operativos',
-                    'Devolución de capital a socios',
-                    'Pago de dividendos',
-                    'Compra de activos',
-                    'Pagos de impuestos',
-                    'Pago de comisiones',
-                    'Pago de salarios y beneficios',
-                    'otro'
                 ],
+
+                esIngreso:false,
+                motivos:[],
 
                 vista:0,
                 boveda:{
@@ -336,6 +391,82 @@
         },
      
         methods: {
+            async cargarMotivos(ingresoOEgreso) {
+                this.esIngreso = ingresoOEgreso;
+                const url = this.esIngreso ? '/get_motivos_ingresos_activos?tipo=boveda' : '/get_motivos_gastos_activos?tipo=boveda';
+                try {
+                    const res = await axios.get(url);
+                    const nombresMotivos = res.data.map(item => item.nombre);
+                    
+                    if (this.esIngreso) {
+                        this.opcionesIngreso = nombresMotivos;
+                        if (!this.opcionesIngreso.includes('otro')) this.opcionesIngreso.push('otro');
+                    } else {
+                        this.opcionesRetiro = nombresMotivos;
+                        if (!this.opcionesRetiro.includes('otro')) this.opcionesRetiro.push('otro');
+                    }
+                } catch (e) {
+                    console.error("Error al cargar motivos:", e);
+                }
+            },
+            async abrirListaIngreso() {
+                await this.cargarMotivos(true);
+                this.filtrarIngresos(); 
+                this.mostrarListaIngreso = true;
+            },
+            toggleListaIngreso() {
+                if (this.mostrarListaIngreso) this.mostrarListaIngreso = false;
+                else this.abrirListaIngreso();
+            },
+            cerrarListaIngreso() {
+                setTimeout(() => { this.mostrarListaIngreso = false; }, 150);
+            },
+            filtrarIngresos() {
+                this.descripcionIngresoSeleccionada = this.busquedaIngreso; 
+
+                if (!this.busquedaIngreso) {
+                    this.resultadosIngreso = this.opcionesIngreso;
+                } else {
+                    const term = this.busquedaIngreso.toLowerCase();
+                    this.resultadosIngreso = this.opcionesIngreso.filter(op => op.toLowerCase().includes(term));
+                }
+                this.mostrarListaIngreso = true;
+            },
+            seleccionarIngreso(opcion) {
+                this.busquedaIngreso = opcion;
+                this.descripcionIngresoSeleccionada = opcion;
+                this.mostrarListaIngreso = false;
+            },
+
+            async abrirListaRetiro() {
+                await this.cargarMotivos(false);
+                this.filtrarRetiros(); 
+                this.mostrarListaRetiro = true;
+            },
+            toggleListaRetiro() {
+                if (this.mostrarListaRetiro) this.mostrarListaRetiro = false;
+                else this.abrirListaRetiro();
+            },
+            cerrarListaRetiro() {
+                setTimeout(() => { this.mostrarListaRetiro = false; }, 150);
+            },
+            filtrarRetiros() {
+                this.descripcionRetiroSeleccionada = this.busquedaRetiro; 
+
+                if (!this.busquedaRetiro) {
+                    this.resultadosRetiro = this.opcionesRetiro;
+                } else {
+                    const term = this.busquedaRetiro.toLowerCase();
+                    this.resultadosRetiro = this.opcionesRetiro.filter(op => op.toLowerCase().includes(term));
+                }
+                this.mostrarListaRetiro = true;
+            },
+            seleccionarRetiro(opcion) {
+                this.busquedaRetiro = opcion;
+                this.descripcionRetiroSeleccionada = opcion;
+                this.mostrarListaRetiro = false;
+            },
+
             async getSocios() {
                 try {
                     const response = await axios.get('/socio/activos'); 
@@ -365,27 +496,26 @@
             async aperturarBovedaPrivate(){
                 await axios.post('/aperturar_boveda');
             },
+            ingresoBoveda(){
+                this.montoIngreso = '';
+                this.descripcionIngresoSeleccionada = '';
+                this.otraDescripcionIngreso = '';
+                this.id_socio_ingreso = '';
+                this.busquedaIngreso = '';
+                this.abrirModalIngresoBoveda();
+            },
+
             retiroBoveda(){
                 if(this.boveda.id_boveda==0){
-                    Swal.fire({
-                        title:'Atención',
-                        text:'Debe Aperturar Bóveda primero',
-                        confirmButtonText:'Aceptar',
-                        icon:'warning',
-                    });
+                    Swal.fire({ title:'Atención', text:'Debe Aperturar Bóveda primero', icon:'warning'});
                     return;
                 }
                 this.montoRetiro = '';
                 this.descripcionRetiroSeleccionada = '';
                 this.otraDescripcionRetiro = '';
+                this.id_socio_retiro = '';
+                this.busquedaRetiro = '';
                 this.abrirModalRetiroBoveda();
-            },
-
-            ingresoBoveda(){
-                this.montoIngreso = '';
-                this.descripcionIngresoSeleccionada = '';
-                this.otraDescripcionIngreso = '';
-                this.abrirModalIngresoBoveda();
             },
             
             abrirModalIngresoBoveda() {
@@ -570,6 +700,30 @@
 </script>
 
 <style scoped>
+
+.custom-dropdown-item {
+    transition: all 0.2s ease-in-out;
+    border-bottom: 1px solid #f8f9fa;
+}
+.custom-dropdown-item:last-child {
+    border-bottom: none;
+}
+.hover-success:hover {
+    background-color: #e8f5e9 !important;
+    color: #198754 !important;
+}
+.hover-danger:hover {
+    background-color: #fce4e4 !important;
+    color: #dc3545 !important;
+}
+.dropdown-menu::-webkit-scrollbar {
+    width: 6px;
+}
+.dropdown-menu::-webkit-scrollbar-thumb {
+    background-color: #ccc;
+    border-radius: 4px;
+}
+
 .preloader {
   position: fixed;
   top: 0;
