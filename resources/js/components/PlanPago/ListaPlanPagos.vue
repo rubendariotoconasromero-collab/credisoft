@@ -224,4 +224,8 @@ export default {
 
 <style scoped>
     @import '../../components/styles/frmPlanPago.css';
+
+    .table-plan-payments th{
+        font-size:12px !important;
+    }
 </style>

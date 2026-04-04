@@ -355,86 +355,78 @@
             </div>
         </div>
 
-        <div id="modalCobrarPagoAdm" class="modal fade" tabindex="-1" aria-labelledby="modalCobrarPagoAdmLabel"
-            aria-hidden="true">
+        <div id="modalCobrarPagoAdm" class="modal fade" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
             <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content border-3 border-dark">
-                    <div class="modal-header bg-success text-white">
-                        <h5 class="modal-title fw-bold text-white" id="modalCobrarPagoAdmLabel">
-                            <i class="fas fa-money-bill-wave me-2"></i>Desembolso del monto de crédito
+                <div class="modal-content border-0 shadow-lg">
+                    
+                    <div class="modal-header bg-success py-3">
+                        <h5 class="modal-title fw-bold text-white text-uppercase">
+                            <!-- <i class="fas fa-hand-holding-usd me-2"></i>  -->
+                            Desembolso de Crédito
                         </h5>
-                        <button type="button" class="btn-close btn-close-white" @click="cerrarModalCobrarPagoAdm()"
-                            data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close btn-close-white" @click="cerrarModalCobrarPagoAdm()"></button>
                     </div>
 
-                    <div class="modal-body">
-                        <div class="card mb-4">
-                            <div class="card-body">
-                                <div class="row g-3">
-                                    <div class="col-12">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <span class="fw-bold text-dark text-uppercase">Cliente:</span>
-                                            <span class="text-end text-uppercase">{{ pago_administrativo.cliente }}</span>
-                                        </div>
-                                        <hr class="my-2">
-                                    </div>
-
-                                    <!-- Asesor -->
-                                    <div class="col-12">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <span class="fw-bold text-dark text-uppercase">Asesor:</span>
-                                            <span class="text-end text-uppercase">{{ pago_administrativo.asesor }}</span>
-                                        </div>
-                                        <hr class="my-2">
-                                    </div>
-
-                                    <!-- Plan de pago -->
-                                    <div class="col-12">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <span class="fw-bold text-dark text-uppercase">Plan de pago:</span>
-                                            <span class="text-end">{{ pago_administrativo.id_plan_pago }}</span>
-                                        </div>
-                                        <hr class="my-2">
-                                    </div>
-
-                                    <!-- Monto -->
-                                    <div class="col-12">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <span class="fw-bold text-dark">MONTO DESEMBOLSO Bs.:</span>
-                                            <span class="fs-5 fw-bold text-dark">
-                                                {{ parseFloat(pago_administrativo.monto_solicitud).toFixed(2) }}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-12">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <span class="fw-bold text-dark">MONTO PAGO ADM.
-                                                Bs.:</span>
-                                            <span class="fs-5 fw-bold text-dark">
-                                                {{ parseFloat(pago_administrativo.monto).toFixed(2) }}
-                                            </span>
-                                        </div>
-                                    </div>
+                    <div class="modal-body p-4">
+                        
+                        <div class="card border-success border-opacity-25 shadow-sm mb-4">
+                            <div class="card-header bg-success bg-opacity-10 py-2 border-bottom-0">
+                                <h6 class="fw-bold text-success mb-0 text-uppercase">
+                                    <i class="fas fa-user-tag me-2"></i> Detalles del Cliente
+                                </h6>
+                            </div>
+                            <div class="card-body py-2">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-muted fw-semibold">Cliente:</span>
+                                    <span class="fw-bold text-dark text-uppercase text-end">{{ pago_administrativo.cliente }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-muted fw-semibold">Asesor:</span>
+                                    <span class="fw-bold text-dark text-uppercase text-end">{{ pago_administrativo.asesor }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-muted fw-semibold">Cód. Plan de Pago:</span>
+                                    <span class="badge bg-secondary shadow-sm">#{{ pago_administrativo.id_plan_pago }}</span>
                                 </div>
                             </div>
                         </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-6">
+                                <div class="p-3 border rounded bg-light text-center h-100 shadow-sm">
+                                    <span class="d-block text-muted fw-bold small mb-1">MONTO A ENTREGAR</span>
+                                    <h4 class="text-primary fw-bold mb-0">Bs. {{ parseFloat(pago_administrativo.monto_solicitud).toFixed(2) }}</h4>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-3 border border-warning rounded bg-warning bg-opacity-10 text-center h-100 shadow-sm">
+                                    <span class="d-block text-warning-emphasis fw-bold small mb-1">COBRO ADMINISTRATIVO</span>
+                                    <h4 class="text-danger fw-bold mb-0">Bs. {{ parseFloat(pago_administrativo.monto).toFixed(2) }}</h4>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-warning border-warning shadow-sm mb-4">
+                            <div class="form-check form-switch d-flex align-items-center gap-3">
+                                <input class="form-check-input fs-3 m-0 border-warning" type="checkbox" id="checkCobroAdm" v-model="confirmacionCobroAdm" style="cursor: pointer; border-radius:10px !important;">
+                                <label class="form-check-label text-dark lh-sm" for="checkCobroAdm" style="cursor: pointer; user-select: none;">
+                                    <strong>Confirmo</strong> que he retenido/cobrado los <strong class="text-danger">Bs. {{ parseFloat(pago_administrativo.monto).toFixed(2) }}</strong> por concepto de pago administrativo.
+                                </label>
+                            </div>
+                        </div>
+
                         <div class="d-grid">
+                            <button :disabled="desembolsando || !confirmacionCobroAdm" @click="guardarPagoAdm()"
+                                class="btn btn-success btn-lg py-3 fw-bold shadow-sm">
+                                
+                                <span v-if="desembolsando" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                <i v-else class="fas fa-check-circle me-2"></i>
 
-                            <button :disabled="desembolsando" @click="guardarPagoAdm()"
-                                class="btn btn-success btn-lg py-3 fw-bold">
-                                <!-- Spinner visible cuando desembolsando es true -->
-                                <span v-if="desembolsando" class="spinner-border spinner-border-sm me-2" role="status"
-                                    aria-hidden="true"></span>
-
-                                <!-- Ícono y texto visibles cuando desembolsando es false -->
-                                <i v-if="!desembolsando" class="fas fa-money-bill-wave me-2"></i>
-
-                                <!-- Texto dinámico -->
-                                <span v-if="!desembolsando">Desembolsar y Cobrar Pago Administrativo</span>
-                                <span v-else>Procesando...</span>
+                                <span v-if="!desembolsando">Procesar Desembolso y Cobro</span>
+                                <span v-else>Procesando Registro...</span>
                             </button>
                         </div>
+
                     </div>
                 </div>
             </div>
@@ -626,7 +618,7 @@ export default {
 
     data() {
         return {
-        
+            confirmacionCobroAdm: false,
             mostrarDropdown: false,
             mostrarDropdownEgreso: false,
             formas_pago: [
@@ -1391,17 +1383,21 @@ export default {
             // Abre una nueva pestaña o ventana con la URL
             window.open(url, '_blank');
         },
-        async guardarPagoAdm() {// metodo desembolsar
-
-            // await this.guardarPagoAdmPrivado();
-            // await this.guardarDesembolso(this.item_pago_desembolso);
+        
+        async guardarPagoAdm() {
+            // Doble validación de seguridad por si el frontend falla
+            if (!this.confirmacionCobroAdm) {
+                Swal.fire('Atención', 'Debe confirmar el cobro del pago administrativo marcando la casilla.', 'warning');
+                return;
+            }
 
             try {
-                this.desembolsando=true;
+                this.desembolsando = true;
                 await this.guardarPagoAdmPrivado();
                 await this.guardarDesembolso(this.item_pago_desembolso);
 
                 this.openModalReportePlanComprobante();
+                
                 // Notificación de éxito
                 await Swal.fire({
                     title: '¡Éxito!',
@@ -1409,6 +1405,11 @@ export default {
                     icon: 'success',
                     confirmButtonText: 'OK'
                 });
+
+                // Reiniciamos el check para el próximo cliente
+                this.confirmacionCobroAdm = false; 
+                this.cerrarModalCobrarPagoAdm(); 
+
             } catch (error) {
                 // Notificación de error
                 await Swal.fire({
@@ -1417,13 +1418,11 @@ export default {
                     icon: 'error',
                     confirmButtonText: 'OK'
                 });
- 
-            } finally{
-                this.desembolsando=false;
+            } finally {
+                this.desembolsando = false;
                 await this.getPagosAdm();
             }
         },
-
 
         async guardarPagoAdmPrivado() {
             await axios.post('/guardar_pago_adm', this.pago_administrativo)

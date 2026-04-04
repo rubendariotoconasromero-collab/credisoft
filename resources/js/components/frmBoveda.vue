@@ -165,8 +165,8 @@
         <div class="modal fade" id="modalIngresoBoveda" tabindex="-1" data-bs-backdrop="static">
             <div class="modal-dialog modal-dialog-centered modal-lg">
                 <div class="modal-content border-2 border-dark">
-                    <div class="modal-header bg-warning py-2">
-                        <h5 class="modal-title text-dark fw-bold text-uppercase"><i class="fas fa-plus-circle me-2"></i> Ingresar a Bóveda</h5>
+                    <div class="modal-header bg-success py-2">
+                        <h5 class="modal-title text-white fw-bold text-uppercase"><i class="fas fa-plus-circle me-2"></i> Ingresar a Bóveda</h5>
                         <button @click="cerrarModalIngresoBoveda()" type="button" class="btn-close btn-close-dark" aria-label="Close"></button>
                     </div>
                     <form @submit.prevent="validarIngreso">
@@ -182,9 +182,9 @@
                                 <label class="fw-bold mb-1 text-muted">Concepto / Motivo</label>
                                 
                                 <div class="input-group shadow-sm rounded">
-                                    <span class="input-group-text bg-white border-success text-success">
+                                    <!-- <span class="input-group-text bg-white border-success text-success">
                                         <i class="fas fa-list-ul"></i>
-                                    </span>
+                                    </span> -->
                                     
                                     <input type="text" class="form-control text-uppercase fw-bold border-success" 
                                         v-model="busquedaIngreso" 
@@ -241,8 +241,8 @@
         <div class="modal fade" id="modalRetiroBoveda" tabindex="-1" data-bs-backdrop="static">
             <div class="modal-dialog modal-dialog-centered modal-lg">
                 <div class="modal-content border-2 border-dark">
-                    <div class="modal-header bg-warning py-2">
-                        <h5 class="modal-title text-dark fw-bold text-uppercase"><i class="fas fa-minus-circle me-2"></i> Retirar de Bóveda</h5>
+                    <div class="modal-header bg-danger py-2">
+                        <h5 class="modal-title text-white fw-bold text-uppercase"><i class="fas fa-minus-circle me-2"></i> Retirar de Bóveda</h5>
                         <button @click="cerrarModalRetiroBoveda()" type="button" class="btn-close btn-close-dark" aria-label="Close"></button>
                     </div>
                     <form @submit.prevent="validarRetiro">
@@ -262,9 +262,9 @@
                                 <label class="fw-bold mb-1 text-muted">Concepto / Motivo</label>
                                 
                                 <div class="input-group shadow-sm rounded">
-                                    <span class="input-group-text bg-white border-danger text-danger">
+                                    <!-- <span class="input-group-text bg-white border-danger text-danger">
                                         <i class="fas fa-list-ul"></i>
-                                    </span>
+                                    </span> -->
                                     
                                     <input type="text" class="form-control text-uppercase fw-bold border-danger" 
                                         v-model="busquedaRetiro" 

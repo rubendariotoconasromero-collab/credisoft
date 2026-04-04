@@ -449,6 +449,10 @@ export default {
     min-width:100px;
 }
 
+.table-desembolso th {
+    font-size:12px
+}
+
 .info-compact-foto {
     width: 100%;
     max-height: 300px; /* Define el tamaño que desees */

@@ -267,37 +267,48 @@ class PlanPagoController extends Controller
         }
     }
 
-    public function ListaCuotasPlanPagoPdf(Request $request){
+    public function ListaCuotasPlanPagoPdf(Request $request)
+    {
+        // 1. Información General
+        $informacion = DB::table('solicitud')
+            ->join('cliente', 'cliente.id', '=', 'solicitud.id_cliente')
+            ->join('users', 'users.id', '=', 'solicitud.id_usuario')
+            ->join('plan_pago', 'plan_pago.id_solicitud', '=', 'solicitud.id')
+            ->where('plan_pago.id', $request->id_planpago)
+            ->select('solicitud.id','solicitud.importe_solicitud', 'solicitud.moneda', 'solicitud.lapso_capital', 'solicitud.nro_cuotas',
+            'solicitud.tasa', 'solicitud.fecha_desembolso', 'solicitud.fecha_primera_cuota', 'solicitud.destino_prestamo',
+            'solicitud.tipo_garantia','solicitud.tipo_desembolso','solicitud.id_cliente', 'solicitud.id_usuario', 'cliente.nombre as cliente',
+            'cliente.ci', 'cliente.lugar_expedicion',
+            'users.name as nombre_asesor', 'plan_pago.estado', 'solicitud.fecha')
+            ->first();
 
-        $informacion=DB::table('solicitud')
-        ->join('cliente', 'cliente.id', '=', 'solicitud.id_cliente')
-        ->join('users', 'users.id', '=', 'solicitud.id_usuario')
-        ->join('plan_pago', 'plan_pago.id_solicitud', '=', 'solicitud.id')
-        ->join('cuota', 'cuota.id_plan_pago', '=', 'plan_pago.id')
-        ->where('plan_pago.id', $request->id_planpago)
-        ->select('solicitud.id','solicitud.importe_solicitud', 'solicitud.moneda', 'solicitud.lapso_capital', 'solicitud.nro_cuotas',
-        'solicitud.tasa', 'solicitud.fecha_desembolso', 'solicitud.fecha_primera_cuota', 'solicitud.destino_prestamo',
-        'solicitud.tipo_garantia','solicitud.tipo_desembolso','solicitud.id_cliente', 'solicitud.id_usuario', 'cliente.nombre as cliente',
-        'cliente.ci', 'cliente.lugar_expedicion',
-        'users.name as nombre_asesor', 'plan_pago.estado', 'solicitud.fecha')
-        ->first();
+        // 2. MAGIA: Reutilizamos tu método maestro para obtener los cálculos exactos
+        $reqCalc = new \Illuminate\Http\Request();
+        $reqCalc->replace(['id_plan_pago' => $request->id_planpago]);
+        $calculo = $this->listarAmortizaciones($reqCalc);
+        $cuotas = $calculo['cuotas'];
 
-        $cuotas = DB::table('plan_pago')
-        ->join('cuota', 'plan_pago.id', '=', 'cuota.id_plan_pago')
-        ->select('cuota.*')
-        ->where('plan_pago.id', $request->id_planpago)
-        ->get();
+        // 3. Extraemos el historial de pagos para cada cuota
+        foreach($cuotas as $cuota) {
+            $pagos = DB::table('pago')
+                ->where('id_cuota', $cuota->id)
+                ->where('estado', 1) // Solo pagos activos
+                ->orderBy('fecha_pago', 'asc')
+                ->get();
+            
+            $cuota->historial_pagos = $pagos;
+        }
 
-         // Carga la vista HTML para el reporte
-         $data  = [
-             'informacion' => $informacion,
-             'detalles' => $cuotas,
-             'usuario' => auth()->user()->name,
-             'fecha_reporte' => now()->format('d/m/Y'),
-         ];
+        // 4. Carga la vista HTML para el reporte
+        $data  = [
+            'informacion' => $informacion,
+            'detalles' => $cuotas,
+            'usuario' => auth()->user()->name ?? 'Sistema',
+            'fecha_reporte' => now()->format('d/m/Y'),
+            'hora_reporte' => now()->format('H:i'),
+        ];
 
-         $this->generatePDF($data, 'reporte.reporte_cuotas_planpago_nuevo', 'reporte_plan_pago');
-
+        return $this->generatePDF($data, 'reporte.reporte_cuotas_planpago_nuevo', 'reporte_plan_pago');
     }
 
     public function activarPlanPago(Request $request){
@@ -1531,5 +1542,19 @@ class PlanPagoController extends Controller
                 'message' => 'Error al registrar la solicitud: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    public function getPagosPorCuota(Request $request)
+    {
+        $id_cuota = $request->input('id_cuota');
+        
+        $pagos = DB::table('pago')
+            ->where('id_cuota', $id_cuota)
+            ->where('estado', 1)
+            ->orderBy('fecha_pago', 'desc')
+            ->orderBy('id', 'desc')
+            ->get();
+            
+        return response()->json($pagos);
     }
 }

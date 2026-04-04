@@ -34,7 +34,7 @@
             </div>
         
             <div class="table-responsive" style="font-size:12px">
-                <table class="table mb-4 table-sm table-striped table-hover">
+                <table class="table mb-4 table-sm table-striped table-hover table-desembolsos">
                     <thead class="text-uppercase table-warning">
                         <tr>
                             <th class="text-dark fw-bold">#</th>
@@ -47,7 +47,7 @@
                             <th class="text-dark fw-bold text-center">Opciones</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="align-middle">
                         <tr v-if="listaFiltrada.length === 0">
                             <td colspan="8" class="text-center text-muted py-3">
                                 No se encontraron desembolsos pendientes.
@@ -67,7 +67,7 @@
                             <td class="text-uppercase text-end">
                                 {{ formatMoney(item.tipo_solicitud == 'Refinanciamiento' ? item.monto_refinanciamiento : item.total_pagar_plan) }}
                             </td>
-                            <td class="text-uppercase text-end text-success">
+                            <td class="text-uppercase text-end text-dark fw-bold">
                                 {{ formatMoney(calcularPagoAdm(item)) }}
                             </td>
                             <td class="text-uppercase text-center">
@@ -135,4 +135,8 @@ export default {
 
 <style scoped>
     @import '../styles/frmCaja.css';
+
+    .table-desembolsos th{
+        font-size:12px !important;
+    }
 </style>

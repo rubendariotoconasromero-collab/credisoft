@@ -14,6 +14,7 @@ use App\Http\Controllers\CajaMovimientosController;
 use App\Http\Controllers\ConsultaFinancieraController;
 use App\Http\Controllers\SocioController;
 use App\Http\Controllers\ConfiguracionController;
+use App\Http\Controllers\PlanPagoController;
 
 
 
@@ -403,6 +404,8 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/caja/movimientos/listado', [CajaMovimientosController::class, 'getListado']);
     Route::get('/caja/movimientos/reporte-pdf', [CajaMovimientosController::class, 'generarReporteLista']);
+
+    Route::get('/get_pagos_cuota', [PlanPagoController::class, 'getPagosPorCuota']);
 
     Route::prefix('socio')->group(function () {
         Route::get('/activos', [SocioController::class, 'getSociosActivos']);
