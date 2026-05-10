@@ -1365,7 +1365,7 @@ class PlanPagoController extends Controller
             return in_array($cuota->estado, [1, 3]);
         });
 
-        $dias_pasados_mora = 0; 
+        $dias_pasados_mora = 0;
 
         $cuotas = $cuotas->map(function ($cuota, $index) use ($cuotas, $firstUnpaidIndex, &$dias_pasados_mora) {
             
@@ -1414,18 +1414,20 @@ class PlanPagoController extends Controller
             $int_pagado = isset($cuota->interes_pagado) ? (float)$cuota->interes_pagado : 0;
             $mora_pagada = isset($cuota->mora_pagada) ? (float)$cuota->mora_pagada : 0;
 
-            // INTERÉS BRUTO HISTÓRICO NORMAL
-            $interesPorDiaNormal = $cuota->interes / $diasPeriodoCuota;
+            // INTERÉS DIARIO DE LA CUOTA — base común para devengado y moratorio
+            $interesPorDiaNormal = ($diasPeriodoCuota > 0) ? ($cuota->interes / $diasPeriodoCuota) : 0;
+
+            // INTERÉS DEVENGADO — interés diario × días transcurridos del período
             $interesDevengadoBruto = $interesPorDiaNormal * $diasTranscurridosNormales;
 
-            // INTERÉS MORATORIO UNIFICADO
-            $capitalParaMora = in_array($cuota->estado, [1, 3]) ? max(0, $cuota->capital - $cap_pagado) : $cuota->capital;
-            $proporcionDeuda = ($cuota->capital > 0) ? ($capitalParaMora / $cuota->capital) : 1;
-            
-            $interesPorDiaMora = $interesPorDiaNormal * $proporcionDeuda;
-            $interesMoratorioBruto = $interesPorDiaMora * $diasRetrasoCuota;
+            // INTERÉS MORATORIO — misma tasa diaria × días de mora (solo primera cuota pendiente)
+            // Misma fórmula que devengado: interesPorDia × dias; solo cambia el input de días
+            if ($index === $firstUnpaidIndex && in_array($cuota->estado, [1, 3]) && $diasRetrasoCuota > 0) {
+                $interesMoratorioBruto = $interesPorDiaNormal * $diasRetrasoCuota;
+            } else {
+                $interesMoratorioBruto = 0;
+            }
 
-            // ---> LÍNEA CORREGIDA (FALTABA ESTO) <---
             $interesTotalAcumuladoBruto = $interesDevengadoBruto + $interesMoratorioBruto;
 
             // PORCENTAJES AVANZADOS

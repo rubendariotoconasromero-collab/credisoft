@@ -452,7 +452,7 @@
                                                 <tr>
                                                     <th rowspan="2" class="align-middle">#</th>
                                                     <th rowspan="2" class="align-middle">Vencimiento</th>
-                                                    <th colspan="2" class="border-start border-end bg-primary bg-opacity-10 text-primary">
+                                                    <th colspan="4" class="border-start border-end bg-primary bg-opacity-10 text-primary">
                                                         Cálculo de Interés
                                                     </th>
                                                     <th rowspan="2" class="bg-danger bg-opacity-10 text-danger border-end align-middle" width="8%">
@@ -464,10 +464,10 @@
                                                     <th rowspan="2" class="text-center align-middle">Saldo Capital</th>
                                                 </tr>
                                                 <tr>
-                                                    <th class="text-end text-muted small bg-primary bg-opacity-10" width="8%">Planificado</th>
-                                                    <th class="text-center fw-bold text-primary bg-primary bg-opacity-10" width="10%">
-                                                        A la Fecha
-                                                    </th>
+                                                    <th class="text-center text-muted small bg-primary bg-opacity-10" width="7%">Int. Fijo</th>
+                                                    <th class="text-center text-primary small fw-bold bg-primary bg-opacity-10" width="10%">Int. Devengado</th>
+                                                    <th class="text-center text-danger small fw-bold bg-primary bg-opacity-10" width="10%">Int. Moratorio</th>
+                                                    <th class="text-center fw-bold text-primary bg-primary bg-opacity-10 border-end" width="9%">Total / Pagar</th>
                                                 </tr>
                                             </thead>
                                             
@@ -478,28 +478,55 @@
                                                     <td class="text-center fw-bold">{{ cuota.numero }}</td>
                                                     <td class="text-center">{{ formatFecha(cuota.fecha) }}</td>
                                                     
-                                                    <td class="text-end text-muted border-start bg-primary bg-opacity-10">
-                                                        {{ formatNumero(cuota.interes) }}
+                                                    <!-- Int. Fijo -->
+                                                    <td class="text-center border-start bg-primary bg-opacity-10">
+                                                        <div class="fw-semibold text-dark">{{ formatNumero(cuota.interes) }}</div>
+                                                        <div class="text-muted" style="font-size: 0.62rem;">Bs / cuota</div>
                                                     </td>
-                                                    
+
+                                                    <!-- Int. Devengado -->
+                                                    <td class="text-center bg-primary bg-opacity-10">
+                                                        <template v-if="cuota.estado !== 2 && cuota.estado !== 0">
+                                                            <div class="fw-bold text-primary" style="font-size: 0.8rem;">
+                                                                {{ formatNumero(cuota.interes_devengado_neto) }}
+                                                            </div>
+                                                            <div class="text-muted" style="font-size: 0.62rem;">
+                                                                <i class="fas fa-calendar-day"></i> {{ cuota.dias_transcurridos }} días
+                                                            </div>
+                                                        </template>
+                                                        <span v-else class="text-muted small">---</span>
+                                                    </td>
+
+                                                    <!-- Int. Moratorio -->
+                                                    <td class="text-center bg-primary bg-opacity-10">
+                                                        <template v-if="parseFloat(cuota.interes_moratorio_neto) > 0 && cuota.estado !== 2 && cuota.estado !== 0">
+                                                            <div class="fw-bold text-danger" style="font-size: 0.8rem;">
+                                                                {{ formatNumero(cuota.interes_moratorio_neto) }}
+                                                            </div>
+                                                            <div class="text-danger" style="font-size: 0.62rem;">
+                                                                <i class="fas fa-clock"></i> {{ cuota.dias_pasados }} días venc.
+                                                            </div>
+                                                        </template>
+                                                        <span v-else class="text-muted small">-</span>
+                                                    </td>
+
+                                                    <!-- Total a pagar (checkbox) -->
                                                     <td class="text-center border-end bg-primary bg-opacity-10">
                                                         <div v-if="cuota.estado !== 2">
-                                                            <div v-if="parseFloat(cuota.interes_acumulado_neto) > 0" 
+                                                            <div v-if="parseFloat(cuota.interes_acumulado_neto) > 0"
                                                                 class="d-flex flex-column align-items-center">
-                                                                
-                                                                <input class="form-check-input m-0 shadow-none border-primary" 
-                                                                    type="checkbox" 
+                                                                <input class="form-check-input m-0 shadow-none border-primary"
+                                                                    type="checkbox"
                                                                     style="cursor: pointer; transform: scale(1.15);"
                                                                     :disabled="!esFilaHabilitada(index)"
                                                                     :checked="esInteresMarcado(index)"
                                                                     @change="clickCheckInteres(index)">
-                                                                
-                                                                <small class="fw-bold text-primary mt-1" style="font-size: 0.75rem;">
+                                                                <small class="fw-bold text-primary mt-1" style="font-size: 0.8rem;">
                                                                     {{ formatNumero(cuota.interes_acumulado_neto) }}
                                                                 </small>
-                                                                
-                                                                <span v-if="cuota.estado == 3" 
-                                                                    class="badge bg-info text-white border border-primary py-0 px-2 mt-1" 
+                                                                <div class="text-muted" style="font-size: 0.62rem;">Bs total</div>
+                                                                <span v-if="cuota.estado == 3"
+                                                                    class="badge bg-info text-white border border-primary py-0 px-2 mt-1"
                                                                     style="font-size: 0.55rem;">
                                                                     Parcial
                                                                 </span>
@@ -529,6 +556,11 @@
                                                     <td class="text-end fw-bold text-dark">Bs. {{ formatNumero(cuota.capital_neto) }}</td>
                                                     
                                                     <td class="text-center">
+                                                        <div v-if="parseFloat(cuota.mora_fija_neta) > 0 && cuota.estado != 2" class="mb-1">
+                                                            <span class="badge bg-danger text-white rounded-pill" style="font-size: 0.55rem; min-width: 70px;">
+                                                                Mora {{ cuota.dias_pasados }}d
+                                                            </span>
+                                                        </div>
                                                         <span class="badge rounded-pill" :class="getEstadoCuota(cuota).clase" style="font-size:0.65rem; min-width: 90px;">
                                                             {{ getEstadoCuota(cuota).texto }}
                                                         </span>
@@ -1119,11 +1151,6 @@ export default {
             }
         },
 
-        calcularMoraFila(cuota) {
-
-            return (cuota.estado == 1 && cuota.dias_pasados > 0) ? (cuota.dias_pasados * 3) : 0;
-        },
-
         // Auxiliar visual
         esInteresMarcado(index) { return index <= this.idx_sel_interes; },
         esMoraMarcada(index) { return index <= this.idx_sel_mora; },
@@ -1574,8 +1601,10 @@ export default {
                 }
                 this.solicitud.tasa = this.plan_pago.tasa;
                 this.solicitud.tipo_tasa = this.plan_pago.tipo_tasa;
-                // El importe (capital) se mantiene
-                this.solicitud.importe_solicitud = this.plan_pago.importe_solicitud;
+                // El importe base es el saldo actual pendiente; en refinanciamiento se suma el monto adicional
+                const saldoBase = parseFloat(this.saldoTotalParaReprogramar) || 0;
+                const extra = parseFloat(this.monto_adicional) || 0;
+                this.solicitud.importe_solicitud = saldoBase + extra;
                 // --- Datos Nuevos de la Reprogramación ---
                 this.solicitud.lapso_capital = this.plan_pago.forma_pago_reprogramacion;
                 this.solicitud.nro_cuotas = this.plan_pago.numero_cuotas_reprogramacion;

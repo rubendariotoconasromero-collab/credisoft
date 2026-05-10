@@ -1330,37 +1330,32 @@ class SolicitudController extends Controller
         //     ], 422);
         // }
 
-        // 4. CÁLCULO (Tu Lógica Mejorada)
-        
-        // A. Capital Pendiente (Sumando el capital de las cuotas pendientes)
-        // ESTE ES TU NUEVO CÁLCULO:
-        $capitalPendiente = (float)Cuota::where('id_plan_pago', $id_plan_pago)
-            ->where('estado', 1) // 1 = Pendiente
-            ->sum('capital'); // Suma la columna 'capital'
+        // 4. CÁLCULO
 
-        // B. Interés Acumulado
+        // A. Capital Pendiente neto (estados 1=Pendiente y 3=Parcial, descontando lo pagado)
+        $cuotasPendientes = Cuota::where('id_plan_pago', $id_plan_pago)
+            ->whereIn('estado', [1, 3])
+            ->get();
+
+        $capitalPendiente = $cuotasPendientes->sum(function ($c) {
+            return max(0, (float)$c->capital - (float)($c->capital_pagado ?? 0));
+        });
+
+        // B. Interés Acumulado sobre saldo capital pendiente
         $interesAcumulado = 0.00;
-        
-        // (Si no hay fecha de último pago, usamos la fecha de desembolso de la solicitud)
-        // Esta lógica sigue siendo correcta
         $fechaBase = $plan->fecha_ultima_amortizacion ?? $solicitud->fecha_desembolso;
-        
-        if ($fechaBase) {
-            $fechaBase = Carbon::parse($fechaBase);
-            $diasTranscurridos = $hoy->diffInDays($fechaBase);
 
-            // Asegurarnos de que la tasa y el capital existan
+        if ($fechaBase) {
+            $fechaBase = Carbon::parse($fechaBase)->startOfDay();
+            $diasTranscurridos = $fechaBase->diffInDays($hoy);
+
             if ($diasTranscurridos > 0 && $capitalPendiente > 0 && $plan->tasa > 0) {
-                
-                // Tasa Mensual (ej: 10) -> Tasa Diaria
-                $tasaDiaria = ($plan->tasa / 100) / 30; 
-                
-                // Usamos el capitalPendiente que acabamos de calcular
+                $tasaDiaria = ($plan->tasa / 100) / 30;
                 $interesAcumulado = $capitalPendiente * $tasaDiaria * $diasTranscurridos;
             }
         }
-        
-        // C. Monto Total a Reprogramar
+
+        // C. Monto Total a Reprogramar (capital neto + interés acumulado)
         $montoTotalReprogramar = $capitalPendiente + $interesAcumulado;
 
         // 5. DEVOLVER RESPUESTA
@@ -1453,15 +1448,16 @@ class SolicitudController extends Controller
                 }
 
                 // Desactivar el Plan de Pagos Viejo
+                // estado 1 = Activo, estado 5 = En Proceso (bloqueado al iniciar reprogramación)
                 $planOriginal = PlanPago::where('id_solicitud', $nuevaSolicitud->id_solicitud_origen)
-                                        ->where('estado', 1)->first();
+                                        ->whereIn('estado', [1, 5])->first();
                                         
                 if ($planOriginal) {
                     $planOriginal->update(['estado' => 0]); // 0 = Inactivo
                     
-                    // Anular cuotas pendientes del plan viejo para que no sumen mora
+                    // Anular cuotas pendientes del plan viejo (estado 1=Pendiente, 3=Parcial)
                     Cuota::where('id_plan_pago', $planOriginal->id)
-                         ->where('estado', 1)
+                         ->whereIn('estado', [1, 3])
                          ->update(['estado' => 0]);
                 }
             }

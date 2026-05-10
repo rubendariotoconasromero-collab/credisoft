@@ -309,7 +309,8 @@
                                     {{ cuota.estado == 0 ? '---' : formatNumero(cuota.interes_devengado_neto) }}
                                 </td>
                                 <td class="text-center text-danger fw-bold">
-                                    {{ cuota.estado == 0 ? '---' : formatNumero(cuota.interes_moratorio_neto) }}
+                                    {{ cuota.estado == 0 ? '---' : formatNumero(cuota.interes_moratorio_neto) }}<br>
+                                    <span v-if="parseFloat(cuota.interes_moratorio_neto) > 0" class="text-muted" style="font-size: 0.6rem;">({{ cuota.dias_pasados }} d)</span>
                                 </td>
                                 
                                 <!-- <td class="text-center fw-bold text-primary border-start border-end">
@@ -326,8 +327,7 @@
                                 </td>
                                 
                                 <td class="text-center">
-                                    <!-- <div v-if="cuota.mora_fija_neta > 0 && cuota.estado != 2" class="mb-1"> -->
-                                    <div v-if="cuota.dias_pasados > 0 && cuota.estado != 2" class="mb-1">
+                                    <div v-if="parseFloat(cuota.mora_fija_neta) > 0 && cuota.estado != 2" class="mb-1">
                                         <span class="badge bg-danger text-white">
                                             Mora - {{ cuota.dias_pasados }} Dias
                                         </span>
@@ -768,11 +768,6 @@ export default {
             }
         },
 
-        esPrimerRegistroConMora(index) {
-            const primerConMora = this.lista_cuotas_plan.findIndex(c => c.dias_pasados > 0);
-            return index === primerConMora;
-        },
-        
         // --- MODAL PAGOS ---
         resetPaymentDetails() {
             this.paymentDetails = {
@@ -800,15 +795,6 @@ export default {
             if (modalInstance) modalInstance.hide();
         },
         
-        calcularMoraFila(cuota) {
-            // Retorna la mora total calculada para esa fila (antes de condonaciones o pagos parciales)
-            // Se calcula usando los dias_pasados multiplicados por la tarifa diaria (multa_dia)
-            // Solo aplica si la cuota está Pendiente (1) o Pagada Parcialmente (3)
-            return (cuota.estado == 1 || cuota.estado == 3) && cuota.dias_pasados > 0 
-                ? (cuota.dias_pasados * this.multa_dia) 
-                : 0;
-        },
-
         async procesarPagoCuotas() {
             try {
                 const cuotasData = this.selectedCuotas.map(id => {

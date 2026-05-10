@@ -155,7 +155,8 @@
                                         <span class="text-muted" style="font-size: 0.6rem;">({{ cuota.dias_transcurridos }} d)</span>
                                     </td>
                                     <td class="text-danger fw-bold">
-                                        {{ cuota.estado == 0 ? '---' : formatNumero(cuota.interes_moratorio_neto) }}
+                                        {{ cuota.estado == 0 ? '---' : formatNumero(cuota.interes_moratorio_neto) }}<br>
+                                        <span v-if="parseFloat(cuota.interes_moratorio_neto) > 0" class="text-muted" style="font-size: 0.6rem;">({{ cuota.dias_pasados }} d)</span>
                                     </td>
                                     <td class="fw-bold text-primary border-start border-end fs-6">
                                         {{ cuota.estado == 0 ? '---' : formatNumero(cuota.interes_acumulado_neto) }}
