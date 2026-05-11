@@ -1367,7 +1367,15 @@ class PlanPagoController extends Controller
 
         $dias_pasados_mora = 0;
 
-        $cuotas = $cuotas->map(function ($cuota, $index) use ($cuotas, $firstUnpaidIndex, &$dias_pasados_mora) {
+        // Saldo capital base para interés moratorio = saldo_capital de la última cuota pagada (estado = 2).
+        // saldo_capital almacena el saldo pendiente DESPUÉS de pagar esa cuota (generado al crear el plan).
+        // Si ninguna cuota ha sido pagada (primera cuota en mora), se usa el monto total del crédito.
+        $lastPaidCuota = $cuotas->last(fn($c) => $c->estado == 2);
+        $saldoCapitalMora = $lastPaidCuota
+            ? (float) $lastPaidCuota->saldo_capital
+            : (float) $cuotas->sum('capital');
+
+        $cuotas = $cuotas->map(function ($cuota, $index) use ($cuotas, $firstUnpaidIndex, &$dias_pasados_mora, $saldoCapitalMora) {
             
             // NORMALIZACIÓN DE FECHAS A 00:00:00 
             $fechaCuota = Carbon::parse($cuota->fecha)->startOfDay();
@@ -1420,10 +1428,17 @@ class PlanPagoController extends Controller
             // INTERÉS DEVENGADO — interés diario × días transcurridos del período
             $interesDevengadoBruto = $interesPorDiaNormal * $diasTranscurridosNormales;
 
-            // INTERÉS MORATORIO — misma tasa diaria × días de mora (solo primera cuota pendiente)
-            // Misma fórmula que devengado: interesPorDia × dias; solo cambia el input de días
+            // INTERÉS MORATORIO
+            // Fórmula: saldo_capital_última_cuota_pagada × (tasa/100) / diasPeriodo × diasMora
+            // - Base: saldo_capital de la última cuota pagada (deuda vigente tras el último pago).
+            //         Si ninguna cuota fue pagada, es el monto total del crédito.
+            // - Tasa: la tasa periódica del plan (plan_pago.tasa, en porcentaje).
+            // - Solo aplica a la primera cuota pendiente de pago.
             if ($index === $firstUnpaidIndex && in_array($cuota->estado, [1, 3]) && $diasRetrasoCuota > 0) {
-                $interesMoratorioBruto = $interesPorDiaNormal * $diasRetrasoCuota;
+                $tasaDiariaMora = ($diasPeriodoCuota > 0)
+                    ? ((float)$cuota->tasa / 100) / $diasPeriodoCuota
+                    : 0;
+                $interesMoratorioBruto = $saldoCapitalMora * $tasaDiariaMora * $diasRetrasoCuota;
             } else {
                 $interesMoratorioBruto = 0;
             }

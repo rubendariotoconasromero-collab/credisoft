@@ -145,7 +145,13 @@
                                     <td class="fw-bold text-muted">{{ cuota.numero }}</td>
                                     <td>{{ formatFecha(cuota.fecha) }}</td>
                                     
-                                    <td class="fw-bold text-dark fs-6">{{ formatNumero(cuota.capital_neto) }}</td>
+                                    <td class="fw-bold text-dark fs-6">
+                                        <div>{{ formatNumero(cuota.capital) }}</div>
+                                        <div v-if="parseFloat(cuota.capital_pagado_total) > 0" class="text-success lh-1 mt-1" style="font-size: 0.65rem;">
+                                            <span class="fw-bold">{{ cuota.porcentaje_capital_pagado }}%</span><br>
+                                            {{ formatNumero(cuota.capital_pagado_total) }} Bs
+                                        </div>
+                                    </td>
                                     <td>{{ formatNumero(cuota.interes) }}</td>
                                     <td class="text-muted">{{ formatNumero(cuota.saldo_capital) }}</td>
                                     <td class="fw-bold text-dark">{{ formatNumero(cuota.total) }}</td>

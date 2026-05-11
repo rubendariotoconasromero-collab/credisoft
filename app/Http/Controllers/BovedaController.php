@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Auth;
 
 class BovedaController extends Controller
 {
-    //
     public function indexBoveda(){
         return view('frmBoveda');
     }
@@ -22,142 +21,163 @@ class BovedaController extends Controller
             ->first();
 
         return [
-            'saldo_actual' => empty($boveda) ? 0 : $boveda->saldo_actual,
-            'fecha_apertura' => empty($boveda) ? 0 : $boveda->fecha_apertura,
-            'id_boveda' => empty($boveda) ? 0 : $boveda->id,
-            'usuario_apertura' => empty($boveda) ? 'Sin registro' : $boveda->nombre_usuario, // <--- NUEVO DATO
+            'saldo_actual'    => empty($boveda) ? 0       : $boveda->saldo_actual,
+            'fecha_apertura'  => empty($boveda) ? null    : $boveda->fecha_apertura,
+            'id_boveda'       => empty($boveda) ? 0       : $boveda->id,
+            'usuario_apertura'=> empty($boveda) ? 'Sin registro' : $boveda->nombre_usuario,
         ];
     }
 
     public function getMovimientosBoveda(Request $request){
-        // 1. Construir la consulta base
+        // 1. Construir la consulta base (sin el primer select duplicado)
         $query = DB::table('movimientos_boveda')
             ->join('users', 'users.id', '=', 'movimientos_boveda.id_usuario')
-            ->select('movimientos_boveda.*', 'users.personal')
-            ->leftJoin('socios', 'socios.id', '=', 'movimientos_boveda.id_socio') // <--- NUEVO JOIN
+            ->leftJoin('socios', 'socios.id', '=', 'movimientos_boveda.id_socio')
             ->select(
-                'movimientos_boveda.*', 
+                'movimientos_boveda.*',
                 'users.personal',
-                'socios.nombres as socio_nombres', // <--- NUEVOS CAMPOS
+                'socios.nombres as socio_nombres',
                 'socios.apellidos as socio_apellidos'
             );
 
-        // 2. Aplicar filtros generales (Fechas y Tipo si viene en el request)
+        // 2. Aplicar filtros
         if ($request->has('tipo') && $request->tipo != 'todos') {
             $query->where('movimientos_boveda.tipo_movimiento', $request->tipo);
         }
 
         if ($request->has('fecha_inicio') && $request->has('fecha_fin')) {
             $query->whereDate('movimientos_boveda.fecha', '>=', $request->fecha_inicio)
-                ->whereDate('movimientos_boveda.fecha', '<=', $request->fecha_fin);
+                  ->whereDate('movimientos_boveda.fecha', '<=', $request->fecha_fin);
         }
 
-        // 3. CLONAR la consulta para los totales ANTES de paginar o modificar
-        // Esto asegura que el cálculo de ingresos no afecte al de salidas
+        // 3. Clonar antes de paginar para calcular totales del período filtrado
         $queryIngresos = clone $query;
-        $querySalidas = clone $query;
+        $querySalidas  = clone $query;
 
         // 4. Paginación
-        $registros = $query->paginate(40);
+        $registros = $query->orderBy('movimientos_boveda.id', 'desc')->paginate(40);
 
-        // 5. Calcular totales usando los CLONES
-        // Nota: Si el usuario filtró por tipo 'ingreso', las salidas seguirán siendo 0 (lógico),
-        // pero si eligió 'todos', ahora ambos valores se calcularán correctamente.
+        // 5. Totales (reflejan el filtro activo de tipo y fechas)
         $ingresos = $queryIngresos->where('movimientos_boveda.tipo_movimiento', 'ingreso')->sum('monto');
-        $salidas = $querySalidas->where('movimientos_boveda.tipo_movimiento', 'salida')->sum('monto');
+        $salidas  = $querySalidas->where('movimientos_boveda.tipo_movimiento', 'salida')->sum('monto');
 
         return response()->json([
             'movimientos' => $registros,
-            'totales' => [
+            'totales'     => [
                 'ingresos' => $ingresos,
-                'salidas' => $salidas,
+                'salidas'  => $salidas,
             ],
         ]);
     }
 
     public function ingresarBoveda(Request $request){
-        $boveda_abierta=DB::table('boveda')->count();
+        // BUG-02: Validar input antes de operar
+        $request->validate([
+            'monto'      => 'required|numeric|min:0.01',
+            'descripcion'=> 'required|string|max:255',
+        ]);
 
-        if($boveda_abierta<=0){
-            return 0;
+        if (!DB::table('boveda')->exists()) {
+            return response()->json(['message' => 'No existe una bóveda registrada'], 422);
         }
 
         DB::beginTransaction();
-        try{
+        try {
+            $id_boveda = DB::table('boveda')->orderBy('id', 'desc')->value('id');
+            $monto     = (float) $request->monto;
 
-            $id_boveda=DB::table('boveda')->orderBy('boveda.id', 'desc')->get()[0]->id;
-    
-            DB::table('movimientos_boveda')
-            ->insertGetId([
-                'tipo_movimiento'=>'ingreso',
-                'monto'=>$request->monto,
-                'descripcion'=>$request->descripcion,
-                'fecha'=>now(),
-                'id_boveda'=>$id_boveda,
-                'id_usuario'=>Auth::user()->id,
-                'id_socio' => $request->id_socio ?? null,
+            DB::table('movimientos_boveda')->insert([
+                'tipo_movimiento' => 'ingreso',
+                'monto'           => $monto,
+                'descripcion'     => $request->descripcion,
+                'fecha'           => now(),
+                'id_boveda'       => $id_boveda,
+                'id_usuario'      => Auth::id(),
+                'id_socio'        => $request->id_socio ?? null,
             ]);
-            
 
+            // BUG-02 resuelto: monto casteado a float antes de DB::raw
             DB::table('boveda')->where('id', $id_boveda)->update([
-                'saldo_actual' => DB::raw('saldo_actual + ' . $request->monto)
+                'saldo_actual' => DB::raw('saldo_actual + ' . $monto),
             ]);
 
             DB::commit();
+            return response()->json(['message' => 'Ingreso registrado correctamente'], 200);
 
-        }catch(Exception $e){
-            DB::rollback();
+        } catch (\Exception $e) {
+            // BUG-03 resuelto: \Exception con namespace global
+            DB::rollBack();
+            return response()->json(['message' => 'Error al registrar el ingreso', 'error' => $e->getMessage()], 500);
         }
     }
 
     public function retirarBoveda(Request $request){
-        $boveda_abierta=DB::table('boveda')->count();
+        // BUG-02: Validar input antes de operar
+        $request->validate([
+            'monto'      => 'required|numeric|min:0.01',
+            'descripcion'=> 'required|string|max:255',
+        ]);
 
-        if($boveda_abierta<=0){
-            return 0;
+        if (!DB::table('boveda')->exists()) {
+            return response()->json(['message' => 'No existe una bóveda registrada'], 422);
         }
 
         DB::beginTransaction();
-        try{
+        try {
+            $id_boveda = DB::table('boveda')->orderBy('id', 'desc')->value('id');
+            $monto     = (float) $request->monto;
 
-            $id_boveda=DB::table('boveda')->orderBy('boveda.id', 'desc')->get()[0]->id;
-    
-            DB::table('movimientos_boveda')
-            ->insertGetId([
-                'tipo_movimiento'=>'salida',
-                'monto'=>$request->monto,
-                'descripcion'=>$request->descripcion,
-                'fecha'=>now(),
-                'id_boveda'=>$id_boveda,
-                'id_usuario'=>Auth::user()->id,
-                'id_socio' => $request->id_socio ?? null,
+            // BUG-01 resuelto: validar saldo suficiente en el backend
+            $saldoActual = (float) DB::table('boveda')->where('id', $id_boveda)->value('saldo_actual');
+            if ($saldoActual < $monto) {
+                DB::rollBack();
+                return response()->json(['message' => 'Saldo insuficiente en bóveda'], 422);
+            }
+
+            DB::table('movimientos_boveda')->insert([
+                'tipo_movimiento' => 'salida',
+                'monto'           => $monto,
+                'descripcion'     => $request->descripcion,
+                'fecha'           => now(),
+                'id_boveda'       => $id_boveda,
+                'id_usuario'      => Auth::id(),
+                'id_socio'        => $request->id_socio ?? null,
             ]);
 
+            // BUG-02 resuelto: monto casteado a float antes de DB::raw
             DB::table('boveda')->where('id', $id_boveda)->update([
-                'saldo_actual' => DB::raw('saldo_actual - ' . $request->monto)
+                'saldo_actual' => DB::raw('saldo_actual - ' . $monto),
             ]);
 
             DB::commit();
+            return response()->json(['message' => 'Retiro registrado correctamente'], 200);
 
-        }catch(Exception $e){
-            DB::rollback();
+        } catch (\Exception $e) {
+            // BUG-03 resuelto: \Exception con namespace global
+            DB::rollBack();
+            return response()->json(['message' => 'Error al registrar el retiro', 'error' => $e->getMessage()], 500);
         }
     }
 
     public function aperturarBoveda(Request $request){
+        // BUG-05 resuelto: impedir múltiples aperturas
+        if (DB::table('boveda')->exists()) {
+            return response()->json(['message' => 'Ya existe una bóveda registrada. No se puede aperturar nuevamente.'], 422);
+        }
+
         DB::beginTransaction();
-        try{
-            DB::table('boveda')->insertGetId([
-                'saldo_actual' => 0,
+        try {
+            DB::table('boveda')->insert([
+                'saldo_actual'   => 0,
                 'fecha_apertura' => now(),
-                'id_usuario' => Auth::user()->id,
+                'id_usuario'     => Auth::id(),
             ]);
 
             DB::commit();
             return response()->json(['message' => 'Bóveda aperturada con éxito'], 200);
 
-        }catch(\Exception $e){
-            DB::rollback();
+        } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json(['message' => 'Error al aperturar', 'error' => $e->getMessage()], 500);
         }
     }

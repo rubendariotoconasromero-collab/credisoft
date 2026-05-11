@@ -553,7 +553,13 @@
                                                         </div>
                                                     </td>
 
-                                                    <td class="text-end fw-bold text-dark">Bs. {{ formatNumero(cuota.capital_neto) }}</td>
+                                                    <td class="text-end fw-bold text-dark">
+                                                        <div>Bs. {{ formatNumero(cuota.capital) }}</div>
+                                                        <div v-if="parseFloat(cuota.capital_pagado_total) > 0" class="text-success lh-1 mt-1" style="font-size: 0.65rem;">
+                                                            <span class="fw-bold">{{ cuota.porcentaje_capital_pagado }}%</span><br>
+                                                            {{ formatNumero(cuota.capital_pagado_total) }} Bs
+                                                        </div>
+                                                    </td>
                                                     
                                                     <td class="text-center">
                                                         <div v-if="parseFloat(cuota.mora_fija_neta) > 0 && cuota.estado != 2" class="mb-1">

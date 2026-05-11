@@ -507,7 +507,7 @@ class CajaController extends Controller
 
 
             DB::table('boveda')->where('id', $id_boveda)->update([
-                'saldo_actual' => DB::raw('saldo_actual - ' . $request->monto)
+                'saldo_actual' => DB::raw('saldo_actual - ' . (float)$request->monto)
             ]);
 
 
@@ -782,11 +782,6 @@ class CajaController extends Controller
             ->where('plan_pago.id', $id_plan_pago->id_plan_pago)
             ->select('pago_administrativo.id as id_pago_adm')
             ->first();
-
-
-            DB::table('plan_pago')->where('id', $id_plan_pago->id_plan_pago)->update([
-                'desembolso'=>1,
-            ]);
 
             DB::table('plan_pago')->where('id', $id_plan_pago->id_plan_pago)->update([
                 'desembolso'=>1,

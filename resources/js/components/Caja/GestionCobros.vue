@@ -291,12 +291,11 @@
                                 <td class="text-center">{{ cuota.numero }}</td>
                                 <td class="text-center">{{ formatDate(cuota.fecha) }}</td>
                                 
-                                <!-- <td class="text-center fw-bold text-dark">{{ formatNumero(cuota.capital_neto) }}</td> -->
-                                 <td class="text-center align-middle">
-                                    <div class="fw-bold text-dark fs-6">{{ formatNumero(cuota.capital_neto) }}</div>
-                                    <div v-if="cuota.capital_pagado_total > 0" class="text-success fw-bold lh-1 mt-1" style="font-size: 0.65rem;">
-                                        Pagado: {{ formatNumero(cuota.capital_pagado_total) }} <br>
-                                        ({{ cuota.porcentaje_capital_pagado }}%)
+                                <td class="text-center align-middle">
+                                    <div class="fw-bold text-dark fs-6">{{ formatNumero(cuota.capital) }}</div>
+                                    <div v-if="parseFloat(cuota.capital_pagado_total) > 0" class="text-success fw-bold lh-1 mt-1" style="font-size: 0.65rem;">
+                                        <span>{{ cuota.porcentaje_capital_pagado }}%</span><br>
+                                        {{ formatNumero(cuota.capital_pagado_total) }} Bs
                                     </div>
                                 </td>
                                 

@@ -119,7 +119,7 @@
                                                 {{ movimiento.tipo_movimiento }}
                                             </span>
                                         </td>
-                                        <td class="fw-bold text-end pe-4 font-monospace fs-6 text-dark">{{ movimiento.monto }}</td>
+                                        <td class="fw-bold text-end pe-4 font-monospace fs-6 text-dark">{{ formatNumero(movimiento.monto) }}</td>
                                         <td class="text-uppercase">
                                             {{ movimiento.descripcion }}
                                             <span v-if="movimiento.socio_nombres" class="d-block text-muted small fw-bold mt-1">
@@ -127,7 +127,7 @@
                                             </span>
                                         </td>
                                         <td class="text-uppercase small"><i class="fas fa-user-circle me-1 text-muted"></i> {{ movimiento.personal }}</td>
-                                        <td class="text-center">{{ movimiento.fecha }}</td>
+                                        <td class="text-center">{{ formatFecha(movimiento.fecha) }}</td>
                                     </tr>
                                     <tr v-if="movimientosBoveda.length === 0">
                                         <td colspan="6" class="text-center py-5 text-muted fst-italic bg-light">
@@ -376,13 +376,12 @@
                 pagination_movimientos_boveda: {
                     total: 0,
                     current_page: 1,
-                    per_page: 10,
+                    per_page: 40,
                     last_page: 0,
                     from: 0,
                     to: 0
                 },
                 offset_movimientos_boveda: 2,
-                fecha_fin:moment().format('YYYY-MM-DD'),
 
                 lista_socios: [],
                 id_socio_ingreso: '',
@@ -474,6 +473,18 @@
                 } catch (error) { console.error('Error al traer socios:', error); }
             },
             async aperturarBoveda(){
+                const confirmar = await Swal.fire({
+                    title: '¿Aperturar Bóveda?',
+                    text: 'Esta acción crea el fondo central de la institución. Solo debe realizarse una vez.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#198754',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Sí, aperturar',
+                    cancelButtonText: 'Cancelar',
+                });
+                if (!confirmar.isConfirmed) return;
+
                 try {
                     await this.aperturarBovedaPrivate();
                     await this.getBoveda();
@@ -482,7 +493,7 @@
                         text: 'Se aperturó la Bóveda correctamente',
                         confirmButtonText: 'Aceptar',
                         icon: 'success',
-                        timer: 1500
+                        timer: 1500,
                     });
                 } catch (error) {
                     Swal.fire({
@@ -535,16 +546,25 @@
             },
 
             validarIngreso() {
-                if (!this.montoIngreso || !this.descripcionIngresoSeleccionada) {
-                    Swal.fire('Advertencia', 'Por favor complete todos los campos.', 'warning');
+                if (!this.montoIngreso || parseFloat(this.montoIngreso) <= 0) {
+                    Swal.fire('Advertencia', 'Ingrese un monto válido mayor a cero.', 'warning');
                     return;
                 }
-
-                if (this.descripcionIngresoSeleccionada === 'Aporte de capital' && !this.id_socio_ingreso) {
+                if (!this.descripcionIngresoSeleccionada) {
+                    Swal.fire('Advertencia', 'Seleccione o escriba el concepto del ingreso.', 'warning');
+                    return;
+                }
+                // BUG-07: comparación case-insensitive
+                if (this.descripcionIngresoSeleccionada.toLowerCase() === 'aporte de capital' && !this.id_socio_ingreso) {
                     Swal.fire('Advertencia', 'Debe seleccionar el Socio/Inversionista que hace el aporte.', 'warning');
                     return;
                 }
-                let descripcionFinal = this.descripcionIngresoSeleccionada === 'otro'
+                if (this.descripcionIngresoSeleccionada.toLowerCase() === 'otro' && !this.otraDescripcionIngreso.trim()) {
+                    Swal.fire('Advertencia', 'Debe especificar el detalle del ingreso.', 'warning');
+                    return;
+                }
+
+                let descripcionFinal = this.descripcionIngresoSeleccionada.toLowerCase() === 'otro'
                     ? `otro: ${this.otraDescripcionIngreso}`
                     : this.descripcionIngresoSeleccionada;
 
@@ -556,21 +576,26 @@
                     Swal.fire('Advertencia', 'Por favor complete todos los campos.', 'warning');
                     return;
                 }
-                if ((this.boveda.saldo_actual - this.montoRetiro) < 0) {
+                // BUG-06: usar parseFloat() para evitar comparación de strings
+                if ((parseFloat(this.boveda.saldo_actual) - parseFloat(this.montoRetiro)) < 0) {
                     Swal.fire('Error', 'No tiene saldo suficiente para el retiro.', 'error');
                     return;
                 }
-
-                if (this.descripcionRetiroSeleccionada === 'Pago de dividendos' && !this.id_socio_retiro) {
+                // BUG-07: comparación case-insensitive
+                if (this.descripcionRetiroSeleccionada.toLowerCase() === 'pago de dividendos' && !this.id_socio_retiro) {
                     Swal.fire('Advertencia', 'Debe seleccionar al Socio que recibe los dividendos.', 'warning');
                     return;
                 }
+                if (this.descripcionRetiroSeleccionada.toLowerCase() === 'otro' && !this.otraDescripcionRetiro.trim()) {
+                    Swal.fire('Advertencia', 'Debe especificar el detalle del retiro.', 'warning');
+                    return;
+                }
 
-                let descripcionFinal = this.descripcionRetiroSeleccionada === 'otro'
+                let descripcionFinal = this.descripcionRetiroSeleccionada.toLowerCase() === 'otro'
                     ? `otro: ${this.otraDescripcionRetiro}`
                     : this.descripcionRetiroSeleccionada;
-                    
-                this.retirarDeBoveda(descripcionFinal); 
+
+                this.retirarDeBoveda(descripcionFinal);
             },
 
             async ingresarABoveda(descripcion) {
@@ -578,7 +603,7 @@
                     await axios.post('/ingresar_boveda', {
                         monto: this.montoIngreso,
                         descripcion: descripcion,
-                        id_socio: this.descripcionIngresoSeleccionada === 'Aporte de capital' ? this.id_socio_ingreso : null
+                        id_socio: this.descripcionIngresoSeleccionada.toLowerCase() === 'aporte de capital' ? this.id_socio_ingreso : null
                     });
 
                     Swal.fire({title:'Éxito', text: 'Ingreso a bóveda registrado con éxito.', icon:'success', timer:1500});
@@ -599,7 +624,7 @@
                     await axios.post('/retirar_boveda', {
                         monto: this.montoRetiro,
                         descripcion: descripcion,
-                        id_socio: this.descripcionRetiroSeleccionada === 'Pago de dividendos' ? this.id_socio_retiro : null
+                        id_socio: this.descripcionRetiroSeleccionada.toLowerCase() === 'pago de dividendos' ? this.id_socio_retiro : null
                     });
 
                     Swal.fire({title:'Éxito', text:'Retiro de bóveda registrado con éxito.', icon:'success', timer:1500});
@@ -625,6 +650,15 @@
                     .catch((error) => {
                         console.error('Error al obtener la información de la bóveda:', error);
                     });
+            },
+
+            formatNumero(value) {
+                const n = parseFloat(value || 0);
+                return n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            },
+
+            formatFecha(fecha) {
+                return fecha ? moment(fecha).format('DD/MM/YYYY HH:mm') : '---';
             },
 
             cambiarPagina(page){

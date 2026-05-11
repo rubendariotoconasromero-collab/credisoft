@@ -7,7 +7,7 @@
         <div class="page-content px-0 mx-0">
             <div class="container-fluid">
                 
-                <div v-if="view === 0" class="card border-0">
+                <div class="card border-0">
                  
                     <div class="card-header bg-success bg-gradient py-2">
                         <h5 class="header-title my-0 text-center fw-bold text-white fw-bold text-uppercase">
@@ -47,6 +47,8 @@
                                     <option value="GASTOSADM">Gastos Administrativos</option>
                                     <option value="INGRESO_CAJA">Ingresos Extra</option>
                                     <option value="EGRESO_CAJA">Egresos Extra</option>
+                                    <option value="BOVEDA_INGRESO" v-if="filtros.tipo_libro === 'GENERAL'">Ingreso Bóveda</option>
+                                    <option value="BOVEDA_EGRESO" v-if="filtros.tipo_libro === 'GENERAL'">Egreso Bóveda</option>
                                 </select>
                             </div>
                             <div class="col-md-2">
@@ -71,17 +73,17 @@
 
                         <ul class="nav nav-pills custom-tabs mb-0 d-flex justify-content-center" role="tablist">
                             <li class="nav-item mx-1" role="presentation">
-                                <button @click="tabActivo = 'GENERAL'" class="nav-link active px-4 fw-bold text-uppercase" data-bs-toggle="pill" data-bs-target="#tab-general" type="button" role="tab">
+                                <button @click="cambiarTab('GENERAL')" :class="['nav-link px-4 fw-bold text-uppercase', tabActivo === 'GENERAL' ? 'active' : '']" type="button" role="tab">
                                     Tabla General
                                 </button>
                             </li>
                             <li class="nav-item mx-1" role="presentation">
-                                <button @click="tabActivo = 'INGRESOS'" class="nav-link px-4 fw-bold text-uppercase text-success" data-bs-toggle="pill" data-bs-target="#tab-ingresos" type="button" role="tab">
+                                <button @click="cambiarTab('INGRESOS')" :class="['nav-link px-4 fw-bold text-uppercase text-success', tabActivo === 'INGRESOS' ? 'active' : '']" type="button" role="tab">
                                     Solo Ingresos
                                 </button>
                             </li>
                             <li class="nav-item mx-1" role="presentation">
-                                <button @click="tabActivo = 'EGRESOS'" class="nav-link px-4 fw-bold text-uppercase text-danger" data-bs-toggle="pill" data-bs-target="#tab-egresos" type="button" role="tab">
+                                <button @click="cambiarTab('EGRESOS')" :class="['nav-link px-4 fw-bold text-uppercase text-danger', tabActivo === 'EGRESOS' ? 'active' : '']" type="button" role="tab">
                                     Solo Egresos
                                 </button>
                             </li>
@@ -89,7 +91,7 @@
 
                         <div class="tab-content bg-white p-3 border rounded-bottom shadow-sm">
                             
-                            <div class="tab-pane fade show active" id="tab-general" role="tabpanel">
+                            <div v-show="tabActivo === 'GENERAL'" role="tabpanel">
                                 <div class="table-responsive">
                                     <table class="table table-sm table-bordered table-hover align-middle ledger-table mb-0 table-striped">
                                         <thead class="table-success text-center align-middle">
@@ -104,7 +106,7 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr v-for="item in listaFiltrada" :key="item.nro">
+                                            <tr v-for="item in movimientos" :key="item.nro">
                                                 <td class="text-center text-muted">{{ item.nro }}</td>
                                                 <td class="text-center">{{ item.fecha }}</td>
                                                 <td class="text-start fw-bold text-secondary" style="font-size: 0.7rem;">{{ item.tipo }}</td>
@@ -119,7 +121,7 @@
                                                 
                                                 <td class="text-end fw-bold border-start-2 border-dark bg-light">{{ formatNumero(item.saldo) }}</td>
                                             </tr>
-                                            <tr v-if="listaFiltrada.length === 0">
+                                            <tr v-if="movimientos.length === 0">
                                                 <td colspan="7" class="text-center py-4 text-muted fst-italic">No hay movimientos registrados.</td>
                                             </tr>
                                         </tbody>
@@ -135,7 +137,7 @@
                                 </div>
                             </div>
 
-                            <div class="tab-pane fade" id="tab-ingresos" role="tabpanel">
+                            <div v-show="tabActivo === 'INGRESOS'" role="tabpanel">
                                 <div class="table-responsive">
                                     <table class="table table-sm table-bordered table-hover align-middle ledger-table mb-0 table-striped">
                                         <thead class="table-success bg-opacity-10 text-center align-middle">
@@ -155,6 +157,9 @@
                                                 <td class="ps-2 text-dark text-uppercase">{{ item.descripcion }}</td>
                                                 <td class="text-end fw-bold text-dark fs-6 bg-success bg-opacity-10">{{ formatNumero(item.debe) }}</td>
                                             </tr>
+                                            <tr v-if="ingresosFiltrados.length === 0">
+                                                <td colspan="5" class="text-center py-4 text-muted fst-italic">No hay ingresos con los filtros actuales.</td>
+                                            </tr>
                                         </tbody>
                                         <tfoot class="table-secondary text-dark fw-bold">
                                             <tr>
@@ -166,7 +171,7 @@
                                 </div>
                             </div>
 
-                            <div class="tab-pane fade" id="tab-egresos" role="tabpanel">
+                            <div v-show="tabActivo === 'EGRESOS'" role="tabpanel">
                                 <div class="table-responsive">
                                     <table class="table table-sm table-bordered table-hover align-middle ledger-table mb-0 table-striped">
                                         <thead class="table-danger bg-opacity-10 text-center align-middle">
@@ -186,6 +191,9 @@
                                                 <td class="ps-2 text-dark text-uppercase">{{ item.descripcion }}</td>
                                                 <td class="text-end fw-bold text-dark fs-6 bg-danger bg-opacity-10">{{ formatNumero(item.haber) }}</td>
                                             </tr>
+                                            <tr v-if="egresosFiltrados.length === 0">
+                                                <td colspan="5" class="text-center py-4 text-muted fst-italic">No hay egresos con los filtros actuales.</td>
+                                            </tr>
                                         </tbody>
                                         <tfoot class="table-secondary text-dark fw-bold">
                                             <tr>
@@ -199,7 +207,7 @@
 
                         </div>
 
-                        <div class="d-flex justify-content-between align-items-center mt-3" v-if="pagination.last_page > 1">
+                        <div class="d-flex justify-content-between align-items-center mt-3" v-if="tabActivo === 'GENERAL' && pagination.last_page > 1">
                             <span class="text-muted small">
                                 Mostrando página {{ pagination.current_page }} de {{ pagination.last_page }} 
                                 (Total registros: {{ pagination.total }})
@@ -236,7 +244,6 @@ export default {
         return {
             tabActivo: 'GENERAL',
             preloader: false,
-            view: 0,
             filtros: {
                 fecha_inicio: moment().subtract(1, 'month').format('YYYY-MM-DD'),
                 fecha_final: moment().format('YYYY-MM-DD'),
@@ -246,6 +253,8 @@ export default {
                 page: 1
             },
             movimientos: [],
+            todosIngresos: [],
+            todosEgresos: [],
             totalIngresosPeriodo: 0,
             totalEgresosPeriodo: 0,
             pagination: {
@@ -257,14 +266,11 @@ export default {
         };
     },
     computed: {
-        listaFiltrada() {
-            return this.movimientos;
-        },
         ingresosFiltrados() {
-            return this.movimientos.filter(i => parseFloat(i.debe) > 0);
+            return this.todosIngresos;
         },
         egresosFiltrados() {
-            return this.movimientos.filter(i => parseFloat(i.haber) > 0);
+            return this.todosEgresos;
         },
         pagesNumber() {
             if (!this.pagination.last_page) return [];
@@ -345,6 +351,18 @@ export default {
             if (numero === undefined || numero === null) return '0.00';
             return new Intl.NumberFormat('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(numero);
         },
+        cambiarTab(tab) {
+            this.tabActivo = tab;
+            const tiposEgreso = ['DESEMBOLSO', 'EGRESO_CAJA', 'BOVEDA_EGRESO'];
+            const tiposIngreso = ['CAPITAL', 'INTERES', 'MORA', 'GASTOSADM', 'INGRESO_CAJA', 'BOVEDA_INGRESO'];
+            if (tab === 'INGRESOS' && tiposEgreso.includes(this.filtros.tipo)) {
+                this.filtros.tipo = 'TODOS';
+                this.fetchLibroMayor(1);
+            } else if (tab === 'EGRESOS' && tiposIngreso.includes(this.filtros.tipo)) {
+                this.filtros.tipo = 'TODOS';
+                this.fetchLibroMayor(1);
+            }
+        },
         buscarConFiltros() {
             // Si el usuario cambia de libro y tenía un filtro no válido, lo reseteamos
             if (this.filtros.tipo_libro === 'OPERATIVO' && (this.filtros.tipo === 'CAPITAL' || this.filtros.tipo === 'DESEMBOLSO')) {
@@ -357,18 +375,21 @@ export default {
         },
         async fetchLibroMayor(page) {
             this.preloader = true;
-            this.filtros.page = page; 
-            
+            this.filtros.page = page;
+
             try {
                 const response = await axios.get('/libro-mayor', { params: this.filtros });
-                
+
                 this.movimientos = response.data.movimientos.data;
                 this.pagination = response.data.movimientos;
                 this.totalIngresosPeriodo = response.data.totales.ingresos;
                 this.totalEgresosPeriodo = response.data.totales.egresos;
-                
+                this.todosIngresos = response.data.ingresos_lista;
+                this.todosEgresos = response.data.egresos_lista;
+
             } catch (error) {
                 console.error("Error obteniendo libro mayor:", error);
+                Swal.fire('Error', 'No se pudieron obtener los movimientos. Intente nuevamente.', 'error');
             } finally {
                 this.preloader = false;
             }

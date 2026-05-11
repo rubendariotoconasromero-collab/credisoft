@@ -18,24 +18,44 @@ class ConsultaFinancieraController extends Controller
     public function getLibroMayor(Request $request)
     {
         $fecha_final = $request->input('fecha_final', date('Y-m-d'));
-        $tipo_libro = $request->input('tipo_libro', 'GENERAL'); 
-        
+        $tipo_libro = $request->input('tipo_libro', 'GENERAL');
+
         $movimientos = $this->obtenerConsultaSQLBase($fecha_final, $tipo_libro);
         $procesado = $this->procesarMovimientosYCalcularSaldos($movimientos, $request, 'TODOS');
 
-        // Paginación Manual del Arreglo
+        // Paginación Manual del Arreglo (solo para tabla General)
         $page = (int)$request->input('page', 1);
         $perPage = 15;
         $total = count($procesado['lista']);
         $items = array_slice($procesado['lista'], ($page - 1) * $perPage, $perPage);
 
+        // Listas completas para tabs Ingresos/Egresos (sin paginar, renumeradas)
+        $nroIng = 1;
+        $nroEgr = 1;
+        $lista_ingresos = [];
+        $lista_egresos = [];
+        foreach ($procesado['lista'] as $item) {
+            if ($item->debe > 0) {
+                $copy = clone $item;
+                $copy->nro = $nroIng++;
+                $lista_ingresos[] = $copy;
+            }
+            if ($item->haber > 0) {
+                $copy = clone $item;
+                $copy->nro = $nroEgr++;
+                $lista_egresos[] = $copy;
+            }
+        }
+
         return response()->json([
             'movimientos' => [
                 'current_page' => $page,
                 'data' => $items,
-                'last_page' => ceil($total / $perPage),
+                'last_page' => max(1, (int)ceil($total / $perPage)),
                 'total' => $total,
             ],
+            'ingresos_lista' => $lista_ingresos,
+            'egresos_lista' => $lista_egresos,
             'totales' => [
                 'ingresos' => round($procesado['ingresos'], 2),
                 'egresos' => round($procesado['egresos'], 2)
@@ -165,7 +185,7 @@ class ConsultaFinancieraController extends Controller
                 ->select('fecha', DB::raw("'DESEMBOLSO' as tipo"), DB::raw("CONCAT('DESEMBOLSO, CREDITO: ', id_plan_pago) as descripcion"), DB::raw('0 as debe'), 'monto as haber', 'fecha as created_at');
 
             $q_boveda_in = DB::table('movimientos_boveda')
-                ->where('tipo_movimiento', 'ingreso')->where('descripcion', 'Aporte de capital')->whereDate('fecha', '<=', $fecha_final)
+                ->where('tipo_movimiento', 'ingreso')->whereDate('fecha', '<=', $fecha_final)
                 ->select('fecha', DB::raw("'BOVEDA_INGRESO' as tipo"), 'descripcion', 'monto as debe', DB::raw('0 as haber'), 'created_at');
 
             $q_boveda_out = DB::table('movimientos_boveda')
@@ -214,7 +234,6 @@ class ConsultaFinancieraController extends Controller
                     'descripcion' => $mov->descripcion,
                     'debe' => (float)$mov->debe,
                     'haber' => (float)$mov->haber,
-                    'monto' => $modo_reporte === 'INGRESOS' ? (float)$mov->debe : ($modo_reporte === 'EGRESOS' ? (float)$mov->haber : 0),
                     'saldo' => round($saldo_acumulado, 2)
                 ];
             }
