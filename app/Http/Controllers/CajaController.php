@@ -95,14 +95,20 @@ class CajaController extends Controller
             'monto_inicial' => 'required|numeric|min:0',
         ]);
 
-        // 1. NUEVO: Verificar si existe al menos una bóveda registrada
-        $existeBoveda = DB::table('boveda')->exists();
+        // 1. Verificar si existe una bóveda y si tiene saldo suficiente
+        $boveda = DB::table('boveda')->first();
         
-        if (!$existeBoveda) {
-            // Retornamos error 422. Tu frontend leerá el 'message' y lo mostrará en el SweetAlert
+        if (!$boveda) {
             return response()->json([
                 'success' => false,
                 'message' => 'No se puede abrir la caja: Aún no existe una Bóveda aperturada en el sistema.'
+            ], 422);
+        }
+
+        if ($boveda->saldo_actual < $request->monto_inicial) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se puede abrir la caja: Saldo insuficiente en Bóveda. Disponible: ' . number_format($boveda->saldo_actual, 2) . ' Bs.'
             ], 422);
         }
 
@@ -123,8 +129,8 @@ class CajaController extends Controller
 
         try {
             // 3. Insertar la nueva caja
-            DB::table('caja')->insert([
-                'fechahora_apertura' => Carbon::now(), // FECHA SERVIDOR
+            $idCaja = DB::table('caja')->insertGetId([
+                'fechahora_apertura' => Carbon::now(),
                 'monto_inicial'      => $request->monto_inicial,
                 'monto_final'        => 0,
                 'efectivo_total'     => 0,
@@ -138,9 +144,41 @@ class CajaController extends Controller
                 'diferencia'         => 0,
                 'id_usuario'         => Auth::id(),
                 'estado'             => 1,
-                'created_at'         => Carbon::now(), // Importante si usas timestamps() en tu migración
+                'created_at'         => Carbon::now(),
                 'updated_at'         => Carbon::now()
             ]);
+
+            if ($request->monto_inicial > 0) {
+                // 4. Descontar de Bóveda
+                DB::table('boveda')->where('id', $boveda->id)->update([
+                    'saldo_actual' => $boveda->saldo_actual - $request->monto_inicial,
+                    'updated_at'   => Carbon::now()
+                ]);
+
+                // 5. Registrar movimiento de salida en Bóveda
+                DB::table('movimientos_boveda')->insert([
+                    'tipo_movimiento' => 'salida',
+                    'monto'           => $request->monto_inicial,
+                    'descripcion'     => 'Apertura de caja (Transferencia a Caja)',
+                    'fecha'           => Carbon::now(),
+                    'id_boveda'       => $boveda->id,
+                    'id_usuario'      => Auth::id(),
+                    'created_at'      => Carbon::now(),
+                    'updated_at'      => Carbon::now()
+                ]);
+
+                // 6. Registrar movimiento de ingreso en Caja
+                DB::table('movimientos_caja')->insert([
+                    'tipo_movimiento' => 'ingreso',
+                    'descripcion'     => 'Apertura de caja (Ingreso Inicial)',
+                    'monto'           => $request->monto_inicial,
+                    'fecha'           => Carbon::now(),
+                    'id_caja'         => $idCaja,
+                    'id_usuario'      => Auth::id(),
+                    'created_at'      => Carbon::now(),
+                    'updated_at'      => Carbon::now()
+                ]);
+            }
 
             DB::commit();
 

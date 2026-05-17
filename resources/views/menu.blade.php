@@ -277,7 +277,7 @@
                 <li>
                     <a href="/consultas_financieras" class="nav-link waves-effect {{ $current_route == 'consultas_financieras' ? 'mm-active' : '' }}">
                         <i class="fas fa-search-dollar"></i>
-                        <span>Consultas Financieras</span>
+                        <span>Adm. Financiera</span>
                     </a>
                 </li>
                 @endif

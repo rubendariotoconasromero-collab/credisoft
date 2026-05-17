@@ -2,112 +2,133 @@
     <main>
         <!-- Preloader -->
         <div v-if="preloader" class="preloader">
-            <div class="spinner"></div>
+            <div class="spinner-border text-success" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
         </div>
 
         <div class="page-content">
-
             <div class="container-fluid">
-                <div class="card">
-                    <div class="card-header bg-warning py-2">
-                        <h5 class="header-title my-0 text-center fw-bold text-dark text-uppercase">
-                            Información de la empresa
-                        </h5>
-                    </div>
-                    <div class="card-body">
-
-                        <!-- <h4 class="card-title">Informacion de la empresa</h4> -->
-                        <form @submit.prevent="modificarInformacionEmpresa()">
-
-                            <!-- Agrega esto si estás utilizando Laravel para proteger contra CSRF -->
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="nombre" class="form-label">Nombre</label>
-                                        <input :disabled="habilitar" v-model="mi_empresa.nombre" type="text"
-                                            class="form-control" id="nombre" name="nombre" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="nit" class="form-label">NIT</label>
-                                        <input :disabled="habilitar" v-model="mi_empresa.nit" type="text"
-                                            class="form-control" id="nit" name="nit" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="direccion" class="form-label">Dirección</label>
-                                        <input :disabled="habilitar" v-model="mi_empresa.direccion" type="text"
-                                            class="form-control" id="direccion" name="direccion" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="telefono" class="form-label">Teléfono</label>
-                                        <input :disabled="habilitar" v-model="mi_empresa.telefono" type="text"
-                                            class="form-control" id="telefono" name="telefono" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="email" class="form-label">Correo Electrónico</label>
-                                        <input :disabled="habilitar" v-model="mi_empresa.email" type="email"
-                                            class="form-control" id="email" name="email" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="logo" class="form-label">Logo</label>
-                                        <input :disabled="habilitar" type="file" class="form-control" id="imagen"
-                                            name="imagen" accept=".png,.jpg,.jpeg,image/png,image/jpeg"
-                                            @change="previewImage($event)" ref="imagenInput">
-                                    </div>
-                                    <div class="mb-3">
-                                        <img :src="logoPreview" alt="Vista previa del logo" class="img-fluid">
-                                    </div>
-                                </div>
+                <div class="row justify-content-center">
+                    <div class="col-lg-10">
+                        <div class="card shadow-sm border-0">
+                            <!-- Card Header - Manteniendo el estilo bg-warning del proyecto -->
+                            <div class="card-header bg-warning py-2">
+                                <h5 class="header-title my-0 text-center fw-bold text-dark text-uppercase">
+                                    <i class="fas fa-info-circle me-2"></i>Información de la empresa
+                                </h5>
                             </div>
-                            <div class="row">
-                                <div class="col-md-12 text-end">
-                                    <button v-if="habilitar == true" @click="habilitarModificar()" type="button"
-                                        class="btn btn-warning text-dark ms-1">Modificar</button>
-                                    <template v-if="habilitar == false">
-                                        <button type="submit" class="btn btn-success ms-1">
-                                            <i class="fas fa-save"></i>
-                                            Guardar</button>
-                                        <button @click="habilitar = true" type="button" class="btn btn-dark ms-1">
-                                            <i class="fas fa-times-circle"></i>
-                                            Cancelar</button>
-                                    </template>
-                                </div>
+
+                            <div class="card-body p-4">
+                                <form @submit.prevent="modificarInformacionEmpresa">
+                                    <div class="row">
+                                        <!-- Lado Izquierdo: Campos de Texto -->
+                                        <div class="col-md-7 border-end">
+                                            <div class="row g-3">
+                                                <div class="col-md-12">
+                                                    <label for="nombre" class="form-label fw-bold small text-muted text-uppercase">Nombre de la Institución</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text bg-light"><i class="fas fa-building text-muted"></i></span>
+                                                        <input :disabled="habilitar" v-model="mi_empresa.nombre" type="text"
+                                                            class="form-control text-uppercase" id="nombre" placeholder="Nombre completo" required>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-6">
+                                                    <label for="nit" class="form-label fw-bold small text-muted text-uppercase">NIT</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text bg-light"><i class="fas fa-file-invoice text-muted"></i></span>
+                                                        <input :disabled="habilitar" v-model="mi_empresa.nit" type="text"
+                                                            class="form-control" id="nit" placeholder="Número de NIT" required>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-6">
+                                                    <label for="telefono" class="form-label fw-bold small text-muted text-uppercase">Teléfono / Celular</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text bg-light"><i class="fas fa-phone text-muted"></i></span>
+                                                        <input :disabled="habilitar" v-model="mi_empresa.telefono" type="text"
+                                                            class="form-control" id="telefono" placeholder="Ej: 70000000" required>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-12">
+                                                    <label for="email" class="form-label fw-bold small text-muted text-uppercase">Correo Electrónico</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text bg-light"><i class="fas fa-envelope text-muted"></i></span>
+                                                        <input :disabled="habilitar" v-model="mi_empresa.email" type="email"
+                                                            class="form-control" id="email" placeholder="ejemplo@correo.com" required>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-12">
+                                                    <label for="direccion" class="form-label fw-bold small text-muted text-uppercase">Dirección</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text bg-light"><i class="fas fa-map-marker-alt text-muted"></i></span>
+                                                        <input :disabled="habilitar" v-model="mi_empresa.direccion" type="text"
+                                                            class="form-control text-uppercase" id="direccion" placeholder="Calle, número, zona..." required>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Lado Derecho: Logo Preview -->
+                                        <div class="col-md-5">
+                                            <div class="px-3">
+                                                <label class="form-label fw-bold small text-muted text-uppercase d-block text-center mb-3">Logo Institucional</label>
+                                                
+                                                <div class="text-center mb-4">
+                                                    <div class="d-inline-block p-2 border rounded bg-white shadow-sm">
+                                                        <img :src="logoPreview" alt="Logo preview" class="img-fluid" 
+                                                            style="max-height: 180px; width: auto; object-fit: contain;">
+                                                    </div>
+                                                </div>
+
+                                                <div class="mb-3" v-if="!habilitar">
+                                                    <input type="file" class="form-control form-control-sm" id="imagen"
+                                                        name="imagen" accept="image/*"
+                                                        @change="previewImage($event)" ref="imagenInput">
+                                                    <div class="form-text small">Tamaño recomendado: 500x500px (PNG/JPG)</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Footer Actions -->
+                                    <div class="row mt-4 pt-3 border-top">
+                                        <div class="col-md-12 text-center">
+                                            <button v-if="habilitar" @click="habilitarModificar" type="button"
+                                                class="btn btn-warning px-4 fw-bold shadow-sm">
+                                                <i class="fas fa-edit me-1"></i> MODIFICAR INFORMACIÓN
+                                            </button>
+                                            
+                                            <template v-else>
+                                                <button type="submit" class="btn btn-success px-4 fw-bold me-2 shadow-sm">
+                                                    <i class="fas fa-save me-1"></i> GUARDAR CAMBIOS
+                                                </button>
+                                                <button @click="habilitar = true" type="button" class="btn btn-dark px-4 shadow-sm">
+                                                    <i class="fas fa-times-circle me-1"></i> CANCELAR
+                                                </button>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </form>
                             </div>
-                        </form>
+                        </div>
                     </div>
-                    <!-- End Cardbody -->
                 </div>
-                <!-- end page-content-wrapper-->
-            </div>
-            <!-- Container-fluid -->
-        </div>
-
-
-
-        <!-- Elemento donde se mostrará el toast -->
-        <div class="position-fixed top-0 end-0 toast" style="z-index: 1050" ref="miToast" role="alert"
-            aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="2000">
-            <div class="toast-header bg-danger" style="border:none">
-                <strong class="me-auto text-white">{{ mensajeError }}</strong>
-                <button type="button" class="btn btn-danger text-white" @click="cerrarToastError()" aria-label="Cerrar">
-                    <i class="fas fa-times"></i>
-                </button>
             </div>
         </div>
     </main>
-
-    <!-- End Page-content -->
 </template>
 
 <script>
     import axios from 'axios';
-    import Swal from 'sweetalert2'
+    import Swal from 'sweetalert2';
 
     export default {
         data() {
             return {
-
                 preloader: false,
                 mi_empresa: {
                     id_mi_empresa: 0,
@@ -117,112 +138,45 @@
                     email: '',
                     telefono: '',
                     logo: '',
-                    imagen_logo: null,
                 },
-                mensajeError: '',
-                logoPreview:'',
-                habilitar:true,
-
+                logoPreview: '',
+                habilitar: true,
             }
         },
         methods: {
-
             previewImage(event) {
                 const file = event.target.files[0];
-                console.log(file.name);
-                this.mi_empresa.logo=file.name;
                 if (file) {
+                    this.mi_empresa.logo = file.name;
                     this.logoPreview = URL.createObjectURL(file);
-                } else {
-                    this.logoPreview = ''; // Vacía la vista previa si no se selecciona ninguna imagen
                 }
             },
-            habilitarModificar(){
-                this.habilitar=false;
+            
+            habilitarModificar() {
+                this.habilitar = false;
             },
+
             async getinformacionEmpresa() {
-                
-                await axios.get('/get_mi_empresa').then((response) => {
-                            console.log(response.data);
-                            this.mi_empresa.id_mi_empresa= response.data['id'];
-                            this.mi_empresa.nombre= response.data['nombre']
-                            this.mi_empresa.nit= response.data['nit'];
-                            this.mi_empresa.direccion= response.data['direccion'];
-                            this.mi_empresa.email= response.data['email'];
-                            this.mi_empresa.telefono= response.data['telefono'];
-                            this.mi_empresa.logo= response.data['logo'];
-                            this.logoPreview='img/'+this.mi_empresa.logo;
-                    })
-                    .catch((error) => {
-                        console.log(error.message);
-                    })
-                    .finally(()=>{
-                        
-                    })
+                try {
+                    const response = await axios.get('/get_mi_empresa');
+                    const data = response.data;
+                    this.mi_empresa = {
+                        id_mi_empresa: data.id,
+                        nombre: data.nombre,
+                        nit: data.nit,
+                        direccion: data.direccion,
+                        email: data.email,
+                        telefono: data.telefono,
+                        logo: data.logo,
+                    };
+                    this.logoPreview = data.logo ? 'img/' + data.logo : '/img/default-company.png';
+                } catch (error) {
+                    console.error('Error fetching company info:', error);
+                }
             },
-
-
-
-
-
-
-
-            mostrarToastError(mensaje) {
-                var miToast = new bootstrap.Toast(this.$refs.miToast);
-                this.mensajeError = mensaje;
-                miToast.show();
-            },
-            cerrarToastError() {
-                var miToast = new bootstrap.Toast(this.$refs.miToast);
-                miToast.hide();
-            },
-
-
-
-            async modificarInformacionEmpresa() {
-
-                const formData = new FormData();
-                formData.append('imagen', this.$refs.imagenInput.files[0]);
-                formData.append('id_mi_empresa', this.mi_empresa.id_mi_empresa);
-                formData.append('nombre', this.mi_empresa.nombre);
-                formData.append('nit', this.mi_empresa.nit);
-                formData.append('direccion', this.mi_empresa.direccion);
-                formData.append('email', this.mi_empresa.email);
-                formData.append('telefono', this.mi_empresa.telefono);
-                formData.append('logo', this.mi_empresa.logo);
-              
-       
-                var guardado=false;
-               
-                await axios.post('/modify_miempresa', formData).then((response) => {
-                        console.log(response);
-                        guardado=true;
-                   
-                    })
-                    .catch((error) => {
-                        console.log(error.message);
-                        
-                    })
-                    .finally(()=>{
-                        if(guardado){
-                            Swal.fire({
-                                position: 'top-end',
-                                icon: 'success',
-                                title: 'Operación exitosa',
-                                showConfirmButton: false,
-                                timer: 1500
-                            });
-                            this.getinformacionEmpresa();
-                            this.habilitar=true;
-                        }
-                    })
-            },
-
 
             async modificarInformacionEmpresa() {
                 const formData = new FormData();
-
-                // Campos obligatorios
                 formData.append('id_mi_empresa', this.mi_empresa.id_mi_empresa);
                 formData.append('nombre', this.mi_empresa.nombre);
                 formData.append('nit', this.mi_empresa.nit);
@@ -230,72 +184,47 @@
                 formData.append('email', this.mi_empresa.email);
                 formData.append('telefono', this.mi_empresa.telefono);
 
-                // Solo agregar imagen si se seleccionó un archivo
                 const fileInput = this.$refs.imagenInput;
                 if (fileInput && fileInput.files && fileInput.files[0]) {
                     formData.append('imagen', fileInput.files[0]);
                 }
 
-                // Opcional: si el logo es parte del modelo (y no se modifica), puedes enviarlo también
                 if (this.mi_empresa.logo) {
                     formData.append('logo', this.mi_empresa.logo);
                 }
 
                 try {
-                    const response = await axios.post('/modify_miempresa', formData);
-                    console.log(response);
-
-                    // Éxito
+                    this.preloader = true;
+                    await axios.post('/modify_miempresa', formData);
+                    
                     Swal.fire({
+                        toast: true,
                         position: 'top-end',
                         icon: 'success',
-                        title: 'Operación exitosa',
+                        title: 'Información actualizada correctamente',
                         showConfirmButton: false,
-                        timer: 1500
+                        timer: 2000
                     });
 
                     await this.getinformacionEmpresa();
                     this.habilitar = true;
-
                 } catch (error) {
-                    // Manejo de errores
-                    let errorMessage = 'Error al actualizar la información.';
-                    if (error.response) {
-                        // El servidor respondió con un código de error (ej: 422, 500)
-                        console.log('Error en respuesta:', error.response.data);
-                        errorMessage = error.response.data.message || errorMessage;
-                    } else if (error.request) {
-                        // No hubo respuesta del servidor
-                        errorMessage = 'No se pudo conectar con el servidor.';
-                    } else {
-                        // Otro tipo de error
-                        console.log('Error desconocido:', error.message);
-                        errorMessage = error.message;
-                    }
                     Swal.fire({
                         icon: 'error',
-                        title: 'Ha ocurrido un error...',
-                        text: errorMessage,
-                        confirmButtonText: 'Cerrar'
+                        title: 'Error',
+                        text: 'No se pudo actualizar la información.',
                     });
-
                 } finally {
-                    // Acciones adicionales al final, si las necesitas
+                    this.preloader = false;
                 }
             },
-
         },
         async mounted() {
-            this.preloader=true;
-            console.log('Component mounted.');
+            this.preloader = true;
             await this.getinformacionEmpresa();
-            this.preloader=false;
-
+            this.preloader = false;
         }
-
-
     }
-
 </script>
 
 <style scoped>
@@ -305,19 +234,39 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
+        background-color: rgba(0, 0, 0, 0.3);
         display: flex;
         justify-content: center;
         align-items: center;
         z-index: 9999;
     }
 
-    .spinner {
-        border: 4px solid #f3f3f3;
-        border-top: 4px solid #3498db;
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        animation: spin 1s linear infinite;
+    .form-control:disabled {
+        background-color: #e9ecef !important;
+        border-color: #dee2e6 !important;
+        color: #495057 !important;
+        opacity: 1; /* Para evitar la transparencia por defecto de algunos navegadores */
+        cursor: not-allowed;
+    }
+
+    .input-group-text {
+        border-right: none;
+        transition: background-color 0.3s ease;
+    }
+
+    /* Estilo para el icono/addon cuando el input está deshabilitado */
+    .input-group:has(.form-control:disabled) .input-group-text {
+        background-color: #e2e5e8 !important;
+        border-color: #dee2e6 !important;
+        color: #6c757d !important;
+    }
+
+    .form-control {
+        border-left: none;
+    }
+
+    .input-group:focus-within .input-group-text {
+        border-color: #86b7fe;
+        background-color: #fff;
     }
 </style>

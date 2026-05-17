@@ -22,6 +22,8 @@ class DatabaseSeeder extends Seeder
             ClienteSeeder::class,
             CodeudorSeeder::class,
             SolicitudSeeder::class,
+            MotivoSeeder::class,
+            SocioSeeder::class,
         ]);
     }
 }

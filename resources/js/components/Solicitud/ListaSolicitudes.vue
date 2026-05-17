@@ -14,6 +14,9 @@
                         <input v-model="filtrosLocales.fecha_final" type="date" class="form-control"
                             @change="emitirBusqueda" />
                     </div>
+                    <small v-if="fechaInvalida" class="text-danger fw-bold" style="font-size: 0.75rem;">
+                        <i class="fas fa-exclamation-circle me-1"></i> La fecha inicial no puede ser mayor a la final
+                    </small>
                 </div>
                 <div class="col-md-5">
                     <div class="input-group">
@@ -224,6 +227,7 @@
 
 <script>
 import moment from "moment";
+import Swal from 'sweetalert2';
 
 export default {
     props: {
@@ -262,10 +266,31 @@ export default {
                 pagesArray.push(from++);
             }
             return pagesArray;
+        },
+        fechaInvalida() {
+            if (this.filtrosLocales.fecha_inicial && this.filtrosLocales.fecha_final) {
+                return this.filtrosLocales.fecha_inicial > this.filtrosLocales.fecha_final;
+            }
+            return false;
         }
     },
     methods: {
         emitirBusqueda() {
+            // Validación de fechas
+            if (this.filtrosLocales.fecha_inicial && this.filtrosLocales.fecha_final) {
+                if (this.filtrosLocales.fecha_inicial > this.filtrosLocales.fecha_final) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Validación de Fechas',
+                        text: 'La fecha inicial no puede ser mayor a la fecha final.',
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000
+                    });
+                    return;
+                }
+            }
             this.$emit('filtrar', this.filtrosLocales);
         },
         obtenerCodeudores(solicitudId) {

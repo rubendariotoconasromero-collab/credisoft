@@ -25,8 +25,12 @@
                             <option value="vigentes">Vigentes</option>
                             <option value="vencidos">Vencidos</option>
                         </select>
-                        <input v-model="filtros.fecha_inicio" type="date" class="form-control" @change="emitirBusqueda">
-                        <input v-model="filtros.fecha_fin" type="date" class="form-control" @change="emitirBusqueda">
+                        <div class="position-relative">
+                            <input v-model="filtros.fecha_inicio" type="date" class="form-control" @change="emitirBusqueda">
+                        </div>
+                        <div class="position-relative">
+                            <input v-model="filtros.fecha_fin" type="date" class="form-control" @change="emitirBusqueda">
+                        </div>
                         <input v-model="filtros.buscar" type="text" class="form-control" placeholder="Buscar..." @input="emitirBusqueda">
                         
                         <button class="btn btn-success" @click="emitirBusqueda">
@@ -35,6 +39,12 @@
                         <button @click="$emit('exportar')" class="btn btn-success btn-sm ms-1">
                             <i class="fas fa-file-excel"></i> Excel
                         </button>
+                    </div>
+                    <!-- Alerta de fecha movida aquí para mayor proximidad -->
+                    <div class="d-flex justify-content-end pe-5 me-5" v-if="fechaInvalida">
+                        <small class="text-danger fw-bold mt-1" style="font-size: 0.72rem;">
+                            <i class="fas fa-exclamation-circle me-1"></i> La fecha inicio no puede ser mayor a la fecha fin
+                        </small>
                     </div>
                 </div>
             </div>
@@ -184,6 +194,7 @@
 
 <script>
 import moment from 'moment';
+import Swal from 'sweetalert2';
 
 export default {
     name: 'ListaPlanPagos',
@@ -206,11 +217,31 @@ export default {
             }
         }
     },
+    computed: {
+        fechaInvalida() {
+            if (this.filtros.fecha_inicio && this.filtros.fecha_fin) {
+                return this.filtros.fecha_inicio > this.filtros.fecha_fin;
+            }
+            return false;
+        }
+    },
     mounted() {
         this.emitirBusqueda();
     },
     methods: {
         emitirBusqueda() {
+            if (this.fechaInvalida) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Validación de Fechas',
+                    text: 'La fecha inicio no puede ser mayor a la fecha fin.',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000
+                });
+                return;
+            }
             // Enviamos los filtros al padre para que él haga la petición Axios
             this.$emit('filtrar', this.filtros);
         },

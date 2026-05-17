@@ -248,6 +248,13 @@
                                                     @input="filteredItemsCodeudorMetodo(item.select_codeudor.codeudor.idd_codeudor, index)" 
                                                 />
                                                 
+                                                <button v-if="item.select_codeudor.codeudor.id_codeudor !== 0 && solicitud.accion !== 2" 
+                                                    @click="limpiarSeleccionCodeudor(index)" type="button" 
+                                                    class="btn btn-outline-danger ms-1 shadow-sm"
+                                                    data-bs-toggle="tooltip" title="Limpiar selección">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+
                                                 <button v-if="solicitud.accion !== 2" 
                                                     @click="addCodeudor" type="button"
                                                     class="btn btn-success ms-1 shadow-sm"
@@ -1963,6 +1970,24 @@ export default {
                 this.lista_codeudores.splice(index, 1);
             }
         },
+        limpiarSeleccionCodeudor(index) {
+            this.lista_codeudores[index].select_codeudor.codeudor = {
+                id_codeudor: 0,
+                idd_codeudor: "",
+                nombre: "",
+                ci: "",
+                lugar_expedicion: "",
+                actividad: "",
+                items_codeudor: [],
+                filteredItemsCodeudorAux: [],
+                sexo: "", 
+                estado_civil: "", 
+                vivienda: "", 
+                ingreso_mensual: 0, 
+                imagen: ""
+            };
+            this.getCodeudores(index);
+        },
         
         // seleccionarCodeudor(item, index) {
         //     this.lista_codeudores[index].select_codeudor.codeudor.idd_codeudor =
@@ -2379,7 +2404,7 @@ export default {
                                         position: 'center',
                                         icon: 'success',
                                         title: 'Operación exitosa',
-                                        text: 'Solicitud aprobada, Verifique en Plan de Pagos',
+                                        text: 'Solicitud aprobada, pero para que aparezca en el plan de pago primero debe realizarse el desembolso en caja.',
                                         showConfirmButton: true,
                                         confirmButtonText: 'Aceptar',
                                     });

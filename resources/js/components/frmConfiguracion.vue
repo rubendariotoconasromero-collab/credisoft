@@ -33,7 +33,7 @@
                             
                             <div v-if="vista === 0" class="fade-in-animation">
                                 <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2 border-success">
-                                    <h6 class="my-0 fw-bold text-success text-uppercase">Listado de Motivos de Ingresos</h6>
+                                    <h6 class="my-0 fw-bold text-dark text-uppercase">Listado de Motivos de Ingresos</h6>
                                     <button @click="nuevoMotivoIngreso()" class="btn btn-success btn-sm fw-bold shadow-sm">
                                         <i class="fas fa-plus-circle me-1"></i> Nuevo Motivo
                                     </button>
@@ -94,7 +94,7 @@
 
                             <div v-if="vista === 1" class="fade-in-animation">
                                 <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2 border-danger">
-                                    <h6 class="my-0 fw-bold text-danger text-uppercase">Listado de Motivos de Egresos</h6>
+                                    <h6 class="my-0 fw-bold text-dark text-uppercase">Listado de Motivos de Egresos</h6>
                                     <button @click="nuevoMotivoGasto()" class="btn btn-danger btn-sm fw-bold shadow-sm">
                                         <i class="fas fa-plus-circle me-1"></i> Nuevo Motivo
                                     </button>

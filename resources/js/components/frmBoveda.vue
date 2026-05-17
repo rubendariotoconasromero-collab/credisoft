@@ -7,132 +7,164 @@
         <div class="page-content px-0 mx-0">
             <div class="container-fluid">
                 
-                <div class="card">
-                    <div class="card-header bg-warning bg-gradient py-2">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-warning bg-gradient py-3">
                         <h5 class="header-title my-0 text-center fw-bold text-dark text-uppercase">
-                            Gestión de Bóveda
+                            <i class="fas fa-vault me-2"></i>Gestión de Bóveda
                         </h5>
                     </div>
 
-                    <div class="card-body pt-4">
+                    <div class="card-body p-4">
                         
-                        <div class="row mb-4 align-items-center">
-                            <div class="col-md-6">
-                                <div v-if="boveda.id_boveda === 0" class="alert alert-secondary border-secondary shadow-sm d-flex align-items-center mb-0 p-3" role="alert">
-                                    <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
-                                        <i class="fas fa-lock fa-lg"></i>
-                                    </div>
-                                    <div>
-                                        <h5 class="alert-heading fw-bold mb-0 text-uppercase text-dark" style="font-size: 1rem;">Bóveda Cerrada</h5>
-                                        <small class="text-muted">Debe realizar la apertura para registrar movimientos.</small>
+                        <!-- Vault Status and Actions Section -->
+                        <div class="row g-4 mb-4">
+                            <div class="col-lg-7">
+                                <div v-if="boveda.id_boveda === 0" class="card border-0 bg-light-secondary shadow-sm h-100">
+                                    <div class="card-body d-flex align-items-center p-4">
+                                        <!-- <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm me-4" style="width: 64px; height: 64px; min-width: 64px;">
+                                            <i class="fas fa-lock fa-2x"></i>
+                                        </div> -->
+                                        <div>
+                                            <h4 class="fw-bold mb-1 text-uppercase text-secondary">Bóveda Cerrada</h4>
+                                            <p class="text-muted mb-0">Debe realizar la apertura para registrar movimientos financieros.</p>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div v-else class="alert alert-success border-success shadow-sm d-flex align-items-center mb-0 p-3" role="alert">
-                                    <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
-                                        <i class="fas fa-shield-alt fa-lg"></i>
+                                <div v-else class="card border-0 bg-light-success shadow-sm h-100 border-start border-4 border-success">
+                                    <div class="card-body p-4">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm me-3" style="width: 56px; height: 56px; min-width: 56px;">
+                                                <i class="fas fa-shield-alt fa-2x"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="fw-bold text-uppercase mb-0 text-success small">Saldo Actual en Bóveda</h6>
+                                                <h2 class="fw-bold mb-0 text-dark">
+                                                    {{ formatNumero(boveda.saldo_actual) }} <span class="fs-5 text-muted fw-normal">Bs.</span>
+                                                </h2>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex flex-wrap gap-4 text-muted small">
+                                            <span><i class="fas fa-calendar-day me-2 text-success"></i><b>Apertura:</b> {{ boveda.fecha_apertura }}</span>
+                                            <span><i class="fas fa-user me-2 text-success"></i><b>Usuario:</b> {{ boveda.usuario_apertura }}</span>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h6 class="fw-bold text-uppercase mb-0 text-success" style="font-size: 0.8rem;">Saldo Actual en Bóveda</h6>
-                                        <h3 class="fw-bold mb-0 text-dark">{{ boveda.saldo_actual }} <span class="fs-6 text-muted">Bs.</span></h3>
-                                        <small class="text-muted">
-                                            <b><i class="fas fa-calendar-day me-1"></i> Fecha Apertura: </b>
-                                            {{ boveda.fecha_apertura }}</small>
-
-                                        <small class="text-muted ms-4">
-                                            <b><i class="fas fa-user me-1"></i> Aperturada por:</b>
-                                             {{ boveda.usuario_apertura }}
-                                        </small>
-                                            
-                                    </div>
-                                 
                                 </div>
                             </div>
 
-                            <div class="col-md-6 text-end mt-3 mt-md-0">
-                                <div class="d-flex justify-content-md-end justify-content-start gap-2">
-                                    <button v-if="boveda.id_boveda === 0" class="btn btn-success fw-bold shadow-sm px-4" @click="aperturarBoveda()">
+                            <div class="col-lg-5 d-flex align-items-center justify-content-lg-end">
+                                <div class="w-100" style="max-width: 400px;">
+                                    <button v-if="boveda.id_boveda === 0" class="btn btn-success btn-lg w-100 fw-bold shadow-sm py-3" @click="aperturarBoveda()">
                                         <i class="fas fa-key me-2"></i> Aperturar Bóveda
                                     </button>
                                     
-                                    <template v-else>
-                                        <button class="btn btn-success shadow-sm" @click="ingresoBoveda()">
-                                            <i class="fas fa-plus-circle me-1"></i> Añadir Fondos
-                                        </button>
-                                        <button class="btn btn-danger shadow-sm" @click="retiroBoveda()">
-                                            <i class="fas fa-minus-circle me-1"></i> Retirar Fondos
-                                        </button>
-                                    </template>
-                                </div>
-                            </div>
-                        </div>
-
-                        <hr class="my-4 text-muted opacity-25">
-
-                        <div class="row g-2 mb-3 align-items-end">
-                            <div class="col-md-3">
-                                <label class="fw-bold small mb-1 text-muted">TIPO MOVIMIENTO</label>
-                                <select @change="buscarMovimientoBoveda()" v-model="filtroTipoMovimiento" class="form-select form-select-sm border-secondary">
-                                    <option value="todos">Todos los Movimientos</option>
-                                    <option value="ingreso">Solo Ingresos</option>
-                                    <option value="salida">Solo Salidas</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="fw-bold small mb-1 text-muted">FECHA INICIO</label>
-                                <input @input="buscarMovimientoBoveda()" type="date" v-model="fechaInicio" class="form-control form-control-sm border-secondary">
-                            </div>
-                            <div class="col-md-3">
-                                <label class="fw-bold small mb-1 text-muted">FECHA FIN</label>
-                                <input @input="buscarMovimientoBoveda()" type="date" v-model="fechaFin" class="form-control form-control-sm border-secondary">
-                            </div>
-                            
-                            <div class="col-md-3">
-                                <div class="d-flex flex-column align-items-end gap-1">
-                                    <div class="badge bg-success bg-opacity-10 text-success border border-success px-3 py-2 w-100 text-end">
-                                        Ingresos: <strong class="fs-6 ms-1">{{ totalIngresosBoveda }} Bs.</strong>
-                                    </div>
-                                    <div class="badge bg-danger bg-opacity-10 text-danger border border-danger px-3 py-2 w-100 text-end">
-                                        Salidas: <strong class="fs-6 ms-1">{{ totalSalidasBoveda }} Bs.</strong>
+                                    <div v-else class="row g-2">
+                                        <div class="col-6">
+                                            <button class="btn btn-success btn-lg w-100 shadow-sm h-100 py-3" @click="ingresoBoveda()">
+                                                <i class="fas fa-plus-circle d-block mb-1 fs-4"></i>
+                                                <span class="small fw-bold">Añadir</span>
+                                            </button>
+                                        </div>
+                                        <div class="col-6">
+                                            <button class="btn btn-danger btn-lg w-100 shadow-sm h-100 py-3" @click="retiroBoveda()">
+                                                <i class="fas fa-minus-circle d-block mb-1 fs-4"></i>
+                                                <span class="small fw-bold">Retirar</span>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="table-responsive" style="font-size: 12px">
-                            <table class="table table-hover table-striped table-sm align-middle border">
-                                <thead class="table-success text-dark text-uppercase fw-bold">
+                        <div class="card bg-light border-0 mb-4 shadow-sm">
+                            <div class="card-body p-3">
+                                <div class="row g-3 align-items-end">
+                                    <div class="col-md-3">
+                                        <label class="fw-bold extra-small mb-1 text-muted text-uppercase">Tipo Movimiento</label>
+                                        <div class="input-group input-group-sm">
+                                            <!-- <span class="input-group-text bg-white border-end-0"><i class="fas fa-filter text-muted"></i></span> -->
+                                            <select @change="buscarMovimientoBoveda()" v-model="filtroTipoMovimiento" class="form-select border-2">
+                                                <option value="todos">Todos</option>
+                                                <option value="ingreso">Ingresos</option>
+                                                <option value="salida">Salidas</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="fw-bold extra-small mb-1 text-muted text-uppercase">Fecha Inicio</label>
+                                        <input @input="buscarMovimientoBoveda()" type="date" v-model="fechaInicio" class="form-control form-control-sm">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="fw-bold extra-small mb-1 text-muted text-uppercase">Fecha Fin</label>
+                                        <input @input="buscarMovimientoBoveda()" type="date" v-model="fechaFin" class="form-control form-control-sm">
+                                    </div>
+                                    <div class="col-md-5">
+                                        <div class="row g-2">
+                                            <div class="col-6">
+                                                <div class="bg-white border rounded p-2 text-center h-100 shadow-xs">
+                                                    <span class="d-block extra-small fw-bold text-success text-uppercase mb-1">Total Ingresos</span>
+                                                    <span class="h6 fw-bold mb-0 text-dark">{{ formatNumero(totalIngresosBoveda) }} <small class="text-muted">Bs.</small></span>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="bg-white border rounded p-2 text-center h-100 shadow-xs">
+                                                    <span class="d-block extra-small fw-bold text-danger text-uppercase mb-1">Total Salidas</span>
+                                                    <span class="h6 fw-bold mb-0 text-dark">{{ formatNumero(totalSalidasBoveda) }} <small class="text-muted">Bs.</small></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive rounded shadow-sm border">
+                            <table class="table table-hover table-striped mb-0 align-middle">
+                                <thead class="table-success text-dark text-uppercase fw-bold small">
                                     <tr>
-                                        <th class="text-center" style="width: 50px;">#</th>
-                                        <th style="width: 120px;">Tipo</th>
-                                        <th class="text-end pe-4">Monto (Bs)</th>
-                                        <th>Descripción</th>
-                                        <th>Usuario</th>
-                                        <th class="text-center">Fecha</th>
+                                        <th class="text-center py-3" style="width: 60px;">#</th>
+                                        <th class="py-3" style="width: 140px;">Movimiento</th>
+                                        <th class="text-end pe-4 py-3">Monto (Bs)</th>
+                                        <th class="py-3">Descripción / Detalle</th>
+                                        <th class="py-3">Usuario Responsable</th>
+                                        <th class="text-center py-3">Fecha / Hora</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody class="small">
                                     <tr v-for="(movimiento, index) in movimientosBoveda" :key="index">
                                         <td class="text-center fw-bold text-muted">{{ index + 1 }}</td>
                                         <td>
-                                            <span :class="movimiento.tipo_movimiento === 'ingreso' ? 'badge bg-success w-100' : 'badge bg-danger w-100'">
-                                                {{ movimiento.tipo_movimiento }}
+                                            <span :class="movimiento.tipo_movimiento === 'ingreso' ? 'badge bg-success py-2 px-3 w-100 shadow-xs' : 'badge bg-danger py-2 px-3 w-100 shadow-xs'">
+                                                <i :class="movimiento.tipo_movimiento === 'ingreso' ? 'fas fa-arrow-up me-1' : 'fas fa-arrow-down me-1'"></i>
+                                                {{ movimiento.tipo_movimiento.toUpperCase() }}
                                             </span>
                                         </td>
                                         <td class="fw-bold text-end pe-4 font-monospace fs-6 text-dark">{{ formatNumero(movimiento.monto) }}</td>
                                         <td class="text-uppercase">
-                                            {{ movimiento.descripcion }}
-                                            <span v-if="movimiento.socio_nombres" class="d-block text-muted small fw-bold mt-1">
-                                                <i class="fas fa-handshake me-1"></i> SOCIO: {{ movimiento.socio_nombres }} {{ movimiento.socio_apellidos }}
-                                            </span>
+                                            <div class="fw-semibold">{{ movimiento.descripcion }}</div>
+                                            <div v-if="movimiento.socio_nombres" class="mt-1">
+                                                <span class="badge bg-light text-primary border border-primary-subtle py-1 px-2">
+                                                    <i class="fas fa-handshake me-1"></i> SOCIO: {{ movimiento.socio_nombres }} {{ movimiento.socio_apellidos }}
+                                                </span>
+                                            </div>
                                         </td>
-                                        <td class="text-uppercase small"><i class="fas fa-user-circle me-1 text-muted"></i> {{ movimiento.personal }}</td>
-                                        <td class="text-center">{{ formatFecha(movimiento.fecha) }}</td>
+                                        <td class="text-uppercase">
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-xs bg-soft-primary rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 24px; height: 24px;">
+                                                    <i class="fas fa-user-circle text-muted"></i>
+                                                </div>
+                                                {{ movimiento.personal }}
+                                            </div>
+                                        </td>
+                                        <td class="text-center text-muted">{{ formatFecha(movimiento.fecha) }}</td>
                                     </tr>
                                     <tr v-if="movimientosBoveda.length === 0">
-                                        <td colspan="6" class="text-center py-5 text-muted fst-italic bg-light">
-                                            <i class="fas fa-search fa-2x mb-2 d-block opacity-50"></i>
-                                            No se encontraron movimientos en este rango de fechas.
+                                        <td colspan="6" class="text-center py-5 text-muted bg-white">
+                                            <div class="py-4">
+                                                <i class="fas fa-search-dollar fa-3x mb-3 opacity-25"></i>
+                                                <h5 class="fw-normal">No se encontraron movimientos</h5>
+                                                <p class="mb-0 small text-muted">Ajuste los filtros para ver otros resultados.</p>
+                                            </div>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -734,6 +766,30 @@
 </script>
 
 <style scoped>
+.bg-light-success {
+    background-color: #f0fdf4;
+}
+.bg-light-secondary {
+    background-color: #f8f9fa;
+}
+.bg-soft-primary {
+    background-color: rgba(59, 130, 246, 0.1);
+}
+.shadow-xs {
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+.extra-small {
+    font-size: 0.65rem;
+}
+.vault-management .card {
+    transition: transform 0.2s ease-in-out;
+}
+.vault-management .btn-lg {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
 
 .custom-dropdown-item {
     transition: all 0.2s ease-in-out;
