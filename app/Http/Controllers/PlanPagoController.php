@@ -981,16 +981,26 @@ class PlanPagoController extends Controller
             $interesDevengadoBruto = $interesPorDiaNormal * $diasTranscurridosNormales;
 
             // INTERÉS MORATORIO
-            // Fórmula: saldo_capital_última_cuota_pagada × (tasa/100) / diasPeriodo × diasMora
-            // - Base: saldo_capital de la última cuota pagada (deuda vigente tras el último pago).
-            //         Si ninguna cuota fue pagada, es el monto total del crédito.
-            // - Tasa: la tasa periódica del plan (plan_pago.tasa, en porcentaje).
-            // - Solo aplica a la primera cuota pendiente de pago.
+            // Ajuste solicitado: (Saldo Capital * Tasa%) / Factor Periodo / Días Divisor * Días Mora
             if ($index === $firstUnpaidIndex && in_array($cuota->estado, [1, 3]) && $diasRetrasoCuota > 0) {
-                $tasaDiariaMora = ($diasPeriodoCuota > 0)
-                    ? ((float)$cuota->tasa / 100) / $diasPeriodoCuota
-                    : 0;
-                $interesMoratorioBruto = $saldoCapitalMora * $tasaDiariaMora * $diasRetrasoCuota;
+                $montoBaseMensual = $saldoCapitalMora * ((float)$cuota->tasa / 100);
+                
+                $lapso = trim(strtolower($cuota->lapso_capital));
+                $factorPeriodo = 1;
+                $diasDivisor = 30;
+
+                if ($lapso == 'quincenal') {
+                    $factorPeriodo = 2;
+                    $diasDivisor = 15;
+                } elseif ($lapso == 'semanal') {
+                    $factorPeriodo = 4;
+                    $diasDivisor = 7;
+                } else {
+                    $factorPeriodo = 1;
+                    $diasDivisor = 30;
+                }
+
+                $interesMoratorioBruto = ($montoBaseMensual / $factorPeriodo) / $diasDivisor * $diasRetrasoCuota;
             } else {
                 $interesMoratorioBruto = 0;
             }
