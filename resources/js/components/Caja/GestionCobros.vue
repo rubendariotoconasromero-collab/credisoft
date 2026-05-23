@@ -280,6 +280,9 @@
                                 <th class="text-center text-primary">Int. Devengado</th>
                                 <th class="text-center text-danger">Int. Moratorio</th>
                                 
+                                <th class="text-center text-danger">Mora a Pagar</th>
+                                <th class="text-center fw-bold">Total a Pagar</th>
+
                                 <th class="text-center">Int. Acumulado</th>
                                 <th class="text-center">Estado</th>
                                 <th class="text-center">Pagar</th>
@@ -312,6 +315,14 @@
                                     <span v-if="parseFloat(cuota.interes_moratorio_neto) > 0" class="text-muted" style="font-size: 0.6rem;">({{ cuota.dias_pasados }} d)</span>
                                 </td>
                                 
+                                <td class="text-center text-danger fw-bold">
+                                    {{ cuota.estado == 0 ? '---' : formatNumero(cuota.mora_fija_neta) }}
+                                </td>
+
+                                <td class="text-center fw-bold text-dark bg-light">
+                                    {{ cuota.estado == 0 ? '---' : formatNumero(parseFloat(cuota.capital_neto || 0) + parseFloat(cuota.interes_acumulado_neto || 0) + parseFloat(cuota.mora_fija_neta || 0)) }}
+                                </td>
+
                                 <!-- <td class="text-center fw-bold text-primary border-start border-end">
                                     {{ cuota.estado == 0 ? '---' : formatNumero(cuota.interes_acumulado_neto) }}
                                 </td> -->
@@ -385,23 +396,37 @@
                                     </div>
                                     <div class="card-body">
                                         <ul class="list-group list-group-flush mb-3">
-                                            <li class="list-group-item d-flex justify-content-between align-items-center px-0 bg-transparent">
-                                                <span class="text-muted">Capital</span>
-                                                <span class="fw-bold">{{ formatNumero(totalCapital) }}</span>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center px-0 bg-transparent border-bottom-0 pb-1">
+                                                <span class="text-muted small">Capital Adeudado</span>
+                                                <span class="fw-bold text-dark">{{ formatNumero(totalCapital) }}</span>
                                             </li>
-                                            <li class="list-group-item d-flex justify-content-between align-items-center px-0 bg-transparent">
-                                                <span class="text-muted">Interés Acumulado</span>
-                                                <span class="fw-bold">{{ formatNumero(totalInteres) }}</span>
+                                            
+                                            <!-- Desglose de Intereses -->
+                                            <li class="list-group-item px-0 bg-transparent border-bottom-0 py-1">
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <span class="text-muted small">Interés Devengado</span>
+                                                    <span class="fw-bold text-primary">{{ formatNumero(totalInteresDevengado) }}</span>
+                                                </div>
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span class="text-muted small">Interés Moratorio</span>
+                                                    <span class="fw-bold text-danger">{{ formatNumero(totalInteresMoratorio) }}</span>
+                                                </div>
                                             </li>
-                                            <li class="list-group-item d-flex justify-content-between align-items-center px-0 bg-transparent">
-                                                <span class="text-muted text-danger">Multa por Mora</span>
+
+                                            <li class="list-group-item d-flex justify-content-between align-items-center px-0 bg-transparent border-top pt-2 pb-1">
+                                                <span class="text-secondary fw-bold small">Subtotal Intereses</span>
+                                                <span class="fw-bold text-primary">{{ formatNumero(totalInteres) }}</span>
+                                            </li>
+
+                                            <li class="list-group-item d-flex justify-content-between align-items-center px-0 bg-transparent pt-1 border-bottom-0">
+                                                <span class="text-muted small">Multa Fija (Mora)</span>
                                                 <span class="fw-bold text-danger">{{ formatNumero(totalMulta) }}</span>
                                             </li>
                                         </ul>
                                         
-                                        <div class="d-flex justify-content-between align-items-end mt-2">
-                                            <span class="text-uppercase fw-bold text-secondary small">Total Bruto</span>
-                                            <span class="fs-4 fw-bold text-dark">{{ plan_pago.moneda }} {{ formatNumero(totalPagar) }}</span>
+                                        <div class="alert alert-dark border-0 p-2 px-3 mb-0 d-flex justify-content-between align-items-center shadow-sm">
+                                            <span class="text-uppercase fw-bold opacity-75" style="font-size: 0.7rem;">TOTAL BRUTO</span>
+                                            <span class="fw-bold mb-0 fs-5">{{ plan_pago.moneda }} {{ formatNumero(totalPagar) }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -450,15 +475,24 @@
 
                                         <div class="row g-3">
                                             <div class="col-12">
-                                                <label class="form-label fw-bold text-dark mb-1">Efectivo a Recibir (Bs) *</label>
-                                                <div class="input-group input-group-lg shadow-sm">
-                                                    <span class="input-group-text bg-white border-primary"><i class="fas fa-money-bill-wave text-success"></i></span>
-                                                    <input type="number" class="form-control fw-bold fs-4 text-end border-primary" 
-                                                        v-model.number="paymentDetails.monto_recibido" 
-                                                        min="1" step="0.01" style="color: #198754;">
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <label class="form-label fw-bold text-dark mb-0 small text-uppercase">Efectivo a Recibir (Bs) *</label>
+                                                    <div class="form-check form-switch mb-0">
+                                                        <input class="form-check-input" type="checkbox" id="toggleCobrarTotal" 
+                                                            v-model="cobrarTotal" @change="handleCobrarTotal">
+                                                        <label class="form-check-label small fw-bold text-primary" for="toggleCobrarTotal" style="cursor:pointer;">COBRAR TODO</label>
+                                                    </div>
                                                 </div>
-                                                <div v-if="paymentDetails.monto_recibido < totalLiquido" class="form-text text-warning fw-bold mt-1">
-                                                    <i class="fas fa-info-circle"></i> Pago Parcial. Quedará un saldo de {{ formatNumero(totalLiquido - paymentDetails.monto_recibido) }} Bs.
+                                                <div class="input-group shadow-sm">
+                                                    <span class="input-group-text bg-white border-primary py-2"><i class="fas fa-money-bill-wave text-success"></i></span>
+                                                    <input type="number" class="form-control fw-bold text-end border-primary py-2" 
+                                                        v-model.number="paymentDetails.monto_recibido" 
+                                                        min="1" step="0.01" style="color: #198754;"
+                                                        @input="cobrarTotal = false"
+                                                        @focus="$event.target.select()">
+                                                </div>
+                                                <div v-if="paymentDetails.monto_recibido < totalLiquido" class="form-text text-warning fw-bold mt-1" style="font-size: 0.7rem;">
+                                                    <i class="fas fa-info-circle"></i> Pago Parcial. Saldo: {{ formatNumero(totalLiquido - paymentDetails.monto_recibido) }} Bs.
                                                 </div>
                                             </div>
 
@@ -531,8 +565,10 @@ export default {
             dias_mora: 0,
             multa_dia: 3,
             selectedCuotas: [], // IDs seleccionados
+            cobrarTotal: false,
             paymentDetails: {
                 fecha_pago: moment().format('YYYY-MM-DD'),
+                monto_recibido: 0,
                 monto_condonado_interes: 0,
                 motivo_condonacion_interes: '',
                 monto_condonado_multa: 0,
@@ -548,6 +584,12 @@ export default {
         totalCapital() {
             // Vue ya no resta, solo lee la variable limpia
             return this.selectedCuotasDetails.reduce((sum, c) => sum + parseFloat(c.capital_neto || 0), 0).toFixed(2);
+        },
+        totalInteresDevengado() {
+            return this.selectedCuotasDetails.reduce((sum, c) => sum + parseFloat(c.interes_devengado_neto || 0), 0).toFixed(2);
+        },
+        totalInteresMoratorio() {
+            return this.selectedCuotasDetails.reduce((sum, c) => sum + parseFloat(c.interes_moratorio_neto || 0), 0).toFixed(2);
         },
         totalInteres() {
             return this.selectedCuotasDetails.reduce((sum, c) => sum + parseFloat(c.interes_acumulado_neto || 0), 0).toFixed(2);
@@ -570,22 +612,22 @@ export default {
     },
 
     watch: {
-        // Observamos el total a pagar calculado. Si cambia, actualizamos el input
-        // de "Monto a Recibir" para que por defecto sugiera el pago total.
-        /*totalLiquido: {
-            handler(nuevoValor) {
-                // Solo auto-rellenamos si el valor es válido y mayor a cero
-                if (nuevoValor && parseFloat(nuevoValor) > 0) {
-                    this.paymentDetails.monto_recibido = parseFloat(nuevoValor);
-                }
-            },
-            immediate: true // Se ejecuta apenas se carga el componente
-        }*/
+        // Observamos el total líquido para mantener sincronizado el monto si Cobrar Total está activo
+        totalLiquido(nuevoValor) {
+            if (this.cobrarTotal) {
+                this.paymentDetails.monto_recibido = parseFloat(nuevoValor);
+            }
+        }
     },
     mounted() {
         this.buscarPlanPago(); // Cargar inicial
     },
     methods: {
+        handleCobrarTotal() {
+            if (this.cobrarTotal) {
+                this.paymentDetails.monto_recibido = parseFloat(this.totalLiquido);
+            }
+        },
         formatDate(date) {
             if (!date) return '';
             return moment(date, 'YYYY-MM-DD').format('DD-MM-YYYY');
@@ -833,9 +875,28 @@ export default {
                 }
 
                 const response = await axios.post('/pagar_cuotas', payload);
-                Swal.fire('Transacción Exitosa', 'El pago se procesó correctamente.', 'success');
+                
                 this.cerrarModalCobrarCuotas();
                 this.verDetallePlan(this.plan_pago);
+
+                Swal.fire({
+                    title: '¡Pago Exitoso!',
+                    text: 'La transacción se procesó correctamente. ¿Desea generar el comprobante de pago?',
+                    icon: 'success',
+                    showCancelButton: true,
+                    confirmButtonColor: '#198754',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '<i class="fas fa-print me-2"></i>Sí, Generar',
+                    cancelButtonText: 'No por ahora'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        if (response.data.codigo_transaccion) {
+                            window.open(`/imprimir/recibo/${response.data.codigo_transaccion}`, '_blank');
+                        } else {
+                            Swal.fire('Error', 'No se encontró el código de transacción para generar el recibo.', 'error');
+                        }
+                    }
+                });
 
             } catch (error) {
                 console.error(error);

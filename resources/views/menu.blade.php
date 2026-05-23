@@ -217,9 +217,6 @@
                             <i class="mdi mdi-chevron-down"></i>
                         </a>
                         <ul class="dropdown-menu">
-                            {{-- <li><a href="javascript:void(0)" class="dropdown-item"><i class="mdi mdi-account-circle text-muted me-2"></i> Profile</a></li>
-                            <li><a href="javascript:void(0)" class="dropdown-item"><i class="mdi mdi-cog text-muted me-2"></i> Settings</a></li>
-                            <li><a href="javascript:void(0)" class="dropdown-item"><i class="mdi mdi-lock-open-outline text-muted me-2"></i> Lock screen</a></li> --}}
                             <li><a href="javascript:void(0)" class="dropdown-item"><i class="mdi mdi-power text-muted me-2"></i> Logout</a></li>
                         </ul>
                     </div>
@@ -231,7 +228,7 @@
         <div id="sidebar-menu">
             <ul class="metismenu list-unstyled" id="side-menu">
                 @if($login_controller->permisoSistema('paneladministracion', auth()->user()->id_rol))
-                <li class="menu-title">Main</li>
+                <li class="menu-title">Menu</li>
                 <li>
                     <a href="/administracion" class="nav-link waves-effect {{ $current_route == 'administracion' ? 'mm-active' : '' }}">
                         <i class="fas fa-info-circle"></i>

@@ -98,13 +98,6 @@ $monto_pago_literal = $formatter->toInvoice($total_pagado, 2, 'Bolivianos');
             text-align: center;
             font-size: 10px;
         }
-        .firmas {
-            margin-top: 50px;
-            width: 100%;
-            text-align: center;
-            font-size: 11px;
-        }
-        .firmas td { width: 50%; }
     </style>
 </head>
 <body>
@@ -163,7 +156,10 @@ $monto_pago_literal = $formatter->toInvoice($total_pagado, 2, 'Bolivianos');
                 @foreach($pagos as $p)
                 <tr>
                     <td class="left">
-                        <strong>Cuota {{ $p->nro_cuota }}</strong><br>
+                        <strong>Cuota {{ $p->nro_cuota }}</strong> 
+                        <span style="font-size: 9px; color: {{ $p->estado_cuota == 2 ? '#198754' : '#f1c40f' }}; font-weight: bold;">
+                            [{{ $p->estado_cuota == 2 ? 'PAGO COMPLETO' : 'PAGO PARCIAL' }}]
+                        </span><br>
                         <span style="font-size: 9px; color:#555;">
                             Cap: {{ number_format($p->pago_capital, 2) }} | 
                             Int: {{ number_format($p->pago_interes, 2) }}
@@ -195,12 +191,37 @@ $monto_pago_literal = $formatter->toInvoice($total_pagado, 2, 'Bolivianos');
             Son: {{ strtoupper($monto_pago_literal) }}
         </div>
 
-        <table class="firmas">
-            <tr>
-                <td>_______________________<br>Firma Cliente</td>
-                <td>_______________________<br>Firma Cajero</td>
-            </tr>
-        </table>
+        <!-- Nueva Sección: Próximo Pago -->
+        <div style="margin-top: 10px; border: 1px double #000; padding: 8px; text-align: center; background-color: #fff;">
+            <p style="margin: 0; font-size: 10px; font-weight: bold; text-transform: uppercase;">Información de su Próximo Pago</p>
+            <p style="margin: 3px 0 0 0; font-size: 12px;">
+                Fecha: <strong>{{ $fecha_proximo_pago }}</strong> | 
+                Monto Sugerido: <strong>Bs. {{ number_format($monto_proximo_pago, 2) }}</strong>
+            </p>
+        </div>
+
+        <!-- Nueva Sección: Saldo Pendiente Detallado -->
+        <div style="margin-top: 15px; border: 1px solid #eee; padding: 10px; border-radius: 5px; background-color: #fff;">
+            <p style="margin: 0 0 8px 0; font-size: 11px; font-weight: bold; text-align: center; text-decoration: underline;">RESUMEN DE SALDO PENDIENTE ACTUAL</p>
+            <table style="width: 100%; font-size: 11px; border-collapse: collapse;">
+                <tr>
+                    <td>Capital Pendiente:</td>
+                    <td style="text-align: right;">{{ number_format($saldo_pendientes['capital'], 2) }} Bs.</td>
+                </tr>
+                <tr>
+                    <td>Interés Pendiente:</td>
+                    <td style="text-align: right;">{{ number_format($saldo_pendientes['interes'], 2) }} Bs.</td>
+                </tr>
+                <tr>
+                    <td>Mora/Multas Pendientes:</td>
+                    <td style="text-align: right;">{{ number_format($saldo_pendientes['mora'], 2) }} Bs.</td>
+                </tr>
+                <tr style="border-top: 1px solid #ccc; font-weight: bold; font-size: 12px;">
+                    <td style="padding-top: 5px;">DEUDA TOTAL RESTANTE:</td>
+                    <td style="text-align: right; padding-top: 5px; color: #d32f2f;">{{ number_format($saldo_pendientes['total'], 2) }} Bs.</td>
+                </tr>
+            </table>
+        </div>
 
         <div class="footer">
             <p>¡Gracias por su pago y su puntualidad!</p>

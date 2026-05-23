@@ -496,7 +496,8 @@ class PagoController extends Controller
                 'pago.monto_condonado', 'pago.forma_pago', 'pago.fecha_pago',
                 'cliente.nombre as cliente_nombre', 'cliente.ci',
                 'cuota.numero as nro_cuota', 'solicitud.nro_cuotas as cantidad_cuotas',
-                'plan_pago.id as codigo_plan', 'users.name as cajero'
+                'plan_pago.id as codigo_plan', 'users.name as cajero',
+                'cuota.estado as estado_cuota'
             )
             ->where('pago.codigo_transaccion', $codigo_transaccion)
             ->where('pago.estado', 1) // Solo pagos no anulados
@@ -516,9 +517,123 @@ class PagoController extends Controller
         $numeros_cuotas = $pagos->pluck('nro_cuota')->toArray();
         $cuotas_texto = implode(', ', $numeros_cuotas);
 
+        // 3. Calculamos el saldo pendiente actual del plan (Lógica de listarAmortizaciones)
+        $id_plan = $info_base->codigo_plan;
+        
+        // Obtenemos el plan y todas sus cuotas
+        $plan = DB::table('plan_pago')->where('id', $id_plan)->first();
+        $todas_cuotas = DB::table('cuota')
+            ->where('id_plan_pago', $id_plan)
+            ->orderBy('numero', 'asc')
+            ->get();
+
+        $cuotas_pendientes_obj = $todas_cuotas->filter(fn($c) => in_array($c->estado, [1, 3]));
+        $firstUnpaidIndex = $todas_cuotas->search(fn($c) => in_array($c->estado, [1, 3]));
+
+        // --- DATOS DEL PRÓXIMO PAGO ---
+        $proxima_cuota = $cuotas_pendientes_obj->first();
+        $fecha_proximo_pago = $proxima_cuota ? Carbon::parse($proxima_cuota->fecha)->format('d/m/Y') : 'CRÉDITO FINALIZADO';
+        
+        // El monto a pagar de la próxima cuota es su total original menos lo ya pagado (Capital + Interés + Mora)
+        $monto_proximo_pago = $proxima_cuota 
+            ? ($proxima_cuota->total - ($proxima_cuota->capital_pagado + $proxima_cuota->interes_pagado + $proxima_cuota->mora_pagada))
+            : 0;
+        // ------------------------------
+
+        // --- CÁLCULO DE CAPITAL PENDIENTE (Basado en el campo saldo_capital de la última procesada) ---
+        $ultimaCuotaProcesada = $todas_cuotas->last(fn($c) => in_array($c->estado, [2, 3]));
+
+        if ($ultimaCuotaProcesada) {
+            $capital_restante_cuota_actual = max(0, (float)$ultimaCuotaProcesada->capital - (float)$ultimaCuotaProcesada->capital_pagado);
+            $saldo_capital_pendiente = (float)$ultimaCuotaProcesada->saldo_capital + $capital_restante_cuota_actual;
+        } else {
+            $saldo_capital_pendiente = (float)$todas_cuotas->sum('capital');
+        }
+
+        // Definimos la base para el cálculo de interés moratorio (Multa porcentual)
+        $lastPaid = $todas_cuotas->last(fn($c) => $c->estado == 2);
+        $saldoCapitalMora = $lastPaid ? (float)$lastPaid->saldo_capital : (float)$todas_cuotas->sum('capital');
+        // --------------------------------------------------------------------------------------------
+
+        $saldo_interes_pendiente = 0;
+        $saldo_mora_pendiente = 0;
+
+        $hoy = Carbon::now()->startOfDay();
+
+        foreach ($todas_cuotas as $index => $cuota) {
+            if (!in_array($cuota->estado, [1, 3])) continue;
+
+            // NORMALIZACIÓN DE FECHAS
+            $fechaCuota = Carbon::parse($cuota->fecha)->startOfDay();
+            $fechaInicioCuota = $index === 0
+                ? Carbon::parse($plan->fecha_inicio)->startOfDay()
+                : Carbon::parse($todas_cuotas[$index - 1]->fecha)->startOfDay();
+
+            $diasPeriodoCuota = max(1, $fechaInicioCuota->diffInDays($fechaCuota, false));
+            $fechaCalculo = $hoy;
+            
+            // DÍAS TRANSCURRIDOS (Para interés normal)
+            if ($index === $firstUnpaidIndex) {
+                $diasDesdeInicio = $fechaInicioCuota->diffInDays($fechaCalculo, false);
+                $diasTranscurridosNormales = max(0, min($diasDesdeInicio, $diasPeriodoCuota));
+                
+                // Cálculo de dias_mora_cobro (Lógica SQL CASE)
+                $fechaReferenciaMora = $plan->fecha_ultima_amortizacion 
+                    ? Carbon::parse($plan->fecha_ultima_amortizacion)->startOfDay() 
+                    : $fechaCuota;
+                $maxFechaMora = $fechaCuota->gt($fechaReferenciaMora) ? $fechaCuota : $fechaReferenciaMora;
+                $dias_mora_cobro = $hoy->gt($maxFechaMora) ? $hoy->diffInDays($maxFechaMora) : 0;
+            } else {
+                if ($fechaCalculo->isAfter($fechaCuota) || $fechaCalculo->isSameDay($fechaCuota)) {
+                    $diasTranscurridosNormales = $diasPeriodoCuota;
+                } else {
+                    $diasDesdeInicio = $fechaInicioCuota->diffInDays($fechaCalculo, false);
+                    $diasTranscurridosNormales = max(0, min($diasDesdeInicio, $diasPeriodoCuota));
+                }
+                $dias_mora_cobro = 0;
+            }
+
+            // DÍAS DE RETRASO (Informativo para Mora)
+            $diasRetrasoCuota = $fechaCalculo->isAfter($fechaCuota) ? $fechaCuota->diffInDays($fechaCalculo, false) : 0;
+
+            // INTERÉS DIARIO Y DEVENGADO
+            $interesPorDiaNormal = ($diasPeriodoCuota > 0) ? ($cuota->interes / $diasPeriodoCuota) : 0;
+            $interesDevengadoBruto = $interesPorDiaNormal * $diasTranscurridosNormales;
+
+            // INTERÉS MORATORIO
+            if ($index === $firstUnpaidIndex && $diasRetrasoCuota > 0) {
+                $montoBaseMensual = $saldoCapitalMora * ((float)$plan->tasa / 100);
+                $lapso = trim(strtolower($plan->lapso_capital));
+                $factorPeriodo = 1; $diasDivisor = 30;
+
+                if ($lapso == 'quincenal') { $factorPeriodo = 2; $diasDivisor = 15; }
+                elseif ($lapso == 'semanal') { $factorPeriodo = 4; $diasDivisor = 7; }
+
+                $interesMoratorioBruto = ($montoBaseMensual / $factorPeriodo) / $diasDivisor * $diasRetrasoCuota;
+            } else {
+                $interesMoratorioBruto = 0;
+            }
+
+            // MULTA FIJA
+            $moraFijaBruta = ($dias_mora_cobro > 0) ? ($dias_mora_cobro * 3) : 0;
+
+            // CÁLCULO DE RESTANTES (NETOS) PARA INTERÉS Y MULTA
+            $int_pagado = (float)$cuota->interes_pagado;
+            $mora_pagada = (float)$cuota->mora_pagada;
+
+            $intDevengadoRestante = max(0, $interesDevengadoBruto - $int_pagado);
+            $excesoInt = max(0, $int_pagado - $interesDevengadoBruto);
+            $intMoratorioRestante = max(0, $interesMoratorioBruto - $excesoInt);
+            $moraFijaRestante = max(0, $moraFijaBruta - $mora_pagada);
+
+            // ACUMULAR PARA EL RESUMEN DEL RECIBO (El capital ya se calculó fuera del bucle)
+            $saldo_interes_pendiente += ($intDevengadoRestante + $intMoratorioRestante);
+            $saldo_mora_pendiente += $moraFijaRestante;
+        }
+
         $empresa = DB::table('mi_empresa')->first();
 
-        // 3. Generamos el PDF
+        // 4. Generamos el PDF
         $options = new Options();
         $options->set('isHtml5ParserEnabled', true);
         $options->set('isPhpEnabled', true);
@@ -532,7 +647,15 @@ class PagoController extends Controller
             'total_mora' => $total_mora,
             'total_condonado' => $total_condonado,
             'cuotas_texto' => $cuotas_texto,
-            'empresa' => $empresa
+            'empresa' => $empresa,
+            'fecha_proximo_pago' => $fecha_proximo_pago,
+            'monto_proximo_pago' => $monto_proximo_pago,
+            'saldo_pendientes' => [
+                'capital' => $saldo_capital_pendiente,
+                'interes' => $saldo_interes_pendiente,
+                'mora' => $saldo_mora_pendiente,
+                'total' => $saldo_capital_pendiente + $saldo_interes_pendiente + $saldo_mora_pendiente
+            ]
         ])->render();
 
         $dompdf->loadHtml($html);
