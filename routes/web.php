@@ -289,6 +289,7 @@ Route::get('/index_rep_extracto', 'App\Http\Controllers\VistasReporteController@
 Route::get('/get_clientes_rep', 'App\Http\Controllers\VistasReporteController@getClientesRep');
 Route::get('/get_creditos_rep', 'App\Http\Controllers\VistasReporteController@getCreditosRep');
 Route::get('/rep_extracto_credito', 'App\Http\Controllers\VistasReporteController@generarReporteExtracto');
+Route::get('/get_detalle_credito_extracto', 'App\Http\Controllers\VistasReporteController@getDetalleCreditoExtracto');
 
 Route::get('/hist_credito_mora', 'App\Http\Controllers\VistasReporteController@indexHistCreditoMora');
 

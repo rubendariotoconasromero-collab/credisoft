@@ -20,13 +20,137 @@ class VistasReporteController extends Controller
     }
 
     public function getCreditosRep(Request $request){
-        return DB::table('cliente')
-        ->join('solicitud', 'solicitud.id_cliente', '=', 'cliente.id')
-        ->join('plan_pago', 'plan_pago.id_solicitud', '=', 'solicitud.id')
-        ->select('plan_pago.total_pagar', 'plan_pago.fecha_inicio', 'plan_pago.fecha_fin', 'solicitud.nro_cuotas', 
-        'solicitud.lapso_capital', 'plan_pago.estado', 'plan_pago.id')
-        ->where('cliente.id', $request->id_cliente)
-        ->get();
+        $query = DB::table('plan_pago')
+            ->join('solicitud', 'solicitud.id', '=', 'plan_pago.id_solicitud')
+            ->join('cliente', 'cliente.id', '=', 'solicitud.id_cliente')
+            ->join('users', 'users.id', '=', 'solicitud.id_usuario')
+            ->select(
+                'plan_pago.id',
+                'plan_pago.total_pagar',
+                'plan_pago.fecha_inicio',
+                'plan_pago.fecha_fin',
+                'plan_pago.estado',
+                'plan_pago.fecha_registro',
+                'solicitud.importe_solicitud',
+                'solicitud.moneda',
+                'solicitud.tasa',
+                'solicitud.nro_cuotas',
+                'solicitud.lapso_capital',
+                'cliente.nombre as cliente_nombre',
+                'cliente.ci as cliente_ci',
+                'cliente.id as id_cliente',
+                'users.personal as asesor_nombre'
+            )
+            ->whereIn('plan_pago.estado', [1, 2]); // Solo Vigente (1) o Terminado (2)
+
+        // Filtro por código de crédito
+        if ($request->filled('id_credito')) {
+            $query->where('plan_pago.id', $request->id_credito);
+        }
+
+        // Filtro por cliente (nombre o CI)
+        if ($request->filled('buscar_cliente')) {
+            $busqueda = '%' . $request->buscar_cliente . '%';
+            $query->where(function($q) use ($busqueda) {
+                $q->where('cliente.nombre', 'like', $busqueda)
+                  ->orWhere('cliente.ci', 'like', $busqueda);
+            });
+        }
+
+        // Filtro por cliente específico (dropdown popover fallback)
+        if ($request->filled('id_cliente') && $request->id_cliente != 0) {
+            $query->where('cliente.id', $request->id_cliente);
+        }
+
+        // Filtro por estado
+        if ($request->filled('estado_plan') && $request->estado_plan != 'todos') {
+            if ($request->estado_plan == 'vigente') {
+                $query->where('plan_pago.estado', 1);
+            } elseif ($request->estado_plan == 'terminado') {
+                $query->where('plan_pago.estado', 2);
+            }
+        }
+
+        // Filtro por rango de fechas
+        if ($request->filled('fecha_inicio') && $request->filled('fecha_fin')) {
+            $query->whereBetween('plan_pago.fecha_registro', [$request->fecha_inicio, $request->fecha_fin]);
+        }
+
+        return $query->orderBy('plan_pago.id', 'desc')->get();
+    }
+
+    public function getDetalleCreditoExtracto(Request $request){
+        $id_plan_pago = $request->id_plan_pago;
+
+        // 1. Información del crédito y cliente
+        $credito = DB::table('plan_pago')
+            ->join('solicitud', 'solicitud.id', '=', 'plan_pago.id_solicitud')
+            ->join('cliente', 'cliente.id', '=', 'solicitud.id_cliente')
+            ->join('users', 'users.id', '=', 'solicitud.id_usuario')
+            ->select(
+                'plan_pago.id',
+                'plan_pago.total_pagar',
+                'plan_pago.fecha_inicio',
+                'plan_pago.fecha_fin',
+                'plan_pago.estado',
+                'plan_pago.fecha_registro',
+                'plan_pago.desembolso',
+                'plan_pago.pago_administrativo',
+                'plan_pago.fecha_ultima_amortizacion',
+                'solicitud.importe_solicitud',
+                'solicitud.moneda',
+                'solicitud.tasa',
+                'solicitud.nro_cuotas',
+                'solicitud.lapso_capital',
+                'solicitud.destino_prestamo',
+                'solicitud.tipo_garantia',
+                'solicitud.tipo_desembolso',
+                'cliente.nombre as cliente_nombre',
+                'cliente.ci as cliente_ci',
+                'cliente.lugar_expedicion as cliente_expedicion',
+                'cliente.actividad as cliente_actividad',
+                'cliente.vivienda as cliente_vivienda',
+                'cliente.ingreso_mensual as cliente_ingreso',
+                'users.personal as asesor_nombre'
+            )
+            ->where('plan_pago.id', $id_plan_pago)
+            ->first();
+
+        if (!$credito) {
+            return response()->json(['message' => 'Crédito no encontrado'], 404);
+        }
+
+        // 2. Cuotas con sus pagos combinados
+        $cuotas = DB::table('cuota')
+            ->where('id_plan_pago', $id_plan_pago)
+            ->orderBy('numero', 'asc')
+            ->get();
+
+        foreach ($cuotas as $cuota) {
+            $cuota->pagos = DB::table('pago')
+                ->join('users', 'users.id', '=', 'pago.id_usuario')
+                ->select(
+                    'pago.id',
+                    'pago.codigo_transaccion',
+                    'pago.fecha_pago',
+                    'pago.monto_pago',
+                    'pago.multa_total',
+                    'pago.pago_capital',
+                    'pago.pago_interes',
+                    'pago.pago_mora',
+                    'pago.forma_pago',
+                    'users.personal as cajero_nombre'
+                )
+                ->where('pago.id_cuota', $cuota->id)
+                ->where('pago.estado', 1) // Activo
+                ->orderBy('pago.fecha_pago', 'asc')
+                ->get();
+        }
+
+        return response()->json([
+            'credito' => $credito,
+            'cuotas' => $cuotas
+        ]);
     }
 
     public function generarReporteExtracto(Request $request){

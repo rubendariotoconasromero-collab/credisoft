@@ -1,413 +1,576 @@
 <template>
-    <main>
+    <main class="credit-extract-management">
+        <!-- Preloader -->
         <div v-if="preloader" class="preloader">
-            <div class="spinner"></div>
-            <!-- <p>Generando reporte...</p> -->
+            <div class="spinner-border text-success" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
         </div>
 
-        <div class="page-content">
+        <div class="page-content px-0 mx-0">
             <div class="container-fluid">
-                <!-- start page title -->
-                <div class="row">
-                    <div class="col-12">
-                        <div class="page-title-box d-flex align-items-center justify-content-between">
-                            <div class="page-title">
-                                <h4 class="mb-0 font-size-18 text-uppercase">
-                                    <i class="fas fa-address-book"></i>
-                                    Reporte Extrato</h4>
-                               
-                            </div>
-
-                            
-                        </div>
+                
+                <!-- VISTA 0: LISTADO DE CRÉDITOS Y FILTROS -->
+                <div v-if="vista === 0" class="card shadow-sm border-0">
+                    <div class="card-header bg-warning bg-gradient py-2 d-flex justify-content-between align-items-center">
+                        <h5 class="header-title my-0 fw-bold text-dark text-uppercase mx-auto" style="font-size: 14px;">
+                            <i class="fas fa-file-invoice-dollar me-2"></i> Extracto de Crédito de Clientes
+                        </h5>
                     </div>
-                </div>
-                <!-- end page title -->
-                <div class="page-content-wrapper">
-                    <div v-if="vista==0" class="row">
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <div class="row mb-3">
-                                            <div class="col-md-12 my-2">
 
-                                                <div class="form-group">
-                                                    <label class="fw-bold" for="">Seleccione cliente....</label>
-                                                    <div class="input-group">
-                                                        <section class="dropdown-wrapper form-control p-2 bg-light position-relative"
-                                                            style="border-radius: 0.375rem; border: 1px solid #ced4da;">
-                                                            <div @click="isVisibleCliente = !isVisibleCliente"
-                                                                class="selected-item p-2 d-flex justify-content-between align-items-center border border-secondary rounded"
-                                                                style="cursor: pointer; transition: background-color 0.3s;">
-                                                                <!-- Texto que muestra si se ha seleccionado un cliente o no -->
-                                                                <span v-if="cliente.buscar === ''" class="text-muted">Seleccione un cliente</span>
-                                                                <span v-else>{{ cliente.buscar }}</span>
-
-                                                                <!-- Icono del dropdown -->
-                                                                <svg :class="isVisibleCliente ? 'dropdown' : ''" class="drop-down-icon"
-                                                                    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-                                                                    <path fill="none" d="M0 0h24v24H0z" />
-                                                                    <path d="M12 10.828l-4.95 4.95-1.414-1.414L12 8l6.364 6.364-1.414 1.414z" />
-                                                                </svg>
-                                                            </div>
-
-                                                            <!-- Dropdown para búsqueda -->
-                                                            <div :class="isVisibleCliente ? 'visible' : 'invisible'"
-                                                                class="dropdown-popover shadow-lg"
-                                                                style="position: absolute; top: 100%; left: 0; z-index: 9999; width: 100%; max-height: 250px; overflow-y: auto; background-color: white; border: 1px solid #ced4da; border-radius: 0.375rem; transition: all 0.3s ease-in-out;">
-                                                                <input type="text" class="form-control form-control-sm mb-2 border-0 px-2"
-                                                                    placeholder="Buscar por CI..." v-model="cliente.ci"
-                                                                    aria-label="Buscar cliente..."
-                                                                    style="font-size:14px; border-bottom: 1px solid #ced4da;">
-
-                                                                <!-- Mensaje cuando no se encuentra ningún cliente -->
-                                                                <div v-if="filteredItemsCliente.length === 0" class="text-center text-muted p-2">
-                                                                    <small>No existe el cliente</small>
-                                                                </div>
-
-                                                                <!-- Lista de clientes filtrados -->
-                                                                <ul class="list-group list-group-flush">
-                                                                    <li v-for="(cliente, index) in filteredItemsCliente" :key="index"
-                                                                        @click="seleccionarCliente(cliente)"
-                                                                        class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
-                                                                        style="cursor: pointer; transition: background-color 0.2s;">
-                                                                        <span class="fw-bold">{{ cliente.nombre }}</span>
-                                                                        <span class="fw-bold">{{ cliente.ci }}</span>
-                                                                    </li>
-                                                                </ul>
-                                                            </div>
-                                                        </section>
-
-                                                        <button class="btn btn-success btn-rounded mx-1">
-                                                            <i class="fas fa-search"></i>
-                                                        </button>
-                                                        <button @click="limpiar()" class="btn btn-danger">
-                                                            <i class="fas fa-trash-alt"></i>
-                                                        </button>
-                                                    </div>
-                                                </div>
-
-
-
-                                            </div>
-                                        </div>
-                                        <h6 class="fw-bold">Detalle de creditos: </h6>
-                                        <h6 class="text-secondary" v-if="items_creditos.length==0">
-                                            Aún no tiene creditos.
-                                        </h6>
-                                        <template v-if="id_cliente!=0 && items_creditos.length!=0">
-        
-                                                <!-- <div class="row">
-                                                    <div class="col-md-4">
-                                                        <h5 class="my-1">
-                                                            <span style="border-radius:0" class="badge bg-danger fw-bold text-uppercase">Total clientes:  </span>
-                                                            <span style="border-radius:0" class="badge text-danger fw-bold">Clientes </span>
-                                                            
-                                                        </h5>
-                                                    </div>
-                                            
-                                                </div> -->
+                    <div class="card-body pt-2">
+                        <!-- SECCIÓN DE FILTROS COMPACTA -->
+                        <div class="card bg-light border-0 mb-3">
+                            <div class="card-body p-2">
+                                <div class="row g-2 align-items-center">
+                                    <!-- Filtro Código de Crédito -->
+                                    <div class="col-md-1">
+                                        <input v-model="filtros.id_credito" type="text" class="form-control form-control-sm" placeholder="Código" @input="getCreditos" />
+                                    </div>
                                     
-                                                
-                                                <div class="table-responsive mt-3" style="font-size:14px">
-                                                    <table class="table mb-4 table-hover table-bordered table-striped table-sm">
-                                                        <thead class="bg-primary text-white text-uppercase">
-                                                            <tr style="background-color:#52BE80">
-                                                                <th>Opciones</th>
-                                                                <th>Credito</th>
-                                                                <th>Total a Pagar</th>
-                                                                <th>Fecha de Inicio</th>
-                                                                <th>Fecha de Fin</th>
-                                                                <th>Número de Cuotas</th>
-                                                                <th>Lapso de Capital</th>
-                                                                <th>Estado</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <tr v-for="item in items_creditos" :key="item.id" style="vertical-align: middle">
-                                                                <td>
-                                                                    <!-- Aquí puedes añadir las opciones para cada crédito, como editar o eliminar -->
-                                                                    <button @click="generarPdfCuotasPlanPago(item.id)" class="btn btn-outline-success btn-sm btn-rounded">
-                                                                        <i class="fas fa-print"></i>
-                                                                        Generar extracto</button>
-                                                                </td>
-                                                                <td>{{ item.id }}</td>
-                                                                <td>{{ item.total_pagar }}</td>
-                                                                <td>{{ item.fecha_inicio }}</td>
-                                                                <td>{{ item.fecha_fin }}</td>
-                                                                <td>{{ item.nro_cuotas }}</td>
-                                                                <td>{{ item.lapso_capital }}</td>
-                                                                <td>
-                                                                    <span v-if="item.estado == 1" class="badge bg-success">Activo</span>
-                                                                    <span v-else class="badge bg-danger">Inactivo</span>
-                                                                </td>
-                                                            </tr>
-                                                        </tbody>
-                                                    </table>
+                                    <!-- Filtro por Cliente (Nombre/CI) -->
+                                    <div class="col-md-3">
+                                        <input v-model="filtros.buscar_cliente" type="text" class="form-control form-control-sm" placeholder="Nombre o CI de Cliente..." @input="getCreditos" />
+                                    </div>
 
-                                                </div>
-                                                <!-- Card Pagination -->
-                                        </template>
+                                    <!-- Filtro por Estado -->
+                                    <div class="col-md-2">
+                                        <select v-model="filtros.estado_plan" class="form-select form-select-sm" @change="getCreditos">
+                                            <option value="todos">Todos los Estados</option>
+                                            <option value="vigente">Vigentes (Activos)</option>
+                                            <option value="terminado">Terminados (Cancelados)</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Filtro Rango Fechas -->
+                                    <div class="col-md-2">
+                                        <input v-model="filtros.fecha_inicio" type="date" class="form-control form-control-sm" placeholder="Desde" @change="getCreditos" />
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input v-model="filtros.fecha_fin" type="date" class="form-control form-control-sm" placeholder="Hasta" @change="getCreditos" />
+                                    </div>
+
+                                    <!-- Botones en la misma fila -->
+                                    <div class="col-md-2 d-flex gap-1">
+                                        <button class="btn btn-success btn-xs px-2 flex-grow-1" @click="getCreditos" style="font-size: 10.5px; height: 31px; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                            <i class="fas fa-search"></i> <span>Filtrar</span>
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-xs px-2 flex-grow-1" @click="limpiarFiltros" style="font-size: 10.5px; height: 31px; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                            <i class="fas fa-trash-alt"></i> <span>Limpiar</span>
+                                        </button>
                                     </div>
                                 </div>
-                                <!-- End Card -->
                             </div>
-                            <!-- end col -->
                         </div>
-                        <!-- end row -->
+
+                        <!-- TABLA DE LISTADO DE CRÉDITOS -->
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold text-dark my-0 text-uppercase" style="font-size: 12px;">
+                                <i class="fas fa-list me-1"></i> Créditos Encontrados ({{ creditos.length }})
+                            </h6>
+                        </div>
+
+                        <div class="table-responsive" style="font-size: 11px">
+                            <table class="table table-hover table-striped table-sm align-middle table-compact">
+                                <thead class="table-success text-white text-uppercase fw-bold text-center">
+                                    <tr>
+                                        <th>Cód. Crédito</th>
+                                        <th>Cliente</th>
+                                        <th>C.I.</th>
+                                        <th>Importe Préstamo</th>
+                                        <th>Total a Pagar</th>
+                                        <th>Tasa</th>
+                                        <th>Cuotas / Frecuencia</th>
+                                        <th>Rango Fechas</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="item in creditos" :key="item.id">
+                                        <td class="fw-bold text-primary text-center">#{{ item.id }}</td>
+                                        <td class="text-uppercase fw-bold">{{ item.cliente_nombre }}</td>
+                                        <td class="fw-bold text-center">{{ item.cliente_ci }}</td>
+                                        <td class="fw-bold text-success text-end">{{ formatMoney(item.importe_solicitud, item.moneda) }}</td>
+                                        <td class="fw-bold text-danger text-end">{{ formatMoney(item.total_pagar, item.moneda) }}</td>
+                                        <td class="text-center">{{ item.tasa }}%</td>
+                                        <td class="text-center">{{ item.nro_cuotas }} cuotas ({{ item.lapso_capital }})</td>
+                                        <td class="text-center">
+                                            <span class="d-block text-muted">Inicio: {{ formatDate(item.fecha_inicio) }}</span>
+                                            <span class="d-block text-muted">Fin: {{ formatDate(item.fecha_fin) }}</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span :class="item.estado === 1 ? 'badge bg-success text-uppercase font-size-10 px-2 rounded' : 'badge bg-secondary text-uppercase font-size-10 px-2 rounded'" style="width: 110px; display: inline-block; text-align: center;">
+                                                {{ item.estado === 1 ? 'Vigente' : 'Terminado' }}
+                                            </span>
+                                        </td>
+                                        <td class="text-center position-relative">
+                                            <div class="btn-group">
+                                                <a style="cursor: pointer" class="text-success" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="fas fa-ellipsis-h fa-lg"></i>
+                                                </a>
+                                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" style="background-color: #2a3b50;">
+                                                    <li @click="verDetalle(item.id)">
+                                                        <a class="dropdown-item text-white" href="#"><i class="fas fa-eye me-2 text-info"></i> Ver Detalle</a>
+                                                    </li>
+                                                    <li @click="generarPdfCuotasPlanPago(item.id)">
+                                                        <a class="dropdown-item text-white" href="#"><i class="fas fa-file-pdf me-2 text-danger"></i> Exportar PDF</a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr v-if="creditos.length === 0">
+                                        <td colspan="10" class="text-center text-muted py-4">
+                                            <i class="fas fa-folder-open fa-3x mb-3 text-secondary"></i>
+                                            <p class="mb-0">No se encontraron créditos vigentes o terminados con los filtros seleccionados.</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VISTA 1: DETALLE DE CRÉDITO Y CUOTAS COMBINADAS (COMPACTO Y DESPLEGABLE) -->
+                <div v-if="vista === 1" class="card shadow-sm border-0">
+                    <div class="card-header bg-warning bg-gradient py-2 d-flex justify-content-between align-items-center">
+                        <button class="btn btn-secondary btn-xs px-2 py-1" @click="vista = 0" style="font-size: 11px;">
+                            <i class="fas fa-arrow-left me-1"></i> Volver
+                        </button>
+                        <h5 class="header-title my-0 fw-bold text-dark text-uppercase mx-auto" style="font-size: 14px;">
+                            <i class="fas fa-info-circle me-2"></i> Detalles de Extracto — Crédito #{{ detalle.credito.id }}
+                        </h5>
+                        <button class="btn btn-danger btn-xs px-2 py-1" @click="generarPdfCuotasPlanPago(detalle.credito.id)" style="font-size: 11px;">
+                            <i class="fas fa-file-pdf me-1"></i> Exportar PDF
+                        </button>
                     </div>
 
-                </div>
-                <!-- end page-content-wrapper-->
-            </div>
-            <!-- Container-fluid -->
+                    <div class="card-body pt-2">
+                        <!-- RESUMEN HORIZONTAL COMPACTO: CLIENTE Y CRÉDITO -->
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-12">
+                                <div class="card border border-primary border-start-4 mb-0 bg-light bg-gradient shadow-none">
+                                    <div class="card-body p-2">
+                                        <div class="row align-items-center">
+                                            <!-- Sección Cliente -->
+                                            <div class="col-md-5 border-end border-secondary-subtle">
+                                                <h6 class="fw-bold text-success text-uppercase mb-1" style="font-size: 11px; letter-spacing: 0.05em;">
+                                                    <i class="fas fa-user-tie me-1"></i> Información del Cliente
+                                                </h6>
+                                                <div class="d-flex flex-wrap gap-x-3 gap-y-1 font-size-11" style="row-gap: 4px; column-gap: 16px;">
+                                                    <span>Cliente: <strong class="text-uppercase text-dark">{{ detalle.credito.cliente_nombre }}</strong></span>
+                                                    <span>C.I.: <strong class="text-dark">{{ detalle.credito.cliente_ci }} {{ detalle.credito.cliente_expedicion }}</strong></span>
+                                                    <span>Actividad: <strong class="text-secondary text-uppercase">{{ detalle.credito.cliente_actividad || 'N/A' }}</strong></span>
+                                                </div>
+                                            </div>
+                                            <!-- Sección Crédito -->
+                                            <div class="col-md-7 ps-md-3">
+                                                <h6 class="fw-bold text-primary text-uppercase mb-1" style="font-size: 11px; letter-spacing: 0.05em;">
+                                                    <i class="fas fa-file-contract me-1"></i> Datos de Crédito
+                                                </h6>
+                                                <div class="d-flex flex-wrap gap-x-3 gap-y-1 font-size-11 align-items-center" style="row-gap: 4px; column-gap: 18px;">
+                                                    <span>Monto: <strong class="text-primary">{{ formatMoney(detalle.credito.importe_solicitud, detalle.credito.moneda) }}</strong></span>
+                                                    <span>Tasa: <strong class="text-dark">{{ detalle.credito.tasa }}%</strong></span>
+                                                    <span>Plazo: <strong class="text-dark">{{ detalle.credito.nro_cuotas }} cuotas ({{ detalle.credito.lapso_capital }})</strong></span>
+                                                    <span>Total Plan: <strong class="text-danger">{{ formatMoney(detalle.credito.total_pagar, detalle.credito.moneda) }}</strong></span>
+                                                    <span>Asesor: <strong class="text-uppercase text-dark">{{ detalle.credito.asesor_nombre }}</strong></span>
+                                                    <span>Estado: <span :class="detalle.credito.estado === 1 ? 'badge bg-success font-size-9 px-2 rounded' : 'badge bg-secondary font-size-9 px-2 rounded'">{{ detalle.credito.estado === 1 ? 'Vigente' : 'Terminado' }}</span></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-            
+                        <!-- TABLA DE CUOTAS Y PAGOS COMBINADOS COMPACTA (UNA SOLA FILA DE ENCABEZADO) -->
+                        <h6 class="fw-bold text-dark mb-2 text-uppercase" style="font-size: 12px;">
+                            <i class="fas fa-money-bill-wave me-1"></i> Cronograma de Amortizaciones y Pagos Realizados
+                        </h6>
+
+                        <div class="table-responsive" style="font-size: 10.5px;">
+                            <table class="table table-bordered table-sm align-middle table-compact">
+                                <thead class="table-dark text-white text-uppercase fw-bold text-center">
+                                    <tr class="align-middle">
+                                        <th style="width: 45px;">Nro</th>
+                                        <th style="width: 90px;">Vencimiento</th>
+                                        <th style="width: 85px;">Capital</th>
+                                        <th style="width: 85px;">Interés</th>
+                                        <th style="width: 95px;">Total Cuota</th>
+                                        <th style="width: 95px;">Estado</th>
+                                        <th class="table-info text-dark" style="width: 90px;">Fecha Pago</th>
+                                        <th class="table-info text-dark" style="width: 95px;">Recibido</th>
+                                        <th class="table-info text-dark" style="width: 90px;">Mora Cobrada</th>
+                                        <th class="table-info text-dark" style="width: 70px;">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template v-for="cuota in detalle.cuotas" :key="cuota.id">
+                                        <!-- CASO A: LA CUOTA TIENE PAGOS -->
+                                        <template v-if="cuota.pagos.length > 0">
+                                            <!-- Fila Principal (Resumen de la cuota y sumatoria de pagos) -->
+                                            <tr class="text-center align-middle">
+                                                <!-- Columnas de Cuota (siempre visibles) -->
+                                                <td :rowspan="isCuotaExpanded(cuota.id) ? cuota.pagos.length + 1 : 1" class="fw-bold text-dark">{{ cuota.numero }}</td>
+                                                <td :rowspan="isCuotaExpanded(cuota.id) ? cuota.pagos.length + 1 : 1">{{ formatDate(cuota.fecha) }}</td>
+                                                <td :rowspan="isCuotaExpanded(cuota.id) ? cuota.pagos.length + 1 : 1" class="text-end fw-bold text-secondary">{{ formatMoney(cuota.capital) }}</td>
+                                                <td :rowspan="isCuotaExpanded(cuota.id) ? cuota.pagos.length + 1 : 1" class="text-end text-muted">{{ formatMoney(cuota.interes) }}</td>
+                                                <td :rowspan="isCuotaExpanded(cuota.id) ? cuota.pagos.length + 1 : 1" class="text-end fw-bold text-primary">{{ formatMoney(cuota.total) }}</td>
+                                                <td :rowspan="isCuotaExpanded(cuota.id) ? cuota.pagos.length + 1 : 1">
+                                                    <span :class="getBadgeCuotaClass(cuota.estado)" style="width: 110px; display: inline-block; text-align: center;">
+                                                        {{ getBadgeCuotaText(cuota.estado) }}
+                                                    </span>
+                                                </td>
+                                                
+                                                <!-- Columnas de Resumen de Pagos en la Fila Principal -->
+                                                <td class="table-info text-muted font-size-10 fw-bold">-</td>
+                                                <td class="table-info fw-bold text-success text-end">{{ formatMoney(getSumMontoPago(cuota.pagos)) }}</td>
+                                                <td class="table-info fw-bold text-danger text-end">{{ formatMoney(getSumPagoMora(cuota.pagos)) }}</td>
+                                                <td class="table-info text-center">
+                                                    <button class="btn btn-xs py-0 px-2 fw-bold" :class="isCuotaExpanded(cuota.id) ? 'btn-secondary' : 'btn-info'" @click="toggleCuotaPagos(cuota.id)" style="font-size: 10px; border-radius: 4px;">
+                                                        <i class="fas me-1" :class="isCuotaExpanded(cuota.id) ? 'fa-compress-alt' : 'fa-expand-alt'"></i>
+                                                        {{ isCuotaExpanded(cuota.id) ? 'Ocultar' : 'Pagos' }}
+                                                    </button>
+                                                </td>
+                                            </tr>
+
+                                            <!-- Filas Secundarias Desplegadas (para cada pago individual) -->
+                                            <tr v-if="isCuotaExpanded(cuota.id)" v-for="pago in cuota.pagos" :key="pago.id" class="text-center align-middle table-info-light">
+                                                <td class="fw-bold bg-light-subtle">{{ formatDate(pago.fecha_pago) }}</td>
+                                                <td class="fw-bold text-success text-end bg-light-subtle">{{ formatMoney(pago.monto_pago) }}</td>
+                                                <td class="fw-bold text-danger text-end bg-light-subtle">{{ formatMoney(pago.pago_mora) }}</td>
+                                                <td class="text-center bg-light-subtle">
+                                                    <button class="btn btn-xs btn-outline-info py-0 px-2 fw-bold" @click="verDetallePago(pago)" style="font-size: 9.5px; border-radius: 4px;">
+                                                        <i class="fas fa-eye me-1"></i> Ver
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </template>
+
+                                        <!-- CASO B: LA CUOTA NO TIENE PAGOS -->
+                                        <tr v-if="cuota.pagos.length === 0" class="text-center align-middle">
+                                            <td class="fw-bold text-dark">{{ cuota.numero }}</td>
+                                            <td>{{ formatDate(cuota.fecha) }}</td>
+                                            <td class="text-end fw-bold text-secondary">{{ formatMoney(cuota.capital) }}</td>
+                                            <td class="text-end text-muted">{{ formatMoney(cuota.interes) }}</td>
+                                            <td class="text-end fw-bold text-primary">{{ formatMoney(cuota.total) }}</td>
+                                            <td>
+                                                <span :class="getBadgeCuotaClass(cuota.estado)" style="width: 110px; display: inline-block; text-align: center;">
+                                                    {{ getBadgeCuotaText(cuota.estado) }}
+                                                </span>
+                                            </td>
+                                            <td colspan="4" class="text-muted small py-1 bg-light text-center">
+                                                <i class="fas fa-exclamation-circle me-1 text-warning"></i> Sin pagos registrados
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODAL DETALLE DE PAGO (GLASSMORPHISM) -->
+                <div v-if="mostrarModalPago" class="custom-modal-backdrop" @click.self="mostrarModalPago = false">
+                    <div class="custom-modal-content card shadow-lg border-0 animate-scale-in">
+                        <div class="card-header bg-info bg-gradient py-2 d-flex justify-content-between align-items-center text-white">
+                            <h6 class="my-0 fw-bold text-uppercase" style="font-size: 12px;"><i class="fas fa-receipt me-2"></i> Detalle del Pago Recibido</h6>
+                            <button type="button" class="btn-close btn-close-white" @click="mostrarModalPago = false" aria-label="Close"></button>
+                        </div>
+                        <div class="card-body p-3 font-size-11">
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <span class="text-muted d-block small mb-1 fw-bold text-uppercase" style="font-size: 9px;">Recibo / Cód. Transacción</span>
+                                    <span class="fw-bold text-dark font-size-12">{{ pagoSeleccionado.codigo_transaccion || 'N/A' }}</span>
+                                </div>
+                                <div class="col-6">
+                                    <span class="text-muted d-block small mb-1 fw-bold text-uppercase" style="font-size: 9px;">Fecha de Pago</span>
+                                    <span class="fw-bold text-dark">{{ formatDate(pagoSeleccionado.fecha_pago) }}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="border border-info rounded p-2 mb-3 bg-light bg-gradient">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="text-muted fw-bold">Monto Total Cobrado:</span>
+                                    <span class="fw-bold text-success font-size-12">{{ formatMoney(pagoSeleccionado.monto_pago) }}</span>
+                                </div>
+                                <hr class="my-1 border-top border-info opacity-20">
+                                <div class="d-flex justify-content-between small text-muted mb-1">
+                                    <span>Abono a Capital:</span>
+                                    <span class="fw-bold text-dark">{{ formatMoney(pagoSeleccionado.pago_capital) }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between small text-muted mb-1">
+                                    <span>Abono a Interés:</span>
+                                    <span class="fw-bold text-dark">{{ formatMoney(pagoSeleccionado.pago_interes) }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between small text-muted">
+                                    <span class="text-danger">Mora Cobrada:</span>
+                                    <span class="fw-bold text-danger">{{ formatMoney(pagoSeleccionado.pago_mora) }}</span>
+                                </div>
+                            </div>
+
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <span class="text-muted d-block small mb-1 fw-bold text-uppercase" style="font-size: 9px;">Forma de Pago</span>
+                                    <span class="badge bg-secondary font-size-9 px-2 py-1 text-uppercase rounded">{{ pagoSeleccionado.forma_pago }}</span>
+                                </div>
+                                <div class="col-6">
+                                    <span class="text-muted d-block small mb-1 fw-bold text-uppercase" style="font-size: 9px;">Cajero Responsable</span>
+                                    <span class="fw-bold text-dark text-uppercase text-truncate d-block">{{ pagoSeleccionado.cajero_nombre }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer d-flex justify-content-end p-2 bg-light">
+                            <button class="btn btn-secondary btn-xs px-3 py-1" @click="mostrarModalPago = false" style="font-size: 11px;">
+                                <i class="fas fa-times-circle me-1"></i> Cerrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
         </div>
-        
-      
     </main>
 </template>
 
 <script>
-    import moment from 'moment';
-    import Swal from 'sweetalert2'
+import moment from 'moment';
+import Swal from 'sweetalert2';
 
-
-    export default {
-        data() {
-            return {
-
-
-                cliente: {
-                    id: 0,
-                    nombre: '',
-                    fecha_nacimiento: '',
-                    ci: '',
-                    lugar_expedicion: '',
-                    buscar: '',
-                },
-                id_cliente:0,
-                isVisibleCliente: false,
-                items_cliente: [],  // Lista de clientes obtenida desde la base de datos
-                items_creditos:[],
-              
-                preloader:false,
-                vista:0,
-  
-
-            }
-        },
-        computed:{
-            filteredItemsCliente() {
-                const searchTermLower = this.cliente.ci.toLowerCase();  // Utilizamos 'ci' como el campo de búsqueda, pero puedes modificarlo
-                return this.items_cliente.filter(item => 
-                    item.ci.toLowerCase().includes(searchTermLower) || 
-                    item.nombre.toLowerCase().includes(searchTermLower)
-                );
-            }
-        },
-        methods: {
-            generarPdfCuotasPlanPago(id_plan_pago){
-                // Construye la URL con el parámetro fecha_inicio
-                const url = '/rep_extracto_credito?id_plan_pago='+id_plan_pago;
-
-                // Abre una nueva pestaña o ventana con la URL
-                window.open(url, '_blank');
+export default {
+    data() {
+        return {
+            preloader: false,
+            vista: 0,
+            creditos: [],
+            filtros: {
+                id_credito: '',
+                buscar_cliente: '',
+                estado_plan: 'todos',
+                fecha_inicio: moment().subtract(1, 'months').format('YYYY-MM-DD'),
+                fecha_fin: moment().format('YYYY-MM-DD')
             },
-            limpiar(){
-                this.limpiarInputCliente();
-                this.id_cliente=0;
-                this.items_creditos=[];
+            detalle: {
+                credito: {},
+                cuotas: []
             },
-
-            limpiarInputCliente(){
-
-                this.cliente= {
-                    id: 0,
-                    nombre: '',
-                    fecha_nacimiento: '',
-                    ci: '',
-                    lugar_expedicion: '',
-                    buscar: '',
-                };
-                
-            },
-            async seleccionarCliente(cliente) {
-                this.preloader=true;
-                this.cliente = {
-                    ...this.cliente,
-                    buscar: cliente.nombre + ' - ' + cliente.ci,
-                    id: cliente.id,
-                    fecha_nacimiento: cliente.fecha_nacimiento,
-                    lugar_expedicion: cliente.lugar_expedicion
-                };
-                this.isVisibleCliente = false;  // Ocultar el dropdown después de la selección
-                this.id_cliente=cliente.id;
-                await this.getCreditos();
-                this.preloader=false;
-
-            },
-   
-            async getClientes(){
-                await axios.get('/get_clientes_rep').then((response)=>{
-                    this.items_cliente=response.data;
-                    console.log(response.data);
-                })
-                .catch((error)=>{
-                    console.log(error.message);
-                })
-            },
-
-            async getCreditos(){
-                await axios.get('/get_creditos_rep?id_cliente='+this.id_cliente).then((response)=>{
-                    this.items_creditos=response.data;
-                    console.log(response.data);
-                })
-                .catch((error)=>{
-                    console.log(error.message);
-                })
-            },
-
-        },
-        async mounted() {
+            pagoSeleccionado: null,
+            mostrarModalPago: false,
+            expandedCuotas: {}
+        };
+    },
+    methods: {
+        async getCreditos() {
             this.preloader = true;
-            console.log('Component mounted.');
-            await this.getClientes();
-            this.preloader=false;
+            try {
+                const response = await axios.get('/get_creditos_rep', { params: this.filtros });
+                this.creditos = response.data;
+            } catch (error) {
+                console.error("Error al obtener créditos:", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Ocurrió un problema al obtener el listado de créditos.'
+                });
+            } finally {
+                this.preloader = false;
+            }
+        },
+        async verDetalle(id_plan_pago) {
+            this.preloader = true;
+            try {
+                const response = await axios.get('/get_detalle_credito_extracto', {
+                    params: { id_plan_pago }
+                });
+                this.detalle = response.data;
+                this.expandedCuotas = {}; // Resetear estados de expansión
+                this.vista = 1; // Cambiar a la vista de detalle
+            } catch (error) {
+                console.error("Error al obtener detalle del crédito:", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudo cargar la información detallada del crédito.'
+                });
+            } finally {
+                this.preloader = false;
+            }
+        },
+        generarPdfCuotasPlanPago(id_plan_pago) {
+            const url = `/rep_extracto_credito?id_plan_pago=${id_plan_pago}`;
+            window.open(url, '_blank');
+        },
+        limpiarFiltros() {
+            this.filtros = {
+                id_credito: '',
+                buscar_cliente: '',
+                estado_plan: 'todos',
+                fecha_inicio: moment().subtract(1, 'months').format('YYYY-MM-DD'),
+                fecha_fin: moment().format('YYYY-MM-DD')
+            };
+            this.getCreditos();
+        },
+        verDetallePago(pago) {
+            this.pagoSeleccionado = pago;
+            this.mostrarModalPago = true;
+        },
+        toggleCuotaPagos(cuotaId) {
+            this.expandedCuotas = {
+                ...this.expandedCuotas,
+                [cuotaId]: !this.expandedCuotas[cuotaId]
+            };
+        },
+        isCuotaExpanded(cuotaId) {
+            return !!this.expandedCuotas[cuotaId];
+        },
+        getSumMontoPago(pagos) {
+            return pagos.reduce((sum, p) => sum + parseFloat(p.monto_pago || 0), 0);
+        },
+        getSumPagoMora(pagos) {
+            return pagos.reduce((sum, p) => sum + parseFloat(p.pago_mora || 0), 0);
+        },
+        formatMoney(value, currency = 'Bs.') {
+            if (value === null || value === undefined) return '-';
+            const formatted = new Intl.NumberFormat('es-BO', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(value);
+            return `${formatted} ${currency}`;
+        },
+        formatDate(date) {
+            if (!date) return '-';
+            return moment(date).format('DD/MM/YYYY');
+        },
+        getBadgeCuotaClass(estado) {
+            switch(estado) {
+                case 0: return 'badge bg-secondary text-uppercase font-size-9 px-1 rounded'; // Anulado
+                case 1: return 'badge bg-warning text-dark text-uppercase font-size-9 px-1 rounded'; // Pendiente
+                case 2: return 'badge bg-success text-uppercase font-size-9 px-1 rounded'; // Pagada completamente
+                case 3: return 'badge bg-info text-white text-uppercase font-size-9 px-1 rounded'; // Pago parcial
+                default: return 'badge bg-light text-uppercase font-size-9 px-1 rounded';
+            }
+        },
+        getBadgeCuotaText(estado) {
+            switch(estado) {
+                case 0: return 'Anulada';
+                case 1: return 'Pendiente';
+                case 2: return 'Pagada';
+                case 3: return 'P. Parcial';
+                default: return 'Desconocido';
+            }
         }
-
-
+    },
+    async mounted() {
+        await this.getCreditos();
     }
-
+};
 </script>
-
-<style>
-.image-container {
-    width: 100%;
-    height: auto;
-    margin-bottom:1rem;
-}
-.image-container img {
-    width: 100%;
-    height: auto;
-    max-width: 100%; /* Evita que la imagen se estire más allá de su tamaño natural */
-}
-
-</style>
 
 <style scoped>
 .preloader {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 99999;
 }
-
-.spinner {
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #3498db;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
+.border-start-4 {
+    border-left-width: 4px !important;
 }
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-p {
-  color: white;
-  margin-top: 10px;
-}
-</style>
-
-<style>
-
-
-/* Estilo general del dropdown y su contenedor */
-.dropdown-wrapper {
-    background-color: #f8f9fa;
-    border-radius: 0.375rem;
-    transition: background-color 0.3s ease-in-out;
-}
-
-.dropdown-wrapper:hover {
-    background-color: #e9ecef;
-}
-
-/* Estilo del elemento seleccionado */
-.selected-item {
-    border-radius: 0.375rem;
-    background-color: #ffffff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    transition: background-color 0.3s ease;
-}
-
-.selected-item:hover {
-    background-color: #f1f3f5;
-}
-
-/* Estilo del dropdown cuando está visible o invisible */
-.dropdown-popover {
-    background-color: white;
-    border-radius: 0.375rem;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-    max-height: 250px;
-    overflow-y: auto;
-    transition: all 0.3s ease-in-out;
-}
-
-.dropdown-popover.visible {
-    display: block;
-}
-
-.dropdown-popover.invisible {
-    display: none;
-}
-
-/* Estilo del campo de entrada (input) */
-.form-control-sm {
+.btn-group .dropdown-menu {
     border: none;
-    padding: 0.5rem;
-    font-size: 14px;
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #ced4da;
-    transition: background-color 0.3s ease-in-out;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+    border-radius: 6px;
+    padding: 6px 0;
+}
+.btn-group .dropdown-item {
+    font-size: 11px;
+    padding: 6px 12px;
+    transition: all 0.2s ease;
+}
+.btn-group .dropdown-item:hover {
+    background-color: rgba(0, 255, 170, 0.15) !important;
+    color: #00ffaa !important;
 }
 
-.form-control-sm:focus {
-    background-color: #ffffff;
-    outline: none;
+/* Clases específicas para diseño extra compacto */
+.table-compact th, .table-compact td {
+    padding: 3px 5px !important;
+    vertical-align: middle !important;
+    font-size: 10.5px !important;
+}
+.table-compact th {
+    font-weight: 700 !important;
+    font-size: 10px !important;
+}
+.font-size-11 {
+    font-size: 11px !important;
+}
+.font-size-10 {
+    font-size: 10px !important;
+}
+.font-size-9 {
+    font-size: 9px !important;
+}
+.font-size-8 {
+    font-size: 8px !important;
+}
+.btn-xs {
+    padding: 3px 8px !important;
+    font-size: 10.5px !important;
+    border-radius: 4px !important;
 }
 
-/* Estilo de los elementos de la lista (li) */
-.list-group-item {
-    padding: 0.5rem 1rem;
-    transition: background-color 0.2s ease-in-out;
+/* Estilos para el Modal de Pago Personalizado (Glassmorphism Backdrop) */
+.custom-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.55);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100000;
+    backdrop-filter: blur(3px);
+}
+.custom-modal-content {
+    background: #ffffff;
+    border-radius: 8px;
+    width: 92%;
+    max-width: 380px;
+    overflow: hidden;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.3) !important;
+}
+.animate-scale-in {
+    animation: scaleIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes scaleIn {
+    0% { transform: scale(0.9); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
 }
 
-.list-group-item:hover {
-    background-color: #f1f3f5;
+/* Efecto de fondo celeste sumamente tenue para las filas secundarias de pagos desplegadas */
+.table-info-light td {
+    background-color: rgba(52, 152, 219, 0.06) !important;
+    border-color: rgba(52, 152, 219, 0.15) !important;
+}
+.btn-info {
+    background-color: #38bdf8 !important;
+    border-color: #0ea5e9 !important;
+    color: #ffffff !important;
+}
+.btn-info:hover {
+    background-color: #0ea5e9 !important;
+    border-color: #0284c7 !important;
 }
 
-/* Estilo del mensaje de lista vacía */
-.text-muted {
-    font-size: 13px;
-}
 
-/* Estilo de los resultados */
-.fw-bold {
-    font-weight: 600;
-}
 </style>

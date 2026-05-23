@@ -28,6 +28,101 @@
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDE-0UOTWtyaeBaTj4WYrA1mHmj5uUCGmw&libraries=places"></script>
 
     <meta content="notranslate">
+    
+    <style>
+        /* Estilos Premium para el Dropdown de Reportes */
+        .reports-dropdown-btn {
+            color: #ffffff !important;
+            background-color: rgba(255, 255, 255, 0.08) !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            border-radius: 6px !important;
+            padding: 6px 16px !important;
+            font-weight: 500 !important;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .reports-dropdown-btn:hover {
+            background-color: rgba(255, 255, 255, 0.15) !important;
+            border-color: #00ffaa !important;
+            box-shadow: 0 0 12px rgba(0, 255, 170, 0.3) !important;
+            transform: translateY(-1px);
+        }
+
+        .reports-dropdown-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Oculta la flecha por defecto de Bootstrap */
+        .reports-dropdown-btn.dropdown-toggle::after {
+            display: none !important;
+        }
+
+        /* Animación para el icono de la flecha */
+        .reports-chevron {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
+        /* Rotación de la flecha al desplegar */
+        .dropdown.show .reports-chevron,
+        .reports-dropdown-btn[aria-expanded="true"] .reports-chevron {
+            transform: rotate(180deg) !important;
+        }
+
+        .reports-dropdown-menu {
+            background-color: #2a3b50 !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            border-radius: 8px !important;
+            min-width: 280px !important;
+            padding: 8px 0 !important;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3) !important;
+            transition: all 0.3s ease !important;
+        }
+
+        .reports-dropdown-menu .dropdown-item {
+            color: rgba(255, 255, 255, 0.85) !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
+            padding: 8px 16px !important;
+            transition: all 0.25s ease !important;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none !important;
+        }
+
+        .reports-dropdown-menu .dropdown-item i {
+            font-size: 16px;
+            transition: transform 0.25s ease !important;
+        }
+
+        .reports-dropdown-menu .dropdown-item:hover {
+            background-color: rgba(0, 255, 170, 0.12) !important;
+            color: #00ffaa !important;
+            padding-left: 20px !important; /* Micro-animación de deslizamiento */
+        }
+
+        .reports-dropdown-menu .dropdown-item:hover i {
+            transform: scale(1.2);
+            color: #00ffaa !important;
+        }
+
+        .reports-dropdown-menu .dropdown-header {
+            color: rgba(255, 255, 255, 0.5) !important;
+            font-size: 11px !important;
+            font-weight: 600 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.05em !important;
+            padding: 8px 16px 4px 16px !important;
+        }
+
+        .reports-dropdown-menu .dropdown-divider {
+            border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+            margin: 6px 0 !important;
+        }
+    </style>
    
 </head>
 
@@ -71,109 +166,96 @@
                         <i class="mdi mdi-menu"></i>
                     </button>
 
-                    <!-- Create New Dropdown -->
-                    {{-- <div class="dropdown d-none d-lg-inline-block align-self-center">
-                        <button class="btn btn-header waves-effect dropdown-toggle" type="button" id="createNewDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            Create New<i class="mdi mdi-chevron-down ms-2"></i>
-                        </button>
-                        <ul class="dropdown-menu" aria-labelledby="createNewDropdown">
-                            <li><a class="dropdown-item" href="#">Action</a></li>
-                            <li><a class="dropdown-item" href="#">Another action</a></li>
-                            <li><a class="dropdown-item" href="#">Something else here</a></li>
-                            <li><div class="dropdown-divider"></div></li>
-                            <li><a class="dropdown-item" href="#">Separated link</a></li>
-                        </ul>
-                    </div> --}}
+
                 </div>
 
                 <div class="d-flex">
-                    <!-- Search Dropdown (Mobile) -->
-                    {{-- <div class="dropdown d-inline-block d-lg-none ms-2">
-                        <button type="button" class="btn header-item noti-icon waves-effect" id="page-header-search-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <i class="mdi mdi-magnify"></i>
+                
+                    @if($login_controller->permisoSistema('reportes', auth()->user()->id_rol))
+                    <!-- Dropdown de Reportes -->
+                    <div class="dropdown d-none d-lg-inline-block align-self-center me-3">
+                        <button class="btn reports-dropdown-btn waves-effect dropdown-toggle" type="button" id="reportsDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bx bx-bar-chart-alt-2" style="color: #00ffaa;"></i>
+                            <span>Reportes</span>
+                            <i class="mdi mdi-chevron-down reports-chevron font-size-14 opacity-75"></i>
                         </button>
-                        <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end p-0" aria-labelledby="page-header-search-dropdown">
-                            <div class="p-3">
-                                <div class="form-group m-0">
-                                    <div class="input-group">
-                                        <input type="text" class="form-control" placeholder="Search ..." aria-label="Recipient's username">
-                                        <div class="input-group-append">
-                                            <button class="btn btn-primary" type="submit"><i class="mdi mdi-magnify"></i></button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div> --}}
+                        <ul class="dropdown-menu reports-dropdown-menu dropdown-menu-end shadow-lg border-0" aria-labelledby="reportsDropdownBtn" style="position: absolute; right: 0;">
+                            <li class="dropdown-header">Reportes Generales</li>
+                            <li>
+                                <a class="dropdown-item" href="/reportes">
+                                    <i class="bx bx-grid-alt" style="color: #38bdf8;"></i>
+                                    <span>Panel de Reportes</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/index_rep_extracto">
+                                    <i class="bx bx-receipt" style="color: #fbbf24;"></i>
+                                    <span>Extracto de Crédito</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/hist_credito_mora">
+                                    <i class="bx bx-time-five" style="color: #f87171;"></i>
+                                    <span>Historial Crédito Mora</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/cliente_mora">
+                                    <i class="bx bx-user-x" style="color: #ef4444;"></i>
+                                    <span>Clientes en Mora</span>
+                                </a>
+                            </li>
+                            
+                            <li><div class="dropdown-divider"></div></li>
+                            <li class="dropdown-header">Transacciones y Pagos</li>
+                            <li>
+                                <a class="dropdown-item" href="/index_rep_pagos_realizados">
+                                    <i class="bx bx-check-circle" style="color: #34d399;"></i>
+                                    <span>Pagos Realizados</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/index_pagos_programados">
+                                    <i class="bx bx-calendar" style="color: #60a5fa;"></i>
+                                    <span>Pagos Programados</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/index_movimientos_credito">
+                                    <i class="bx bx-transfer" style="color: #a78bfa;"></i>
+                                    <span>Extracto de Movimientos</span>
+                                </a>
+                            </li>
 
-                    <!-- App Search -->
-                    {{-- <div class="app-search d-none d-lg-block">
-                        <div class="position-relative">
-                            <input type="text" class="form-control" placeholder="Search...">
-                            <span class="mdi mdi-magnify"></span>
-                        </div>
-                    </div> --}}
-
-                    <!-- Notification Dropdown -->
-                    {{-- <div class="dropdown d-inline-block">
-                        <button type="button" class="btn header-item noti-icon waves-effect" id="page-header-notifications-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <i class="mdi mdi-bell"></i>
-                            <span class="badge bg-info rounded-pill">3</span>
-                        </button>
-                        <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end p-0" aria-labelledby="page-header-notifications-dropdown">
-                            <h5 class="p-3 text-dark mb-0">Notifications (37)</h5>
-                            <div data-simplebar style="max-height: 230px;">
-                                <a href="" class="text-reset notification-item">
-                                    <div class="d-flex mt-3">
-                                        <div class="avatar-xs me-3">
-                                            <span class="avatar-title bg-success rounded-circle font-size-16">
-                                                <i class="mdi mdi-cart"></i>
-                                            </span>
-                                        </div>
-                                        <div class="flex-1">
-                                            <h6 class="mb-1">Your order is placed</h6>
-                                            <div class="font-size-12 text-muted">
-                                                <p class="mb-1">If several languages coalesce the grammar</p>
-                                            </div>
-                                        </div>
-                                    </div>
+                            <li><div class="dropdown-divider"></div></li>
+                            <li class="dropdown-header">Porcentajes y Desembolsos</li>
+                            <li>
+                                <a class="dropdown-item" href="/index_porcentajes_pagos">
+                                    <i class="bx bx-pie-chart-alt-2" style="color: #fb7185;"></i>
+                                    <span>Porcentaje Pagos</span>
                                 </a>
-                                <a href="" class="text-reset notification-item">
-                                    <div class="d-flex mt-3">
-                                        <div class="avatar-xs me-3">
-                                            <span class="avatar-title bg-warning rounded-circle font-size-16">
-                                                <i class="mdi mdi-message"></i>
-                                            </span>
-                                        </div>
-                                        <div class="flex-1">
-                                            <h6 class="mb-1">New Message received</h6>
-                                            <div class="font-size-12 text-muted">
-                                                <p class="mb-1">You have 87 unread messages</p>
-                                            </div>
-                                        </div>
-                                    </div>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/index_desembolsos">
+                                    <i class="bx bx-dollar-circle" style="color: #34d399;"></i>
+                                    <span>Desembolsos</span>
                                 </a>
-                                <a href="" class="text-reset notification-item">
-                                    <div class="d-flex mt-3">
-                                        <div class="avatar-xs me-3">
-                                            <span class="avatar-title bg-info rounded-circle font-size-16">
-                                                <i class="mdi mdi-flag"></i>
-                                            </span>
-                                        </div>
-                                        <div class="flex-1">
-                                            <h6 class="mb-1">Your item is shipped</h6>
-                                            <div class="font-size-12 text-muted">
-                                                <p class="mb-1">If several languages coalesce the grammar</p>
-                                            </div>
-                                        </div>
-                                    </div>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/index_desembolsos_oficial">
+                                    <i class="bx bx-user" style="color: #818cf8;"></i>
+                                    <span>Desembolsos por Oficial</span>
                                 </a>
-                            </div>
-                            <div class="p-2 d-grid">
-                                <a class="font-size-14 text-center" href="javascript:void(0)">View all</a>
-                            </div>
-                        </div>
-                    </div> --}}
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/index_desembolsos_pendientes">
+                                    <i class="bx bx-hourglass-top" style="color: #fbbf24;"></i>
+                                    <span>Desembolsos Pendientes</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    @endif
 
                     <!-- User Dropdown -->
                     <div class="dropdown d-inline-block">
@@ -239,11 +321,6 @@
 
             @yield('content')
 
-            
-            {{-- <footer class="footer">
-                © 2025 <span class="d-none d-sm-inline-block"> INNOVASOFT </span>
-            </footer>
-             --}}
         </div>
         <!-- end main content-->
         
