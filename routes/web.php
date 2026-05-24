@@ -288,6 +288,7 @@ Route::get('/export-planes_pago', 'App\Http\Controllers\ExportController@exportP
 Route::get('/index_rep_extracto', 'App\Http\Controllers\VistasReporteController@indexExtracto');
 Route::get('/get_clientes_rep', 'App\Http\Controllers\VistasReporteController@getClientesRep');
 Route::get('/get_creditos_rep', 'App\Http\Controllers\VistasReporteController@getCreditosRep');
+Route::get('/get_creditos_mora_rep', 'App\Http\Controllers\VistasReporteController@getCreditosMoraRep');
 Route::get('/rep_extracto_credito', 'App\Http\Controllers\VistasReporteController@generarReporteExtracto');
 Route::get('/get_detalle_credito_extracto', 'App\Http\Controllers\VistasReporteController@getDetalleCreditoExtracto');
 

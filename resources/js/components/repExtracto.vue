@@ -14,7 +14,7 @@
                 <div v-if="vista === 0" class="card shadow-sm border-0">
                     <div class="card-header bg-warning bg-gradient py-2 d-flex justify-content-between align-items-center">
                         <h5 class="header-title my-0 fw-bold text-dark text-uppercase mx-auto" style="font-size: 14px;">
-                            <i class="fas fa-file-invoice-dollar me-2"></i> Extracto de Crédito de Clientes
+                             Extracto de Crédito de Clientes
                         </h5>
                     </div>
 
@@ -95,9 +95,15 @@
                                         <td class="fw-bold text-danger text-end">{{ formatMoney(item.total_pagar, item.moneda) }}</td>
                                         <td class="text-center">{{ item.tasa }}%</td>
                                         <td class="text-center">{{ item.nro_cuotas }} cuotas ({{ item.lapso_capital }})</td>
-                                        <td class="text-center">
-                                            <span class="d-block text-muted">Inicio: {{ formatDate(item.fecha_inicio) }}</span>
-                                            <span class="d-block text-muted">Fin: {{ formatDate(item.fecha_fin) }}</span>
+                                        <td>
+                                            <div class="d-flex flex-column gap-1 align-items-center">
+                                                <span class="badge bg-light text-dark border border-success-subtle rounded px-2 py-1" style="width: 105px; display: inline-block; font-weight: 500; font-size: 9.5px;">
+                                                    <i class="far fa-calendar-alt text-success me-1"></i> {{ formatDate(item.fecha_inicio) }}
+                                                </span>
+                                                <span class="badge bg-light text-dark border border-danger-subtle rounded px-2 py-1" style="width: 105px; display: inline-block; font-weight: 500; font-size: 9.5px;">
+                                                    <i class="far fa-calendar-check text-danger me-1"></i> {{ formatDate(item.fecha_fin) }}
+                                                </span>
+                                            </div>
                                         </td>
                                         <td class="text-center">
                                             <span :class="item.estado === 1 ? 'badge bg-success text-uppercase font-size-10 px-2 rounded' : 'badge bg-secondary text-uppercase font-size-10 px-2 rounded'" style="width: 110px; display: inline-block; text-align: center;">
@@ -134,16 +140,13 @@
 
                 <!-- VISTA 1: DETALLE DE CRÉDITO Y CUOTAS COMBINADAS (COMPACTO Y DESPLEGABLE) -->
                 <div v-if="vista === 1" class="card shadow-sm border-0">
-                    <div class="card-header bg-warning bg-gradient py-2 d-flex justify-content-between align-items-center">
-                        <button class="btn btn-secondary btn-xs px-2 py-1" @click="vista = 0" style="font-size: 11px;">
-                            <i class="fas fa-arrow-left me-1"></i> Volver
-                        </button>
-                        <h5 class="header-title my-0 fw-bold text-dark text-uppercase mx-auto" style="font-size: 14px;">
-                            <i class="fas fa-info-circle me-2"></i> Detalles de Extracto — Crédito #{{ detalle.credito.id }}
-                        </h5>
-                        <button class="btn btn-danger btn-xs px-2 py-1" @click="generarPdfCuotasPlanPago(detalle.credito.id)" style="font-size: 11px;">
-                            <i class="fas fa-file-pdf me-1"></i> Exportar PDF
-                        </button>
+                    <div class="card-header bg-warning py-2 d-flex justify-content-between align-items-center">
+                        <div class="flex-grow-1 text-center">
+                            <h5 class="header-title my-0 fw-bold text-dark text-uppercase" style="font-size: 14px;">
+                                {{ tituloFormulario }}
+                            </h5>
+                        </div>
+                        <a @click="cerrarFormulario()" type="button" class="btn-close btn-close-white" style="cursor: pointer;"></a>
                     </div>
 
                     <div class="card-body pt-2">
@@ -185,9 +188,14 @@
                         </div>
 
                         <!-- TABLA DE CUOTAS Y PAGOS COMBINADOS COMPACTA (UNA SOLA FILA DE ENCABEZADO) -->
-                        <h6 class="fw-bold text-dark mb-2 text-uppercase" style="font-size: 12px;">
-                            <i class="fas fa-money-bill-wave me-1"></i> Cronograma de Amortizaciones y Pagos Realizados
-                        </h6>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold text-dark my-0 text-uppercase" style="font-size: 12px;">
+                                <i class="fas fa-money-bill-wave me-1"></i> Cronograma de Amortizaciones y Pagos Realizados
+                            </h6>
+                            <button class="btn btn-danger btn-xs px-2 py-1" @click="generarPdfCuotasPlanPago(detalle.credito.id)" style="font-size: 10.5px; display: flex; align-items: center; gap: 4px; border-radius: 4px;">
+                                <i class="fas fa-file-pdf"></i> <span>Exportar PDF</span>
+                            </button>
+                        </div>
 
                         <div class="table-responsive" style="font-size: 10.5px;">
                             <table class="table table-bordered table-sm align-middle table-compact">
@@ -360,6 +368,14 @@ export default {
             expandedCuotas: {}
         };
     },
+    computed: {
+        tituloFormulario() {
+            if (this.detalle && this.detalle.credito && this.detalle.credito.id) {
+                return `Detalles de Extracto — Crédito #${this.detalle.credito.id}`;
+            }
+            return "Detalles de Extracto";
+        }
+    },
     methods: {
         async getCreditos() {
             this.preloader = true;
@@ -410,6 +426,9 @@ export default {
                 fecha_fin: moment().format('YYYY-MM-DD')
             };
             this.getCreditos();
+        },
+        cerrarFormulario() {
+            this.vista = 0;
         },
         verDetallePago(pago) {
             this.pagoSeleccionado = pago;

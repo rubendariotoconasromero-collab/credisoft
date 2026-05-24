@@ -153,6 +153,118 @@ class VistasReporteController extends Controller
         ]);
     }
 
+    public function getCreditosMoraRep(Request $request)
+    {
+        $id_credito = $request->id_credito;
+        $buscar_cliente = $request->buscar_cliente;
+
+        // Fetch credits in arrears (with at least one unpaid cuota past due)
+        $query = DB::table('plan_pago')
+            ->join('solicitud', 'solicitud.id', '=', 'plan_pago.id_solicitud')
+            ->join('cliente', 'cliente.id', '=', 'solicitud.id_cliente')
+            ->join('users', 'users.id', '=', 'solicitud.id_usuario')
+            ->join('cuota', 'cuota.id_plan_pago', '=', 'plan_pago.id')
+            ->whereIn('cuota.estado', [1, 3]) // 1: Sin pagar, 3: Pago parcial
+            ->whereDate('cuota.fecha', '<', now()) // Vencidas
+            ->whereIn('plan_pago.estado', [1, 2]) // Vigente o Terminado
+            ->select(
+                'plan_pago.id as plan_pago_id',
+                'solicitud.id as credito_id',
+                'solicitud.id_cliente',
+                'solicitud.importe_solicitud',
+                'solicitud.moneda',
+                'solicitud.tasa',
+                'solicitud.nro_cuotas',
+                'solicitud.lapso_capital',
+                'cliente.nombre as cliente_nombre',
+                'cliente.ci as cliente_ci',
+                'users.personal as asesor_nombre',
+                DB::raw('COUNT(cuota.id) as cuotas_mora_count'),
+                DB::raw('DATEDIFF(NOW(), MIN(cuota.fecha)) as dias_mora_max'),
+                // Formulas aligned with DATABASE.md to subtract already paid amounts in partial payments (estado 3)
+                DB::raw('SUM(cuota.capital - cuota.capital_pagado) as total_capital_mora'),
+                DB::raw('SUM(cuota.interes - cuota.interes_pagado) as total_interes_mora'),
+                DB::raw('SUM(cuota.total - (cuota.capital_pagado + cuota.interes_pagado)) as total_cuota_mora'),
+                // Dynamic multa: 3 BOB per delayed day minus any already paid mora (mora_pagada)
+                DB::raw('SUM(CASE WHEN DATEDIFF(NOW(), cuota.fecha) > 0 THEN (DATEDIFF(NOW(), cuota.fecha) * 3) - cuota.mora_pagada ELSE 0 END) as total_multas_mora')
+            )
+            ->groupBy(
+                'plan_pago.id',
+                'solicitud.id',
+                'solicitud.id_cliente',
+                'solicitud.importe_solicitud',
+                'solicitud.moneda',
+                'solicitud.tasa',
+                'solicitud.nro_cuotas',
+                'solicitud.lapso_capital',
+                'cliente.nombre',
+                'cliente.ci',
+                'users.personal'
+            );
+
+        if (!empty($id_credito)) {
+            $query->where('solicitud.id', $id_credito);
+        }
+
+        if (!empty($buscar_cliente)) {
+            $query->where(function($q) use ($buscar_cliente) {
+                $q->where('cliente.nombre', 'LIKE', '%' . $buscar_cliente . '%')
+                  ->orWhere('cliente.ci', 'LIKE', '%' . $buscar_cliente . '%');
+            });
+        }
+
+        $creditos = $query->orderBy('dias_mora_max', 'desc')->get();
+
+        // Attach specific past due cuotas for modal popups with precise outstanding details
+        foreach ($creditos as $credito) {
+            // Fetch contact telephones of the client
+            $telefonos = DB::table('telefono')
+                ->where('id_cliente', $credito->id_cliente)
+                ->select('numero', 'tipo', 'relacion')
+                ->get()
+                ->map(function($t) {
+                    $label = $t->numero;
+                    if (!empty($t->tipo) || !empty($t->relacion)) {
+                        $sub = [];
+                        if (!empty($t->tipo)) $sub[] = $t->tipo;
+                        if (!empty($t->relacion)) $sub[] = $t->relacion;
+                        $label .= ' (' . implode('-', $sub) . ')';
+                    }
+                    return $label;
+                })
+                ->toArray();
+
+            $credito->cliente_telefonos = empty($telefonos) ? 'Sin teléfonos' : implode(', ', $telefonos);
+            $credito->telefonos_list = $telefonos;
+
+            $credito->cuotas_mora = DB::table('cuota')
+                ->where('id_plan_pago', $credito->plan_pago_id)
+                ->whereIn('estado', [1, 3])
+                ->whereDate('fecha', '<', now())
+                ->orderBy('numero', 'asc')
+                ->select(
+                    'id',
+                    'numero',
+                    'fecha',
+                    'capital',
+                    'interes',
+                    'total',
+                    'estado',
+                    'capital_pagado',
+                    'interes_pagado',
+                    'mora_pagada',
+                    DB::raw('DATEDIFF(NOW(), fecha) as dias_retraso'),
+                    DB::raw('CASE WHEN DATEDIFF(NOW(), fecha) > 0 THEN (DATEDIFF(NOW(), fecha) * 3) - mora_pagada ELSE 0 END as multa_acumulada'),
+                    DB::raw('capital - capital_pagado as capital_pendiente'),
+                    DB::raw('interes - interes_pagado as interes_pendiente'),
+                    DB::raw('total - (capital_pagado + interes_pagado) as total_pendiente')
+                )
+                ->get();
+        }
+
+        return response()->json($creditos);
+    }
+
     public function generarReporteExtracto(Request $request){
         $informacion=DB::table('solicitud')
         ->join('cliente', 'cliente.id', '=', 'solicitud.id_cliente')
@@ -168,14 +280,21 @@ class VistasReporteController extends Controller
         ->get();
 
 
-
         $cuotas = DB::table('plan_pago')
         ->join('cuota', 'plan_pago.id', '=', 'cuota.id_plan_pago')
         ->select('cuota.*')
         ->where('plan_pago.id', $request->id_plan_pago)
+        ->orderBy('cuota.numero', 'asc')
         ->get();
 
-        
+        foreach ($cuotas as $cuota) {
+            $cuota->pagos = DB::table('pago')
+                ->where('pago.id_cuota', $cuota->id)
+                ->where('pago.estado', 1) // Activo
+                ->orderBy('pago.fecha_pago', 'asc')
+                ->get();
+        }
+
 
 
          // Carga la vista HTML para el reporte
@@ -514,7 +633,14 @@ class VistasReporteController extends Controller
 
         $html = view($url_vista, $data)->render();
 
-        $mpdf->WriteHTML($html);
+        // Temporarily suppress PHP warnings and notices for PHP 8 compatibility with mPDF's CSS/OTL parser
+        $prev_reporting = error_reporting(E_ALL & ~E_WARNING & ~E_NOTICE & ~E_DEPRECATED);
+        try {
+            $mpdf->WriteHTML($html);
+        } finally {
+            error_reporting($prev_reporting);
+        }
+
         $mpdf->Output($nombre_reporte, 'I');
     }
 
