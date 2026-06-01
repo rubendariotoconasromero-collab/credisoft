@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-
 use DB;
 use Carbon\Carbon;
 use Dompdf\Dompdf;
@@ -12,7 +11,6 @@ use Dompdf\Options;
 
 class PagoController extends Controller
 {
-
     public function save(Request $request){
         DB::beginTransaction();
 
@@ -44,7 +42,6 @@ class PagoController extends Controller
             }
 
             DB::table('pago')->insert($datos_pago);
-            
 
             DB::table('cuota')->where('id', $request->id_cuota)->update([
                 'estado'=>2,
@@ -94,6 +91,9 @@ class PagoController extends Controller
     public function anularPago(Request $request){
         DB::beginTransaction();
         try{
+            // Obtener el monto antes de anular para revertirlo en bóveda
+            $monto_pago = (float) DB::table('pago')->where('id', $request->id_pago)->value('monto_pago');
+
             DB::table('pago')
             ->join('cuota', 'cuota.id', '=', 'pago.id_cuota')
             ->where('pago.id', $request->id_pago)
@@ -101,7 +101,7 @@ class PagoController extends Controller
             ->update([
                 'pago.estado'=>0
             ]);
-    
+
             DB::table('cuota')->where('id', $request->id_cuota)->update([
                 'estado'=>1
             ]);
@@ -710,6 +710,8 @@ class PagoController extends Controller
         
         $forma_pago = $request->input('forma_pago');
         $fecha_pago = $request->input('fecha_pago');
+        // 'completo' | 'solo_interes' | 'solo_mora' | 'interes_mora' | 'parcial'
+        $modalidad = $request->input('modalidad_pago', 'completo');
 
         if (empty($cuotas)) {
             return response()->json(['error' => 'No se seleccionaron cuotas para pagar'], 400);
@@ -739,6 +741,7 @@ class PagoController extends Controller
 
             $codigo_transaccion = 'TRX-' . time() . '-' . Auth::id() . '-' . rand(100, 999);
             $alguna_cuota_pagada_totalmente = false; // <-- Control para el reloj de mora
+            $total_ingresado_boveda = 0.0; // acumulador para actualizar bóveda una sola vez
 
             // ==========================================
             // ESCUDO DE SEGURIDAD: PREVENIR COBRO EXCESIVO
@@ -772,37 +775,41 @@ class PagoController extends Controller
                 $pago_mora = 0; $pago_interes = 0; $pago_capital = 0;
                 $condonado_mora_cuota = 0; $condonado_interes_cuota = 0;
 
-                // --- 1. APLICAMOS CONDONACIONES ---
-                if ($bolsa_condonacion_mora > 0 && $deuda_mora > 0) {
+                // --- 1. APLICAMOS CONDONACIONES (según modalidad) ---
+                $aplicaMora    = in_array($modalidad, ['completo', 'parcial', 'solo_mora', 'interes_mora']);
+                $aplicaInteres = in_array($modalidad, ['completo', 'parcial', 'solo_interes', 'interes_mora']);
+                $aplicaCapital = in_array($modalidad, ['completo', 'parcial']);
+
+                if ($aplicaMora && $bolsa_condonacion_mora > 0 && $deuda_mora > 0) {
                     $aplicar = min($bolsa_condonacion_mora, $deuda_mora);
                     $condonado_mora_cuota = $aplicar;
                     $deuda_mora -= $aplicar;
                     $bolsa_condonacion_mora -= $aplicar;
                 }
 
-                if ($bolsa_condonacion_interes > 0 && $deuda_interes > 0) {
+                if ($aplicaInteres && $bolsa_condonacion_interes > 0 && $deuda_interes > 0) {
                     $aplicar = min($bolsa_condonacion_interes, $deuda_interes);
                     $condonado_interes_cuota = $aplicar;
                     $deuda_interes -= $aplicar;
                     $bolsa_condonacion_interes -= $aplicar;
                 }
 
-                // --- 2. CASCADA DEL EFECTIVO ---
-                if ($bolsa_efectivo > 0 && $deuda_mora > 0) {
+                // --- 2. CASCADA DEL EFECTIVO (según modalidad) ---
+                if ($aplicaMora && $bolsa_efectivo > 0 && $deuda_mora > 0) {
                     $aplicar = min($bolsa_efectivo, $deuda_mora);
                     $pago_mora = $aplicar;
                     $deuda_mora -= $aplicar;
                     $bolsa_efectivo -= $aplicar;
                 }
 
-                if ($bolsa_efectivo > 0 && $deuda_interes > 0) {
+                if ($aplicaInteres && $bolsa_efectivo > 0 && $deuda_interes > 0) {
                     $aplicar = min($bolsa_efectivo, $deuda_interes);
                     $pago_interes = $aplicar;
                     $deuda_interes -= $aplicar;
                     $bolsa_efectivo -= $aplicar;
                 }
 
-                if ($bolsa_efectivo > 0 && $deuda_capital > 0) {
+                if ($aplicaCapital && $bolsa_efectivo > 0 && $deuda_capital > 0) {
                     $aplicar = min($bolsa_efectivo, $deuda_capital);
                     $pago_capital = $aplicar;
                     $deuda_capital -= $aplicar;
@@ -831,6 +838,7 @@ class PagoController extends Controller
                         'monto_condonado_mora' => $condonado_mora_cuota,
                         'motivo_condonacion' => implode(' | ', $motivos),
                         'forma_pago' => $forma_pago,
+                        'tipo_pago' => $modalidad,
                         'estado' => 1,
                         'id_usuario' => Auth::id(),
                         'id_cuota' => $id_cuota,
@@ -867,6 +875,8 @@ class PagoController extends Controller
                             'id_caja' => $id_caja,
                             'id_usuario' => Auth::id(),
                         ]);
+
+                        $total_ingresado_boveda += $total_pagado_esta_cuota;
                     }
                 }
             }
@@ -886,10 +896,10 @@ class PagoController extends Controller
             DB::table('plan_pago')->where('id', $id_plan_pago)->update($datos_actualizar_plan);
 
             DB::commit();
-            
+
             return [
                 'estado_plan' => $no_hay_sin_pagar ? 2 : 1,
-                'codigo_transaccion' => $codigo_transaccion 
+                'codigo_transaccion' => $codigo_transaccion
             ];
 
         } catch (\Exception $e) {

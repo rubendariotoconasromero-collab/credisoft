@@ -393,6 +393,7 @@ Route::get('/reportes/egresos/excel', [ConsultaFinancieraController::class, 'exp
 
 Route::get('/caja/get-ordenes-reprogramacion', [CajaController::class, 'getOrdenesReprogramacion']);
 Route::get('/verificar-boveda', [CajaController::class, 'verificarBoveda']);
+Route::get('/caja/saldo-actual', [CajaController::class, 'getSaldoCajaActual']);
 
 
 

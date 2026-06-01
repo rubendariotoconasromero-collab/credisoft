@@ -1,69 +1,76 @@
 <template>
-    <div class="modal fade" id="modalAbrirCaja" tabindex="-1" data-bs-backdrop="static">
-        <div class="modal-dialog modal-md modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg rounded-4">
-                <div class="modal-header bg-success bg-gradient py-3 border-0 rounded-top-4">
-                    <h5 class="modal-title text-uppercase text-white fw-bold">
-                        <i class="fas fa-cash-register me-2"></i>Apertura de Caja
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" @click="cerrar"></button>
+    <div class="modal fade animate__animated animate__fadeIn" id="modalAbrirCaja" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 360px;">
+            <div class="modal-content border border-secondary shadow-lg rounded-0">
+                <!-- Flat, compact header -->
+                <div class="modal-header bg-success text-white py-2 border-0 rounded-0 d-flex justify-content-between align-items-center">
+                    <h6 class="modal-title text-uppercase fw-bold m-0" style="font-size: 0.8rem; letter-spacing: 0.5px;">
+                        Apertura de Caja
+                    </h6>
+                    <button type="button" class="btn-close btn-close-white" style="font-size: 0.65rem;" @click="cerrar"></button>
                 </div>
-                <div class="modal-body p-4">
-                    <!-- Status Card -->
-                    <div class="card border-0 bg-light-info mb-4 shadow-sm rounded-3">
-                        <div class="card-body d-flex align-items-center p-3">
-                            <!-- <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 shadow-sm" style="width: 48px; height: 48px; min-width: 48px;">
-                                <i class="fas fa-vault fa-lg"></i>
-                            </div> -->
-                            <div>
-                                <h6 class="text-uppercase text-muted fw-bold mb-0 small text-center" style="letter-spacing: 0.5px;">Disponible en Bóveda</h6>
-                                <h4 class="text-primary fw-bold mb-0">
-                                    {{ formatNumero(saldoBoveda) }} <span class="fs-6 text-muted fw-normal">Bs.</span>
-                                </h4>
-                            </div>
+
+                <div class="modal-body p-3">
+                    <!-- Available in Vault Info Box (Flat, compact) -->
+                    <div class="border p-2 mb-3 bg-light d-flex justify-content-between align-items-center rounded-0">
+                        <div>
+                            <span class="text-uppercase text-muted fw-bold d-block" style="font-size: 0.55rem; letter-spacing: 0.5px;">Disponible en Bóveda</span>
+                            <span class="fw-bold text-dark font-monospace" style="font-size: 1rem;">
+                                {{ formatNumero(saldoBoveda) }} <small class="text-muted fw-normal" style="font-size: 0.7rem;">Bs.</small>
+                            </span>
+                        </div>
+                        <div class="text-success opacity-75">
+                            <i class="fas fa-vault fa-lg"></i>
                         </div>
                     </div>
 
-                    <div class="text-center mb-4">
-                        <p class="text-muted small fw-bold text-uppercase mb-3" style="letter-spacing: 1px;">Monto Inicial para la Jornada</p>
+                    <!-- Monto input section -->
+                    <div class="mb-3">
+                        <label class="text-muted small fw-bold text-uppercase d-block mb-1 text-center" style="font-size: 0.6rem; letter-spacing: 0.5px;">
+                            Monto Inicial para la Jornada <span class="text-danger">*</span>
+                        </label>
                         
-                        <div class="input-group input-group-lg shadow-sm rounded-pill overflow-hidden border">
-                            <span class="input-group-text bg-white border-0 ps-4">
-                                <i class="fas fa-money-bill-wave text-success fs-4"></i>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-light border rounded-0 px-2 text-muted fw-bold" style="font-size: 0.75rem;">
+                                Bs.
                             </span>
                             <input v-model="monto" type="number" 
-                                class="form-control border-0 text-center fw-bold fs-3 py-3"
+                                class="form-control border text-center fw-bold rounded-0"
                                 placeholder="0.00" 
                                 autofocus 
                                 step="0.01" 
                                 @focus="$event.target.select()"
-                                style="color: #2c3e50;">
-                            <span class="input-group-text bg-white border-0 pe-4 fw-bold text-muted">Bs.</span>
+                                style="color: #2c3e50; font-size: 0.95rem; height: 35px;">
                         </div>
                         
-                        <div v-if="parseFloat(monto) > parseFloat(saldoBoveda)" class="mt-2 animate__animated animate__headShake">
-                            <small class="text-danger fw-bold">
-                                <i class="fas fa-exclamation-triangle me-1"></i> El monto supera el saldo de bóveda
+                        <!-- Error feedback -->
+                        <div v-if="parseFloat(monto) > parseFloat(saldoBoveda)" class="mt-1 text-center animate__animated animate__headShake">
+                            <small class="text-danger fw-bold" style="font-size: 0.7rem;">
+                                <i class="fas fa-exclamation-triangle me-1"></i> Supera el saldo de bóveda
                             </small>
                         </div>
                     </div>
 
-                    <div class="alert alert-warning border-0 bg-light-warning py-3 rounded-3 d-flex align-items-center mb-0">
-                        <i class="fas fa-info-circle text-warning fs-4 me-3"></i>
-                        <p class="mb-0 small text-dark">
+                    <!-- Clean alert note -->
+                    <div class="border border-warning bg-warning bg-opacity-10 p-2 d-flex align-items-start rounded-0">
+                        <i class="fas fa-info-circle text-warning mt-1 me-2" style="font-size: 0.8rem;"></i>
+                        <p class="mb-0 text-dark lh-sm" style="font-size: 0.68rem; text-align: justify;">
                             Este monto será transferido desde la <strong>Bóveda Central</strong> a su <strong>Caja Personal</strong> para iniciar operaciones.
                         </p>
                     </div>
                 </div>
                 
-                <div class="modal-footer border-0 p-4 pt-0">
-                    <button @click="guardar" class="btn btn-success btn-lg w-100 fw-bold shadow-sm py-3 rounded-pill transition-all" :disabled="procesando || parseFloat(monto) > parseFloat(saldoBoveda)">
-                        <span v-if="procesando" class="spinner-border spinner-border-sm me-2"></span>
-                        <span v-else><i class="fas fa-unlock-alt me-2"></i> CONFIRMAR APERTURA</span>
-                    </button>
-                    <button @click="cerrar" class="btn btn-link w-100 text-muted text-decoration-none mt-2 small fw-bold">
-                        CANCELAR
-                    </button>
+                <!-- Compact footer with flat buttons side-by-side -->
+                <div class="modal-footer border-0 p-3 pt-0">
+                    <div class="d-flex gap-2 w-100">
+                        <button @click="cerrar" class="btn btn-secondary btn-sm rounded-0 fw-bold flex-fill py-2 text-uppercase" style="font-size: 0.7rem;">
+                            Cancelar
+                        </button>
+                        <button @click="guardar" class="btn btn-success btn-sm rounded-0 fw-bold flex-fill py-2 text-uppercase" style="font-size: 0.7rem;" :disabled="procesando || parseFloat(monto) > parseFloat(saldoBoveda)">
+                            <span v-if="procesando" class="spinner-border spinner-border-sm me-1"></span>
+                            <span v-else><i class="fas fa-check-circle me-1"></i> Aperturar</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -153,25 +160,8 @@ export default {
 </script>
 
 <style scoped>
-.bg-light-info {
-    background-color: #f0f9ff;
-}
-.bg-light-warning {
-    background-color: #fffbeb;
-}
-.rounded-4 {
-    border-radius: 1rem !important;
-}
-.rounded-top-4 {
-    border-top-left-radius: 1rem !important;
-    border-top-right-radius: 1rem !important;
-}
-.transition-all {
-    transition: all 0.3s ease;
-}
-.transition-all:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+.lh-sm {
+    line-height: 1.25 !important;
 }
 .animate__headShake {
     animation: headShake 1s ease-in-out;

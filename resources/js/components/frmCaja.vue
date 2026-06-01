@@ -1385,57 +1385,72 @@ export default {
         },
         
         async guardarPagoAdm() {
-            // Doble validación de seguridad por si el frontend falla
             if (!this.confirmacionCobroAdm) {
                 Swal.fire('Atención', 'Debe confirmar el cobro del pago administrativo marcando la casilla.', 'warning');
                 return;
             }
 
+            // ── VALIDAR SALDO ANTES de cualquier operación ────────────────────
+            // Si no validamos aquí primero, el pago administrativo puede guardarse
+            // y el desembolso fallar, dejando el plan en estado inconsistente
+            // (no aparece en la lista porque el JOIN requiere ambos registros).
+            const montoDesembolso = parseFloat(this.pago_administrativo.monto_solicitud);
+            const saldoOk = await this.validarSaldoCajaParaEgreso(montoDesembolso);
+            if (!saldoOk) return;
+            // ──────────────────────────────────────────────────────────────────
+
             try {
                 this.desembolsando = true;
-                await this.guardarPagoAdmPrivado();
-                await this.guardarDesembolso(this.item_pago_desembolso);
 
+                // 1) Registrar el cobro administrativo
+                await this.guardarPagoAdmPrivado();
+
+                // 2) Registrar el desembolso — si falla aquí es un caso borde
+                //    (saldo cambió entre la validación y la ejecución)
+                const desembolsoOk = await this.guardarDesembolso(this.item_pago_desembolso);
+
+                if (!desembolsoOk) {
+                    // El cobro administrativo ya se registró pero el desembolso no.
+                    // Advertimos al administrador para que lo revise manualmente.
+                    await Swal.fire({
+                        title: 'Atención: operación incompleta',
+                        html: `El <strong>cobro administrativo</strong> fue registrado correctamente, pero el <strong>desembolso no pudo completarse</strong> (saldo insuficiente al momento de ejecutar).<br><br>
+                               Solicite un traspaso de bóveda a caja e intente el desembolso nuevamente desde la sección de <strong>Desembolsos Pendientes</strong>.`,
+                        icon: 'warning',
+                        confirmButtonText: 'Entendido',
+                    });
+                    return;
+                }
+
+                // Ambas operaciones OK → mostrar comprobante y éxito
                 this.openModalReportePlanComprobante();
-                
-                // Notificación de éxito
+                this.confirmacionCobroAdm = false;
+                this.cerrarModalCobrarPagoAdm();
                 await Swal.fire({
                     title: '¡Éxito!',
-                    text: 'El pago y el desembolso se han guardado correctamente.',
+                    text: 'El cobro administrativo y el desembolso se registraron correctamente.',
                     icon: 'success',
-                    confirmButtonText: 'OK'
+                    timer: 2000,
+                    showConfirmButton: false,
                 });
 
-                // Reiniciamos el check para el próximo cliente
-                this.confirmacionCobroAdm = false; 
-                this.cerrarModalCobrarPagoAdm(); 
-
             } catch (error) {
-                // Notificación de error
                 await Swal.fire({
                     title: 'Error',
-                    text: 'Hubo un problema al guardar el pago o el desembolso: ' + error.message,
+                    text: 'Hubo un problema al procesar la operación: ' + (error.message ?? 'error desconocido'),
                     icon: 'error',
-                    confirmButtonText: 'OK'
+                    confirmButtonText: 'OK',
                 });
             } finally {
                 this.desembolsando = false;
                 await this.getPagosAdm();
+                this.getCajas(1);
             }
         },
 
         async guardarPagoAdmPrivado() {
-            await axios.post('/guardar_pago_adm', this.pago_administrativo)
-                .then((response) => {
-                    console.log(response.message);
-                    this.cerrarModalCobrarPagoAdm();
-
-                    this.getPagosAdm();
-                    
-                    this.getCajas(1);
-                }).catch((error) => {
-                    console.log(error.message);
-                })
+            // Lanza el error hacia arriba para que guardarPagoAdm() lo capture
+            await axios.post('/guardar_pago_adm', this.pago_administrativo);
         },
 
         registrarPagoAdm(item) {
@@ -1483,64 +1498,152 @@ export default {
         cerrarModalPagosAdministrativos() {
             this.view = 0;
         },
-        actualizarDesembolso(item) {
+        async actualizarDesembolso(item) {
+            const monto = item.tipo_solicitud === 'Refinanciamiento'
+                ? parseFloat(item.monto_refinanciamiento)
+                : parseFloat(item.total_pagar_plan);
 
-            Swal.fire({
-                title: '¿Estás seguro?',
-                text: 'Esta acción no se puede deshacer',
+            // ── Validar saldo de caja antes de confirmar ─────────────────
+            const saldoOk = await this.validarSaldoCajaParaEgreso(monto);
+            if (!saldoOk) return;
+            // ─────────────────────────────────────────────────────────────
+
+            const result = await Swal.fire({
+                title: '¿Confirmar desembolso?',
+                html: `Se desembolsarán <strong>${this.formatMoney(monto)} Bs</strong> al cliente.<br><small class="text-muted">Esta acción no se puede deshacer.</small>`,
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonText: 'Sí, realizar',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
-                if (result.value) {
-                    // Aquí puedes colocar el código que se ejecutará si el usuario confirma
-                    axios.post('/actualizar_desembolso',
-                        {
-                            'id_plan_pago': item.id,
-                            'id_caja': this.lista_caja[0].id,
-                            'monto': item.total_pagar_plan,
-
-                        })
-                        .then((response) => {
-                            console.log(response.data);
-                            this.getPlanesPago();
-                            this.cerrarModalDesembolsos();
-                            Swal.fire('Acción realizada', '', 'success');
-                            this.getCajas(1);
-                        })
-                        .catch((error) => {
-                            console.log(error.message);
-                            Swal.fire('Ha ocurrido un error', '', 'error');
-
-                        })
-                } else if (result.dismiss === Swal.DismissReason.cancel) {
-                    // Aquí puedes colocar el código que se ejecutará si el usuario cancela
-                    Swal.fire('Acción cancelada', '', 'error');
-                }
+                confirmButtonColor: '#198754',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, desembolsar',
+                cancelButtonText: 'Cancelar',
             });
 
+            if (!result.isConfirmed) return;
 
+            try {
+                await axios.post('/actualizar_desembolso', {
+                    id_plan_pago: item.id,
+                    id_caja:      this.lista_caja[0].id,
+                    monto,
+                });
+                this.getPlanesPago();
+                this.cerrarModalDesembolsos();
+                Swal.fire({ title: 'Desembolso realizado', icon: 'success', timer: 1500, showConfirmButton: false });
+                this.getCajas(1);
+            } catch (error) {
+                this.manejarErrorSaldoCaja(error, monto);
+            }
         },
 
         async guardarDesembolso(item) {
-            await axios.post('/actualizar_desembolso',
-                {
-                    'id_plan_pago': item.id,
-                    'id_caja': this.lista_caja[0].id,
-                    'monto': item.tipo_solicitud=='Refinanciamiento'?item.monto_refinanciamiento: item.total_pagar_plan,
+            const monto = item.tipo_solicitud === 'Refinanciamiento'
+                ? parseFloat(item.monto_refinanciamiento)
+                : parseFloat(item.total_pagar_plan);
 
-                })
-                .then((response) => {
-                    console.log(response.data);
-        
-                    this.getCajas(1);
-                })
-                .catch((error) => {
-                    console.log(error.message);
-                    Swal.fire('Ha ocurrido un error', '', 'error');
+            // Validar saldo (para llamadas directas, ej. desde el panel de desembolsos)
+            const saldoOk = await this.validarSaldoCajaParaEgreso(monto);
+            if (!saldoOk) return false;
 
-                })
+            try {
+                await axios.post('/actualizar_desembolso', {
+                    id_plan_pago: item.id,
+                    id_caja:      this.lista_caja[0].id,
+                    monto,
+                });
+                this.getCajas(1);
+                return true;
+            } catch (error) {
+                this.manejarErrorSaldoCaja(error, monto);
+                return false;
+            }
+        },
+
+        /**
+         * Consulta el saldo actual de caja y muestra alerta si es insuficiente.
+         * Retorna true si hay saldo suficiente, false si no.
+         */
+        async validarSaldoCajaParaEgreso(montoRequerido) {
+            try {
+                const { data } = await axios.get('/caja/saldo-actual');
+
+                if (!data.caja_abierta) {
+                    Swal.fire('Sin caja abierta', 'No hay una caja abierta para realizar este egreso.', 'warning');
+                    return false;
+                }
+
+                if (data.saldo < montoRequerido) {
+                    const faltante = (montoRequerido - data.saldo).toFixed(2);
+                    Swal.fire({
+                        title: 'Saldo insuficiente en Caja',
+                        html: `
+                            <div class="text-start" style="font-size:0.9rem;">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>Saldo disponible en caja:</span>
+                                    <strong class="text-success">${parseFloat(data.saldo).toFixed(2)} Bs</strong>
+                                </div>
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>Monto requerido:</span>
+                                    <strong class="text-danger">${parseFloat(montoRequerido).toFixed(2)} Bs</strong>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2 border-top pt-1">
+                                    <span>Faltante:</span>
+                                    <strong class="text-danger">${faltante} Bs</strong>
+                                </div>
+                                <div class="alert alert-warning py-1 px-2 mb-0" style="font-size:0.8rem;">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Para continuar, solicite un <strong>traspaso de bóveda a caja</strong> por al menos <strong>${faltante} Bs</strong>.
+                                </div>
+                            </div>`,
+                        icon: 'warning',
+                        confirmButtonColor: '#ffc107',
+                        confirmButtonText: 'Entendido',
+                    });
+                    return false;
+                }
+
+                return true;
+            } catch (e) {
+                // Si el endpoint falla, dejamos pasar (el backend validará igual)
+                console.warn('No se pudo verificar el saldo de caja:', e);
+                return true;
+            }
+        },
+
+        /**
+         * Muestra el error de saldo insuficiente que devuelve el backend (422).
+         */
+        manejarErrorSaldoCaja(error, montoRequerido) {
+            if (error.response?.status === 422) {
+                const data = error.response.data;
+                const faltante = data.faltante ?? (montoRequerido - (data.saldo_disponible ?? 0)).toFixed(2);
+                Swal.fire({
+                    title: 'Saldo insuficiente en Caja',
+                    html: `
+                        <div class="text-start" style="font-size:0.9rem;">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Saldo disponible en caja:</span>
+                                <strong class="text-success">${parseFloat(data.saldo_disponible ?? 0).toFixed(2)} Bs</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Monto requerido:</span>
+                                <strong class="text-danger">${parseFloat(data.monto_requerido ?? montoRequerido).toFixed(2)} Bs</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2 border-top pt-1">
+                                <span>Faltante:</span>
+                                <strong class="text-danger">${parseFloat(faltante).toFixed(2)} Bs</strong>
+                            </div>
+                            <div class="alert alert-warning py-1 px-2 mb-0" style="font-size:0.8rem;">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Solicite un <strong>traspaso de bóveda a caja</strong> para continuar.
+                            </div>
+                        </div>`,
+                    icon: 'warning',
+                    confirmButtonText: 'Entendido',
+                });
+            } else {
+                Swal.fire('Error', 'Ha ocurrido un error inesperado.', 'error');
+            }
         },
         async getPlanesPago() {
             await axios.get('/get_planes_pago_sin_desembolso').then((response) => {

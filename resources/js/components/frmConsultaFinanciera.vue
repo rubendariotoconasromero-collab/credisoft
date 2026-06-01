@@ -1,234 +1,333 @@
 <template>
     <main class="financial-consultation">
-        <div v-if="preloader" class="preloader">
+
+        <div v-if="preloaderCaja || preloaderDiario" class="preloader">
             <div class="spinner"></div>
         </div>
 
         <div class="page-content px-0 mx-0">
             <div class="container-fluid">
-                
                 <div class="card border-0">
-                 
+
                     <div class="card-header bg-success bg-gradient py-2">
-                        <h5 class="header-title my-0 text-center fw-bold text-white fw-bold text-uppercase">
-                            Libro Mayor y Consultas Financieras
+                        <h5 class="header-title my-0 text-center fw-bold text-white text-uppercase">
+                            Consultas Financieras
                         </h5>
                     </div>
 
                     <div class="card-body pt-3">
-                        
-                        <div class="row mb-4 g-2 align-items-end">
-                            
-                            <div class="col-md-2">
-                                <label class="form-label small fw-bold text-muted mb-1">Tipo de Libro</label>
-                                <select v-model="filtros.tipo_libro" class="form-select shadow-sm border-0" @change="buscarConFiltros()">
-                                    <option value="GENERAL">Libro General</option>
-                                    <option value="OPERATIVO">Libro Operativo (Caja)</option>
-                                </select>
-                            </div>
 
-                            <div class="col-md-4">
-                                <label class="form-label small fw-bold text-muted mb-1">Rango de Fechas</label>
-                                <div class="input-group shadow-sm">
-                                    <span class="input-group-text bg-white text-muted fw-bold" style="font-size: 11px;">DESDE</span>
-                                    <input type="date" @change="buscarConFiltros()" v-model="filtros.fecha_inicio" class="form-control border-start-0">
-                                    <span class="input-group-text bg-white text-muted fw-bold border-start-0" style="font-size: 11px;">HASTA</span>
-                                    <input type="date" @change="buscarConFiltros()" v-model="filtros.fecha_final" class="form-control border-start-0">
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small fw-bold text-muted mb-1">Tipo de Movimiento</label>
-                                <select v-model="filtros.tipo" class="form-select shadow-sm border-0" @change="buscarConFiltros()">
-                                    <option value="TODOS">Todos los movimientos</option>
-                                    <option value="CAPITAL" v-if="filtros.tipo_libro === 'GENERAL'">Pago de Capital</option>
-                                    <option value="INTERES">Pago de Interés</option>
-                                    <option value="MORA">Multas / Mora</option>
-                                    <option value="DESEMBOLSO" v-if="filtros.tipo_libro === 'GENERAL'">Desembolsos</option>
-                                    <option value="GASTOSADM">Gastos Administrativos</option>
-                                    <option value="INGRESO_CAJA">Ingresos Extra</option>
-                                    <option value="EGRESO_CAJA">Egresos Extra</option>
-                                    <option value="BOVEDA_INGRESO" v-if="filtros.tipo_libro === 'GENERAL'">Ingreso Bóveda</option>
-                                    <option value="BOVEDA_EGRESO" v-if="filtros.tipo_libro === 'GENERAL'">Egreso Bóveda</option>
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label small fw-bold text-muted mb-1">Buscar (Descripción)</label>
-                                <input v-model="filtros.buscar" @keyup.enter="buscarConFiltros()" type="text" class="form-control shadow-sm border-0" placeholder="Ej. CREDITO: 5034" />
-                            </div>
-                            <div class="col-md-1 text-end">
-                                <button class="btn btn-success w-100 shadow-sm fw-bold" @click="buscarConFiltros()"><i class="fas fa-search"></i></button>
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-md-12 text-end">
-                                <button @click="exportarExcelDinamico" class="btn btn-success fw-bold me-2 text-white">
-                                    <i class="fas fa-file-excel me-1"></i> Exportar Excel
-                                </button>
-                                <button @click="imprimirReporteDinamico" class="btn btn-warning fw-bold">
-                                    <i class="fas fa-print me-1"></i> Imprimir Reporte
-                                </button>
-                            </div>
-                        </div>
-
+                        <!-- TABS NAV -->
                         <ul class="nav nav-pills custom-tabs mb-0 d-flex justify-content-center" role="tablist">
-                            <li class="nav-item mx-1" role="presentation">
-                                <button @click="cambiarTab('GENERAL')" :class="['nav-link px-4 fw-bold text-uppercase', tabActivo === 'GENERAL' ? 'active' : '']" type="button" role="tab">
-                                    Tabla General
+                            <li class="nav-item mx-1">
+                                <button @click="cambiarTab('FLUJO_CAJA')"
+                                        :class="['nav-link px-4 fw-bold text-uppercase', tabActivo === 'FLUJO_CAJA' ? 'active' : '']"
+                                        type="button">
+                                    <i class="fas fa-stream me-2"></i> Flujo de Caja
                                 </button>
                             </li>
-                            <li class="nav-item mx-1" role="presentation">
-                                <button @click="cambiarTab('INGRESOS')" :class="['nav-link px-4 fw-bold text-uppercase text-success', tabActivo === 'INGRESOS' ? 'active' : '']" type="button" role="tab">
-                                    Solo Ingresos
-                                </button>
-                            </li>
-                            <li class="nav-item mx-1" role="presentation">
-                                <button @click="cambiarTab('EGRESOS')" :class="['nav-link px-4 fw-bold text-uppercase text-danger', tabActivo === 'EGRESOS' ? 'active' : '']" type="button" role="tab">
-                                    Solo Egresos
+                            <li class="nav-item mx-1">
+                                <button @click="cambiarTab('LIBRO_DIARIO')"
+                                        :class="['nav-link px-4 fw-bold text-uppercase', tabActivo === 'LIBRO_DIARIO' ? 'active' : '']"
+                                        type="button">
+                                    <i class="fas fa-arrow-circle-down me-2"></i> Libro Diario
                                 </button>
                             </li>
                         </ul>
 
                         <div class="tab-content bg-white p-3 border rounded-bottom shadow-sm">
-                            
-                            <div v-show="tabActivo === 'GENERAL'" role="tabpanel">
+
+                            <!-- ================================================ -->
+                            <!-- TAB 1: FLUJO DE CAJA                              -->
+                            <!-- Todos los movimientos con saldo bóveda corrido    -->
+                            <!-- ================================================ -->
+                            <div v-show="tabActivo === 'FLUJO_CAJA'">
+
+                                <!-- Filtros -->
+                                <div class="row mb-3 g-2 align-items-end">
+                                    <div class="col-md-2">
+                                        <label class="form-label small fw-bold text-muted mb-1">Tipo de Libro</label>
+                                        <select v-model="filtrosCaja.tipo_libro" class="form-select shadow-sm border-0" @change="buscarCaja()">
+                                            <option value="GENERAL">Libro General</option>
+                                            <option value="OPERATIVO">Libro Operativo (Caja)</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold text-muted mb-1">Rango de Fechas</label>
+                                        <div class="input-group shadow-sm">
+                                            <span class="input-group-text bg-white text-muted fw-bold" style="font-size:11px;">DESDE</span>
+                                            <input type="date" @change="buscarCaja()" v-model="filtrosCaja.fecha_inicio" class="form-control border-start-0">
+                                            <span class="input-group-text bg-white text-muted fw-bold border-start-0" style="font-size:11px;">HASTA</span>
+                                            <input type="date" @change="buscarCaja()" v-model="filtrosCaja.fecha_final" class="form-control border-start-0">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label small fw-bold text-muted mb-1">Tipo de Movimiento</label>
+                                        <select v-model="filtrosCaja.tipo" class="form-select shadow-sm border-0" @change="buscarCaja()">
+                                            <option value="TODOS">Todos</option>
+                                            <option value="CAPITAL"       v-if="filtrosCaja.tipo_libro === 'GENERAL'">Pago de Capital</option>
+                                            <option value="INTERES">Pago de Interés</option>
+                                            <option value="MORA">Multas / Mora</option>
+                                            <option value="DESEMBOLSO"    v-if="filtrosCaja.tipo_libro === 'GENERAL'">Desembolsos</option>
+                                            <option value="GASTOSADM">Gastos Adm.</option>
+                                            <option value="INGRESO_CAJA">Ingresos Extra</option>
+                                            <option value="EGRESO_CAJA">Egresos Extra</option>
+                                            <option value="BOVEDA_INGRESO" v-if="filtrosCaja.tipo_libro === 'GENERAL'">Ingreso Bóveda</option>
+                                            <option value="BOVEDA_EGRESO"  v-if="filtrosCaja.tipo_libro === 'GENERAL'">Egreso Bóveda</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label small fw-bold text-muted mb-1">Buscar (Descripción)</label>
+                                        <input v-model="filtrosCaja.buscar" @keyup.enter="buscarCaja()" type="text"
+                                               class="form-control shadow-sm border-0" placeholder="Ej: CREDITO: 5034" />
+                                    </div>
+                                    <div class="col-md-1">
+                                        <button class="btn btn-success w-100 shadow-sm fw-bold" @click="buscarCaja()">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                    <div class="col-md-1 d-flex gap-1 justify-content-end">
+                                        <button @click="exportarCaja()" class="btn btn-success btn-sm shadow-sm fw-bold" title="Exportar Excel">
+                                            <i class="fas fa-file-excel"></i>
+                                        </button>
+                                        <button @click="imprimirCaja()" class="btn btn-warning btn-sm shadow-sm fw-bold" title="Imprimir PDF">
+                                            <i class="fas fa-print"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Tabla Flujo de Caja -->
                                 <div class="table-responsive">
                                     <table class="table table-sm table-bordered table-hover align-middle ledger-table mb-0 table-striped">
-                                        <thead class="table-success text-center align-middle">
+                                        <thead class="table-primary text-center align-middle">
                                             <tr>
-                                                <th width="5%">Nro</th>
-                                                <th width="10%">Fecha</th>
-                                                <th class="text-start" width="15%">Tipo</th>
-                                                <th width="35%" class="text-start ps-2">Descripción</th>
-                                                <th width="11%" class="text-primary bg-primary bg-opacity-10">Ingreso (Debe)</th>
-                                                <th width="11%" class="text-danger bg-danger bg-opacity-10">Egreso (Haber)</th>
-                                                <th width="13%" class="bg-light border-start-2 border-dark">Saldo Caja</th>
+                                                <th width="4%">Nro</th>
+                                                <th width="9%">Fecha</th>
+                                                <th width="12%" class="text-start ps-2">Tipo</th>
+                                                <th class="text-start ps-2">Descripción</th>
+                                                <th width="11%" class="text-success bg-success bg-opacity-10">Debe (Bs)</th>
+                                                <th width="11%" class="text-danger bg-danger bg-opacity-10">Haber (Bs)</th>
+                                                <th width="13%" class="bg-warning bg-opacity-25 fw-bold">Capital Total</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr v-for="item in movimientos" :key="item.nro">
+                                            <tr v-for="item in movimientosCaja" :key="item.nro">
                                                 <td class="text-center text-muted">{{ item.nro }}</td>
                                                 <td class="text-center">{{ item.fecha }}</td>
-                                                <td class="text-start fw-bold text-secondary" style="font-size: 0.7rem;">{{ item.tipo }}</td>
-                                                <td class="ps-2 text-dark text-uppercase">{{ item.descripcion }}</td>
-                                                
-                                                <td class="text-end fw-semibold text-primary bg-primary bg-opacity-10">
+                                                <td class="text-start fw-bold text-secondary ps-2" style="font-size:0.7rem;">{{ item.tipo }}</td>
+                                                <td class="ps-2 text-dark text-uppercase" style="font-size:0.75rem;">{{ item.descripcion }}</td>
+                                                <td class="text-end fw-semibold text-success bg-success bg-opacity-10">
                                                     {{ item.debe > 0 ? formatNumero(item.debe) : '' }}
                                                 </td>
                                                 <td class="text-end fw-semibold text-danger bg-danger bg-opacity-10">
                                                     {{ item.haber > 0 ? formatNumero(item.haber) : '' }}
                                                 </td>
-                                                
-                                                <td class="text-end fw-bold border-start-2 border-dark bg-light">{{ formatNumero(item.saldo) }}</td>
+                                                <td class="text-end fw-bold bg-warning bg-opacity-25">
+                                                    {{ formatNumero(item.saldo) }}
+                                                </td>
                                             </tr>
-                                            <tr v-if="movimientos.length === 0">
-                                                <td colspan="7" class="text-center py-4 text-muted fst-italic">No hay movimientos registrados.</td>
+                                            <tr v-if="movimientosCaja.length === 0">
+                                                <td colspan="7" class="text-center py-5 text-muted fst-italic">
+                                                    <i class="fas fa-folder-open fa-2x d-block mb-2 opacity-25"></i>
+                                                    No hay movimientos en el período seleccionado.
+                                                </td>
                                             </tr>
                                         </tbody>
-                                        <tfoot class="table-secondary text-dark fw-bold">
+                                        <tfoot class="table-secondary fw-bold text-dark">
                                             <tr>
-                                                <td colspan="4" class="text-end pe-3 fw-bold text-dark">TOTAL DEL PERIODO:</td>
-                                                <td class="text-end fw-bold text-dark">{{ formatNumero(totalIngresosPeriodo) }}</td>
-                                                <td class="text-end fw-bold text-dark">{{ formatNumero(totalEgresosPeriodo) }}</td>
-                                                <td class="text-end fw-bold text-dark">-</td>
+                                                <td colspan="4" class="text-end pe-3">TOTAL DEL PERIODO:</td>
+                                                <td class="text-end text-success">{{ formatNumero(totalIngresosCaja) }}</td>
+                                                <td class="text-end text-danger">{{ formatNumero(totalEgresosCaja) }}</td>
+                                                <td class="text-end text-muted" style="font-size:0.7rem;">excl. transf. internas</td>
                                             </tr>
                                         </tfoot>
                                     </table>
                                 </div>
+
+                                <!-- Capital Total (último asiento) -->
+                                <div class="d-flex justify-content-end mt-3">
+                                    <div class="card border-0 shadow rounded-3 bg-dark text-white" style="min-width:340px;">
+                                        <div class="card-body py-2 px-4 d-flex justify-content-between align-items-center gap-4">
+                                            <div>
+                                                <div class="fw-bold text-uppercase text-white-50" style="font-size:0.7rem; letter-spacing:1px;">
+                                                    <i class="fas fa-coins me-1"></i> Capital Total (Bóveda + Caja)
+                                                </div>
+                                                <div class="text-white-50" style="font-size:0.65rem;">
+                                                    al {{ filtrosCaja.fecha_final }}
+                                                </div>
+                                            </div>
+                                            <div class="fs-4 fw-bold" :class="saldoBoveda >= 0 ? 'text-success' : 'text-danger'">
+                                                {{ formatNumero(saldoBoveda) }}
+                                                <small class="fs-6 text-white-50">Bs</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Paginación Flujo de Caja -->
+                                <div class="d-flex justify-content-between align-items-center mt-3" v-if="paginacionCaja.last_page > 1">
+                                    <span class="text-muted small">
+                                        Página {{ paginacionCaja.current_page }} de {{ paginacionCaja.last_page }}
+                                        ({{ paginacionCaja.total }} registros)
+                                    </span>
+                                    <nav>
+                                        <ul class="pagination shadow-sm mb-0">
+                                            <li class="page-item" :class="{disabled: paginacionCaja.current_page <= 1}">
+                                                <a class="page-link" href="#" @click.prevent="cambiarPaginaCaja(paginacionCaja.current_page - 1)">Anterior</a>
+                                            </li>
+                                            <li class="page-item" v-for="page in pagesNumberCaja" :key="page"
+                                                :class="{active: page == paginacionCaja.current_page}">
+                                                <a class="page-link" href="#" @click.prevent="cambiarPaginaCaja(page)">{{ page }}</a>
+                                            </li>
+                                            <li class="page-item" :class="{disabled: paginacionCaja.current_page >= paginacionCaja.last_page}">
+                                                <a class="page-link" href="#" @click.prevent="cambiarPaginaCaja(paginacionCaja.current_page + 1)">Siguiente</a>
+                                            </li>
+                                        </ul>
+                                    </nav>
+                                </div>
                             </div>
 
-                            <div v-show="tabActivo === 'INGRESOS'" role="tabpanel">
+                            <!-- ================================================ -->
+                            <!-- TAB 2: LIBRO DIARIO                               -->
+                            <!-- Solo ingresos recaudados                          -->
+                            <!-- ================================================ -->
+                            <div v-show="tabActivo === 'LIBRO_DIARIO'">
+
+                                <!-- Filtros Libro Diario -->
+                                <div class="row mb-3 g-2 align-items-end">
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold text-muted mb-1">Rango de Fechas</label>
+                                        <div class="input-group shadow-sm">
+                                            <span class="input-group-text bg-white text-muted fw-bold" style="font-size:11px;">DESDE</span>
+                                            <input type="date" @change="buscarDiario()" v-model="filtrosDiario.fecha_inicio" class="form-control border-start-0">
+                                            <span class="input-group-text bg-white text-muted fw-bold border-start-0" style="font-size:11px;">HASTA</span>
+                                            <input type="date" @change="buscarDiario()" v-model="filtrosDiario.fecha_final" class="form-control border-start-0">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small fw-bold text-muted mb-1">Tipo de Ingreso</label>
+                                        <select v-model="filtrosDiario.tipo" class="form-select shadow-sm border-0" @change="buscarDiario()">
+                                            <option value="TODOS">Todos los ingresos</option>
+                                            <option value="INTERES">Pago de Interés</option>
+                                            <option value="MORA">Multas / Mora</option>
+                                            <option value="GASTOSADM">Gastos Administrativos</option>
+                                            <option value="INGRESO_CAJA">Otros Ingresos</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small fw-bold text-muted mb-1">Buscar (Descripción)</label>
+                                        <input v-model="filtrosDiario.buscar" @keyup.enter="buscarDiario()" type="text"
+                                               class="form-control shadow-sm border-0" placeholder="Descripción..." />
+                                    </div>
+                                    <div class="col-md-1">
+                                        <button class="btn btn-success w-100 shadow-sm fw-bold" @click="buscarDiario()">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                    <div class="col-md-1 d-flex gap-1 justify-content-end">
+                                        <button @click="exportarDiario()" class="btn btn-success btn-sm shadow-sm fw-bold" title="Exportar Excel">
+                                            <i class="fas fa-file-excel"></i>
+                                        </button>
+                                        <button @click="imprimirDiario()" class="btn btn-warning btn-sm shadow-sm fw-bold" title="Imprimir PDF">
+                                            <i class="fas fa-print"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Tabla Libro Diario -->
                                 <div class="table-responsive">
                                     <table class="table table-sm table-bordered table-hover align-middle ledger-table mb-0 table-striped">
-                                        <thead class="table-success bg-opacity-10 text-center align-middle">
+                                        <thead class="table-success text-center align-middle">
                                             <tr>
-                                                <th width="5%">Nro</th>
-                                                <th width="10%">Fecha</th>
-                                                <th width="15%" class="text-start">Tipo de Ingreso</th>
-                                                <th width="50%" class="text-start ps-2">Detalle / Descripción</th>
-                                                <th width="20%" class="text-dark fw-bold">Monto Recaudado <span class="text-capitalize">(Bs)</span></th>
+                                                <th width="4%">Nro</th>
+                                                <th width="9%">Fecha</th>
+                                                <th width="13%" class="text-start ps-2">Tipo de Ingreso</th>
+                                                <th class="text-start ps-2">Detalle / Descripción</th>
+                                                <th width="12%" class="text-success bg-success bg-opacity-10">Debe (Bs)</th>
+                                                <th width="12%" class="text-danger bg-danger bg-opacity-10">Haber (Bs)</th>
+                                                <th width="13%" class="bg-warning bg-opacity-25 fw-bold">Total Acum. (Bs)</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr v-for="item in ingresosFiltrados" :key="'ing_'+item.nro">
+                                            <tr v-for="item in ingresosDiarioPaginados" :key="'ing_' + item.nro">
                                                 <td class="text-center text-muted">{{ item.nro }}</td>
                                                 <td class="text-center">{{ item.fecha }}</td>
-                                                <td class="text-start fw-bold text-dark" style="font-size: 0.7rem;">{{ item.tipo }}</td>
-                                                <td class="ps-2 text-dark text-uppercase">{{ item.descripcion }}</td>
-                                                <td class="text-end fw-bold text-dark fs-6 bg-success bg-opacity-10">{{ formatNumero(item.debe) }}</td>
+                                                <td class="text-start fw-bold text-dark ps-2" style="font-size:0.7rem;">{{ item.tipo }}</td>
+                                                <td class="ps-2 text-dark text-uppercase" style="font-size:0.75rem;">{{ item.descripcion }}</td>
+                                                <td class="text-end fw-semibold text-success bg-success bg-opacity-10">
+                                                    {{ item.debe > 0 ? formatNumero(item.debe) : '' }}
+                                                </td>
+                                                <td class="text-end fw-semibold text-danger bg-danger bg-opacity-10">
+                                                    {{ item.haber > 0 ? formatNumero(item.haber) : '' }}
+                                                </td>
+                                                <td class="text-end fw-bold bg-warning bg-opacity-25">
+                                                    {{ formatNumero(item.totalAcumulado) }}
+                                                </td>
                                             </tr>
-                                            <tr v-if="ingresosFiltrados.length === 0">
-                                                <td colspan="5" class="text-center py-4 text-muted fst-italic">No hay ingresos con los filtros actuales.</td>
+                                            <tr v-if="ingresosDiario.length === 0">
+                                                <td colspan="7" class="text-center py-5 text-muted fst-italic">
+                                                    <i class="fas fa-folder-open fa-2x d-block mb-2 opacity-25"></i>
+                                                    No hay ingresos en el período seleccionado.
+                                                </td>
                                             </tr>
                                         </tbody>
-                                        <tfoot class="table-secondary text-dark fw-bold">
+                                        <tfoot class="table-success fw-bold text-dark">
                                             <tr>
-                                                <td colspan="4" class="text-end pe-3 fs-6">TOTAL INGRESOS FILTRADOS:</td>
-                                                <td class="text-end fs-6">{{ formatNumero(totalIngresosPeriodo) }}</td>
+                                                <td colspan="4" class="text-end pe-3">TOTAL INGRESOS DEL PERIODO:</td>
+                                                <td class="text-end fs-6">{{ formatNumero(totalIngresosDiario) }}</td>
+                                                <td></td>
+                                                <td class="text-end fs-6 bg-warning bg-opacity-25">{{ formatNumero(totalIngresosDiario) }}</td>
                                             </tr>
                                         </tfoot>
                                     </table>
                                 </div>
-                            </div>
 
-                            <div v-show="tabActivo === 'EGRESOS'" role="tabpanel">
-                                <div class="table-responsive">
-                                    <table class="table table-sm table-bordered table-hover align-middle ledger-table mb-0 table-striped">
-                                        <thead class="table-danger bg-opacity-10 text-center align-middle">
-                                            <tr>
-                                                <th width="5%">Nro</th>
-                                                <th width="10%">Fecha</th>
-                                                <th class="text-start" width="15%">Tipo de Egreso</th>
-                                                <th width="50%" class="text-start ps-2">Detalle / Descripción</th>
-                                                <th width="20%" class="text-dark fw-bold">Monto Saliente <span class="text-capitalize">(Bs)</span></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr v-for="item in egresosFiltrados" :key="'egr_'+item.nro">
-                                                <td class="text-center text-muted">{{ item.nro }}</td>
-                                                <td class="text-center">{{ item.fecha }}</td>
-                                                <td class="text-start fw-bold text-dark" style="font-size: 0.7rem;">{{ item.tipo }}</td>
-                                                <td class="ps-2 text-dark text-uppercase">{{ item.descripcion }}</td>
-                                                <td class="text-end fw-bold text-dark fs-6 bg-danger bg-opacity-10">{{ formatNumero(item.haber) }}</td>
-                                            </tr>
-                                            <tr v-if="egresosFiltrados.length === 0">
-                                                <td colspan="5" class="text-center py-4 text-muted fst-italic">No hay egresos con los filtros actuales.</td>
-                                            </tr>
-                                        </tbody>
-                                        <tfoot class="table-secondary text-dark fw-bold">
-                                            <tr>
-                                                <td colspan="4" class="text-end pe-3 fs-6">TOTAL EGRESOS FILTRADOS:</td>
-                                                <td class="text-end fs-6">{{ formatNumero(totalEgresosPeriodo) }}</td>
-                                            </tr>
-                                        </tfoot>
-                                    </table>
+                                <!-- Capital Total (Libro Diario) -->
+                                <div class="d-flex justify-content-end mt-3">
+                                    <div class="card border-0 shadow rounded-3 bg-dark text-white" style="min-width:340px;">
+                                        <div class="card-body py-2 px-4 d-flex justify-content-between align-items-center gap-4">
+                                            <div>
+                                                <div class="fw-bold text-uppercase text-white-50" style="font-size:0.7rem; letter-spacing:1px;">
+                                                    <i class="fas fa-coins me-1"></i> Capital Total (Bóveda + Caja)
+                                                </div>
+                                                <div class="text-white-50" style="font-size:0.65rem;">
+                                                    al {{ filtrosDiario.fecha_final }}
+                                                </div>
+                                            </div>
+                                            <div class="fs-4 fw-bold" :class="saldoTotalDiario >= 0 ? 'text-success' : 'text-danger'">
+                                                {{ formatNumero(saldoTotalDiario) }}
+                                                <small class="fs-6 text-white-50">Bs</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Paginación Libro Diario (client-side) -->
+                                <div class="d-flex justify-content-between align-items-center mt-3" v-if="paginacionDiario.last_page > 1">
+                                    <span class="text-muted small">
+                                        Página {{ paginacionDiario.current_page }} de {{ paginacionDiario.last_page }}
+                                        ({{ paginacionDiario.total }} registros)
+                                    </span>
+                                    <nav>
+                                        <ul class="pagination shadow-sm mb-0">
+                                            <li class="page-item" :class="{disabled: paginacionDiario.current_page <= 1}">
+                                                <a class="page-link" href="#" @click.prevent="cambiarPaginaDiario(paginacionDiario.current_page - 1)">Anterior</a>
+                                            </li>
+                                            <li class="page-item" v-for="page in pagesNumberDiario" :key="page"
+                                                :class="{active: page == paginacionDiario.current_page}">
+                                                <a class="page-link" href="#" @click.prevent="cambiarPaginaDiario(page)">{{ page }}</a>
+                                            </li>
+                                            <li class="page-item" :class="{disabled: paginacionDiario.current_page >= paginacionDiario.last_page}">
+                                                <a class="page-link" href="#" @click.prevent="cambiarPaginaDiario(paginacionDiario.current_page + 1)">Siguiente</a>
+                                            </li>
+                                        </ul>
+                                    </nav>
                                 </div>
                             </div>
 
-                        </div>
-
-                        <div class="d-flex justify-content-between align-items-center mt-3" v-if="tabActivo === 'GENERAL' && pagination.last_page > 1">
-                            <span class="text-muted small">
-                                Mostrando página {{ pagination.current_page }} de {{ pagination.last_page }} 
-                                (Total registros: {{ pagination.total }})
-                            </span>
-                            <nav>
-                                <ul class="pagination shadow-sm mb-0">
-                                    <li class="page-item" :class="{disabled: pagination.current_page <= 1}">
-                                        <a class="page-link" href="#" @click.prevent="cambiarPagina(pagination.current_page - 1)">Anterior</a>
-                                    </li>
-                                    <li class="page-item" v-for="page in pagesNumber" :key="page" :class="{ active: page == pagination.current_page }">
-                                        <a class="page-link" href="#" @click.prevent="cambiarPagina(page)">{{ page }}</a>
-                                    </li>
-                                    <li class="page-item" :class="{disabled: pagination.current_page >= pagination.last_page}">
-                                        <a class="page-link" href="#" @click.prevent="cambiarPagina(pagination.current_page + 1)">Siguiente</a>
-                                    </li>
-                                </ul>
-                            </nav>
-                        </div>
-                    </div>
-                </div>
-
+                        </div><!-- /tab-content -->
+                    </div><!-- /card-body -->
+                </div><!-- /card -->
             </div>
         </div>
     </main>
@@ -242,164 +341,218 @@ import Swal from 'sweetalert2';
 export default {
     data() {
         return {
-            tabActivo: 'GENERAL',
-            preloader: false,
-            filtros: {
+            tabActivo: 'FLUJO_CAJA',
+            preloaderCaja: false,
+            preloaderDiario: false,
+
+            // ── Flujo de Caja ──────────────────────────────────────────
+            filtrosCaja: {
                 fecha_inicio: moment().subtract(1, 'month').format('YYYY-MM-DD'),
-                fecha_final: moment().format('YYYY-MM-DD'),
-                tipo_libro: 'GENERAL', // NUEVA VARIABLE
-                tipo: 'TODOS',
-                buscar: '',
-                page: 1
+                fecha_final:  moment().format('YYYY-MM-DD'),
+                tipo_libro:   'GENERAL',
+                tipo:         'TODOS',
+                buscar:       '',
             },
-            movimientos: [],
-            todosIngresos: [],
-            todosEgresos: [],
-            totalIngresosPeriodo: 0,
-            totalEgresosPeriodo: 0,
-            pagination: {
-                current_page: 1,
-                last_page: 1,
-                total: 0
+            movimientosCaja:   [],
+            totalIngresosCaja: 0,
+            totalEgresosCaja:  0,
+            saldoBoveda:       0,
+            paginacionCaja: { current_page: 1, last_page: 1, total: 0 },
+
+            // ── Libro Diario ───────────────────────────────────────────
+            filtrosDiario: {
+                fecha_inicio: moment().startOf('month').format('YYYY-MM-DD'),
+                fecha_final:  moment().format('YYYY-MM-DD'),
+                tipo:         'TODOS',
+                buscar:       '',
             },
-            offset: 2
+            ingresosDiario:      [],
+            totalIngresosDiario: 0,
+            saldoTotalDiario:    0,
+            paginaActualDiario:  1,
+            libroDiarioCargado:  false,
+
+            offset: 2,
         };
     },
+
     computed: {
-        ingresosFiltrados() {
-            return this.todosIngresos;
+        // Flujo de Caja — páginas para el paginador
+        pagesNumberCaja() {
+            return this.buildPages(this.paginacionCaja.current_page, this.paginacionCaja.last_page);
         },
-        egresosFiltrados() {
-            return this.todosEgresos;
+
+        // Libro Diario — paginación client-side
+        paginacionDiario() {
+            const perPage = 20;
+            const total   = this.ingresosDiario.length;
+            return {
+                current_page: this.paginaActualDiario,
+                last_page:    Math.max(1, Math.ceil(total / perPage)),
+                total,
+            };
         },
-        pagesNumber() {
-            if (!this.pagination.last_page) return [];
-            let from = this.pagination.current_page - this.offset;
-            if (from < 1) from = 1;
-            let to = from + (this.offset * 2);
-            if (to >= this.pagination.last_page) to = this.pagination.last_page;
-            
-            let pagesArray = [];
-            while (from <= to) {
-                pagesArray.push(from);
-                from++;
-            }
-            return pagesArray;
-        }
+        ingresosDiarioPaginados() {
+            const perPage = 20;
+            const start   = (this.paginaActualDiario - 1) * perPage;
+            return this.ingresosDiario.slice(start, start + perPage);
+        },
+        pagesNumberDiario() {
+            return this.buildPages(this.paginaActualDiario, this.paginacionDiario.last_page);
+        },
     },
+
     mounted() {
-        this.fetchLibroMayor(1);
+        this.fetchFlujoCaja(1);
     },
+
     methods: {
-        exportarExcelDinamico() {
-            const queryParams = new URLSearchParams({
-                fecha_inicio: this.filtros.fecha_inicio,
-                fecha_final: this.filtros.fecha_final,
-                tipo_libro: this.filtros.tipo_libro, // Pasamos el tipo de libro
-                tipo: this.filtros.tipo,
-                buscar: this.filtros.buscar
-            }).toString();
-            
-            let endpoint = '';
-            if (this.tabActivo === 'GENERAL') endpoint = '/reportes/libro-mayor/excel';
-            else if (this.tabActivo === 'INGRESOS') endpoint = '/reportes/ingresos/excel';
-            else if (this.tabActivo === 'EGRESOS') endpoint = '/reportes/egresos/excel';
-
-            window.open(`${endpoint}?${queryParams}`, '_blank');
+        // ── Helpers ───────────────────────────────────────────────────
+        buildPages(current, lastPage) {
+            let from = Math.max(1, current - this.offset);
+            let to   = Math.min(lastPage, from + this.offset * 2);
+            const pages = [];
+            for (let i = from; i <= to; i++) pages.push(i);
+            return pages;
         },
-        
-        async imprimirReporteDinamico() {
-            let endpoint = '';
-            if (this.tabActivo === 'GENERAL') endpoint = '/reportes/libro-mayor';
-            else if (this.tabActivo === 'INGRESOS') endpoint = '/reportes/ingresos';
-            else if (this.tabActivo === 'EGRESOS') endpoint = '/reportes/egresos';
 
+        formatNumero(numero) {
+            if (numero == null) return '0.00';
+            return new Intl.NumberFormat('es-BO', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+            }).format(numero);
+        },
+
+        async generarPDF(endpoint) {
             Swal.fire({
                 title: 'Generando Reporte...',
-                text: 'Procesando el documento PDF, por favor espere.',
+                text: 'Procesando el PDF, por favor espere.',
                 allowOutsideClick: false,
-                didOpen: () => { Swal.showLoading(); }
+                didOpen: () => Swal.showLoading(),
             });
-
             try {
-                const queryParams = new URLSearchParams({
-                    fecha_inicio: this.filtros.fecha_inicio,
-                    fecha_final: this.filtros.fecha_final,
-                    tipo_libro: this.filtros.tipo_libro, // Pasamos el tipo de libro
-                    tipo: this.filtros.tipo,
-                    buscar: this.filtros.buscar
-                }).toString();
-                
-                const response = await axios.get(`${endpoint}?${queryParams}`, {
-                    responseType: 'blob'
-                });
-
-                const blob = new Blob([response.data], { type: 'application/pdf' });
-                const url = window.URL.createObjectURL(blob);
-                
+                const response = await axios.get(endpoint, { responseType: 'blob' });
+                const url = window.URL.createObjectURL(
+                    new Blob([response.data], { type: 'application/pdf' })
+                );
                 Swal.close();
                 window.open(url, '_blank');
                 setTimeout(() => window.URL.revokeObjectURL(url), 10000);
-
             } catch (error) {
                 console.error(error);
                 Swal.fire('Error', 'No se pudo generar el reporte.', 'error');
             }
         },
 
-        formatNumero(numero) {
-            if (numero === undefined || numero === null) return '0.00';
-            return new Intl.NumberFormat('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(numero);
-        },
+        // ── Tabs ──────────────────────────────────────────────────────
         cambiarTab(tab) {
             this.tabActivo = tab;
-            const tiposEgreso = ['DESEMBOLSO', 'EGRESO_CAJA', 'BOVEDA_EGRESO'];
-            const tiposIngreso = ['CAPITAL', 'INTERES', 'MORA', 'GASTOSADM', 'INGRESO_CAJA', 'BOVEDA_INGRESO'];
-            if (tab === 'INGRESOS' && tiposEgreso.includes(this.filtros.tipo)) {
-                this.filtros.tipo = 'TODOS';
-                this.fetchLibroMayor(1);
-            } else if (tab === 'EGRESOS' && tiposIngreso.includes(this.filtros.tipo)) {
-                this.filtros.tipo = 'TODOS';
-                this.fetchLibroMayor(1);
+            if (tab === 'LIBRO_DIARIO' && !this.libroDiarioCargado) {
+                this.fetchLibroDiario();
             }
         },
-        buscarConFiltros() {
-            // Si el usuario cambia de libro y tenía un filtro no válido, lo reseteamos
-            if (this.filtros.tipo_libro === 'OPERATIVO' && (this.filtros.tipo === 'CAPITAL' || this.filtros.tipo === 'DESEMBOLSO')) {
-                this.filtros.tipo = 'TODOS';
-            }
-            this.fetchLibroMayor(1);
-        },
-        cambiarPagina(page) {
-            this.fetchLibroMayor(page);
-        },
-        async fetchLibroMayor(page) {
-            this.preloader = true;
-            this.filtros.page = page;
 
+        // ── Flujo de Caja ─────────────────────────────────────────────
+        buscarCaja() {
+            const soloGeneral = ['CAPITAL', 'DESEMBOLSO', 'BOVEDA_INGRESO', 'BOVEDA_EGRESO'];
+            if (this.filtrosCaja.tipo_libro === 'OPERATIVO' && soloGeneral.includes(this.filtrosCaja.tipo)) {
+                this.filtrosCaja.tipo = 'TODOS';
+            }
+            this.fetchFlujoCaja(1);
+        },
+
+        cambiarPaginaCaja(page) {
+            if (page >= 1 && page <= this.paginacionCaja.last_page) {
+                this.fetchFlujoCaja(page);
+            }
+        },
+
+        async fetchFlujoCaja(page = 1) {
+            this.preloaderCaja = true;
             try {
-                const response = await axios.get('/libro-mayor', { params: this.filtros });
-
-                this.movimientos = response.data.movimientos.data;
-                this.pagination = response.data.movimientos;
-                this.totalIngresosPeriodo = response.data.totales.ingresos;
-                this.totalEgresosPeriodo = response.data.totales.egresos;
-                this.todosIngresos = response.data.ingresos_lista;
-                this.todosEgresos = response.data.egresos_lista;
-
+                const response = await axios.get('/libro-mayor', {
+                    params: { ...this.filtrosCaja, page },
+                });
+                this.movimientosCaja   = response.data.movimientos.data;
+                this.paginacionCaja    = response.data.movimientos;
+                this.totalIngresosCaja = response.data.totales.ingresos;
+                this.totalEgresosCaja  = response.data.totales.egresos;
+                this.saldoBoveda       = response.data.saldo_boveda ?? 0;
             } catch (error) {
-                console.error("Error obteniendo libro mayor:", error);
-                Swal.fire('Error', 'No se pudieron obtener los movimientos. Intente nuevamente.', 'error');
+                console.error(error);
+                Swal.fire('Error', 'No se pudieron cargar los movimientos.', 'error');
             } finally {
-                this.preloader = false;
+                this.preloaderCaja = false;
             }
-        }
-    }
+        },
+
+        exportarCaja() {
+            const qs = new URLSearchParams({ ...this.filtrosCaja }).toString();
+            window.open(`/reportes/libro-mayor/excel?${qs}`, '_blank');
+        },
+
+        async imprimirCaja() {
+            const qs = new URLSearchParams({ ...this.filtrosCaja }).toString();
+            await this.generarPDF(`/reportes/libro-mayor?${qs}`);
+        },
+
+        // ── Libro Diario ──────────────────────────────────────────────
+        buscarDiario() {
+            this.paginaActualDiario = 1;
+            this.fetchLibroDiario();
+        },
+
+        cambiarPaginaDiario(page) {
+            if (page >= 1 && page <= this.paginacionDiario.last_page) {
+                this.paginaActualDiario = page;
+            }
+        },
+
+        async fetchLibroDiario() {
+            this.preloaderDiario = true;
+            try {
+                const response = await axios.get('/libro-mayor', {
+                    params: {
+                        ...this.filtrosDiario,
+                        tipo_libro: 'GENERAL',
+                        page: 1,
+                    },
+                });
+                const tiposIngresoReal = ['INTERES', 'MORA', 'GASTOSADM', 'INGRESO_CAJA'];
+                let acumulado = 0;
+                this.ingresosDiario = (response.data.ingresos_lista || [])
+                    .filter(item => tiposIngresoReal.includes(item.tipo))
+                    .map((item, idx) => {
+                        acumulado += (item.debe || 0);
+                        return { ...item, nro: idx + 1, totalAcumulado: acumulado };
+                    });
+                this.totalIngresosDiario = acumulado;
+                this.saldoTotalDiario    = response.data.saldo_boveda ?? 0;
+                this.libroDiarioCargado  = true;
+            } catch (error) {
+                console.error(error);
+                Swal.fire('Error', 'No se pudieron cargar los ingresos.', 'error');
+            } finally {
+                this.preloaderDiario = false;
+            }
+        },
+
+        exportarDiario() {
+            const qs = new URLSearchParams({ ...this.filtrosDiario, tipo_libro: 'GENERAL' }).toString();
+            window.open(`/reportes/ingresos/excel?${qs}`, '_blank');
+        },
+
+        async imprimirDiario() {
+            const qs = new URLSearchParams({ ...this.filtrosDiario, tipo_libro: 'GENERAL' }).toString();
+            await this.generarPDF(`/reportes/ingresos?${qs}`);
+        },
+    },
 };
 </script>
 
 <style scoped>
-/* Tabs Personalizados */
+/* Tabs */
 .custom-tabs {
     border-bottom: 2px solid #dee2e6;
 }
@@ -409,30 +562,27 @@ export default {
     border: 1px solid #dee2e6;
     border-bottom: none;
     border-radius: 8px 8px 0 0;
-    transition: all 0.05s ease;
     font-size: 0.85rem;
     margin-bottom: -2px;
+    transition: all 0.05s ease;
 }
 .custom-tabs .nav-link:hover {
     background-color: #198754 !important;
-    color:#ffffff !important;
+    color: #fff !important;
 }
 .custom-tabs .nav-link.active {
-    background-color: #ffffff;
+    background-color: #fff;
     color: #198754 !important;
     border-color: #dee2e6;
     border-top: 3px solid #198754;
-    border-bottom: 3px solid #ffffff;
+    border-bottom: 3px solid #fff;
     z-index: 2;
     position: relative;
 }
-.custom-tabs .nav-link.active:hover { color: #ffffff !important; }
+.custom-tabs .nav-link.active:hover { color: #fff !important; }
 
-/* Tabla Ledger */
-.ledger-table {
-    font-family: inherit;
-    font-size: 0.8rem;
-}
+/* Tabla */
+.ledger-table { font-size: 0.8rem; }
 .ledger-table th {
     vertical-align: middle;
     text-transform: uppercase;
@@ -440,35 +590,27 @@ export default {
     letter-spacing: 0.5px;
     padding: 10px 5px;
 }
-.ledger-table td {
-    vertical-align: middle;
-    padding: 6px 5px;
-}
-.border-start-2 { border-left: 2px solid #dee2e6 !important; }
-
-/* Animaciones */
-.fade-in-animation { animation: fadeIn 0.3s ease-in-out; }
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(5px); }
-    to { opacity: 1; transform: translateY(0); }
-}
+.ledger-table td { vertical-align: middle; padding: 6px 5px; }
 
 /* Preloader */
 .preloader {
     position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
+    inset: 0;
     background-color: rgba(255, 255, 255, 0.8);
-    display: flex; justify-content: center; align-items: center; z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
 }
 .spinner {
     border: 4px solid rgba(25, 135, 84, 0.2);
     border-top: 4px solid #198754;
     border-radius: 50%;
-    width: 50px; height: 50px;
+    width: 50px;
+    height: 50px;
     animation: spin 1s linear infinite;
 }
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    to { transform: rotate(360deg); }
 }
 </style>

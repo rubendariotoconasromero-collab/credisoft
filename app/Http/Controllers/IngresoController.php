@@ -7,17 +7,23 @@ use Illuminate\Support\Facades\Auth;
 use DB;
 class IngresoController extends Controller
 {
+
     public function save(Request $request){
         DB::beginTransaction();
         try{
-            
-            $id_caja=DB::table('caja')->where('estado', 1)->get()[0]->id;
+
+            $id_caja = DB::table('caja')->where('estado', 1)->first()?->id;
+
+            $descripcionFinal = ($request->descripcion == 'Otros ingresos')
+                ? $request->descripcion . ' - ' . $request->descripcion_otro
+                : $request->descripcion;
+
             DB::table('ingreso')->insert([
-                'monto'=>$request->monto,
-                'descripcion'=>($request->descripcion=='Otros ingresos')?$request->descripcion .' - '.$request->descripcion_otro: $request->descripcion,
-                'id_usuario'=>Auth::id(),
-                'fecha'=>now(),
-                'id_caja'=>$id_caja
+                'monto'       => $request->monto,
+                'descripcion' => $descripcionFinal,
+                'id_usuario'  => Auth::id(),
+                'fecha'       => now(),
+                'id_caja'     => $id_caja,
             ]);
 
             // Reg. en mov. caja
@@ -132,21 +138,24 @@ class IngresoController extends Controller
 
     public function anularIngreso(Request $request)
     {
-        $anular= DB::table('ingreso')
+        $ingreso = DB::table('ingreso')->where('id', $request->id)->select('monto', 'descripcion')->first();
+        $monto   = (float) ($ingreso->monto ?? 0);
+
+        $anular = DB::table('ingreso')
             ->join('caja', 'caja.id', '=', 'ingreso.id_caja')
             ->where('ingreso.id', $request->id)
             ->where('caja.estado', 1)->exists();
 
-        if($anular){
+        if ($anular) {
             DB::table('ingreso')
                 ->join('caja', 'caja.id', '=', 'ingreso.id_caja')
                 ->where('ingreso.id', $request->id)
                 ->where('caja.estado', 1)
                 ->update(['ingreso.estado' => 0]);
+
             return response()->json(['respuesta' => 1]);
-        }else{
+        } else {
             return response()->json(['respuesta' => 0]);
         }
-
     }
 }

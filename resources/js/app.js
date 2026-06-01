@@ -50,6 +50,7 @@ import frmHistorialPagos from './components/frmHistorialPagos.vue';
 import frmConsultaFinanciera from './components/frmConsultaFinanciera.vue';
 import PerfilUsuarioComponent from './components/PerfilUsuarioComponent.vue';
 import frmSocio from './components/frmSocio.vue';
+import LiveSearch from './components/Shared/LiveSearch.vue';
 
 
 
@@ -84,6 +85,7 @@ app.component('frm-historialpagos', frmHistorialPagos);
 app.component('frm-consultafinanciera', frmConsultaFinanciera);
 app.component('perfil-usuario-component', PerfilUsuarioComponent);
 app.component('frm-socio', frmSocio);
+app.component('live-search', LiveSearch);
 
 
 

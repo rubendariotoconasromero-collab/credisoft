@@ -981,26 +981,19 @@ class PlanPagoController extends Controller
             $interesDevengadoBruto = $interesPorDiaNormal * $diasTranscurridosNormales;
 
             // INTERÉS MORATORIO
-            // Ajuste solicitado: (Saldo Capital * Tasa%) / Factor Periodo / Días Divisor * Días Mora
+            // Fórmula: (interés fijo de la cuota / días del lapso) × días de retraso
             if ($index === $firstUnpaidIndex && in_array($cuota->estado, [1, 3]) && $diasRetrasoCuota > 0) {
-                $montoBaseMensual = $saldoCapitalMora * ((float)$cuota->tasa / 100);
-                
                 $lapso = trim(strtolower($cuota->lapso_capital));
-                $factorPeriodo = 1;
-                $diasDivisor = 30;
 
-                if ($lapso == 'quincenal') {
-                    $factorPeriodo = 2;
-                    $diasDivisor = 15;
-                } elseif ($lapso == 'semanal') {
-                    $factorPeriodo = 4;
+                if ($lapso == 'semanal') {
                     $diasDivisor = 7;
+                } elseif ($lapso == 'quincenal') {
+                    $diasDivisor = 15;
                 } else {
-                    $factorPeriodo = 1;
                     $diasDivisor = 30;
                 }
 
-                $interesMoratorioBruto = ($montoBaseMensual / $factorPeriodo) / $diasDivisor * $diasRetrasoCuota;
+                $interesMoratorioBruto = ($cuota->interes / $diasDivisor) * $diasRetrasoCuota;
             } else {
                 $interesMoratorioBruto = 0;
             }
@@ -1021,14 +1014,18 @@ class PlanPagoController extends Controller
             // MULTA FIJA ECONÓMICA
             $moraFijaBruta = ($cuota->dias_mora_cobro > 0) ? ($cuota->dias_mora_cobro * 3) : 0;
             $moraFijaRestante = max(0, $moraFijaBruta - $mora_pagada);
+            $porcentaje_mora = ($moraFijaBruta > 0) ? round(($mora_pagada / $moraFijaBruta) * 100, 1) : 0;
 
             // ASIGNACIÓN AL OBJETO FINAL
             $cuota->dias_transcurridos = round($diasTranscurridosNormales);
-            
+
             $cuota->capital_pagado_total = round($cap_pagado, 2);
             $cuota->interes_pagado_total = round($int_pagado, 2);
             $cuota->porcentaje_capital_pagado = $porcentaje_capital;
             $cuota->porcentaje_interes_pagado = $porcentaje_interes;
+            $cuota->mora_pagada_total = round($mora_pagada, 2);
+            $cuota->mora_bruta = round($moraFijaBruta, 2);
+            $cuota->porcentaje_mora_pagada = $porcentaje_mora;
 
             $cuota->capital_neto = round($capitalRestante, 2);
             $cuota->interes_devengado_neto = round($intDevengadoRestante, 2);

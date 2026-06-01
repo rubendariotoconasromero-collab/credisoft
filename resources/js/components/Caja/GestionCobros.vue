@@ -12,53 +12,54 @@
             </div>
             
             <div class="card-body">
-                <ul class="nav nav-pills nav-justified mb-4 bg-white rounded list-header-pay p-3">
-                    <li class="nav-item text-dark">
-                        <a class="text-decoration-none py-1 w-100 fw-bold text-uppercase d-flex align-items-center justify-content-center border border-1" 
-                        :class="tabActual === 'normal' ? 'bg-warning text-white border-warning' : 'text-dark bg-white hover-effect border-secondary'" 
-                        href="#" @click.prevent="tabActual = 'normal'" style="cursor: pointer; transition: all 0.2s;">
-                            Cuotas Normales
-                        </a>
+                <ul class="nav mb-3 mt-1 d-flex justify-content-center px-2 custom-tabs border-bottom" role="tablist">
+                    <li class="nav-item mx-1" role="presentation">
+                        <button class="nav-link px-4 py-2 fw-bold text-uppercase border-0" 
+                            :class="{ active: tabActual === 'normal' }" 
+                            @click.prevent="tabActual = 'normal'" type="button">
+                            <i class="fas fa-calendar-alt me-2"></i> Cuotas Normales
+                        </button>
                     </li>
-                    <li class="nav-item text-dark">
-                        <a class="text-decoration-none py-1 w-100 fw-bold text-uppercase d-flex align-items-center justify-content-center border border-1" 
-                        :class="tabActual === 'repro' ? 'bg-info text-white border-info' : 'text-dark bg-white hover-effect border-secondary'"
-                        href="#" @click.prevent="cambiarTabRepro" style="cursor: pointer; transition: all 0.2s;">
-                            <!-- <i class="fas fa-history me-2"></i>  -->
-                            Ordenes de pago
-                        </a>
+                    <li class="nav-item mx-1" role="presentation">
+                        <button class="nav-link px-4 py-2 fw-bold text-uppercase border-0" 
+                            :class="{ active: tabActual === 'repro' }" 
+                            @click.prevent="cambiarTabRepro" type="button">
+                            <i class="fas fa-file-invoice-dollar me-2"></i> Órdenes de pago
+                        </button>
                     </li>
                 </ul>
 
                 <div class="bg-white p-3 rounded border" style="min-height: 400px;">
                     
                     <div v-if="tabActual === 'normal'" class="fade-in-animation">
-                        <div class="row mb-3">
+                        <div class="row mb-2">
                             <div class="col-md-12">
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light"><i class="fas fa-filter text-muted"></i></span>
-                                    <select @change="buscarPlanPago()" v-model="filtrosPlan.criterio" class="form-select">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-light border-secondary-subtle"><i class="fas fa-filter text-muted"></i></span>
+                                    <select @change="buscarPlanPago()" v-model="filtrosPlan.criterio" class="form-select border-secondary-subtle" style="max-width: 150px;">
                                         <option value="plan_pago.id">Cod. Credito</option>
                                         <option value="cliente.nombre">Nombre cliente</option>
                                         <option value="cliente.ci">CI</option>
                                     </select>
-                                    <input v-model="filtrosPlan.fecha_inicio" type="date" class="form-control" @change="buscarPlanPago()">
-                                    <input v-model="filtrosPlan.fecha_fin" type="date" class="form-control" @change="buscarPlanPago()">
-                                    <input v-model="filtrosPlan.buscar" type="text" class="form-control" placeholder="Buscar..." @input="buscarPlanPago()">
-                                    <button class="btn btn-success" @click="buscarPlanPago">
-                                        <i class="fas fa-search"></i>
+                                    <span class="input-group-text bg-light text-muted" style="font-size: 11px;">Desde</span>
+                                    <input v-model="filtrosPlan.fecha_inicio" type="date" class="form-control border-secondary-subtle" @change="buscarPlanPago()" style="max-width: 130px;">
+                                    <span class="input-group-text bg-light text-muted" style="font-size: 11px;">Hasta</span>
+                                    <input v-model="filtrosPlan.fecha_fin" type="date" class="form-control border-secondary-subtle" @change="buscarPlanPago()" style="max-width: 130px;">
+                                    <input v-model="filtrosPlan.buscar" type="text" class="form-control border-secondary-subtle" placeholder="Buscar cliente, CI o código..." @input="buscarPlanPago()">
+                                    <button class="btn btn-success px-3 fw-bold border-secondary-subtle" @click="buscarPlanPago">
+                                        <i class="fas fa-search me-1"></i> Buscar
                                     </button>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="table-responsive text-uppercase" style="font-size:12px;">
-                            <table class="table mb-0 table-hover table-striped table-sm align-middle">
+                        <div class="table-responsive text-uppercase">
+                            <table class="table mb-0 table-hover table-striped align-middle table-compact-general">
                                 <thead class="text-uppercase text-white">
                                     <tr class="align-middle table-warning">
-                                        <th class="text-dark fw-bold"># Cred.</th>
+                                        <th class="text-dark fw-bold text-center"># Cred.</th>
                                         <th class="text-dark fw-bold">Cliente</th>
-                                        <th class="text-dark fw-bold">CI</th>
+                                        <th class="text-dark fw-bold text-center">CI</th>
                                         <th class="text-dark fw-bold text-center">Desembolso</th>
                                         <th class="text-dark fw-bold text-end">Monto</th>
                                         <th class="text-dark fw-bold text-center">Asesor</th>
@@ -70,25 +71,27 @@
                                 </thead>
                                 <tbody>
                                     <tr v-for="item in lista_planespago" :key="item.id">
-                                        <td class="fw-bold text-center">{{ item.id }}</td>
+                                        <td class="fw-bold text-center text-primary">{{ item.id }}</td>
                                         <td class="fw-bold">{{ item.cliente }}</td>
-                                        <td>{{ item.ci }}</td>
+                                        <td class="text-center">{{ item.ci }}</td>
                                         <td class="text-center">{{ formatDate(item.fecha_desembolso) }}</td>
-                                        <td class="fw-bold text-end">{{ item.total_pagar_plan }}</td>
-                                        <td class="text-center">{{ item.asesor }}</td>
+                                        <td class="fw-bold text-end text-success">{{ item.total_pagar_plan }}</td>
+                                        <td class="text-center text-muted">{{ item.asesor }}</td>
                                         <td class="text-center">{{ formatDate(item.fecha_inicio_plan) }}</td>
                                         <td class="text-center">{{ formatDate(item.fecha_fin_plan) }}</td>
                                         <td class="text-center">
-                                            {{ item.nro_cuotas }} <span class="text-muted" style="font-size:10px;">({{ item.lapso_capital }})</span>
+                                            {{ item.nro_cuotas }} <span class="text-muted" style="font-size: 9px;">({{ item.lapso_capital }})</span>
                                         </td>
                                         <td class="text-center">
-                                            <button class="btn btn-success btn-sm px-3 shadow-sm" @click="verDetallePlan(item)">
-                                                <i class="fas fa-hand-holding-usd"></i>
+                                            <button class="btn btn-success btn-sm px-3 shadow-sm border-0" @click="verDetallePlan(item)" title="Gestionar Cobro">
+                                                <i class="fas fa-hand-holding-usd me-1"></i> Cobrar
                                             </button>
                                         </td>
                                     </tr>
                                     <tr v-if="lista_planespago.length === 0">
-                                        <td colspan="10" class="text-center py-4 text-muted">No se encontraron planes vigentes.</td>
+                                        <td colspan="10" class="text-center py-4 text-muted fst-italic">
+                                            <i class="fas fa-folder-open me-1"></i> No se encontraron planes vigentes.
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -96,35 +99,33 @@
                     </div>
 
                     <div v-if="tabActual === 'repro'" class="fade-in-animation">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="text-primary fw-bold text-uppercase my-0">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="text-primary fw-bold text-uppercase my-0 small">
                                 <i class="fas fa-list-alt me-2"></i> Órdenes de Cobro Pendientes
                             </h6>
                         </div>
 
-                        <div class="row mb-3">
+                        <div class="row mb-2">
                             <div class="col-md-12">
-                                <div class="input-group">
-                                    <select v-model="filtrosRepro.criterio" class="form-select" style="max-width: 300px;">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-light border-secondary-subtle"><i class="fas fa-filter text-muted"></i></span>
+                                    <select v-model="filtrosRepro.criterio" class="form-select border-secondary-subtle" style="max-width: 150px;">
                                         <option value="cliente.nombre">Nombre</option>
                                         <option value="cliente.ci">CI</option>
                                         <option value="plan_pagos.id">Cód. Crédito</option>
                                     </select>
                                     
-                                    <input type="text" class="form-control ms-1" 
+                                    <input type="text" class="form-control border-secondary-subtle" 
                                         v-model="filtrosRepro.buscar" 
                                         placeholder="Escriba para buscar..." 
                                         @keyup.enter="cargarOrdenesReprogramacion">
                                     
-                                    <button class="btn btn-success" @click="cargarOrdenesReprogramacion">
-                                        <i class="fas fa-search"></i>
+                                    <button class="btn btn-success px-3 fw-bold border-secondary-subtle" @click="cargarOrdenesReprogramacion">
+                                        <i class="fas fa-search me-1"></i> Buscar
                                     </button>
                                     
-                                    <!-- <button v-if="filtrosRepro.buscar" class="btn btn-outline-secondary" @click="limpiarFiltroRepro">
-                                        <i class="fas fa-times"></i>
-                                    </button> -->
-                                    <button class="btn btn-info btn-sm ms-1" @click="cargarOrdenesReprogramacion">
-                                        <i class="fas fa-sync-alt"></i> Actualizar
+                                    <button class="btn btn-info text-white px-3 fw-bold border-secondary-subtle" @click="cargarOrdenesReprogramacion">
+                                        <i class="fas fa-sync-alt me-1"></i> Actualizar
                                     </button>
                                 </div>
                             </div>
@@ -135,36 +136,34 @@
                         </div>
 
                         <div v-else class="table-responsive">
-                            <table class="table table-sm table-hover table-striped table-sm align-middle mb-0">
-                                <thead class="table-warning text-uppercase small text-center">
+                            <table class="table table-hover table-striped align-middle mb-0 table-compact-general">
+                                <thead class="table-warning text-uppercase text-center">
                                     <tr>
-                                        <th># Orden</th>
-                                        <th>Fecha</th>
-                                        <th class="text-start">Cliente</th>
-                                        <!-- <th>Ref.</th> -->
-                                        <th class="text-end border-start">Int. Calc.</th>
-                                        <th class="text-end">Int. Cond.</th>
-                                        <th class="text-end border-start">Mora Calc.</th>
-                                        <th class="text-end">Mora Cond.</th>
-                                        <th class="text-end border-start bg-warning bg-opacity-25">Total Cobrar</th>
-                                        <th>Estado</th>
-                                        <th>Acción</th>
+                                        <th class="text-dark fw-bold"># Orden</th>
+                                        <th class="text-dark fw-bold">Fecha</th>
+                                        <th class="text-dark fw-bold text-start">Cliente</th>
+                                        <th class="text-dark fw-bold text-end border-start">Int. Calc.</th>
+                                        <th class="text-dark fw-bold text-end">Int. Cond.</th>
+                                        <th class="text-dark fw-bold text-end border-start">Mora Calc.</th>
+                                        <th class="text-dark fw-bold text-end">Mora Cond.</th>
+                                        <th class="text-dark fw-bold text-end border-start bg-warning bg-opacity-10">Total Cobrar</th>
+                                        <th class="text-dark fw-bold">Estado</th>
+                                        <th class="text-dark fw-bold">Acción</th>
                                     </tr>
                                 </thead>
-                                <tbody class="small text-center">
+                                <tbody class="text-center">
                                     <tr v-for="orden in lista_ordenes_repro" :key="orden.id">
                                         <td class="fw-bold text-primary">#{{ orden.id }}</td>
                                         <td>{{ orden.created_at_fmt }}</td>
                                         <td class="text-start fw-bold text-uppercase">{{ orden.cliente_nombre }}</td>
-                                        <!-- <td><span class="badge bg-secondary">CRED-{{ orden.id_plan_pago_origen }}</span></td> -->
-                                        <td class="text-end border-start">{{ orden.monto_interes_calculado }}</td>
-                                        <td class="text-end text-muted fst-italic bg-light">
+                                        <td class="text-end border-start font-monospace">{{ orden.monto_interes_calculado }}</td>
+                                        <td class="text-end text-muted fst-italic bg-light font-monospace">
                                             <span v-if="orden.monto_condonado_interes > 0">-{{ orden.monto_condonado_interes }}</span>
                                             <span v-else>-</span>
                                         </td>
                                         
-                                        <td class="text-end text-danger border-start">{{ orden.monto_mora_calculado }}</td>
-                                        <td class="text-end text-muted fst-italic bg-light">
+                                        <td class="text-end text-danger border-start font-monospace">{{ orden.monto_mora_calculado }}</td>
+                                        <td class="text-end text-muted fst-italic bg-light font-monospace">
                                             <div v-if="orden.monto_condonado_mora > 0">
                                                 -{{ orden.monto_condonado_mora }}
                                                 <i v-if="orden.motivo_condonacion" 
@@ -175,7 +174,7 @@
                                             <span v-else>-</span>
                                         </td>
                                         
-                                        <td class="text-end fs-6 border-start bg-success bg-opacity-10" style="font-weight: 800; color:green">
+                                        <td class="text-end border-start bg-success bg-opacity-10 font-monospace" style="font-weight: 700; color: #198754; font-size: 12px;">
                                             {{ orden.total_a_pagar }}
                                         </td>
                                         
@@ -184,12 +183,10 @@
                                             <span v-else-if="orden.estado == 2" class="badge bg-success">PAGADO</span>
                                             <span v-else class="badge bg-secondary">NO DISP.</span>
                                         </td>
-
-                                        
                                         
                                         <td>
                                             <button v-if="orden.estado == 1" 
-                                                    class="btn btn-info btn-sm px-3 fw-bold" 
+                                                    class="btn btn-info text-white btn-sm px-3 fw-bold" 
                                                     @click="cobrarOrdenReprogramacion(orden)">
                                                 <i class="fas fa-money-bill-wave me-1"></i> Cobrar
                                             </button>
@@ -201,14 +198,13 @@
                                         </td>
                                     </tr>
                                     <tr v-if="lista_ordenes_repro.length === 0">
-                                        <td colspan="11" class="text-center py-5 text-muted fst-italic bg-white">
-                                            <i class="fas fa-folder-open fa-2x mb-2 d-block text-secondary"></i>
+                                        <td colspan="10" class="text-center py-4 text-muted fst-italic bg-white">
+                                            <i class="fas fa-folder-open fa-lg mb-1 d-block text-secondary"></i>
                                             No hay órdenes de reprogramación pendientes.
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
-
                         </div>
                     </div>
                 </div>
@@ -226,36 +222,38 @@
             </div>
 
             <div class="card-body">
-                <div class="row mb-3">
+                <!-- Action Buttons: sm size, compact layout -->
+                <div class="row mb-2">
                     <div class="col text-center">
-                        <a @click="generarPdf(plan_pago.id)" class="btn btn-info text-white me-2">
-                            <i class="fas fa-file-pdf"></i> Generar PDF
+                        <a @click="generarPdf(plan_pago.id)" class="btn btn-info btn-sm text-white me-2 shadow-sm fw-bold">
+                            <i class="fas fa-file-pdf me-1"></i> Generar PDF
                         </a>
-                        <a @click="openPaymentModal()" class="btn btn-success">
-                            <i class="fas fa-dollar-sign"></i> Cobrar Cuota/s
+                        <a @click="openPaymentModal()" class="btn btn-success btn-sm shadow-sm fw-bold">
+                            <i class="fas fa-dollar-sign me-1"></i> Cobrar Cuota/s
                         </a>
                     </div>
                 </div>
 
-                <div class="row mb-4">
+                <!-- Overview Summary Blocks: compact padding & font size -->
+                <div class="row g-2 mb-2" style="font-size: 0.78rem;">
                     <div class="col-md-4">
-                        <div class="p-3 rounded border bg-light h-100">
-                            <div class="d-flex justify-content-between mb-2"><strong>Cliente:</strong> <span>{{ plan_pago.cliente }}</span></div>
-                            <div class="d-flex justify-content-between mb-2"><strong>CI:</strong> <span>{{ plan_pago.ci }} {{ plan_pago.lugar_expedicion }}</span></div>
+                        <div class="p-2 rounded border bg-light h-100">
+                            <div class="d-flex justify-content-between mb-1"><strong>Cliente:</strong> <span class="text-uppercase text-dark fw-semibold">{{ plan_pago.cliente }}</span></div>
+                            <div class="d-flex justify-content-between mb-1"><strong>CI:</strong> <span>{{ plan_pago.ci }} {{ plan_pago.lugar_expedicion }}</span></div>
                             <div class="d-flex justify-content-between"><strong>Garantía:</strong> <span>{{ plan_pago.tipo_garantia }}</span></div>
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <div class="p-3 rounded border bg-light h-100">
-                            <div class="d-flex justify-content-between mb-2"><strong>Plazo:</strong> <span>{{ plan_pago.nro_cuotas }} {{ plan_pago.lapso_capital }}</span></div>
-                            <div class="d-flex justify-content-between mb-2"><strong>Monto:</strong> <span>{{ plan_pago.total_pagar_plan }} {{ plan_pago.moneda }}</span></div>
+                        <div class="p-2 rounded border bg-light h-100">
+                            <div class="d-flex justify-content-between mb-1"><strong>Plazo:</strong> <span>{{ plan_pago.nro_cuotas }} {{ plan_pago.lapso_capital }}</span></div>
+                            <div class="d-flex justify-content-between mb-1"><strong>Monto:</strong> <span class="font-monospace fw-bold text-dark">{{ formatNumero(plan_pago.total_pagar_plan) }} {{ plan_pago.moneda }}</span></div>
                             <div class="d-flex justify-content-between"><strong>Forma Pago:</strong> <span>{{ plan_pago.lapso_capital }}</span></div>
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <div class="p-3 rounded border bg-light h-100">
-                            <div class="d-flex justify-content-between mb-2"><strong>Inicio:</strong> <span>{{ formatDate(plan_pago.fecha_inicio_plan) }}</span></div>
-                            <div class="d-flex justify-content-between mb-2"><strong>Fin:</strong> <span>{{ formatDate(plan_pago.fecha_fin_plan) }}</span></div>
+                        <div class="p-2 rounded border bg-light h-100">
+                            <div class="d-flex justify-content-between mb-1"><strong>Inicio:</strong> <span>{{ formatDate(plan_pago.fecha_inicio_plan) }}</span></div>
+                            <div class="d-flex justify-content-between mb-1"><strong>Fin:</strong> <span>{{ formatDate(plan_pago.fecha_fin_plan) }}</span></div>
                             <div v-if="dias_mora > 0" class="d-flex justify-content-between">
                                 <span class="fw-bold text-danger">Mora General:</span>
                                 <span class="fw-bold text-danger">{{ dias_mora }} Días</span>
@@ -264,7 +262,7 @@
                     </div>
                 </div>
 
-                <div class="table-responsive" style="font-size:12px;">
+                <div class="table-responsive" style="font-size:11px;">
                     <table class="table mb-4 table-striped table-sm table-hover border table-cuotas">
                         
                         <thead class="text-dark table-warning">
@@ -311,12 +309,17 @@
                                     {{ cuota.estado == 0 ? '---' : formatNumero(cuota.interes_devengado_neto) }}
                                 </td>
                                 <td class="text-center text-danger fw-bold">
-                                    {{ cuota.estado == 0 ? '---' : formatNumero(cuota.interes_moratorio_neto) }}<br>
-                                    <span v-if="parseFloat(cuota.interes_moratorio_neto) > 0" class="text-muted" style="font-size: 0.6rem;">({{ cuota.dias_pasados }} d)</span>
+                                    {{ cuota.estado == 0 ? '---' : formatNumero(cuota.interes_moratorio_neto) }}
                                 </td>
-                                
+
                                 <td class="text-center text-danger fw-bold">
-                                    {{ cuota.estado == 0 ? '---' : formatNumero(cuota.mora_fija_neta) }}
+                                    <div class="fw-bold text-danger fs-6">
+                                        {{ cuota.estado == 0 ? '---' : formatNumero(cuota.mora_fija_neta) }}
+                                    </div>
+                                    <div v-if="cuota.mora_pagada_total > 0" class="text-success fw-bold lh-1 mt-1" style="font-size: 0.65rem;">
+                                        Pagado: {{ formatNumero(cuota.mora_pagada_total) }} <br>
+                                        ({{ cuota.porcentaje_mora_pagada }}%)
+                                    </div>
                                 </td>
 
                                 <td class="text-center fw-bold text-dark bg-light">
@@ -337,11 +340,7 @@
                                 </td>
                                 
                                 <td class="text-center">
-                                    <div v-if="parseFloat(cuota.mora_fija_neta) > 0 && cuota.estado != 2" class="mb-1">
-                                        <span class="badge bg-danger text-white">
-                                            Mora - {{ cuota.dias_pasados }} Dias
-                                        </span>
-                                    </div>
+
                                     <span class="badge rounded-pill" :class="getEstadoCuota(cuota).clase">
                                         {{ getEstadoCuota(cuota).texto }}
                                     </span>
@@ -387,8 +386,36 @@
                     </div>
 
                     <div class="modal-body p-4 bg-light">
+
+                        <!-- Selector de modalidad de pago -->
+                        <div class="card border-0 shadow-sm mb-3">
+                            <div class="card-body py-2 px-3">
+                                <label class="form-label small fw-bold text-muted mb-2 text-uppercase d-block">
+                                    <i class="fas fa-sliders-h me-1"></i> Modalidad de Pago
+                                </label>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <button v-for="m in modalidades" :key="m.value"
+                                            type="button"
+                                            class="btn btn-sm fw-bold text-uppercase"
+                                            :class="paymentDetails.modalidad === m.value ? m.classActive : 'btn-outline-secondary'"
+                                            @click="paymentDetails.modalidad = m.value">
+                                        {{ m.label }}
+                                    </button>
+                                </div>
+                                <div v-if="paymentDetails.modalidad !== 'completo' && paymentDetails.modalidad !== 'parcial'"
+                                     class="mt-2 small text-warning fw-bold">
+                                    <i class="fas fa-info-circle"></i>
+                                    Solo se registra {{
+                                        paymentDetails.modalidad === 'solo_interes' ? 'el interés' :
+                                        paymentDetails.modalidad === 'solo_mora' ? 'la mora' :
+                                        'interés + mora'
+                                    }}. El capital permanece pendiente.
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="row g-4">
-                            
+
                             <div class="col-md-5">
                                 <div class="card border-0 shadow-sm h-100">
                                     <div class="card-header bg-white border-bottom-0 pt-3 pb-0">
@@ -434,7 +461,7 @@
 
                             <div class="col-md-7">
                                 
-                                <div class="card border-warning border-opacity-50 shadow-sm mb-3" v-if="totalInteres > 0 || totalMulta > 0">
+                                <div class="card border-warning border-opacity-50 shadow-sm mb-3" v-if="showCondInt || showCondMora">
                                     <div class="card-header bg-warning bg-opacity-10 py-2">
                                         <h6 class="fw-bold text-warning-emphasis mb-0 small text-uppercase">
                                             <i class="fas fa-gift me-2"></i>Opciones de Condonación
@@ -442,23 +469,23 @@
                                     </div>
                                     <div class="card-body p-3">
                                         <div class="row g-2">
-                                            <div class="col-sm-6" v-if="totalInteres > 0">
+                                            <div class="col-sm-6" v-if="showCondInt">
                                                 <label class="form-label small fw-bold text-muted mb-1">Desc. Interés (Bs)</label>
-                                                <input type="number" class="form-control form-control-sm border-warning bg-white" 
-                                                    v-model.number="paymentDetails.monto_condonado_interes" 
+                                                <input type="number" class="form-control form-control-sm border-warning bg-white"
+                                                    v-model.number="paymentDetails.monto_condonado_interes"
                                                     min="0" :max="totalInteres"
                                                     @focus="$event.target.select()" @blur="verificarVacio('interes')" @input="validarMonto('interes')" placeholder="0.00">
                                             </div>
-                                            <div class="col-sm-6" v-if="totalMulta > 0">
+                                            <div class="col-sm-6" v-if="showCondMora">
                                                 <label class="form-label small fw-bold text-danger mb-1">Desc. Multa (Bs)</label>
-                                                <input type="number" class="form-control form-control-sm border-danger bg-white" 
-                                                    v-model.number="paymentDetails.monto_condonado_multa" 
+                                                <input type="number" class="form-control form-control-sm border-danger bg-white"
+                                                    v-model.number="paymentDetails.monto_condonado_multa"
                                                     min="0" :max="totalMulta"
                                                     @focus="$event.target.select()" @blur="verificarVacio('multa')" @input="validarMonto('multa')" placeholder="0.00">
                                             </div>
                                             <div class="col-12 mt-2" v-if="paymentDetails.monto_condonado_interes > 0 || paymentDetails.monto_condonado_multa > 0">
-                                                <input type="text" class="form-control form-control-sm bg-white" 
-                                                    v-model="paymentDetails.motivo_condonacion_interes" 
+                                                <input type="text" class="form-control form-control-sm bg-white"
+                                                    v-model="paymentDetails.motivo_condonacion_interes"
                                                     placeholder="Escriba el motivo de la condonación...">
                                             </div>
                                         </div>
@@ -477,21 +504,25 @@
                                             <div class="col-12">
                                                 <div class="d-flex justify-content-between align-items-center mb-1">
                                                     <label class="form-label fw-bold text-dark mb-0 small text-uppercase">Efectivo a Recibir (Bs) *</label>
-                                                    <div class="form-check form-switch mb-0">
-                                                        <input class="form-check-input" type="checkbox" id="toggleCobrarTotal" 
+                                                    <div class="form-check form-switch mb-0"
+                                                         v-if="paymentDetails.modalidad === 'parcial'">
+                                                        <input class="form-check-input" type="checkbox" id="toggleCobrarTotal"
                                                             v-model="cobrarTotal" @change="handleCobrarTotal">
                                                         <label class="form-check-label small fw-bold text-primary" for="toggleCobrarTotal" style="cursor:pointer;">COBRAR TODO</label>
                                                     </div>
+                                                    <span v-else class="badge bg-secondary small">Auto-calculado</span>
                                                 </div>
                                                 <div class="input-group shadow-sm">
                                                     <span class="input-group-text bg-white border-primary py-2"><i class="fas fa-money-bill-wave text-success"></i></span>
-                                                    <input type="number" class="form-control fw-bold text-end border-primary py-2" 
-                                                        v-model.number="paymentDetails.monto_recibido" 
+                                                    <input type="number" class="form-control fw-bold text-end border-primary py-2"
+                                                        v-model.number="paymentDetails.monto_recibido"
                                                         min="1" step="0.01" style="color: #198754;"
+                                                        :readonly="paymentDetails.modalidad !== 'parcial'"
+                                                        :class="{'bg-light': paymentDetails.modalidad !== 'parcial'}"
                                                         @input="cobrarTotal = false"
                                                         @focus="$event.target.select()">
                                                 </div>
-                                                <div v-if="paymentDetails.monto_recibido < totalLiquido" class="form-text text-warning fw-bold mt-1" style="font-size: 0.7rem;">
+                                                <div v-if="paymentDetails.modalidad === 'parcial' && paymentDetails.monto_recibido < totalLiquido" class="form-text text-warning fw-bold mt-1" style="font-size: 0.7rem;">
                                                     <i class="fas fa-info-circle"></i> Pago Parcial. Saldo: {{ formatNumero(totalLiquido - paymentDetails.monto_recibido) }} Bs.
                                                 </div>
                                             </div>
@@ -568,13 +599,21 @@ export default {
             cobrarTotal: false,
             paymentDetails: {
                 fecha_pago: moment().format('YYYY-MM-DD'),
+                modalidad: 'completo',
                 monto_recibido: 0,
                 monto_condonado_interes: 0,
                 motivo_condonacion_interes: '',
                 monto_condonado_multa: 0,
                 motivo_condonacion_multa: '',
                 forma_pago: 'efectivo'
-            }
+            },
+            modalidades: [
+                { value: 'completo',     label: 'Cuota Completa',        classActive: 'btn-success' },
+                { value: 'solo_interes', label: 'Solo Interés',          classActive: 'btn-primary' },
+                { value: 'solo_mora',    label: 'Solo Mora',             classActive: 'btn-danger' },
+                { value: 'interes_mora', label: 'Interés + Mora',        classActive: 'btn-warning text-dark' },
+                { value: 'parcial',      label: 'Pago Parcial (libre)',  classActive: 'btn-info text-white' },
+            ]
         };
     },
     computed: {
@@ -601,21 +640,54 @@ export default {
             return (parseFloat(this.totalCapital) + parseFloat(this.totalInteres) + parseFloat(this.totalMulta)).toFixed(2);
         },
         totalLiquido() {
-            const getVal = (v) => {
+            const val = (v) => {
                 if (v === '' || v === null || v === undefined) return 0;
-                const parsed = parseFloat(v);
-                return isNaN(parsed) ? 0 : parsed;
+                const p = parseFloat(v);
+                return isNaN(p) ? 0 : p;
             };
-            let liquido = getVal(this.totalPagar) - getVal(this.paymentDetails.monto_condonado_interes) - getVal(this.paymentDetails.monto_condonado_multa);
-            return (liquido > 0 ? liquido : 0).toFixed(2);
+            const m  = this.paymentDetails.modalidad;
+            const ci = val(this.paymentDetails.monto_condonado_interes);
+            const cm = val(this.paymentDetails.monto_condonado_multa);
+            let base;
+            if      (m === 'solo_interes') base = val(this.totalInteres) - ci;
+            else if (m === 'solo_mora')    base = val(this.totalMulta) - cm;
+            else if (m === 'interes_mora') base = val(this.totalInteres) + val(this.totalMulta) - ci - cm;
+            else                           base = val(this.totalPagar) - ci - cm; // completo, parcial
+            return (base > 0 ? base : 0).toFixed(2);
+        },
+        showCondInt() {
+            return ['completo', 'parcial', 'solo_interes', 'interes_mora'].includes(this.paymentDetails.modalidad)
+                && parseFloat(this.totalInteres) > 0;
+        },
+        showCondMora() {
+            return ['completo', 'parcial', 'solo_mora', 'interes_mora'].includes(this.paymentDetails.modalidad)
+                && parseFloat(this.totalMulta) > 0;
         }
     },
 
     watch: {
-        // Observamos el total líquido para mantener sincronizado el monto si Cobrar Total está activo
         totalLiquido(nuevoValor) {
             if (this.cobrarTotal) {
                 this.paymentDetails.monto_recibido = parseFloat(nuevoValor);
+            }
+        },
+        'paymentDetails.modalidad'(newVal) {
+            if (newVal === 'parcial') {
+                this.cobrarTotal = false;
+                this.paymentDetails.monto_recibido = 0;
+            } else {
+                // Para modos fijos, auto-rellenar el monto con el total líquido
+                this.cobrarTotal = (newVal === 'completo');
+                this.$nextTick(() => {
+                    this.paymentDetails.monto_recibido = parseFloat(this.totalLiquido);
+                });
+            }
+            // Limpiar condonaciones del componente que no aplica
+            if (!['completo', 'parcial', 'solo_interes', 'interes_mora'].includes(newVal)) {
+                this.paymentDetails.monto_condonado_interes = 0;
+            }
+            if (!['completo', 'parcial', 'solo_mora', 'interes_mora'].includes(newVal)) {
+                this.paymentDetails.monto_condonado_multa = 0;
             }
         }
     },
@@ -813,12 +885,15 @@ export default {
         resetPaymentDetails() {
             this.paymentDetails = {
                 fecha_pago: moment().format('YYYY-MM-DD'),
+                modalidad: 'completo',
+                monto_recibido: 0,
                 monto_condonado_interes: 0,
                 motivo_condonacion_interes: '',
                 monto_condonado_multa: 0,
                 motivo_condonacion_multa: '',
                 forma_pago: 'efectivo'
             };
+            this.cobrarTotal = false;
         },
         openPaymentModal() {
             if (this.selectedCuotas.length === 0) {
@@ -851,6 +926,7 @@ export default {
                 const payload = {
                     id_plan_pago: this.plan_pago.id,
                     cuotas: cuotasData,
+                    modalidad_pago: this.paymentDetails.modalidad,
                     monto_recibido: parseFloat(this.paymentDetails.monto_recibido || 0),
                     fecha_pago: this.paymentDetails.fecha_pago,
                     forma_pago: this.paymentDetails.forma_pago,
@@ -941,6 +1017,64 @@ export default {
 
 <style scoped>
     @import '../styles/frmCaja.css';
+    
+    /* Tabs Personalizados y Modernos (Warning Style) */
+    .custom-tabs {
+        border-bottom: 2px solid #e9ecef;
+    }
+    .custom-tabs .nav-link {
+        color: #6c757d !important;
+        background-color: transparent !important;
+        border: none !important;
+        border-bottom: 3px solid transparent !important;
+        border-radius: 0 !important;
+        transition: all 0.3s ease !important;
+        font-size: 0.85rem !important;
+    }
+
+    .custom-tabs .nav-link i {
+        color: #6c757d !important;
+    }
+    .custom-tabs .nav-link:hover {
+        color: #e0a800 !important;
+        background-color: rgba(255, 193, 7, 0.05) !important;
+        border-bottom-color: rgba(255, 193, 7, 0.3) !important;
+    }
+    .custom-tabs .nav-link.active {
+        color: #e0a800 !important;
+        background-color: rgba(255, 193, 7, 0.1) !important;
+        border-bottom-color: #ffc107 !important;
+    }
+
+    .custom-tabs .nav-link.active i{
+        color: #e0a800 !important;
+    }
+
+    /* Animación Suave entre Pestañas */
+    .fade-in-animation {
+        animation: fadeIn 0.3s ease-in-out;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(5px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Estilos ultra-compactos para listas generales */
+    .table-compact-general th,
+    .table-compact-general td {
+        padding: 4px 6px !important;
+        vertical-align: middle !important;
+        font-size: 11px !important;
+    }
+    .table-compact-general th {
+        font-weight: 700 !important;
+        letter-spacing: 0.2px;
+    }
+    .table-compact-general .btn-sm {
+        padding: 3px 8px !important;
+        font-size: 10px !important;
+    }
+
     .hover-effect:hover {
         background-color: #e9ecef;
     }
@@ -967,8 +1101,23 @@ export default {
         margin-right: 0;
     }
 
-    .table-cuotas th{
-        font-size:11px !important;
+    /* Estilos ultra-compactos estilo Ledger Contable Senior */
+    .table-cuotas th,
+    .table-cuotas td {
+        padding: 3px 5px !important;
+        vertical-align: middle !important;
+        font-size: 10.5px !important;
     }
-
+    .table-cuotas th {
+        font-weight: 700 !important;
+        letter-spacing: 0.3px;
+    }
+    .table-cuotas input[type="checkbox"] {
+        transform: scale(1.1) !important;
+    }
+    .table-cuotas .badge {
+        min-width: 80px !important;
+        font-size: 9px !important;
+        padding: 3px 6px !important;
+    }
 </style>

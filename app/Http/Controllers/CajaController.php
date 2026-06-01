@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Traits\CalculaSaldoCaja;
 use DB;
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -14,7 +15,8 @@ use App\Models\OrdenPagoReprogramacion;
 
 class CajaController extends Controller
 {
-    //
+    use CalculaSaldoCaja;
+
     public function index(){
         return view('frmCaja');
     }
@@ -149,13 +151,12 @@ class CajaController extends Controller
             ]);
 
             if ($request->monto_inicial > 0) {
-                // 4. Descontar de Bóveda
+                // El efectivo de apertura sale físicamente de la bóveda hacia el cajón de caja.
                 DB::table('boveda')->where('id', $boveda->id)->update([
-                    'saldo_actual' => $boveda->saldo_actual - $request->monto_inicial,
-                    'updated_at'   => Carbon::now()
+                    'saldo_actual' => DB::raw('saldo_actual - ' . $request->monto_inicial),
                 ]);
 
-                // 5. Registrar movimiento de salida en Bóveda
+                // Registro de trazabilidad en bóveda (para TRANSFER_INTERNO en el flujo)
                 DB::table('movimientos_boveda')->insert([
                     'tipo_movimiento' => 'salida',
                     'monto'           => $request->monto_inicial,
@@ -167,7 +168,7 @@ class CajaController extends Controller
                     'updated_at'      => Carbon::now()
                 ]);
 
-                // 6. Registrar movimiento de ingreso en Caja
+                // Registro de trazabilidad en caja
                 DB::table('movimientos_caja')->insert([
                     'tipo_movimiento' => 'ingreso',
                     'descripcion'     => 'Apertura de caja (Ingreso Inicial)',
@@ -239,7 +240,9 @@ class CajaController extends Controller
 
     public function closeCaja(Request $request){
 
-    
+        // Calcular saldo restante ANTES de cerrar (caja todavía abierta)
+        $saldoRestante = $this->calcularSaldoCaja((int) $request->id_caja);
+
         DB::table('caja')->where('id', $request->id_caja)->update([
             'fechahora_apertura'=>$request->fechahora_apertura,
             'fechahora_cierre'=>Carbon::now(),
@@ -257,6 +260,26 @@ class CajaController extends Controller
             'id_usuario'=>Auth::id(),
             'estado'=>0,
         ]);
+
+        // El efectivo físico restante regresa a la bóveda al cerrar caja
+        if ($saldoRestante > 0) {
+            $id_boveda = DB::table('boveda')->orderBy('id', 'desc')->value('id');
+            if ($id_boveda) {
+                DB::table('movimientos_boveda')->insert([
+                    'tipo_movimiento' => 'ingreso',
+                    'monto'           => $saldoRestante,
+                    'descripcion'     => 'Retorno de Caja al Cierre',
+                    'fecha'           => Carbon::now(),
+                    'id_boveda'       => $id_boveda,
+                    'id_usuario'      => Auth::id(),
+                    'created_at'      => Carbon::now(),
+                    'updated_at'      => Carbon::now(),
+                ]);
+                DB::table('boveda')->where('id', $id_boveda)->update([
+                    'saldo_actual' => DB::raw('saldo_actual + ' . $saldoRestante),
+                ]);
+            }
+        }
     }
 
     public function getPagos(Request $request){
@@ -500,61 +523,6 @@ class CajaController extends Controller
         return $planes_pago;
     }
 
-    public function actualizarDesembolso(Request $request){
-        $boveda_abierta=DB::table('boveda')->count();
-        $plan_pago= DB::table('plan_pago')->where('plan_pago.id', $request->id_plan_pago)->first();
-
-        if($boveda_abierta<=0){
-            return 0;
-        }
-
-
-        DB::beginTransaction();
-        try{
-            DB::table('plan_pago')->where('id', $request->id_plan_pago)->update([
-                'desembolso'=>0,
-            ]);
-
-            DB::table('solicitud')->where('id', $plan_pago->id_solicitud)->update([
-                'desembolso'=>1,
-            ]);
-    
-            // Registrando desembolsos
-            DB::table('desembolso')->insert([
-                'monto'=>$request->monto,
-                'fecha'=>Carbon::now(),
-                'id_plan_pago'=>$request->id_plan_pago,
-                'id_caja'=>$request->id_caja,
-                'id_usuario'=>Auth::id(),
-            ]);
-
-            // Descontamos de boveda
-
-            $id_boveda=DB::table('boveda')->orderBy('boveda.id', 'desc')->get()[0]->id;
-    
-            DB::table('movimientos_boveda')
-            ->insertGetId([
-                'tipo_movimiento'=>'salida',
-                'monto'=>$request->monto,
-                'descripcion'=>'Otorgamiento de préstamo',
-                'fecha'=>now(),
-                'id_boveda'=>$id_boveda,
-                'id_usuario'=>Auth::user()->id,
-            ]);
-
-
-
-            DB::table('boveda')->where('id', $id_boveda)->update([
-                'saldo_actual' => DB::raw('saldo_actual - ' . (float)$request->monto)
-            ]);
-
-
-            DB::commit();
-        }catch(Exception $e){
-            DB::rollback();
-        }
-        
-    }
 
     public function getPlanesPagoSinPagoAdm(Request $request){
         $planes_pago = DB::table('plan_pago')
@@ -602,7 +570,6 @@ class CajaController extends Controller
                 'id_caja'=>$request->id_caja,
                 'id_usuario'=>Auth::user()->id,
             ]);
-
 
             DB::commit();
         }catch(Exception $e){
@@ -1252,5 +1219,79 @@ class CajaController extends Controller
         return response()->json([
             'aperturada' => $existeBoveda
         ]);
+    }
+
+    /**
+     * Devuelve el saldo disponible en la caja abierta del usuario actual.
+     * Usado por el frontend antes de registrar egresos o desembolsos.
+     */
+    public function getSaldoCajaActual()
+    {
+        $caja = DB::table('caja')->where('estado', 1)->first();
+
+        if (!$caja) {
+            return response()->json([
+                'caja_abierta'   => false,
+                'saldo'          => 0,
+                'id_caja'        => null,
+            ]);
+        }
+
+        return response()->json([
+            'caja_abierta' => true,
+            'id_caja'      => $caja->id,
+            'saldo'        => round($this->calcularSaldoCaja($caja->id), 2),
+        ]);
+    }
+
+    /**
+     * Registra un desembolso validando que la caja tenga saldo suficiente.
+     */
+    public function actualizarDesembolso(Request $request)
+    {
+        $boveda_abierta = DB::table('boveda')->count();
+        $plan_pago      = DB::table('plan_pago')->where('id', $request->id_plan_pago)->first();
+
+        if ($boveda_abierta <= 0) {
+            return response()->json(['message' => 'No existe bóveda aperturada.'], 422);
+        }
+
+        // ── Validar saldo disponible en caja ──────────────────────────────
+        $monto         = (float) $request->monto;
+        $saldoCaja     = $this->calcularSaldoCaja((int) $request->id_caja);
+
+        if ($saldoCaja < $monto) {
+            return response()->json([
+                'message'           => 'Saldo insuficiente en caja para realizar el desembolso.',
+                'saldo_disponible'  => round($saldoCaja, 2),
+                'monto_requerido'   => $monto,
+                'faltante'          => round($monto - $saldoCaja, 2),
+            ], 422);
+        }
+        // ─────────────────────────────────────────────────────────────────
+
+        DB::beginTransaction();
+        try {
+            DB::table('plan_pago')->where('id', $request->id_plan_pago)->update([
+                'desembolso' => 0,
+            ]);
+
+            DB::table('solicitud')->where('id', $plan_pago->id_solicitud)->update([
+                'desembolso' => 1,
+            ]);
+
+            DB::table('desembolso')->insert([
+                'monto'        => $monto,
+                'fecha'        => Carbon::now(),
+                'id_plan_pago' => $request->id_plan_pago,
+                'id_caja'      => $request->id_caja,
+                'id_usuario'   => Auth::id(),
+            ]);
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json(['message' => 'Error al registrar el desembolso.'], 500);
+        }
     }
 }

@@ -203,23 +203,99 @@ export default {
         },
 
         async guardar() {
-            if(!this.form.descripcion) {
+            if (!this.form.descripcion) {
                 Swal.fire('Falta Motivo', 'Seleccione o cree un motivo.', 'warning');
                 return;
             }
+
+            // ── Validar saldo solo para egresos ──────────────────────────
+            if (!this.esIngreso) {
+                const monto = parseFloat(this.form.monto) || 0;
+                const saldoOk = await this.validarSaldoParaEgreso(monto);
+                if (!saldoOk) return;
+            }
+            // ─────────────────────────────────────────────────────────────
+
             this.procesando = true;
             const url = this.esIngreso ? '/save_ingreso' : '/save_gasto';
-            
+
             try {
                 await axios.post(url, this.form);
-                Swal.fire('Guardado', 'Movimiento registrado con éxito.', 'success');
+                Swal.fire({ title: 'Guardado', text: 'Movimiento registrado con éxito.', icon: 'success', timer: 1500, showConfirmButton: false });
                 this.$emit('guardado');
                 this.cerrar();
             } catch (error) {
+                if (error.response?.status === 422) {
+                    const d = error.response.data;
+                    const faltante = parseFloat(d.faltante ?? 0).toFixed(2);
+                    Swal.fire({
+                        title: 'Saldo insuficiente en Caja',
+                        html: `
+                            <div class="text-start" style="font-size:0.9rem;">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>Saldo disponible:</span>
+                                    <strong class="text-success">${parseFloat(d.saldo_disponible ?? 0).toFixed(2)} Bs</strong>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2 border-top pt-1">
+                                    <span>Faltante:</span>
+                                    <strong class="text-danger">${faltante} Bs</strong>
+                                </div>
+                                <div class="alert alert-warning py-1 px-2 mb-0" style="font-size:0.8rem;">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Solicite un <strong>traspaso de bóveda a caja</strong> para continuar.
+                                </div>
+                            </div>`,
+                        icon: 'warning',
+                        confirmButtonText: 'Entendido',
+                    });
+                } else {
+                    Swal.fire('Error', 'No se pudo guardar el movimiento.', 'error');
+                }
                 console.error(error);
-                Swal.fire('Error', 'No se pudo guardar el movimiento.', 'error');
             } finally {
                 this.procesando = false;
+            }
+        },
+
+        async validarSaldoParaEgreso(montoRequerido) {
+            try {
+                const { data } = await axios.get('/caja/saldo-actual');
+
+                if (!data.caja_abierta) return true; // el backend lo validará
+
+                if (data.saldo < montoRequerido) {
+                    const faltante = (montoRequerido - data.saldo).toFixed(2);
+                    Swal.fire({
+                        title: 'Saldo insuficiente en Caja',
+                        html: `
+                            <div class="text-start" style="font-size:0.9rem;">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>Saldo disponible en caja:</span>
+                                    <strong class="text-success">${parseFloat(data.saldo).toFixed(2)} Bs</strong>
+                                </div>
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>Monto del egreso:</span>
+                                    <strong class="text-danger">${parseFloat(montoRequerido).toFixed(2)} Bs</strong>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2 border-top pt-1">
+                                    <span>Faltante:</span>
+                                    <strong class="text-danger">${faltante} Bs</strong>
+                                </div>
+                                <div class="alert alert-warning py-1 px-2 mb-0" style="font-size:0.8rem;">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Solicite un <strong>traspaso de bóveda a caja</strong> por al menos <strong>${faltante} Bs</strong>.
+                                </div>
+                            </div>`,
+                        icon: 'warning',
+                        confirmButtonText: 'Entendido',
+                    });
+                    return false;
+                }
+
+                return true;
+            } catch (e) {
+                console.warn('No se pudo verificar saldo:', e);
+                return true; // si el endpoint falla, el backend validará igual
             }
         }
     }

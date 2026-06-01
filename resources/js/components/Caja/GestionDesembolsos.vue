@@ -10,16 +10,17 @@
         </div>
 
         <div class="card-body">
-            <div class="row mb-3">
-                <div class="col-md-3">
-                    <select class="form-select" v-model="filtros.criterio">
+            <!-- Filtros más compactos -->
+            <div class="row g-2 mb-2">
+                <div class="col-md-3 col-sm-4">
+                    <select class="form-select form-select-sm" v-model="filtros.criterio">
                         <option value="">-- Seleccionar criterio --</option>
                         <option value="ci">CI</option>
                         <option value="cliente">Cliente</option>
                     </select>
                 </div>
-                <div class="col-md-5">
-                    <div class="input-group">
+                <div class="col-md-4 col-sm-8">
+                    <div class="input-group input-group-sm">
                         <input
                             type="text"
                             class="form-control"
@@ -33,11 +34,11 @@
                 </div>
             </div>
         
-            <div class="table-responsive" style="font-size:12px">
+            <!-- Tabla compacta sin columna # -->
+            <div class="table-responsive" style="font-size:11.5px">
                 <table class="table mb-4 table-sm table-striped table-hover table-desembolsos">
                     <thead class="text-uppercase table-warning">
                         <tr>
-                            <th class="text-dark fw-bold">#</th>
                             <th class="text-dark fw-bold">Plan pago</th>
                             <th class="text-dark fw-bold">Fecha desembolso</th>
                             <th class="text-dark fw-bold">Cliente</th>
@@ -49,21 +50,20 @@
                     </thead>
                     <tbody class="align-middle">
                         <tr v-if="listaFiltrada.length === 0">
-                            <td colspan="8" class="text-center text-muted py-3">
+                            <td colspan="7" class="text-center text-muted py-3">
                                 No se encontraron desembolsos pendientes.
                             </td>
                         </tr>
-                        <tr v-for="(item, index) in listaFiltrada" :key="item.id">
-                            <td class="text-uppercase">{{ index + 1 }}</td>
+                        <tr v-for="item in listaFiltrada" :key="item.id">
                             <td class="text-uppercase fw-bold">{{ item.id }}</td>
-                            <td class="text-uppercase">{{ item.fecha_desembolso }}</td>
+                            <td class="text-uppercase text-muted">{{ item.fecha_desembolso }}</td>
                             <td class="text-uppercase fw-bold">
                                 {{ item.cliente }}
-                                <span class="text-muted d-block small">
-                                    <strong>CI: </strong> {{ item.ci }}
+                                <span class="text-muted d-block" style="font-size: 10px; font-weight: normal; text-transform: none;">
+                                    <strong>CI:</strong> {{ item.ci }}
                                 </span>
                             </td>
-                            <td class="text-uppercase">{{ item.asesor }}</td>
+                            <td class="text-uppercase text-secondary">{{ item.asesor }}</td>
                             <td class="text-uppercase text-end">
                                 {{ formatMoney(item.tipo_solicitud == 'Refinanciamiento' ? item.monto_refinanciamiento : item.total_pagar_plan) }}
                             </td>
@@ -74,7 +74,7 @@
                                 <button
                                     style="font-size:10px"
                                     @click="$emit('desembolsar', item)"
-                                    class="btn btn-sm btn-success my-0 py-1 shadow-sm"
+                                    class="btn btn-sm btn-success my-0 py-1 shadow-sm px-3"
                                 >
                                     <i class="fas fa-dollar-sign me-1"></i> Desembolsar
                                 </button>
@@ -136,7 +136,13 @@ export default {
 <style scoped>
     @import '../styles/frmCaja.css';
 
-    .table-desembolsos th{
-        font-size:12px !important;
+    .table-desembolsos th {
+        font-size: 11px !important;
+        padding-top: 5px;
+        padding-bottom: 5px;
+    }
+    .table-desembolsos td {
+        padding-top: 4px;
+        padding-bottom: 4px;
     }
 </style>

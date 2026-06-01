@@ -12,11 +12,21 @@ class ConfiguracionController extends Controller
     }
 
     public function getMotivosIngresos(Request $request){
-        return DB::table('motivo_ingreso')->get();
+        $tipo = $request->input('tipo');
+        $query = DB::table('motivo_ingreso');
+        if ($tipo && $tipo !== 'todos') {
+            $query->where('tipo', $tipo);
+        }
+        return $query->paginate(15);
     }
 
     public function getMotivosGastos(Request $request){
-        return DB::table('motivo_gasto')->get();
+        $tipo = $request->input('tipo');
+        $query = DB::table('motivo_gasto');
+        if ($tipo && $tipo !== 'todos') {
+            $query->where('tipo', $tipo);
+        }
+        return $query->paginate(15);
     }
 
     // --- INGRESOS ---

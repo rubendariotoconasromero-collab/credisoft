@@ -96,7 +96,6 @@ class BovedaController extends Controller
                 'id_socio'        => $request->id_socio ?? null,
             ]);
 
-            // BUG-02 resuelto: monto casteado a float antes de DB::raw
             DB::table('boveda')->where('id', $id_boveda)->update([
                 'saldo_actual' => DB::raw('saldo_actual + ' . $monto),
             ]);
@@ -144,10 +143,37 @@ class BovedaController extends Controller
                 'id_socio'        => $request->id_socio ?? null,
             ]);
 
-            // BUG-02 resuelto: monto casteado a float antes de DB::raw
             DB::table('boveda')->where('id', $id_boveda)->update([
                 'saldo_actual' => DB::raw('saldo_actual - ' . $monto),
             ]);
+
+            // ── Contrapartida en Caja ──────────────────────────────────────
+            // Cuando se transfiere dinero de Bóveda a Caja, el monto debe
+            // reflejarse en el saldo de caja (tabla ingreso + movimientos_caja).
+            // Sin este registro, calcularSaldoCaja() no incluye el traspaso.
+            if (str_contains(strtolower($request->descripcion), 'transferencia a caja')) {
+                $id_caja = DB::table('caja')->where('estado', 1)->value('id');
+
+                if ($id_caja) {
+                    DB::table('ingreso')->insert([
+                        'monto'       => $monto,
+                        'descripcion' => 'Transferencia desde Bóveda',
+                        'id_usuario'  => Auth::id(),
+                        'fecha'       => now(),
+                        'id_caja'     => $id_caja,
+                    ]);
+
+                    DB::table('movimientos_caja')->insert([
+                        'tipo_movimiento' => 'ingreso',
+                        'monto'           => $monto,
+                        'descripcion'     => 'Transferencia desde Bóveda',
+                        'fecha'           => now(),
+                        'id_caja'         => $id_caja,
+                        'id_usuario'      => Auth::id(),
+                    ]);
+                }
+            }
+            // ──────────────────────────────────────────────────────────────
 
             DB::commit();
             return response()->json(['message' => 'Retiro registrado correctamente'], 200);

@@ -4,36 +4,81 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Traits\CalculaSaldoCaja;
 use DB;
 class GastoController extends Controller
 {
-    //
+    use CalculaSaldoCaja;
+
     public function save(Request $request){
         DB::beginTransaction();
         try{
-            
-            $id_caja=DB::table('caja')->where('estado', 1)->get()[0]->id;
+
+            $id_caja = DB::table('caja')->where('estado', 1)->first()?->id;
+
+            if (!$id_caja) {
+                return response()->json(['message' => 'No hay caja abierta para registrar el egreso.'], 422);
+            }
+
+            // ── Validar saldo disponible en caja ─────────────────────────
+            $monto     = (float) $request->monto;
+            $saldoCaja = $this->calcularSaldoCaja($id_caja);
+
+            if ($saldoCaja < $monto) {
+                DB::rollBack();
+                return response()->json([
+                    'message'          => 'Saldo insuficiente en caja para registrar el egreso.',
+                    'saldo_disponible' => round($saldoCaja, 2),
+                    'monto_requerido'  => $monto,
+                    'faltante'         => round($monto - $saldoCaja, 2),
+                ], 422);
+            }
+            // ─────────────────────────────────────────────────────────────
+
+            $descripcionFinal = ($request->descripcion == 'Otros gastos')
+                ? $request->descripcion . ' - ' . $request->descripcion_otro
+                : $request->descripcion;
+
             DB::table('egreso')->insert([
-                'monto'=>$request->monto,
-                // 'descripcion'=>$request->descripcion,
-                'descripcion'=>($request->descripcion=='Otros gastos')?$request->descripcion .' - '.$request->descripcion_otro: $request->descripcion,
-                'id_usuario'=>Auth::id(),
-                'fecha'=>now(),
-                'id_caja'=>$id_caja,
+                'monto'       => $request->monto,
+                'descripcion' => $descripcionFinal,
+                'id_usuario'  => Auth::id(),
+                'fecha'       => now(),
+                'id_caja'     => $id_caja,
             ]);
 
-            // reg. mov. caja
+            // "Transferencia a Bóveda": el efectivo físicamente entra a la bóveda.
+            // Se crea automáticamente la contrapartida en movimientos_boveda.
+            $esTransferenciaInterna = str_contains(strtolower($descripcionFinal), 'transferencia a bóveda')
+                                   || str_contains(strtolower($descripcionFinal), 'transferencia a boveda');
+
+            if ($esTransferenciaInterna) {
+                $id_boveda = DB::table('boveda')->orderBy('id', 'desc')->value('id');
+                if ($id_boveda) {
+                    DB::table('movimientos_boveda')->insert([
+                        'tipo_movimiento' => 'ingreso',
+                        'monto'           => $monto,
+                        'descripcion'     => 'Transferencia desde Caja',
+                        'fecha'           => now(),
+                        'id_boveda'       => $id_boveda,
+                        'id_usuario'      => Auth::id(),
+                    ]);
+                    DB::table('boveda')->where('id', $id_boveda)->update([
+                        'saldo_actual' => DB::raw('saldo_actual + ' . $monto),
+                    ]);
+                }
+            }
+
             // Reg. en mov. caja
             DB::table('movimientos_caja')
             ->insertGetId([
                 'tipo_movimiento'=>'salida',
                 'monto'=>$request->monto,
-                'descripcion'=>($request->descripcion=='Otros ingresos')?$request->descripcion .' - '.$request->descripcion_otro: $request->descripcion,
+                'descripcion'=>($request->descripcion=='Otros gastos')?$request->descripcion .' - '.$request->descripcion_otro: $request->descripcion,
                 'fecha'=>now(),
                 'id_caja'=>$id_caja,
                 'id_usuario'=>Auth::user()->id,
             ]);
-
 
             DB::commit();
         }catch(Exception $e){
@@ -132,19 +177,37 @@ class GastoController extends Controller
     
 
     public function anularGasto(Request $request){
-        $anular= DB::table('egreso')
+        $egreso = DB::table('egreso')->where('id', $request->id)->select('monto', 'descripcion')->first();
+        $monto  = (float) ($egreso->monto ?? 0);
+
+        $anular = DB::table('egreso')
             ->join('caja', 'caja.id', '=', 'egreso.id_caja')
             ->where('egreso.id', $request->id)
             ->where('caja.estado', 1)->exists();
 
-        if($anular){
+        if ($anular) {
             DB::table('egreso')
                 ->join('caja', 'caja.id', '=', 'egreso.id_caja')
                 ->where('egreso.id', $request->id)
                 ->where('caja.estado', 1)
                 ->update(['egreso.estado' => 0]);
+
+            // Si era "Transferencia a Bóveda", revertir la contrapartida en boveda
+            $descripcion = strtolower($egreso->descripcion ?? '');
+            $esTransferenciaInterna = str_contains($descripcion, 'transferencia a bóveda')
+                                   || str_contains($descripcion, 'transferencia a boveda');
+
+            if ($esTransferenciaInterna) {
+                $id_boveda = DB::table('boveda')->orderBy('id', 'desc')->value('id');
+                if ($id_boveda) {
+                    DB::table('boveda')->where('id', $id_boveda)->update([
+                        'saldo_actual' => DB::raw('saldo_actual - ' . $monto),
+                    ]);
+                }
+            }
+
             return response()->json(['respuesta' => 1]);
-        }else{
+        } else {
             return response()->json(['respuesta' => 0]);
         }
     }
