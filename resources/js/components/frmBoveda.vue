@@ -167,9 +167,8 @@
                                         <td style="font-size:0.78rem;">
                                             <div class="fw-semibold text-dark text-uppercase">{{ getCleanDescripcion(mov) }}</div>
                                             <span v-if="mov.socio_nombres"
-                                                  class="badge mt-1 fw-normal text-uppercase"
-                                                  style="font-size:0.6rem;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;">
-                                                <i class="fas fa-handshake me-1"></i>
+                                                  class="badge mt-1 fw-normal text-uppercase rounded"
+                                                  style="font-size:0.6rem;background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;">
                                                 {{ mov.socio_nombres }} {{ mov.socio_apellidos }}
                                             </span>
                                         </td>

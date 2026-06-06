@@ -43,26 +43,27 @@
 
                     <div class="tab-content bg-white p-3 rounded-bottom" id="seccionesTabContent">
                         
+                        <!-- TAB 1: ingresos-caja -->
                         <div class="tab-pane fade show active fade-in-animation" id="ingresos-caja" role="tabpanel" aria-labelledby="ingresos-caja-tab">
                             
-                            <div class="row mb-3">
+                            <div class="row mb-3 align-items-center">
                                 <div class="col-lg-8 mb-2 mb-lg-0">
                                     <div class="row g-2">
                                         <div class="col-md-6">
-                                            <div class="input-group shadow-sm">
-                                                <span class="input-group-text bg-white text-muted fw-bold" style="font-size: 11px;">DESDE</span>
-                                                <input @change="buscarIngresosCaja" type="date" v-model="filtros_caja.fecha_inicio" class="form-control border-start-0">
-                                                <span class="input-group-text bg-white text-muted fw-bold border-start-0" style="font-size: 11px;">HASTA</span>
-                                                <input @change="buscarIngresosCaja" type="date" v-model="filtros_caja.fecha_final" class="form-control border-start-0">
+                                            <div class="input-group input-group-sm shadow-sm">
+                                                <span class="input-group-text bg-light text-secondary fw-bold" style="font-size: 10px;">DESDE</span>
+                                                <input @change="buscarIngresosCaja" type="date" v-model="filtros_caja.fecha_inicio" class="form-control">
+                                                <span class="input-group-text bg-light text-secondary fw-bold" style="font-size: 10px;">HASTA</span>
+                                                <input @change="buscarIngresosCaja" type="date" v-model="filtros_caja.fecha_final" class="form-control">
                                             </div>
                                         </div>
                                         <div class="col-md-6">
-                                            <div class="input-group shadow-sm">
-                                                <select v-model="filtros_caja.criterio" class="form-select bg-white" style="max-width: 140px;" @change="buscarIngresosCaja">
+                                            <div class="input-group input-group-sm shadow-sm">
+                                                <select v-model="filtros_caja.criterio" class="form-select bg-white" style="max-width: 220px;" @change="buscarIngresosCaja">
                                                     <option value="users.name">Asesor</option>
                                                     <option value="users.personal">Personal</option>
                                                 </select>
-                                                <input type="text" v-model="filtros_caja.buscar" class="form-control border-start-0" placeholder="Buscar..." @keyup.enter="buscarIngresosCaja">
+                                                <input type="text" v-model="filtros_caja.buscar" class="form-control" placeholder="Buscar..." @keyup.enter="buscarIngresosCaja">
                                                 <button class="btn btn-success px-3" @click="buscarIngresosCaja"><i class="fas fa-search"></i></button>
                                             </div>
                                         </div>
@@ -84,57 +85,56 @@
                                 </div>
                             </div>
 
-                            <div class="card border-0 shadow-sm mb-3">
-                                <div class="table-responsive" style="font-size:12px">
-                                    <table class="table table-hover table-striped mb-0 align-middle table-sm">
-                                        <thead class="table-success text-white text-uppercase" style="font-size: 11px;">
-                                            <tr>
-                                                <th class="py-3 ps-3">Asesor/a</th>
-                                                <th class="py-3">Personal</th>
-                                                <th class="py-3">Fecha</th>
-                                                <th class="py-3 text-end text-white bg-success border-success">Monto (Bs)</th>
-                                                <th class="py-3 ps-3">Descripción</th>
-                                                <th class="py-3 text-center">Estado</th>
-                                                <th class="py-3 text-center">Op.</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr v-for="item in listaIngresosCaja" :key="item.id">
-                                                <td class="ps-3 fw-bold">{{ item.asesor }}</td>
-                                                <td>{{ item.personal }}</td>
-                                                <td>{{ formatearFecha(item.fecha) }}</td>
-                                                <td class="text-end fw-bold text-success bg-success bg-opacity-10 fs-6">{{ formatNumero(item.monto_ingreso) }}</td>
-                                                <td class="ps-3 text-muted">{{ item.descripcion }}</td>
-                                                <td class="text-center">
-                                                    <span v-if="item.estado == 1" class="badge bg-success">CANCELADO</span>
-                                                    <span v-else class="badge bg-danger">ANULADO</span>
-                                                </td>
-                                                <td class="text-center">
-                                                    <div class="btn-group">
-                                                        <a style="cursor:pointer;" class="text-success dropdown-toggle btn-sm" data-bs-toggle="dropdown">
-                                                            <i class="fas fa-ellipsis-h fs-5"></i>
-                                                        </a>
-                                                        <ul class="dropdown-menu shadow">
-                                                            <li @click="anularIngreso(item)">
-                                                                <a class="dropdown-item text-danger fw-bold" href="#">
-                                                                    <i class="fas fa-times me-2"></i> Anular Ingreso
-                                                                </a>
-                                                            </li>
-                                                        </ul>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            <tr v-if="listaIngresosCaja.length === 0">
-                                                <td colspan="7" class="text-center py-5 text-muted fst-italic">
-                                                    <i class="fas fa-folder-open fa-2x mb-2 d-block text-secondary"></i> No hay ingresos registrados.
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
+                            <div class="table-container-custom table-responsive mt-2 mb-3">
+                                <table class="table table-striped table-hover table-compact-custom align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Asesor/a</th>
+                                            <th>Personal</th>
+                                            <th class="text-center">Fecha</th>
+                                            <th class="text-end">Monto (Bs)</th>
+                                            <th>Descripción</th>
+                                            <th class="text-center">Estado</th>
+                                            <th class="text-center">Op.</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="item in listaIngresosCaja" :key="item.id">
+                                            <td class="fw-bold text-dark py-1">{{ item.asesor }}</td>
+                                            <td class="text-secondary py-1" style="font-size: 0.8rem;">{{ item.personal }}</td>
+                                            <td class="text-center text-secondary py-1" style="font-size: 0.78rem;">{{ formatearFecha(item.fecha) }}</td>
+                                            <td class="text-end font-monospace fw-bold text-success bg-success bg-opacity-10 py-1">{{ formatNumero(item.monto_ingreso) }}</td>
+                                            <td class="text-muted py-1" style="font-size: 0.8rem;">{{ item.descripcion }}</td>
+                                            <td class="text-center py-1">
+                                                <span v-if="item.estado == 1" class="badge bg-success rounded badge-custom">CANCELADO</span>
+                                                <span v-else class="badge bg-danger rounded badge-custom">ANULADO</span>
+                                            </td>
+                                            <td class="text-center py-1">
+                                                <div class="btn-group">
+                                                    <a style="cursor:pointer;" class="text-success dropdown-toggle btn-sm" data-bs-toggle="dropdown">
+                                                        <i class="fas fa-ellipsis-h fs-5"></i>
+                                                    </a>
+                                                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                                                        <li @click="anularIngreso(item)">
+                                                            <a class="dropdown-item text-danger fw-bold" href="#">
+                                                                <i class="fas fa-times me-2"></i> Anular Ingreso
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr v-if="listaIngresosCaja.length === 0">
+                                            <td colspan="7" class="text-center py-5 text-muted fst-italic">
+                                                <i class="fas fa-folder-open fa-2x mb-2 d-block text-secondary"></i> No hay ingresos registrados.
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
+
                             <div class="d-flex justify-content-end" v-if="paginationCaja.last_page > 1">
-                                <nav><ul class="pagination shadow-sm mb-0">
+                                <nav><ul class="pagination pagination-sm shadow-sm mb-0">
                                     <li class="page-item" :class="{disabled: paginationCaja.current_page <= 1}">
                                         <a class="page-link" href="#" @click.prevent="cambiarPaginaCaja(paginationCaja.current_page - 1)">Ant</a>
                                     </li>
@@ -148,26 +148,27 @@
                             </div>
                         </div>
 
+                        <!-- TAB 2: egresos-caja -->
                         <div class="tab-pane fade fade-in-animation" id="egresos-caja" role="tabpanel" aria-labelledby="egresos-caja-tab">
                             
-                            <div class="row mb-3">
+                            <div class="row mb-3 align-items-center">
                                 <div class="col-lg-8 mb-2 mb-lg-0">
                                     <div class="row g-2">
                                         <div class="col-md-6">
-                                            <div class="input-group shadow-sm">
-                                                <span class="input-group-text bg-white text-muted fw-bold" style="font-size: 11px;">DESDE</span>
-                                                <input @change="buscarEgresosCaja" type="date" v-model="filtros_egresos_caja.fecha_inicio" class="form-control border-start-0">
-                                                <span class="input-group-text bg-white text-muted fw-bold border-start-0" style="font-size: 11px;">HASTA</span>
-                                                <input @change="buscarEgresosCaja" type="date" v-model="filtros_egresos_caja.fecha_final" class="form-control border-start-0">
+                                            <div class="input-group input-group-sm shadow-sm">
+                                                <span class="input-group-text bg-light text-secondary fw-bold" style="font-size: 10px;">DESDE</span>
+                                                <input @change="buscarEgresosCaja" type="date" v-model="filtros_egresos_caja.fecha_inicio" class="form-control">
+                                                <span class="input-group-text bg-light text-secondary fw-bold" style="font-size: 10px;">HASTA</span>
+                                                <input @change="buscarEgresosCaja" type="date" v-model="filtros_egresos_caja.fecha_final" class="form-control">
                                             </div>
                                         </div>
                                         <div class="col-md-6">
-                                            <div class="input-group shadow-sm">
-                                                <select v-model="filtros_egresos_caja.criterio" class="form-select bg-white" style="max-width: 140px;" @change="buscarEgresosCaja">
+                                            <div class="input-group input-group-sm shadow-sm">
+                                                <select v-model="filtros_egresos_caja.criterio" class="form-select bg-white" style="max-width: 220px;" @change="buscarEgresosCaja">
                                                     <option value="users.name">Asesor</option>
                                                     <option value="users.personal">Personal</option>
                                                 </select>
-                                                <input type="text" v-model="filtros_egresos_caja.buscar" class="form-control border-start-0" placeholder="Buscar..." @keyup.enter="buscarEgresosCaja">
+                                                <input type="text" v-model="filtros_egresos_caja.buscar" class="form-control" placeholder="Buscar..." @keyup.enter="buscarEgresosCaja">
                                                 <button class="btn btn-success px-3" @click="buscarEgresosCaja"><i class="fas fa-search"></i></button>
                                             </div>
                                         </div>
@@ -189,57 +190,56 @@
                                 </div>
                             </div>
 
-                            <div class="card border-0 shadow-sm mb-3">
-                                <div class="table-responsive" style="font-size:12px">
-                                    <table class="table table-sm table-hover table-striped mb-0 align-middle">
-                                        <thead class="table-danger text-white text-uppercase" style="font-size: 11px;">
-                                            <tr>
-                                                <th class="py-3 ps-3">Asesor/a</th>
-                                                <th class="py-3">Personal</th>
-                                                <th class="py-3">Fecha</th>
-                                                <th class="py-3 text-end text-white bg-danger border-danger">Monto (Bs)</th>
-                                                <th class="py-3 ps-3">Descripción</th>
-                                                <th class="py-3 text-center">Estado</th>
-                                                <th class="py-3 text-center">Op.</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr v-for="item in listaEgresosCaja" :key="item.id">
-                                                <td class="ps-3 fw-bold">{{ item.asesor }}</td>
-                                                <td>{{ item.personal }}</td>
-                                                <td>{{ formatearFecha(item.fecha) }}</td>
-                                                <td class="text-end fw-bold text-danger bg-danger bg-opacity-10 fs-6">{{ formatNumero(item.monto_gasto) }}</td>
-                                                <td class="ps-3 text-muted">{{ item.descripcion }}</td>
-                                                <td class="text-center">
-                                                    <span v-if="item.estado == 1" class="badge bg-success">CANCELADO</span>
-                                                    <span v-else class="badge bg-danger">ANULADO</span>
-                                                </td>
-                                                <td class="text-center">
-                                                    <div class="btn-group">
-                                                        <a style="cursor:pointer;" class="text-success dropdown-toggle btn-sm" data-bs-toggle="dropdown">
-                                                            <i class="fas fa-ellipsis-h fs-5"></i>
-                                                        </a>
-                                                        <ul class="dropdown-menu shadow">
-                                                            <li @click="anularEgresoCaja(item)">
-                                                                <a class="dropdown-item text-danger fw-bold" href="#">
-                                                                    <i class="fas fa-times me-2"></i> Anular Egreso
-                                                                </a>
-                                                            </li>
-                                                        </ul>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            <tr v-if="listaEgresosCaja.length === 0">
-                                                <td colspan="7" class="text-center py-5 text-muted fst-italic">
-                                                    <i class="fas fa-folder-open fa-2x mb-2 d-block text-secondary"></i> No hay egresos registrados.
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
+                            <div class="table-container-custom table-responsive mt-2 mb-3">
+                                <table class="table table-striped table-hover table-compact-custom align-middle mb-0">
+                                    <thead class="table-danger border-danger">
+                                        <tr>
+                                            <th>Asesor/a</th>
+                                            <th>Personal</th>
+                                            <th class="text-center">Fecha</th>
+                                            <th class="text-end text-white bg-danger border-danger">Monto (Bs)</th>
+                                            <th>Descripción</th>
+                                            <th class="text-center">Estado</th>
+                                            <th class="text-center">Op.</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="item in listaEgresosCaja" :key="item.id">
+                                            <td class="fw-bold text-dark py-1">{{ item.asesor }}</td>
+                                            <td class="text-secondary py-1" style="font-size: 0.8rem;">{{ item.personal }}</td>
+                                            <td class="text-center text-secondary py-1" style="font-size: 0.78rem;">{{ formatearFecha(item.fecha) }}</td>
+                                            <td class="text-end font-monospace fw-bold text-danger bg-danger bg-opacity-10 py-1">{{ formatNumero(item.monto_gasto) }}</td>
+                                            <td class="text-muted py-1" style="font-size: 0.8rem;">{{ item.descripcion }}</td>
+                                            <td class="text-center py-1">
+                                                <span v-if="item.estado == 1" class="badge bg-success rounded badge-custom">CANCELADO</span>
+                                                <span v-else class="badge bg-danger rounded badge-custom">ANULADO</span>
+                                            </td>
+                                            <td class="text-center py-1">
+                                                <div class="btn-group">
+                                                    <a style="cursor:pointer;" class="text-success dropdown-toggle btn-sm" data-bs-toggle="dropdown">
+                                                        <i class="fas fa-ellipsis-h fs-5"></i>
+                                                    </a>
+                                                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                                                        <li @click="anularEgresoCaja(item)">
+                                                            <a class="dropdown-item text-danger fw-bold" href="#">
+                                                                <i class="fas fa-times me-2"></i> Anular Egreso
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr v-if="listaEgresosCaja.length === 0">
+                                            <td colspan="7" class="text-center py-5 text-muted fst-italic">
+                                                <i class="fas fa-folder-open fa-2x mb-2 d-block text-secondary"></i> No hay egresos registrados.
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
+
                             <div class="d-flex justify-content-end" v-if="paginationEgresosCaja.last_page > 1">
-                                <nav><ul class="pagination shadow-sm mb-0">
+                                <nav><ul class="pagination pagination-sm shadow-sm mb-0">
                                     <li class="page-item" :class="{disabled: paginationEgresosCaja.current_page <= 1}">
                                         <a class="page-link" href="#" @click.prevent="cambiarPaginaEgresosCaja(paginationEgresosCaja.current_page - 1)">Ant</a>
                                     </li>
@@ -253,26 +253,27 @@
                             </div>
                         </div>
 
+                        <!-- TAB 3: historial-ingresos -->
                         <div class="tab-pane fade fade-in-animation" id="historial-ingresos" role="tabpanel" aria-labelledby="historial-ingresos-tab">
                             
-                            <div class="row mb-3">
+                            <div class="row mb-3 align-items-center">
                                 <div class="col-lg-8 mb-2 mb-lg-0">
                                     <div class="row g-2">
                                         <div class="col-md-6">
-                                            <div class="input-group shadow-sm">
-                                                <span class="input-group-text bg-white text-muted fw-bold" style="font-size: 11px;">DESDE</span>
-                                                <input @change="buscarIngresos" type="date" v-model="filtros.fecha_inicio" class="form-control border-start-0">
-                                                <span class="input-group-text bg-white text-muted fw-bold border-start-0" style="font-size: 11px;">HASTA</span>
-                                                <input @change="buscarIngresos" type="date" v-model="filtros.fecha_final" class="form-control border-start-0">
+                                            <div class="input-group input-group-sm shadow-sm">
+                                                <span class="input-group-text bg-light text-secondary fw-bold" style="font-size: 10px;">DESDE</span>
+                                                <input @change="buscarIngresos" type="date" v-model="filtros.fecha_inicio" class="form-control">
+                                                <span class="input-group-text bg-light text-secondary fw-bold" style="font-size: 10px;">HASTA</span>
+                                                <input @change="buscarIngresos" type="date" v-model="filtros.fecha_final" class="form-control">
                                             </div>
                                         </div>
                                         <div class="col-md-6">
-                                            <div class="input-group shadow-sm">
-                                                <select v-model="filtros.criterio" class="form-select bg-white" style="max-width: 140px;" @change="buscarIngresos">
+                                            <div class="input-group input-group-sm shadow-sm">
+                                                <select v-model="filtros.criterio" class="form-select bg-white" style="max-width: 220px;" @change="buscarIngresos">
                                                     <option value="users.name">Asesor</option>
                                                     <option value="users.personal">Personal</option>
                                                 </select>
-                                                <input type="text" v-model="filtros.buscar" class="form-control border-start-0" placeholder="Buscar..." @keyup.enter="buscarIngresos">
+                                                <input type="text" v-model="filtros.buscar" class="form-control" placeholder="Buscar..." @keyup.enter="buscarIngresos">
                                                 <button class="btn btn-success px-3" @click="buscarIngresos"><i class="fas fa-search"></i></button>
                                             </div>
                                         </div>
@@ -294,57 +295,56 @@
                                 </div>
                             </div>
 
-                            <div class="card border-0 shadow-sm mb-3">
-                                <div class="table-responsive" style="font-size:12px">
-                                    <table class="table table-sm table-hover table-striped mb-0 align-middle">
-                                        <thead class="table-success text-white text-uppercase" style="font-size: 11px;">
-                                            <tr>
-                                                <th class="py-3 ps-3">Asesor/a</th>
-                                                <th class="py-3">Personal</th>
-                                                <th class="py-3">Fecha</th>
-                                                <th class="py-3 text-end text-white bg-success border-success">Monto Ing. (Bs)</th>
-                                                <th class="py-3 ps-3">Descripción</th>
-                                                <th class="py-3 text-center">Estado</th>
-                                                <th class="py-3 text-center">Op.</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr v-for="item in listaIngresos" :key="item.id">
-                                                <td class="ps-3 fw-bold">{{ item.asesor }}</td>
-                                                <td>{{ item.personal }}</td>
-                                                <td>{{ formatearFecha(item.fecha) }}</td>
-                                                <td class="text-end fw-bold text-success bg-success bg-opacity-10 fs-6">{{ formatNumero(item.monto_ingreso) }}</td>
-                                                <td class="ps-3 text-muted">{{ item.descripcion }}</td>
-                                                <td class="text-center">
-                                                    <span v-if="item.estado == 1" class="badge bg-success">CANCELADO</span>
-                                                    <span v-else class="badge bg-danger">ANULADO</span>
-                                                </td>
-                                                <td class="text-center">
-                                                    <div class="btn-group">
-                                                        <a style="cursor:pointer;" class="text-success dropdown-toggle btn-sm" data-bs-toggle="dropdown">
-                                                            <i class="fas fa-ellipsis-h fs-5"></i>
-                                                        </a>
-                                                        <ul class="dropdown-menu shadow">
-                                                            <li @click="anularIngreso(item)">
-                                                                <a class="dropdown-item text-danger fw-bold" href="#">
-                                                                    <i class="fas fa-times me-2"></i> Anular Ingreso
-                                                                </a>
-                                                            </li>
-                                                        </ul>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            <tr v-if="listaIngresos.length === 0">
-                                                <td colspan="7" class="text-center py-5 text-muted fst-italic">
-                                                    <i class="fas fa-folder-open fa-2x mb-2 d-block text-secondary"></i> No hay ingresos registrados.
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
+                            <div class="table-container-custom table-responsive mt-2 mb-3">
+                                <table class="table table-striped table-hover table-compact-custom align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Asesor/a</th>
+                                            <th>Personal</th>
+                                            <th class="text-center">Fecha</th>
+                                            <th class="text-end">Monto Ing. (Bs)</th>
+                                            <th>Descripción</th>
+                                            <th class="text-center">Estado</th>
+                                            <th class="text-center">Op.</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="item in listaIngresos" :key="item.id">
+                                            <td class="fw-bold text-dark py-1">{{ item.asesor }}</td>
+                                            <td class="text-secondary py-1" style="font-size: 0.8rem;">{{ item.personal }}</td>
+                                            <td class="text-center text-secondary py-1" style="font-size: 0.78rem;">{{ formatearFecha(item.fecha) }}</td>
+                                            <td class="text-end font-monospace fw-bold text-success bg-success bg-opacity-10 py-1">{{ formatNumero(item.monto_ingreso) }}</td>
+                                            <td class="text-muted py-1" style="font-size: 0.8rem;">{{ item.descripcion }}</td>
+                                            <td class="text-center py-1">
+                                                <span v-if="item.estado == 1" class="badge bg-success rounded badge-custom">CANCELADO</span>
+                                                <span v-else class="badge bg-danger rounded badge-custom">ANULADO</span>
+                                            </td>
+                                            <td class="text-center py-1">
+                                                <div class="btn-group">
+                                                    <a style="cursor:pointer;" class="text-success dropdown-toggle btn-sm" data-bs-toggle="dropdown">
+                                                        <i class="fas fa-ellipsis-h fs-5"></i>
+                                                    </a>
+                                                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                                                        <li @click="anularIngreso(item)">
+                                                            <a class="dropdown-item text-danger fw-bold" href="#">
+                                                                <i class="fas fa-times me-2"></i> Anular Ingreso
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr v-if="listaIngresos.length === 0">
+                                            <td colspan="7" class="text-center py-5 text-muted fst-italic">
+                                                <i class="fas fa-folder-open fa-2x mb-2 d-block text-secondary"></i> No hay ingresos registrados.
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
+
                             <div class="d-flex justify-content-end" v-if="pagination.last_page > 1">
-                                <nav><ul class="pagination shadow-sm mb-0">
+                                <nav><ul class="pagination pagination-sm shadow-sm mb-0">
                                     <li class="page-item" :class="{disabled: pagination.current_page <= 1}">
                                         <a class="page-link" href="#" @click.prevent="cambiarPagina(pagination.current_page - 1)">Ant</a>
                                     </li>
@@ -358,26 +358,27 @@
                             </div>
                         </div>
 
+                        <!-- TAB 4: historial-gastos -->
                         <div class="tab-pane fade fade-in-animation" id="historial-gastos" role="tabpanel" aria-labelledby="historial-gastos-tab">
                             
-                            <div class="row mb-3">
+                            <div class="row mb-3 align-items-center">
                                 <div class="col-lg-8 mb-2 mb-lg-0">
                                     <div class="row g-2">
                                         <div class="col-md-6">
-                                            <div class="input-group shadow-sm">
-                                                <span class="input-group-text bg-white text-muted fw-bold" style="font-size: 11px;">DESDE</span>
-                                                <input @change="buscarGastos" type="date" v-model="filtros_gastos.fecha_inicio" class="form-control border-start-0">
-                                                <span class="input-group-text bg-white text-muted fw-bold border-start-0" style="font-size: 11px;">HASTA</span>
-                                                <input @change="buscarGastos" type="date" v-model="filtros_gastos.fecha_final" class="form-control border-start-0">
+                                            <div class="input-group input-group-sm shadow-sm">
+                                                <span class="input-group-text bg-light text-secondary fw-bold" style="font-size: 10px;">DESDE</span>
+                                                <input @change="buscarGastos" type="date" v-model="filtros_gastos.fecha_inicio" class="form-control">
+                                                <span class="input-group-text bg-light text-secondary fw-bold" style="font-size: 10px;">HASTA</span>
+                                                <input @change="buscarGastos" type="date" v-model="filtros_gastos.fecha_final" class="form-control">
                                             </div>
                                         </div>
                                         <div class="col-md-6">
-                                            <div class="input-group shadow-sm">
-                                                <select v-model="filtros_gastos.criterio" class="form-select bg-white" style="max-width: 140px;" @change="buscarGastos">
+                                            <div class="input-group input-group-sm shadow-sm">
+                                                <select v-model="filtros_gastos.criterio" class="form-select bg-white" style="max-width: 220px;" @change="buscarGastos">
                                                     <option value="users.name">Asesor</option>
                                                     <option value="users.personal">Personal</option>
                                                 </select>
-                                                <input type="text" v-model="filtros_gastos.buscar" class="form-control border-start-0" placeholder="Buscar..." @keyup.enter="buscarGastos">
+                                                <input type="text" v-model="filtros_gastos.buscar" class="form-control" placeholder="Buscar..." @keyup.enter="buscarGastos">
                                                 <button class="btn btn-success px-3" @click="buscarGastos"><i class="fas fa-search"></i></button>
                                             </div>
                                         </div>
@@ -399,57 +400,56 @@
                                 </div>
                             </div>
 
-                            <div class="card border-0 shadow-sm mb-3">
-                                <div class="table-responsive" style="font-size:12px">
-                                    <table class="table table-sm table-hover table-striped mb-0 align-middle">
-                                        <thead class="table-danger text-white text-uppercase" style="font-size: 11px;">
-                                            <tr>
-                                                <th class="py-3 ps-3">Asesor/a</th>
-                                                <th class="py-3">Personal</th>
-                                                <th class="py-3">Fecha</th>
-                                                <th class="py-3 text-end text-white bg-danger border-danger">Monto (Bs)</th>
-                                                <th class="py-3 ps-3">Descripción</th>
-                                                <th class="py-3 text-center">Estado</th>
-                                                <th class="py-3 text-center">Op.</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr v-for="item in listaGastos" :key="item.id">
-                                                <td class="ps-3 fw-bold">{{ item.asesor }}</td>
-                                                <td>{{ item.personal }}</td>
-                                                <td>{{ formatearFecha(item.fecha) }}</td>
-                                                <td class="text-end fw-bold text-danger bg-danger bg-opacity-10 fs-6">{{ formatNumero(item.monto_gasto) }}</td>
-                                                <td class="ps-3 text-muted">{{ item.descripcion }}</td>
-                                                <td class="text-center">
-                                                    <span v-if="item.estado == 1" class="badge bg-success">CANCELADO</span>
-                                                    <span v-else class="badge bg-danger">ANULADO</span>
-                                                </td>
-                                                <td class="text-center">
-                                                    <div class="btn-group">
-                                                        <a style="cursor:pointer;" class="text-success dropdown-toggle btn-sm" data-bs-toggle="dropdown">
-                                                            <i class="fas fa-ellipsis-h fs-5"></i>
-                                                        </a>
-                                                        <ul class="dropdown-menu shadow">
-                                                            <li @click="anularGasto(item)">
-                                                                <a class="dropdown-item text-danger fw-bold" href="#">
-                                                                    <i class="fas fa-times me-2"></i> Anular Gasto
-                                                                </a>
-                                                            </li>
-                                                        </ul>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            <tr v-if="listaGastos.length === 0">
-                                                <td colspan="7" class="text-center py-5 text-muted fst-italic">
-                                                    <i class="fas fa-folder-open fa-2x mb-2 d-block text-secondary"></i> No hay gastos registrados.
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
+                            <div class="table-container-custom table-responsive mt-2 mb-3">
+                                <table class="table table-striped table-hover table-compact-custom align-middle mb-0">
+                                    <thead class="table-danger border-danger">
+                                        <tr>
+                                            <th>Asesor/a</th>
+                                            <th>Personal</th>
+                                            <th class="text-center">Fecha</th>
+                                            <th class="text-end text-white bg-danger border-danger">Monto (Bs)</th>
+                                            <th>Descripción</th>
+                                            <th class="text-center">Estado</th>
+                                            <th class="text-center">Op.</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="item in listaGastos" :key="item.id">
+                                            <td class="fw-bold text-dark py-1">{{ item.asesor }}</td>
+                                            <td class="text-secondary py-1" style="font-size: 0.8rem;">{{ item.personal }}</td>
+                                            <td class="text-center text-secondary py-1" style="font-size: 0.78rem;">{{ formatearFecha(item.fecha) }}</td>
+                                            <td class="text-end font-monospace fw-bold text-danger bg-danger bg-opacity-10 py-1">{{ formatNumero(item.monto_gasto) }}</td>
+                                            <td class="text-muted py-1" style="font-size: 0.8rem;">{{ item.descripcion }}</td>
+                                            <td class="text-center py-1">
+                                                <span v-if="item.estado == 1" class="badge bg-success rounded badge-custom">CANCELADO</span>
+                                                <span v-else class="badge bg-danger rounded badge-custom">ANULADO</span>
+                                            </td>
+                                            <td class="text-center py-1">
+                                                <div class="btn-group">
+                                                    <a style="cursor:pointer;" class="text-success dropdown-toggle btn-sm" data-bs-toggle="dropdown">
+                                                        <i class="fas fa-ellipsis-h fs-5"></i>
+                                                    </a>
+                                                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                                                        <li @click="anularGasto(item)">
+                                                            <a class="dropdown-item text-danger fw-bold" href="#">
+                                                                <i class="fas fa-times me-2"></i> Anular Gasto
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr v-if="listaGastos.length === 0">
+                                            <td colspan="7" class="text-center py-5 text-muted fst-italic">
+                                                <i class="fas fa-folder-open fa-2x mb-2 d-block text-secondary"></i> No hay gastos registrados.
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
+
                             <div class="d-flex justify-content-end" v-if="paginationGastos.last_page > 1">
-                                <nav><ul class="pagination shadow-sm mb-0">
+                                <nav><ul class="pagination pagination-sm shadow-sm mb-0">
                                     <li class="page-item" :class="{disabled: paginationGastos.current_page <= 1}">
                                         <a class="page-link" href="#" @click.prevent="cambiarPaginaGastos(paginationGastos.current_page - 1)">Ant</a>
                                     </li>
@@ -472,9 +472,15 @@
 
 <script>
 import moment from 'moment';
-import Swal from 'sweetalert2'
+import Swal from 'sweetalert2';
 
 export default {
+    props: {
+        rolUsuario: {
+            type: String,
+            required: true,
+        },
+    },
     data() {
         return {
             view: 0,
@@ -676,7 +682,7 @@ export default {
                     this.paginationCaja = response.data.ingresos;
                 })
                 .catch((error) => {
-                    console.error('Error al obtener los ingresos:', error);
+                    console.error('Error al obtener los ingresos de caja:', error);
                 })
                 .finally(() => {
                     this.preloader = false;
@@ -699,7 +705,7 @@ export default {
                     this.paginationEgresosCaja = response.data.egresos;
                 })
                 .catch((error) => {
-                    console.error('Error al obtener los egresos:', error);
+                    console.error('Error al obtener egresos de caja:', error);
                 })
                 .finally(() => {
                     this.preloader = false;
@@ -707,7 +713,7 @@ export default {
         },
         async getIngresos(page) {
             this.preloader = true;
-            await axios.get('/historial_ingresos_listado', {
+            await axios.get('/historial_ingresos_listado_general', {
                 params: {
                     page: page,
                     fecha_inicio: this.filtros.fecha_inicio,
@@ -722,7 +728,7 @@ export default {
                     this.pagination = response.data.ingresos;
                 })
                 .catch((error) => {
-                    console.error('Error al obtener los ingresos:', error);
+                    console.error('Error al obtener ingresos generales:', error);
                 })
                 .finally(() => {
                     this.preloader = false;
@@ -730,7 +736,7 @@ export default {
         },
         async getGastos(page) {
             this.preloader = true;
-            await axios.get('/historial_gastos_listado', {
+            await axios.get('/historial_gastos_listado_general', {
                 params: {
                     page: page,
                     fecha_inicio: this.filtros_gastos.fecha_inicio,
@@ -745,7 +751,7 @@ export default {
                     this.paginationGastos = response.data.gastos;
                 })
                 .catch((error) => {
-                    console.error('Error al obtener los gastos:', error);
+                    console.error('Error al obtener gastos generales:', error);
                 })
                 .finally(() => {
                     this.preloader = false;
@@ -763,7 +769,7 @@ export default {
                 cancelButtonText: 'Cancelar',
             }).then((result) => {
                 if (result.isConfirmed) {
-                    axios.post('/anular_ingreso', { id: item.id })
+                    axios.post('/anular_ingreso_caja', { id: item.id })
                         .then((response) => {
                             if (response.data.respuesta == 1) {
                                 Swal.fire(
@@ -771,8 +777,8 @@ export default {
                                     'El ingreso ha sido anulado.',
                                     'success'
                                 );
-                                this.getIngresos(this.pagination.current_page);
                                 this.getIngresosCaja(this.paginationCaja.current_page);
+                                this.getIngresos(this.pagination.current_page);
                             } else {
                                 Swal.fire(
                                     'No se ha podido anular!',
@@ -918,7 +924,6 @@ export default {
     color: #198754 !important;
 }
 
-
 /* Animación Suave entre Pestañas */
 .fade-in-animation {
     animation: fadeIn 0.3s ease-in-out;
@@ -962,4 +967,52 @@ export default {
 
 .table th { vertical-align: middle; }
 .table td { vertical-align: middle; }
+
+/* Compacted Styles */
+.table-container-custom {
+    min-height: 250px;
+    border: 1px solid #e3e6f0;
+    border-radius: 6px;
+    background-color: white;
+}
+
+.table-compact-custom {
+    font-size: 0.82rem;
+    margin-bottom: 0;
+}
+
+.table-compact-custom th {
+    background-color: #198754 !important; /* Solid premium success green */
+    color: white !important;
+    border-bottom: 2px solid #157347 !important;
+    padding: 6px 8px;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+}
+
+/* Make egresos headers use dark red color */
+.table-compact-custom thead.table-danger th {
+    background-color: #dc3545 !important;
+    border-bottom-color: #bd2130 !important;
+}
+
+.table-compact-custom td {
+    padding: 5px 8px !important;
+    vertical-align: middle;
+}
+
+.font-monospace {
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.8rem;
+}
+
+.badge-custom {
+    width: 90px;
+    font-size: 0.7rem;
+    padding: 4px 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    display: inline-block;
+}
 </style>

@@ -5,21 +5,23 @@
                 Gestión de Solicitudes
             </h5>
         </div>
-        <div class="card-body">
-            <div class="row g-3 mb-4 mt-1">
-                <div class="col-md-4">
-                    <div class="input-group">
+        <div class="card-body py-2">
+            <div class="row g-2 mb-3 mt-1 align-items-center">
+                <div class="col-md-3">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-light text-secondary"><i class="far fa-calendar-alt"></i></span>
                         <input v-model="filtrosLocales.fecha_inicial" type="date" class="form-control"
                             @change="emitirBusqueda" />
                         <input v-model="filtrosLocales.fecha_final" type="date" class="form-control"
                             @change="emitirBusqueda" />
                     </div>
-                    <small v-if="fechaInvalida" class="text-danger fw-bold" style="font-size: 0.75rem;">
-                        <i class="fas fa-exclamation-circle me-1"></i> La fecha inicial no puede ser mayor a la final
+                    <small v-if="fechaInvalida" class="text-danger fw-bold d-block mt-1" style="font-size: 0.7rem;">
+                        <i class="fas fa-exclamation-circle me-1"></i> Inicial > Final
                     </small>
                 </div>
-                <div class="col-md-5">
-                    <div class="input-group">
+                <div class="col-md-6">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-light text-secondary" style="font-size: 0.75rem;">Estado</span>
                         <select v-model="filtrosLocales.estado" class="form-select" @change="emitirBusqueda">
                             <option value="todos">Todos</option>
                             <option value="1">Nuevo</option>
@@ -38,89 +40,89 @@
                     </div>
                 </div>
                 <div class="col-md-3 text-end">
-                    <button @click="$emit('nueva-solicitud')" class="btn btn-success" data-bs-toggle="tooltip"
+                    <button @click="$emit('nueva-solicitud')" class="btn btn-success btn-sm me-1" data-bs-toggle="tooltip"
                         title="Crear nueva solicitud">
                         <i class="fas fa-plus me-1"></i> Nuevo
                     </button>
-                    <button @click="$emit('abrir-calculadora')" class="btn btn-info px-3 ms-2" data-bs-toggle="tooltip"
+                    <button @click="$emit('abrir-calculadora')" class="btn btn-info btn-sm" data-bs-toggle="tooltip"
                         title="Abrir calculadora de crédito">
                         <i class="fas fa-calculator me-1"></i> Calculadora
                     </button>
                 </div>
             </div>
 
-            <div class="table-responsive">
-                <table class="table table-striped table-hover table-sm">
-                    <thead class="table-success">
+            <div class="table-container-custom table-responsive">
+                <table class="table table-striped table-hover table-compact-custom align-middle">
+                    <thead>
                         <tr>
-                            <th class="text-dark text-uppercase fw-bold">#</th>
-                            <th class="text-dark text-uppercase fw-bold">Cliente</th>
-                            <th class="text-dark text-uppercase fw-bold">Gar./Cod.</th>
-                            <th class="text-dark text-uppercase fw-bold">Asesor</th>
-                            <th class="text-dark text-uppercase fw-bold">Importe</th>
-                            <th class="text-dark text-uppercase fw-bold text-center">Plazo</th>
-                            <th class="text-dark text-uppercase fw-bold">Tasa</th>
-                            <th class="text-dark text-uppercase fw-bold">F. Reg.</th>
-                            <th class="text-dark text-uppercase fw-bold">F. Des.</th>
-                            <th class="text-dark text-uppercase fw-bold">Tipo</th>
-                            <th class="text-dark text-uppercase fw-bold">Estado</th>
-                            <th class="text-dark text-uppercase fw-bold">Op.</th>
+                            <th class="text-center">#</th>
+                            <th>Cliente</th>
+                            <th>Gar./Cod.</th>
+                            <th>Asesor</th>
+                            <th class="text-end">Importe</th>
+                            <th class="text-center">Plazo</th>
+                            <th class="text-center">Tasa</th>
+                            <th class="text-center">F. Reg.</th>
+                            <th class="text-center">F. Des.</th>
+                            <th>Tipo</th>
+                            <th class="text-center">Estado</th>
+                            <th class="text-center">Op.</th>
                         </tr>
                     </thead>
                     <tbody>
                         <template v-if="solicitudes.length > 0">
                             <tr v-for="item in solicitudes" :key="item.id">
-                                <td class="text-uppercase">{{ item.id }}</td>
-                                <td class="text-uppercase fw-bold">
-                                    <span class="d-block">
-                                        <strong class="fw-bold">CI: </strong>
-                                        {{ item.ci }}
-                                    </span>
-                                    {{ item.cliente }}
-                                </td>
-                                <td class="text-uppercase">
-                                    <div v-if="obtenerCodeudores(item.id).length > 0">
-                                        <p v-for="codeudor in obtenerCodeudores(item.id)" :key="codeudor.id"
-                                            class="mb-1 text-truncate">
-                                            <small class="text-muted">* </small>{{ codeudor.nombre }}
-                                        </p>
+                                <td class="text-center font-monospace py-1 fw-semibold text-secondary">{{ item.id }}</td>
+                                <td class="text-uppercase py-1">
+                                    <div class="d-flex flex-column">
+                                        <span class="text-dark fw-bold" style="font-size: 0.85rem;">{{ item.cliente }}</span>
+                                        <span class="text-muted small" style="font-size: 0.72rem;"><strong class="fw-semibold">CI:</strong> {{ item.ci }}</span>
                                     </div>
-                                    <div v-else class="text-start text-muted fst-italic">
+                                </td>
+                                <td class="text-uppercase py-1">
+                                    <div v-if="obtenerCodeudores(item.id).length > 0" class="codeudor-list">
+                                        <div v-for="codeudor in obtenerCodeudores(item.id)" :key="codeudor.id"
+                                            class="text-truncate text-secondary" style="font-size: 0.72rem; max-width: 150px;" :title="codeudor.nombre">
+                                            <i class="fas fa-user-friends me-1 text-muted"></i>{{ codeudor.nombre }}
+                                        </div>
+                                    </div>
+                                    <div v-else class="text-muted fst-italic" style="font-size: 0.72rem;">
                                         Sin codeudores
                                     </div>
                                 </td>
-                                <td class="text-uppercase fw-bold">{{ item.personal }}</td>
-                                <td class="text-uppercase">{{ item.importe_solicitud }}</td>
-                                <td>
-                                    <span
-                                        class="badge text-dark rounded text-uppercase border border-secondary bg-white d-inline-block w-100 text-center pt-1"
-                                        style="max-width: 150px;font-size: 10px;">
+                                <td class="text-uppercase py-1 text-secondary" style="font-size: 0.8rem;">{{ item.personal }}</td>
+                                <td class="text-end font-monospace py-1 fw-bold text-dark">{{ formatMoneda(item.importe_solicitud) }}</td>
+                                <td class="text-center py-1">
+                                    <span class="badge bg-light text-dark border border-secondary-subtle px-2 py-1 rounded" style="font-size: 0.75rem;">
                                         {{ item.nro_cuotas }} - {{ item.lapso_capital }}
                                     </span>
                                 </td>
-                                <td class="text-uppercase">{{ item.tasa }}</td>
-                                <td class="text-uppercase">{{ formatearFecha(item.fecha) }}</td>
-                                <td class="text-uppercase">{{ formatearFecha(item.fecha_desembolso) }}</td>
-                                <td class="text-uppercase">{{ item.tipo_garantia }}</td>
-    
-                                <td class="text-uppercase text-center">
-                                    <span v-if="item.desembolso === 0 && item.estado === 2" style="width:110px;"
-                                        class="badge bg-dark badge-fixed-width text-white d-block rounded">
-                                        x desembolsar
-                                    </span>
-                                    <span style="width:110px;" class="rounded"
-                                        :class="getEstadoClass(item.estado, item.tipo_solicitud)">
-                                        {{ getEstadoText(item.estado, item.tipo_solicitud) }}
-                                    </span>
-    
-                                    <span v-if="item.observacion && item.observacion.trim() !== ''"
-                                        class="mt-1 badge bg-danger badge-fixed-width text-white d-block rounded"
-                                        style="width:110px;">
-                                        OBSERVADO
-                                    </span>
+                                <td class="text-center py-1 font-monospace">{{ item.tasa }}%</td>
+                                <td class="text-center py-1 text-secondary" style="font-size: 0.78rem;">{{ formatearFecha(item.fecha) }}</td>
+                                <td class="text-center py-1 text-secondary" style="font-size: 0.78rem;">{{ formatearFecha(item.fecha_desembolso) }}</td>
+                                <td class="text-uppercase py-1 text-truncate" style="max-width: 120px; font-size: 0.8rem;" :title="item.tipo_garantia">
+                                    {{ item.tipo_garantia }}
                                 </td>
     
-                                <td class="text-uppercase position-relative text-center">
+                                <td class="text-uppercase text-center py-1">
+                                    <div class="d-flex flex-column gap-1 align-items-center">
+                                        <span v-if="item.desembolso === 0 && item.estado === 2"
+                                            class="badge bg-dark badge-custom text-white rounded">
+                                            x desembolsar
+                                        </span>
+                                        <span class="badge badge-custom rounded"
+                                            :class="getEstadoBadgeClass(item.estado, item.tipo_solicitud)">
+                                            {{ getEstadoText(item.estado, item.tipo_solicitud) }}
+                                        </span>
+                                        <span v-if="item.observacion && item.observacion.trim() !== ''"
+                                            class="badge bg-danger badge-custom text-white rounded"
+                                            data-bs-toggle="tooltip" :title="item.observacion">
+                                            OBSERVADO
+                                        </span>
+                                    </div>
+                                </td>
+    
+                                <td class="text-uppercase text-center py-1">
                                     <div class="dropdown">
                                         <a class="text-success dropdown-toggle" style="cursor: pointer"
                                             data-bs-toggle="dropdown" aria-expanded="false">
@@ -203,13 +205,10 @@
                         </tr>
                     </tbody>
                 </table>
-                <template v-if="solicitudes.length < 15">
-                    <br><br><br><br><br><br><br><br><br><br>
-                </template>
             </div>
 
-            <nav v-if="pagination.last_page > 1" class="mt-4">
-                <ul class="pagination justify-content-end">
+            <nav v-if="pagination.last_page > 1" class="mt-3">
+                <ul class="pagination pagination-sm justify-content-end mb-1">
                     <li class="page-item" :class="{ disabled: pagination.current_page === 1 }">
                         <a class="page-link" href="#" @click.prevent="$emit('cambiar-pagina', pagination.current_page - 1)">Anterior</a>
                     </li>
@@ -301,6 +300,12 @@ export default {
         formatearFecha(fechaISO) {
             return fechaISO ? moment(fechaISO).format("DD/MM/YYYY") : "-";
         },
+        formatMoneda(val) {
+            if (val === undefined || val === null) return "-";
+            const num = parseFloat(val);
+            if (isNaN(num)) return val;
+            return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        },
         // --- Lógica de Permisos / Visualización en botones ---
         esAprobable(item) {
             return item.estado !== 0 &&
@@ -346,17 +351,17 @@ export default {
                 return "Desconocido";
             }
         },
-        getEstadoClass(estado, tipo_solicitud) {
+        getEstadoBadgeClass(estado, tipo_solicitud) {
             if (estado == 1) {
-                if (tipo_solicitud == 'Nuevo') return "badge bg-info badge-fixed-width d-block mt-1";
-                if (tipo_solicitud == 'Reprogramacion' || tipo_solicitud == 'Refinanciamiento') return "badge bg-warning badge-fixed-width d-block mt-1 text-dark";
-                return "badge bg-info badge-fixed-width d-block mt-1";
+                if (tipo_solicitud == 'Nuevo') return "bg-info text-white";
+                if (tipo_solicitud == 'Reprogramacion' || tipo_solicitud == 'Refinanciamiento') return "bg-warning text-dark";
+                return "bg-info text-white";
             } else if (estado == 2) {
-                return "badge bg-success badge-fixed-width d-block mt-1";
+                return "bg-success text-white";
             } else if (estado == 0) {
-                return "badge bg-danger badge-fixed-width d-block mt-1";
+                return "bg-danger text-white";
             } else {
-                return "badge bg-secondary badge-fixed-width d-block mt-1";
+                return "bg-secondary text-white";
             }
         }
     }
@@ -365,7 +370,62 @@ export default {
 
 <style scoped>
 @import './../styles/frmSolicitud.css';
-.badge-fixed-width {
-    width: 110px;
+
+.table-container-custom {
+    min-height: 250px;
+    border: 1px solid #e3e6f0;
+    border-radius: 6px;
+    background-color: white;
+}
+
+.table-compact-custom {
+    font-size: 0.82rem;
+    margin-bottom: 0;
+}
+
+.table-compact-custom th {
+    background-color: #198754 !important; /* Solid premium success green */
+    color: white !important;
+    border-bottom: 2px solid #157347 !important;
+    padding: 6px 8px;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+}
+
+.table-compact-custom td {
+    padding: 6px 8px !important;
+    vertical-align: middle;
+}
+
+.font-monospace {
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.8rem;
+}
+
+.badge-custom {
+    width: 100px;
+    font-size: 0.7rem;
+    padding: 4px 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    display: block;
+}
+
+.codeudor-list {
+    max-height: 48px;
+    overflow-y: auto;
+}
+
+/* Custom fine scrollbar for codeudor list */
+.codeudor-list::-webkit-scrollbar {
+    width: 3px;
+}
+.codeudor-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+.codeudor-list::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 2px;
 }
 </style>

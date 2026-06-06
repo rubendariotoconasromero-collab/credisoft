@@ -274,7 +274,7 @@
                 <li>
                     <a href="/consultas_financieras" class="nav-link waves-effect {{ $current_route == 'consultas_financieras' ? 'mm-active' : '' }}">
                         <i class="fas fa-search-dollar"></i>
-                        <span>Adm. Financiera</span>
+                        <span>Flujo. Financiero</span>
                     </a>
                 </li>
                 @endif
@@ -304,7 +304,7 @@
                         <li><a href="/usuarios" class="{{ $current_route == 'usuarios' ? 'mm-active' : '' }}">Gestión de usuarios</a></li>
                         <li><a href="/socio" class="{{ $current_route == 'socio' ? 'mm-active' : '' }}">Gestión de socios</a></li>
                         <li><a href="/roles" class="{{ $current_route == 'roles' ? 'mm-active' : '' }}">Roles</a></li>
-                        <li><a href="/configuracion" class="{{ $current_route == 'configuracion' ? 'mm-active' : '' }}">Configuración</a></li>
+                        <li><a href="/configuracion" class="{{ $current_route == 'configuracion' ? 'mm-active' : '' }}">Motivos Ingresos y Egresos</a></li>
                         <li><a href="/boveda" class="{{ $current_route == 'boveda' ? 'mm-active' : '' }}">Boveda</a></li>
                     </ul>
                 </li>

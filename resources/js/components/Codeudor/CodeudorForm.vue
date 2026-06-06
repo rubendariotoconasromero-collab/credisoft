@@ -253,7 +253,7 @@
             </div>
         </div>
 
-        <div id="modalMapaComponent" class="modal fade" tabindex="-1" aria-hidden="true">
+        <div id="modalMapaComponentCodeudor" class="modal fade" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content border border-secondary border-2">
                     <div class="modal-header bg-warning">
@@ -261,7 +261,7 @@
                         <button @click="closeMapModal()" type="button" class="btn-close btn-close-dark" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                         <div id="mapComponent" style="height: 400px; width: 100%;"></div>
+                         <div id="mapComponentCodeudor" style="height: 400px; width: 100%;"></div>
                     </div>
                     <div class="modal-footer">
                         <button @click="closeMapModal()" class="btn btn-secondary"><i class="fas fa-times-circle"></i> Cerrar</button>
@@ -569,32 +569,56 @@ export default {
             this.selectedFile = null;
         },
 
-        // --- Lógica Mapa ---
+        // --- Lógica del Mapa ---
         openMapModal(index, mode) {
             this.currentAddressIndex = index;
             this.mapModalMode = mode;
             this.mapModalTitle = mode === 'add' ? 'Agregar Ubicación' : (mode === 'view' ? 'Ver Ubicación' : 'Actualizar');
-            $('#modalMapaComponent').modal('show');
             
-            this.$nextTick(() => {
+            $('#modalMapaComponentCodeudor').one('shown.bs.modal', () => {
                 const address = this.addresses[index];
-                if (mode === 'view' && address.lat && address.lng) {
+                if (address && address.lat && address.lng) {
                     this.initializeMap(parseFloat(address.lat), parseFloat(address.lng));
                 } else {
                     this.initializeMap(-17.7833, -63.1821); 
                 }
-            });
+            }).modal('show');
         },
-        closeMapModal() { $('#modalMapaComponent').modal('hide'); },
+        closeMapModal() { $('#modalMapaComponentCodeudor').modal('hide'); },
         initializeMap(lat, lng) {
-            const mapElement = document.getElementById('mapComponent');
+            const mapElement = document.getElementById('mapComponentCodeudor');
             if (!mapElement) return;
-            this.map = new google.maps.Map(mapElement, { center: { lat, lng }, zoom: 12 });
-            this.marker = new google.maps.Marker({ map: this.map, position: { lat, lng }, draggable: this.mapModalMode !== 'view' });
             
-            if (this.mapModalMode !== 'view') {
-                 this.map.addListener('click', (e) => { this.marker.setPosition(e.latLng); this.updateCoords(e.latLng.lat(), e.latLng.lng()); });
-                 this.marker.addListener('dragend', () => { const pos = this.marker.getPosition(); this.updateCoords(pos.lat(), pos.lng()); });
+            if (this.map) {
+                this.map.remove();
+                this.map = null;
+            }
+            
+            const L = window.L;
+            this.map = L.map(mapElement).setView([lat, lng], 13);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(this.map);
+            
+            const isDraggable = this.mapModalMode !== 'view';
+            this.marker = L.marker([lat, lng], { draggable: isDraggable }).addTo(this.map);
+            
+            if (isDraggable) {
+                // Si las coordenadas no están seteadas, guardamos la posición inicial por defecto
+                const address = this.addresses[this.currentAddressIndex];
+                if (address && (!address.lat || !address.lng)) {
+                    this.updateCoords(lat, lng);
+                }
+                
+                this.map.on('click', (event) => {
+                    this.marker.setLatLng(event.latlng);
+                    this.updateCoords(event.latlng.lat, event.latlng.lng);
+                });
+                this.marker.on('dragend', () => {
+                    const pos = this.marker.getLatLng();
+                    this.updateCoords(pos.lat, pos.lng);
+                });
             }
         },
         updateCoords(lat, lng) {

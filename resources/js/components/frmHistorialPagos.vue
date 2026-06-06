@@ -73,85 +73,85 @@
                             </div>
 
                             <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light fw-bold" style="font-size: 11px;">DESDE</span>
+                                <div class="col-md-6 mb-2 mb-md-0">
+                                    <div class="input-group input-group-sm shadow-sm">
+                                        <span class="input-group-text bg-light text-secondary fw-bold" style="font-size: 10px;">DESDE</span>
                                         <input @change="buscarPagos" type="date" v-model="filtros.fecha_inicio" class="form-control">
-                                        <span class="input-group-text bg-light fw-bold" style="font-size: 11px;">HASTA</span>
+                                        <span class="input-group-text bg-light text-secondary fw-bold" style="font-size: 10px;">HASTA</span>
                                         <input @change="buscarPagos" type="date" v-model="filtros.fecha_final" class="form-control">
                                     </div>
                                 </div>
 
                                 <div class="col-md-6">
-                                    <div class="input-group">
-                                        <select v-model="filtros.criterio" class="form-select" @change="buscarPagos">
+                                    <div class="input-group input-group-sm shadow-sm">
+                                        <select v-model="filtros.criterio" class="form-select bg-white" style="max-width: 220px;" @change="buscarPagos">
                                             <option value="cliente.nombre">Nombre Cliente</option>
                                             <option value="cliente.ci">CI Cliente</option>
                                             <option value="codigo">Cód. Transacción</option>
                                             <option value="users.name">Cajero</option>
                                         </select>
                                         <input type="text" v-model="filtros.buscar" class="form-control" placeholder="Buscar..." @keyup.enter="buscarPagos">
-                                        <button class="btn btn-success" @click="buscarPagos">
+                                        <button class="btn btn-success px-3" @click="buscarPagos">
                                             <i class="fas fa-search"></i>
                                         </button>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="table-responsive mt-2" style="font-size:11px">
-                                <table class="table table-hover table-striped table-sm" style="font-size:12px">
-                                    <thead class="text-white">
-                                        <tr class="table-success">
-                                            <th class="text-uppercase fw-bold">Cod. Transacción</th>
-                                            <th class="text-uppercase fw-bold">Fecha</th>
-                                            <th class="text-uppercase fw-bold">Cliente</th>
-                                            <th class="text-uppercase fw-bold text-center">Cuotas Pagadas</th>
-                                            <th class="text-uppercase fw-bold text-center">Cant.</th>
-                                            <th class="text-uppercase fw-bold text-end bg-success text-white">Total Pagado</th>
-                                            <th class="text-uppercase fw-bold text-center">Método</th>
-                                            <th class="text-uppercase fw-bold">Cajero</th>
-                                            <th class="text-uppercase fw-bold text-center">Estado</th>
-                                            <th class="text-uppercase fw-bold text-center">Op.</th>
+                            <div class="table-container-custom table-responsive mt-2 mb-3">
+                                <table class="table table-striped table-hover table-compact-custom align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Cod. Transacción</th>
+                                            <th class="text-center">Fecha</th>
+                                            <th>Cliente</th>
+                                            <th class="text-center">Cuotas Pagadas</th>
+                                            <th class="text-center">Cant.</th>
+                                            <th class="text-end">Total Pagado (Bs)</th>
+                                            <th class="text-center">Método</th>
+                                            <th>Cajero</th>
+                                            <th class="text-center">Estado</th>
+                                            <th class="text-center">Op.</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <tr v-for="item in listaPagos" :key="item.codigo_transaccion">
-                                            <td class="fw-bold text-primary">{{ item.codigo_transaccion }}</td>
-                                            <td>{{ formatearFecha(item.fecha_pago) }}</td>
-                                            <td>
+                                            <td class="fw-bold text-primary py-1">{{ item.codigo_transaccion }}</td>
+                                            <td class="text-center text-secondary py-1" style="font-size: 0.78rem;">{{ formatearFecha(item.fecha_pago) }}</td>
+                                            <td class="py-1">
                                                 <div v-if="item.cliente_data">
-                                                    <span class="fw-bold d-block text-uppercase">
+                                                    <span class="fw-bold d-block text-uppercase text-dark" style="font-size: 0.8rem;">
                                                         {{ item.cliente_data.nombre }} {{ item.cliente_data.apellido }}
                                                     </span>
-                                                    <small class="text-muted">CI: {{ item.cliente_data.ci }}</small>
+                                                    <small class="text-muted" style="font-size: 0.75rem;">CI: {{ item.cliente_data.ci }}</small>
                                                 </div>
-                                                <div v-else class="text-danger">
+                                                <div v-else class="text-danger py-1" style="font-size: 0.8rem;">
                                                     <i class="fas fa-exclamation-circle"></i> Datos no disp.
                                                 </div>
                                             </td>
-                                            <td class="text-center text-uppercase fw-semibold">
-                                                    Cuotas: {{ item.detalles_cuotas }}
+                                            <td class="text-center text-uppercase fw-semibold py-1" style="font-size: 0.78rem;">
+                                                Cuotas: {{ item.detalles_cuotas }}
                                             </td>
-                                            <td class="text-center fw-bold">{{ item.cantidad_cuotas }}</td>
+                                            <td class="text-center fw-bold py-1">{{ item.cantidad_cuotas }}</td>
                                             
-                                            <td class="text-end fw-bold fs-6 text-success">
-                                                {{ formatMonto(item.total_pagado) }} Bs.
+                                            <td class="text-end font-monospace fw-bold text-success bg-success bg-opacity-10 py-1">
+                                                {{ formatMonto(item.total_pagado) }}
                                             </td>
 
-                                            <td class="text-center">
-                                                <span class="badge rounded-pill text-dark border text-uppercase">{{ item.forma_pago }}</span>
+                                            <td class="text-center py-1">
+                                                <span class="badge rounded border text-dark text-uppercase bg-light" style="font-size: 0.7rem; padding: 4px 6px;">{{ item.forma_pago }}</span>
                                             </td>
-                                            <td class="text-uppercase fw-bold">{{ item.usuario ? item.usuario.name : 'Sistema' }}</td>
-                                            <td class="text-center">
-                                                <span v-if="item.estado == 0" class="badge bg-danger">Anulado</span>
-                                                <span v-else class="badge bg-success">Completado</span>
+                                            <td class="text-uppercase fw-bold py-1" style="font-size: 0.8rem;">{{ item.usuario ? item.usuario.name : 'Sistema' }}</td>
+                                            <td class="text-center py-1">
+                                                <span v-if="item.estado == 0" class="badge bg-danger rounded badge-custom">Anulado</span>
+                                                <span v-else class="badge bg-success rounded badge-custom">Completado</span>
                                             </td>
-                                            <td class="text-center">
+                                            <td class="text-center py-1">
                                                 <div class="btn-group">
                                                     <a style="cursor:pointer;" class="text-success dropdown-toggle btn-sm" data-bs-toggle="dropdown">
-                                                        <i class="fas fa-ellipsis-h fs-4"></i>
+                                                        <i class="fas fa-ellipsis-h fs-5"></i>
                                                     </a>
-                                                    <ul class="dropdown-menu">
+                                                    <ul class="dropdown-menu dropdown-menu-end shadow">
                                                         <li @click="imprimirRecibo(item)">
                                                             <a class="dropdown-item text-primary" href="#">
                                                                 <i class="fas fa-print me-2"></i> Imprimir Recibo
@@ -159,14 +159,14 @@
                                                         </li>
                                                         <li v-if="item.estado == 1" @click="anularTransaccion(item)">
                                                             <hr class="dropdown-divider">
-                                                            <a class="dropdown-item text-danger" href="#">
+                                                            <a class="dropdown-item text-danger fw-bold" href="#">
                                                                 <i class="fas fa-times me-2"></i> Anular Transacción
                                                             </a>
                                                         </li>
                                                         <li @click="verDetalles(item)">
                                                             <hr class="dropdown-divider">
                                                             <a class="dropdown-item text-dark" href="#">
-                                                                <i class="fas fa-eye me-2"></i> Ver Detalles
+                                                                <i class="fas fa-eye me-2 text-info"></i> Ver Detalles
                                                             </a>
                                                         </li>
                                                     </ul>
@@ -174,20 +174,17 @@
                                             </td>
                                         </tr>
                                         <tr v-if="listaPagos.length === 0">
-                                            <td colspan="10" class="text-center py-4 text-muted">
-                                                <i class="fas fa-search me-1"></i> No se encontraron transacciones.
+                                            <td colspan="10" class="text-center py-5 text-muted fst-italic">
+                                                <i class="fas fa-folder-open fa-2x mb-2 d-block text-secondary"></i> No se encontraron transacciones.
                                             </td>
                                         </tr>
                                     </tbody>
                                 </table>
-                                <template v-if="listaPagos.length<=8">
-                                    <br><br><br><br><br><br><br>
-                                </template>
                             </div>
 
-                            <div class="d-flex justify-content-end mt-3">
+                            <div class="d-flex justify-content-end mt-3" v-if="pagination.last_page > 1">
                                 <nav>
-                                    <ul class="pagination">
+                                    <ul class="pagination pagination-sm shadow-sm mb-1">
                                         <li class="page-item" :class="{ disabled: pagination.current_page <= 1 }">
                                             <a class="page-link" href="#" @click.prevent="cambiarPagina(pagination.current_page - 1)">Ant</a>
                                         </li>
@@ -504,16 +501,52 @@ export default {
     display: none !important;
 }
 
-.badge {
-    font-size:0.65rem;
-    min-width:100px;
-    border-radius:15px;
-}
-
 .table th {
     vertical-align: middle;
 }
 .table td {
     vertical-align: middle;
+}
+
+/* Compacted Styles */
+.table-container-custom {
+    min-height: 250px;
+    border: 1px solid #e3e6f0;
+    border-radius: 6px;
+    background-color: white;
+}
+
+.table-compact-custom {
+    font-size: 0.82rem;
+    margin-bottom: 0;
+}
+
+.table-compact-custom th {
+    background-color: #198754 !important; /* Solid premium success green */
+    color: white !important;
+    border-bottom: 2px solid #157347 !important;
+    padding: 6px 8px;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+}
+
+.table-compact-custom td {
+    padding: 5px 8px !important;
+    vertical-align: middle;
+}
+
+.font-monospace {
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.8rem;
+}
+
+.badge-custom {
+    width: 90px;
+    font-size: 0.7rem;
+    padding: 4px 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    display: inline-block;
 }
 </style>

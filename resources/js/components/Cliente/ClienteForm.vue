@@ -501,19 +501,14 @@ export default {
             this.mapModalMode = mode;
             this.mapModalTitle = mode === 'add' ? 'Agregar Ubicación' : (mode === 'view' ? 'Ver Ubicación' : 'Actualizar Ubicación');
             
-            // Usamos jQuery para abrir el modal porque así estaba en el original, 
-            // pero le cambié el ID a #modalMapaComponente para evitar conflictos si se usa globalmente.
-            $('#modalMapaComponente').modal('show'); 
-            
-            this.$nextTick(() => {
+            $('#modalMapaComponente').one('shown.bs.modal', () => {
                 const address = this.addresses[index];
-                if (mode === 'view' && address.lat && address.lng) {
+                if (address && address.lat && address.lng) {
                     this.initializeMap(parseFloat(address.lat), parseFloat(address.lng));
                 } else {
-                    // Lógica de geolocalización por defecto
                     this.initializeMap(-17.7833, -63.1821); 
                 }
-            });
+            }).modal('show');
         },
         closeMapModal() {
             $('#modalMapaComponente').modal('hide');
@@ -522,19 +517,35 @@ export default {
             const mapElement = document.getElementById('mapComponent'); // ID único
             if (!mapElement) return;
             
-            this.map = new google.maps.Map(mapElement, { center: { lat, lng }, zoom: 12 });
-            this.marker = new google.maps.Marker({
-                map: this.map, position: { lat, lng }, draggable: this.mapModalMode !== 'view'
-            });
+            if (this.map) {
+                this.map.remove();
+                this.map = null;
+            }
             
-            if (this.mapModalMode !== 'view') {
-                this.map.addListener('click', (event) => {
-                    this.marker.setPosition(event.latLng);
-                    this.updateAddressCoordinates(event.latLng.lat(), event.latLng.lng());
+            const L = window.L;
+            this.map = L.map(mapElement).setView([lat, lng], 13);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(this.map);
+            
+            const isDraggable = this.mapModalMode !== 'view';
+            this.marker = L.marker([lat, lng], { draggable: isDraggable }).addTo(this.map);
+            
+            if (isDraggable) {
+                // Si las coordenadas no están seteadas, guardamos la posición inicial por defecto
+                const address = this.addresses[this.currentAddressIndex];
+                if (address && (!address.lat || !address.lng)) {
+                    this.updateAddressCoordinates(lat, lng);
+                }
+                
+                this.map.on('click', (event) => {
+                    this.marker.setLatLng(event.latlng);
+                    this.updateAddressCoordinates(event.latlng.lat, event.latlng.lng);
                 });
-                this.marker.addListener('dragend', () => {
-                    const pos = this.marker.getPosition();
-                    this.updateAddressCoordinates(pos.lat(), pos.lng());
+                this.marker.on('dragend', () => {
+                    const pos = this.marker.getLatLng();
+                    this.updateAddressCoordinates(pos.lat, pos.lng);
                 });
             }
         },
