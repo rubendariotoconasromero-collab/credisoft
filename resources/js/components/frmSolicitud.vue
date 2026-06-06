@@ -215,14 +215,23 @@
                                         <h6 class="mb-0 fw-bold text-uppercase" id="tituloCabecera">
                                             Seleccione Codeudores/Garantes
                                         </h6>
-                                        <div class="form-check form-switch" v-if="solicitud.accion !== 2">
-                                            <input :disabled="solicitud.accion === 2" v-model="sinCodeudor"
-                                                class="form-check-input fs-6" type="checkbox" id="switchSinCodeudor"
-                                                @change="seleccionSinCodeudor(sinCodeudor)">
-                                            <label class="form-check-label small fs-6" for="switchSinCodeudor">
-                                                Sin Codeudor/Garante
-                                            </label>
-                                        </div>
+                                        <div v-if="solicitud.accion !== 2" class="d-flex align-items-center bg-light px-3 py-1 rounded-pill border">
+                                             <div class="form-check form-switch m-0 p-0 d-flex align-items-center">
+                                                 <input 
+                                                     :disabled="solicitud.accion === 2" 
+                                                     :checked="!sinCodeudor"
+                                                     @change="toggleSinCodeudor($event.target.checked)"
+                                                     class="form-check-input fs-5 ms-0 me-2" 
+                                                     type="checkbox" 
+                                                     id="switchSinCodeudor"
+                                                     style="cursor: pointer;"
+                                                 />
+                                                 <label class="form-check-label small fs-6 fw-bold cursor-pointer" for="switchSinCodeudor" :class="sinCodeudor ? 'text-danger' : 'text-success'" style="cursor: pointer;">
+                                                     <i class="fas" :class="sinCodeudor ? 'fa-user-slash me-1' : 'fa-user-check me-1'"></i>
+                                                     {{ sinCodeudor ? 'Sin Codeudor/Garante' : 'Con Codeudor/Garante' }}
+                                                 </label>
+                                             </div>
+                                         </div>
                                     </div>
                                 </div>
                              
@@ -1765,6 +1774,10 @@ export default {
             }
 
         },
+        toggleSinCodeudor(isChecked) {
+            this.sinCodeudor = !isChecked;
+            this.seleccionSinCodeudor(this.sinCodeudor);
+        },
     
         formatearFecha(fecha) {
             return fecha ? moment(fecha).format("DD/MM/YYYY") : "-";
@@ -1929,16 +1942,24 @@ export default {
         buscarSolicitudDebounced: debounce(function () {
             this.getSolicitudes(1);
         }, 500),
+        normalizeString(str) {
+            if (!str) return "";
+            return str
+                .toString()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .toLowerCase();
+        },
         filteredItemsClienteMetodo(keyword) {
             if (!keyword) {
                 this.filteredItemsCliente = [];
                 return;
             }
-            const searchTerm = keyword.toLowerCase();
+            const searchTerm = this.normalizeString(keyword);
             this.filteredItemsCliente = this.items_cliente.filter(
                 (item) =>
-                    item.nombre.toLowerCase().includes(searchTerm) ||
-                    item.ci.toLowerCase().includes(searchTerm)
+                    this.normalizeString(item.nombre).includes(searchTerm) ||
+                    this.normalizeString(item.ci).includes(searchTerm)
             );
         },
         filteredItemsCodeudorMetodo(keyword, index) {
@@ -1948,7 +1969,7 @@ export default {
                 ].select_codeudor.codeudor.filteredItemsCodeudorAux = [];
                 return;
             }
-            const searchTerm = keyword.toLowerCase();
+            const searchTerm = this.normalizeString(keyword);
             this.lista_codeudores[
                 index
             ].select_codeudor.codeudor.filteredItemsCodeudorAux =
@@ -1956,8 +1977,8 @@ export default {
                     index
                 ].select_codeudor.codeudor.items_codeudor.filter(
                     (item) =>
-                        item.nombre.toLowerCase().includes(searchTerm) ||
-                        item.ci.toLowerCase().includes(searchTerm)
+                        this.normalizeString(item.nombre).includes(searchTerm) ||
+                        this.normalizeString(item.ci).includes(searchTerm)
                 );
         },
 
