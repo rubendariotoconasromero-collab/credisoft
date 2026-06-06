@@ -320,6 +320,16 @@ export default {
                     this.resetForm();
                 }
             }
+        },
+        clienteData: {
+            immediate: true,
+            handler(newVal) {
+                if (newVal && this.accion !== 0) {
+                    this.currentCustomer = { ...newVal, enviado: 0 };
+                    this.currentCustomer.lugar_expedicion = this.normalizeExpeditionPlace(this.currentCustomer.lugar_expedicion);
+                    this.actividadClase.buscar = this.currentCustomer.actividad || "";
+                }
+            }
         }
     },
     mounted() {
@@ -327,12 +337,30 @@ export default {
         // Si hay datos básicos pasados por prop al editar, inicializarlos
         if(this.clienteData && this.accion !== 0) {
              this.currentCustomer = { ...this.clienteData, enviado: 0 };
+             this.currentCustomer.lugar_expedicion = this.normalizeExpeditionPlace(this.currentCustomer.lugar_expedicion);
              this.actividadClase.buscar = this.currentCustomer.actividad || "";
         }
     },
     methods: {
         cerrarFormulario() {
             this.$emit('cerrar');
+        },
+        normalizeExpeditionPlace(value) {
+            if (!value) return "0";
+            const val = value.toString().trim();
+            // Buscar por sigla (LP, CB, etc.)
+            const foundBySigla = this.expeditionPlaces.find(
+                p => p.sigla.toLowerCase() === val.toLowerCase()
+            );
+            if (foundBySigla) return foundBySigla.sigla;
+
+            // Buscar por nombre (La Paz, Cochabamba, etc.)
+            const foundByNombre = this.expeditionPlaces.find(
+                p => p.nombre.toLowerCase() === val.toLowerCase()
+            );
+            if (foundByNombre) return foundByNombre.sigla;
+
+            return val;
         },
         getDefaultCustomer() {
             return {
@@ -389,7 +417,8 @@ export default {
                 });
                 if (response.data.success) {
                     Swal.fire({ icon: "success", title: "Cliente guardado", timer: 1000 });
-                    this.$emit('guardado');
+                    this.currentCustomer.id = response.data.id;
+                    this.$emit('guardado', this.currentCustomer);
                     this.cerrarFormulario();
                 } else if (response.data.error === "duplicate") {
                     Swal.fire("Cliente duplicado", response.data.message, "error");
@@ -412,7 +441,7 @@ export default {
                     telefonos: this.phones,
                 });
                 Swal.fire({ icon: "success", title: "Cliente actualizado", timer: 1000 });
-                this.$emit('guardado');
+                this.$emit('guardado', this.currentCustomer);
                 this.cerrarFormulario();
             } catch (error) {
                 console.error("Error updating:", error);

@@ -362,6 +362,7 @@ export default {
             handler(newVal) {
                 if(newVal && this.accion !== 0) {
                      this.currentGuarantor = { ...newVal, enviado: 0 };
+                     this.currentGuarantor.lugar_expedicion = this.normalizeExpeditionPlace(this.currentGuarantor.lugar_expedicion);
                      this.actividadClase.buscar = newVal.actividad || "";
                 }
             }
@@ -372,6 +373,7 @@ export default {
         // Si hay datos iniciales y no se requiere fetch inmediato
         if(this.initialData && this.accion !== 0) {
             this.currentGuarantor = { ...this.initialData, enviado: 0 };
+            this.currentGuarantor.lugar_expedicion = this.normalizeExpeditionPlace(this.currentGuarantor.lugar_expedicion);
             this.actividadClase.buscar = this.initialData.actividad;
             // Aún cargamos detalles (direcciones/teléfonos) si tenemos ID
             if(this.codeudorId) this.loadGuarantorDetails(this.codeudorId);
@@ -380,6 +382,23 @@ export default {
     methods: {
         cerrarFormulario() {
             this.$emit('cerrar');
+        },
+        normalizeExpeditionPlace(value) {
+            if (!value) return "0";
+            const val = value.toString().trim();
+            // Buscar por sigla (LP, CB, etc.)
+            const foundBySigla = this.expeditionPlaces.find(
+                p => p.sigla.toLowerCase() === val.toLowerCase()
+            );
+            if (foundBySigla) return foundBySigla.sigla;
+
+            // Buscar por nombre (La Paz, Cochabamba, etc.)
+            const foundByNombre = this.expeditionPlaces.find(
+                p => p.nombre.toLowerCase() === val.toLowerCase()
+            );
+            if (foundByNombre) return foundByNombre.sigla;
+
+            return val;
         },
         getDefaultGuarantor() {
             return {

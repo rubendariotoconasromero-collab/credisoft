@@ -1168,7 +1168,13 @@ export default {
                 ci: "",
                 actividad: "",
                 lugar_expedicion: "",
-                
+                fecha_nacimiento: "",
+                imagen: "",
+                imagen_validate: "",
+                sexo: "",
+                estado_civil: "",
+                vivienda: "",
+                ingreso_mensual: null,
             },
             cliente_simulacion: {},
             lista_garantias: [
@@ -1228,7 +1234,8 @@ export default {
             try {
                 const response = await axios.get('/get_cliente_info', {
                     params: {
-                        id: idCliente
+                        id: idCliente,
+                        _t: Date.now()
                     }
                 });
 
@@ -1281,29 +1288,45 @@ export default {
 
         // Callback cuando el ClienteForm emite "guardado"
         async alGuardarCliente() {
-            // 1. Recargar la lista de clientes en memoria para el buscador
-            await this.getClientes(); 
+            // Capturar antes de cualquier await: cerrarModalCliente (via @cerrar) los resetea a 0 tras 300ms
+            const accion = this.clienteFormAccion;
+            const clienteId = this.clienteFormId;
 
-            // 2. Si estábamos editando, actualizar los datos del cliente seleccionado en la vista actual
-            if (this.clienteFormAccion === 1 && this.clienteFormId) {
-                // Buscar el cliente actualizado en la lista recién cargada
-                const clienteActualizado = this.items_cliente.find(c => c.id === this.clienteFormId);
-                if (clienteActualizado) {
-                    this.seleccionarCliente(clienteActualizado);
-                    Swal.fire({
-                        toast: true,
-                        position: 'top-end',
-                        icon: 'success',
-                        title: 'Datos del cliente actualizados',
-                        showConfirmButton: false,
-                        timer: 3000
+            // 1. Recargar la lista de clientes en memoria para el buscador
+            await this.getClientes();
+
+            // 2. Si estábamos editando, refrescar la tarjeta del cliente en pantalla
+            if (accion === 1 && clienteId) {
+                try {
+                    const response = await axios.get('/get_cliente_info', {
+                        params: {
+                            id: clienteId,
+                            _t: Date.now()
+                        }
                     });
+                    const clienteActualizado = response.data;
+                    if (clienteActualizado) {
+                        if (clienteActualizado.fecha_nacimiento) {
+                            clienteActualizado.fecha_nacimiento = moment(clienteActualizado.fecha_nacimiento).format("YYYY-MM-DD");
+                        }
+                        this.selectedCustomerData = clienteActualizado;
+                        this.seleccionarCliente(clienteActualizado);
+                    }
+                } catch (error) {
+                    console.error("Error al obtener la información actualizada del cliente:", error);
                 }
-            } 
+
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: 'Datos del cliente actualizados',
+                    showConfirmButton: false,
+                    timer: 3000
+                });
+            }
             // 3. Si estábamos creando uno nuevo
-            else if (this.clienteFormAccion === 0) {
-                // Opcional: Podrías buscar el último cliente creado y seleccionarlo automáticamente
-                // O simplemente notificar al usuario que ya puede buscarlo
+            else if (accion === 0) {
                 Swal.fire({
                     toast: true,
                     position: 'top-end',
@@ -1313,8 +1336,6 @@ export default {
                     timer: 3000
                 });
             }
-            
-            this.cerrarModalCliente();
         },
         abrirObservacionRepro(accion) {
             const textoInicial = accion === 'modificar' ? this.solicitud_editar.observacion : '';
@@ -1567,19 +1588,23 @@ export default {
         },
 
         seleccionarCliente(item) {
-            this.cliente.idd_cliente = item.nombre;
-            this.cliente.id_cliente = item.id;
-            this.cliente.imagen = '/img/cliente/'+item.imagen;
-            this.cliente.imagen_validate = item.imagen;
-            this.cliente.nombre = item.nombre; // Opcional, si lo necesitas almacenar
-            this.cliente.ci = item.ci;
-            this.cliente.lugar_expedicion = item.lugar_expedicion; // Si tienes un campo para mostrarlo
-            this.cliente.sexo = item.sexo; // Si tienes un campo para mostrarlo
-            this.cliente.estado_civil = item.estado_civil; // Si tienes un campo para mostrarlo
-            this.cliente.vivienda = item.vivienda; // Si tienes un campo para mostrarlo
-            this.cliente.ingreso_mensual = item.ingreso_mensual; // Si tienes un campo para mostrarlo
-            this.cliente.actividad = item.actividad;
-            this.solicitud.id_cliente = item.id;
+            const id = item.id || item.id_cliente;
+            this.cliente = {
+                id_cliente: id,
+                idd_cliente: item.nombre,
+                nombre: item.nombre,
+                ci: item.ci,
+                lugar_expedicion: item.lugar_expedicion,
+                fecha_nacimiento: item.fecha_nacimiento || "",
+                imagen: '/img/cliente/' + item.imagen,
+                imagen_validate: item.imagen,
+                sexo: item.sexo,
+                estado_civil: item.estado_civil,
+                vivienda: item.vivienda,
+                ingreso_mensual: item.ingreso_mensual,
+                actividad: item.actividad
+            };
+            this.solicitud.id_cliente = id;
             this.filteredItemsCliente = [];
         },
         limpiarSeleccionCliente() {
@@ -2217,10 +2242,17 @@ export default {
                 this.solicitud.plazo = this.solicitud.lapso_capital == 'Semanal' ? this.solicitud.nro_cuotas / 4 : (this.solicitud.lapso_capital == 'Quincenal' ? this.solicitud.nro_cuotas / 2 : this.solicitud.nro_cuotas / 1);
                 this.tipo_tasa = item.tipo_tasa;
                 const cliente = this.items_cliente.find(
-                    (c) => c.id === item.id_cliente
+                    (c) => c.id == item.id_cliente
                 );
                 
-                if (cliente) this.seleccionarCliente(cliente);
+                if (cliente) {
+                    this.seleccionarCliente(cliente);
+                } else if (item.id_cliente) {
+                    await this.obtenerClientePorId(item.id_cliente);
+                    if (this.selectedCustomerData) {
+                        this.seleccionarCliente(this.selectedCustomerData);
+                    }
+                }
                 await this.cargarCodeudores(item.id);
                 if (this.lista_codeudores.length <= 1 && this.lista_codeudores[0].select_codeudor.codeudor.idd_codeudor == '') {
                     this.sinCodeudor = true;
@@ -2255,9 +2287,16 @@ export default {
                 };
                 this.tipo_tasa = item.tipo_tasa;
                 const cliente = this.items_cliente.find(
-                    (c) => c.id === item.id_cliente
+                    (c) => c.id == item.id_cliente
                 );
-                if (cliente) this.seleccionarCliente(cliente);
+                if (cliente) {
+                    this.seleccionarCliente(cliente);
+                } else if (item.id_cliente) {
+                    await this.obtenerClientePorId(item.id_cliente);
+                    if (this.selectedCustomerData) {
+                        this.seleccionarCliente(this.selectedCustomerData);
+                    }
+                }
                 await this.cargarCodeudores(item.id);
                 if (this.lista_codeudores.length <= 1 && this.lista_codeudores[0].select_codeudor.codeudor.idd_codeudor == '') {
                     this.sinCodeudor = true;

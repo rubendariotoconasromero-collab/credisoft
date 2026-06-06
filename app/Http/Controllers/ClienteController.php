@@ -171,15 +171,15 @@ class ClienteController extends Controller
                     'descripcion' => $direccion['descripcion'],
                     'referencia' => $direccion['referencia'] ?? null,
                     'id_cliente' => $request->id,
-                    'lat' => $direccion['lat'],
-                    'lng' => $direccion['lng'],
+                    'lat' => $direccion['lat'] ?? null,
+                    'lng' => $direccion['lng'] ?? null,
                     
                 ]);
             }
     
             foreach($request->telefonos as $telefono){
                 DB::table('telefono')->insert([
- 
+  
                     'tipo' => $telefono['tipo'],
                     'numero' => $telefono['numero'],
                     'nombre' => $telefono['nombre'] ?? null,
@@ -192,8 +192,14 @@ class ClienteController extends Controller
             }
 
             DB::commit();
-        }catch(Exception $e){
+            return response()->json(['success' => true]);
+        }catch(\Exception $e){
             DB::rollback();
+            return response()->json([
+                'success' => false,
+                'error' => 'server',
+                'message' => $e->getMessage()
+            ], 500);
         }
 
     }
