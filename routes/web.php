@@ -293,6 +293,8 @@ Route::get('/rep_extracto_credito', 'App\Http\Controllers\VistasReporteControlle
 Route::get('/get_detalle_credito_extracto', 'App\Http\Controllers\VistasReporteController@getDetalleCreditoExtracto');
 
 Route::get('/hist_credito_mora', 'App\Http\Controllers\VistasReporteController@indexHistCreditoMora');
+Route::get('/exportar_creditos_mora_pdf', 'App\Http\Controllers\VistasReporteController@exportarCreditosMoraPdf');
+Route::get('/exportar_creditos_mora_excel', 'App\Http\Controllers\VistasReporteController@exportarCreditosMoraExcel');
 
 Route::get('/rep_creditos_mora', 'App\Http\Controllers\VistasReporteController@generarReporteCreditosMora');
 
@@ -308,6 +310,9 @@ Route::get('/generar_reporte_pagos_realizados', 'App\Http\Controllers\VistasRepo
 Route::get('/index_pagos_programados', 'App\Http\Controllers\VistasReporteController@indexPagosProgramados');
 
 Route::get('/generar_reporte_pagos_programados', 'App\Http\Controllers\VistasReporteController@generarReportesPagosProgramados');
+Route::get('/get_pagos_programados_rep', 'App\Http\Controllers\VistasReporteController@getPagosProgramadosRep');
+Route::get('/exportar_pagos_programados_pdf', 'App\Http\Controllers\VistasReporteController@exportarPagosProgramadosPdf');
+Route::get('/exportar_pagos_programados_excel', 'App\Http\Controllers\VistasReporteController@exportarPagosProgramadosExcel');
 
 Route::get('/index_movimientos_credito', 'App\Http\Controllers\VistasReporteController@indexMovimientosCredito');
 
@@ -315,9 +320,15 @@ Route::get('/reporte_extracto_movimientos', 'App\Http\Controllers\VistasReporteC
 
 Route::get('/index_porcentajes_pagos', 'App\Http\Controllers\VistasReporteController@indexPorcentajesPagos');
 Route::get('/rep_porcentajes_creditos', 'App\Http\Controllers\VistasReporteController@reportePorcentajesCreditos');
+Route::get('/get_avance_creditos_rep', 'App\Http\Controllers\VistasReporteController@getPorcentajesCreditosRep');
+Route::get('/exportar_avance_creditos_pdf', 'App\Http\Controllers\VistasReporteController@exportarAvanceCreditosPdf');
+Route::get('/exportar_avance_creditos_excel', 'App\Http\Controllers\VistasReporteController@exportarAvanceCreditosExcel');
 
 Route::get('/index_desembolsos', 'App\Http\Controllers\VistasReporteController@indexDesembolsos');
 Route::get('/reporte_desembolsos', 'App\Http\Controllers\VistasReporteController@reporteDesembolsos');
+Route::get('/get_desembolsos_rep', 'App\Http\Controllers\VistasReporteController@getDesembolsosRep');
+Route::get('/exportar_desembolsos_pdf', 'App\Http\Controllers\VistasReporteController@exportarDesembolsosPdf');
+Route::get('/exportar_desembolsos_excel', 'App\Http\Controllers\VistasReporteController@exportarDesembolsosExcel');
 
 Route::get('/index_desembolsos_oficial', 'App\Http\Controllers\VistasReporteController@indexDesembolsosOficial');
 Route::get('/reporte_desembolsos_oficial', 'App\Http\Controllers\VistasReporteController@reporteDesembolsosOficial');
@@ -384,6 +395,7 @@ Route::post('/pagos/anular/{id}', [HistorialPagosController::class, 'anular']);
 Route::get('/historial-pagos/detalles/{codigo}', [HistorialPagosController::class, 'show']);
 
 Route::get('/libro-mayor', [ConsultaFinancieraController::class, 'getLibroMayor']);
+Route::get('/consulta-financiera/info-credito', [ConsultaFinancieraController::class, 'getInfoCreditoAsociado']);
 Route::get('/reportes/libro-mayor', [ConsultaFinancieraController::class, 'imprimirLibroMayor']);
 Route::get('/reportes/ingresos', [ConsultaFinancieraController::class, 'imprimirReporteIngresos']);
 Route::get('/reportes/egresos', [ConsultaFinancieraController::class, 'imprimirReporteEgresos']);

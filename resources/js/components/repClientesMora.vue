@@ -245,22 +245,22 @@
                                         <tr v-for="cuota in creditoSeleccionado.cuotas_mora" :key="cuota.id" class="text-center">
                                             <td class="fw-bold">{{ cuota.numero }}</td>
                                             <td>{{ formatDate(cuota.fecha) }}</td>
-                                            <td class="fw-bold text-danger">{{ cuota.dias_retraso }} días</td>
+                                            <td class="fw-bold text-danger">{{ cuota.dias_pasados }} días</td>
                                             <td class="text-end text-muted">
-                                                <div>{{ formatMoney(cuota.capital_pendiente) }}</div>
+                                                <div>{{ formatMoney(cuota.capital_neto) }}</div>
                                                 <div v-if="parseFloat(cuota.capital_pagado) > 0" class="text-success" style="font-size: 8px; font-weight: bold;">
                                                     Pagado: {{ formatMoney(cuota.capital_pagado) }}
                                                 </div>
                                             </td>
                                             <td class="text-end text-muted">
-                                                <div>{{ formatMoney(cuota.interes_pendiente) }}</div>
+                                                <div>{{ formatMoney(cuota.interes_acumulado_neto) }}</div>
                                                 <div v-if="parseFloat(cuota.interes_pagado) > 0" class="text-success" style="font-size: 8px; font-weight: bold;">
                                                     Pagado: {{ formatMoney(cuota.interes_pagado) }}
                                                 </div>
                                             </td>
-                                            <td class="text-end text-danger fw-bold">{{ formatMoney(cuota.multa_acumulada) }}</td>
+                                            <td class="text-end text-danger fw-bold">{{ formatMoney(cuota.mora_fija_neta) }}</td>
                                             <td class="text-end text-primary fw-bold">
-                                                <div>{{ formatMoney(cuota.total_pendiente) }}</div>
+                                                <div>{{ formatMoney(cuota.total_a_pagar) }}</div>
                                                 <div v-if="parseFloat(cuota.capital_pagado) > 0 || parseFloat(cuota.interes_pagado) > 0" class="text-muted" style="font-size: 8px; font-weight: normal;">
                                                     Org: {{ formatMoney(cuota.total) }}
                                                 </div>

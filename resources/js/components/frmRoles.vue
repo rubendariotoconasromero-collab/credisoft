@@ -1,123 +1,150 @@
 <template>
-    <main class="">
-        <div class="page-content">
+    <main>
+        <div class="page-content px-0 mx-0">
             <div class="container-fluid">
-
-                <div class="card">
-                    <div class="card-header bg-warning py-2">
-                        <h5 class="header-title my-0 text-center fw-bold text-dark text-uppercase">
-                            Gestión de Roles
+                <!-- CARD PRINCIPAL -->
+                <div class="card shadow-sm border-0 animate-fade-in">
+                    <div class="card-header bg-warning bg-gradient py-2 d-flex justify-content-between align-items-center">
+                        <h5 class="header-title my-0 fw-bold text-dark text-uppercase mx-auto" style="font-size: 14px; letter-spacing: 0.5px;">
+                            <i class="fas fa-user-shield me-2"></i> Gestión de Roles
                         </h5>
                     </div>
+                    <div class="card-body pt-2">
 
-                    <div class="card-body">
-                        <div class="row mb-3 mt-0">
-                            <div class="col-md-12 text-end">
-                                <button @click="abrirModalNuevo()" class="btn btn-success">
-                                    <i class="fas fa-plus-circle"></i>
-                                    Nuevo Rol
-                                </button>
+                        <!-- FILTROS Y ACCIONES -->
+                        <div class="card bg-light border-0 mb-3 animate-fade-in">
+                            <div class="card-body p-2">
+                                <div class="row g-2 align-items-center">
+                                    <div class="col-md-6">
+                                        <h6 class="fw-bold text-dark my-0 text-uppercase" style="font-size: 12px;">
+                                            <i class="fas fa-list me-1 text-success"></i> Roles Registrados ({{ array_roles.length }})
+                                        </h6>
+                                    </div>
+                                    <div class="col-md-6 d-flex justify-content-end gap-1">
+                                        <button @click="abrirModalNuevo()" class="btn btn-success btn-xs px-3" style="font-size: 10.5px; height: 31px; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                            <i class="fas fa-plus-circle"></i> <span>Nuevo Rol</span>
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="table-responsive">
-                            <table class="table table-sm table-hover table-striped align-middle table-roles"
-                                style="font-size: 12px;">
-                                <thead class="text-white text-uppercase table-success">
-                                    <tr>
-                                        <th class="text-start fw-bold text-dark text-uppercase">Rol</th>
-                                        <th class="text-start fw-bold text-dark text-uppercase">Estado</th>
-                                        <th class="text-center fw-bold text-dark text-uppercase">Opciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr v-for="rol in array_roles" :key="rol.id">
-                                        <td class="text-capitalize fw-bold">{{ rol.nombre }}</td>
-                                        <td>
-                                            <span :class="rol.estado === 1 ? 'badge bg-success' : 'badge bg-danger'">
+
+                        <!-- LISTADO EN TARJETAS -->
+                        <div class="row g-3">
+                            <div v-for="rol in array_roles" :key="rol.id" class="col-md-6 col-lg-4 animate-fade-in">
+                                <div class="card h-100 shadow-sm transition-hover"
+                                     :style="rol.estado === 1 ? 'border: 1.5px solid #86efac;' : 'border: 1.5px solid #e5e7eb;'"
+                                     style="background: #ffffff; border-radius: 6px;">
+                                    <div class="card-body p-3 d-flex flex-column justify-content-between">
+                                        <div>
+                                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <div class="rounded-circle p-2" :style="rol.estado === 1 ? 'background-color: #e6f4ea; color: #137333;' : 'background-color: #f3f4f6; color: #4b5563;'">
+                                                        <i class="fas fa-user-shield"></i>
+                                                    </div>
+                                                    <h6 class="my-0 fw-bold text-dark text-uppercase" style="font-size: 12.5px; letter-spacing: 0.3px;">
+                                                        {{ rol.nombre }}
+                                                    </h6>
+                                                </div>
+                                                
+                                                <div class="btn-group">
+                                                    <a class="dropdown-toggle text-muted px-2 py-1 cursor-pointer" data-bs-toggle="dropdown" aria-expanded="false">
+                                                        <i class="fas fa-ellipsis-v"></i>
+                                                    </a>
+                                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                                        <li v-if="rol.estado === 1" @click="toggleEstado(rol, 'desactivar')">
+                                                            <a class="dropdown-item text-danger" href="#">
+                                                                <i class="fas fa-times-circle me-2"></i> Desactivar
+                                                            </a>
+                                                        </li>
+                                                        <li v-else @click="toggleEstado(rol, 'activar')">
+                                                            <a class="dropdown-item text-success" href="#">
+                                                                <i class="fas fa-check-circle me-2"></i> Activar
+                                                            </a>
+                                                        </li>
+                                                        <li @click="editarRol(rol)">
+                                                            <a class="dropdown-item text-primary" href="#">
+                                                                <i class="fas fa-pencil-alt me-2"></i> Editar Rol
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="d-flex align-items-center justify-content-between mt-3 pt-2 border-top border-light">
+                                            <span class="text-muted font-size-10">Estado del Rol</span>
+                                            <span :class="rol.estado === 1 ? 'badge bg-success text-uppercase font-size-10 px-2 rounded' : 'badge bg-secondary text-uppercase font-size-10 px-2 rounded'">
                                                 {{ rol.estado === 1 ? 'Activo' : 'Inactivo' }}
                                             </span>
-                                        </td>
-                                        <td class="text-center">
-                                            <div class="btn-group">
-                                                <a class="dropdown-toggle text-success" data-bs-toggle="dropdown"
-                                                    style="cursor: pointer;">
-                                                    <i class="fas fa-ellipsis-h fs-4"></i>
-                                                </a>
-                                                <ul class="dropdown-menu">
-                                                    <li v-if="rol.estado === 1"
-                                                        @click="toggleEstado(rol, 'desactivar')">
-                                                        <a class="dropdown-item text-danger" href="#">
-                                                            <i class="fas fa-times me-1"></i> Desactivar
-                                                        </a>
-                                                    </li>
-                                                    <li v-else @click="toggleEstado(rol, 'activar')">
-                                                        <a class="dropdown-item text-success" href="#">
-                                                            <i class="fas fa-check me-1"></i> Activar
-                                                        </a>
-                                                    </li>
-                                                    <li @click="editarRol(rol)">
-                                                        <a class="dropdown-item text-primary" href="#">
-                                                            <i class="fas fa-pencil-alt me-1"></i> Editar
-                                                        </a>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-
-
-
-
                 <!-- Modal -->
-                <div class="modal fade" id="nuevoRol" tabindex="-1" aria-labelledby="modalLabel">
-                    <div class="modal-dialog modal-lg">
-                        <div class="modal-content">
-                            <div class="modal-header bg-warning">
-                                <h5 class="modal-title text-dark fw-bold" id="modalLabel">
-                                    {{ rol.accion === 0 ? 'Nuevo Rol' : 'Modificar Rol' }}
+                <div class="modal fade" id="nuevoRol" tabindex="-1" aria-labelledby="modalLabel" data-bs-backdrop="static">
+                    <div class="modal-dialog modal-xl">
+                        <div class="modal-content border border-secondary border-2">
+                            <div class="modal-header bg-warning py-2 text-dark">
+                                <h5 class="modal-title text-dark fw-bold text-uppercase" id="modalLabel" style="font-size: 14px;">
+                                    <i class="fas" :class="rol.accion === 0 ? 'fa-plus-circle' : 'fa-edit'"></i> {{ rol.accion === 0 ? 'Nuevo Rol' : 'Modificar Rol' }}
                                 </h5>
-                                <button @click="cerrarModal" type="button" class="btn-close btn-close-dark"
-                                    data-bs-dismiss="modal"></button>
+                                <button @click="cerrarModal" type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
                             <div class="modal-body">
-                                <div class="mb-3">
-                                    <label for="nombre" class="form-label fw-bold">Nombre</label>
-                                    <input v-model="rol.nombre" type="text" class="form-control" id="nombre"
-                                        placeholder="Ingrese el nombre del rol">
+                                <div class="card bg-light border-0 mb-3">
+                                    <div class="card-body p-3">
+                                        <div class="row align-items-center">
+                                            <div class="col-md-2">
+                                                <label for="nombre" class="form-label fw-bold text-uppercase mb-0 text-muted" style="font-size: 11px;">Nombre del Rol</label>
+                                            </div>
+                                            <div class="col-md-10">
+                                                <input v-model="rol.nombre" type="text" class="form-control form-control-sm text-uppercase fw-semibold" id="nombre"
+                                                    placeholder="Ej: ASESOR DE CRÉDITO, CAJERO PRINCIPAL..." style="font-size: 12px;">
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <label class="form-label">Permisos</label>
-                                <div class="table-responsive">
-                                    <table class="table table-striped table-sm">
-                                        <tbody>
-                                            <tr v-for="permiso in lista_roles" :key="permiso.id">
-                                                <td class="fw-bold">{{ permiso.descripcion }}</td>
-                                                <td>
-                                                    <div class="form-check form-switch">
-                                                        <input class="form-check-input" type="checkbox"
-                                                            v-model="permiso.activado" :id="`switch-${permiso.id}`">
-                                                        <label class="form-check-label" :for="`switch-${permiso.id}`">
-                                                            {{ permiso.activado ? 'Activado' : 'Desactivado' }}
-                                                        </label>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+
+                                <div class="d-flex align-items-center gap-2 mb-2 px-1">
+                                    <h6 class="fw-bold text-dark my-0 text-uppercase" style="font-size: 12px;">
+                                        <i class="fas fa-key me-1 text-success"></i> Asignación de Permisos del Sistema
+                                    </h6>
+                                    <span class="badge bg-success font-size-10">{{ lista_roles.filter(p => p.activado).length }} asignados</span>
+                                </div>
+
+                                <div class="row g-2" style="max-height: 450px; overflow-y: auto; padding: 4px;">
+                                    <div v-for="permiso in lista_roles" :key="permiso.id" class="col-md-6 col-lg-4">
+                                        <div class="card border border-light-subtle h-100 cursor-pointer transition-hover"
+                                             :style="permiso.activado ? 'background-color: #f0fdf4; border-color: #bbf7d0;' : 'background-color: #ffffff;'"
+                                             @click="permiso.activado = !permiso.activado">
+                                            <div class="card-body p-2 d-flex align-items-center justify-content-between">
+                                                <div class="pe-2" style="max-width: 80%;">
+                                                    <span class="fw-semibold text-dark d-block text-capitalize" style="font-size: 11px; line-height: 1.3;">
+                                                        {{ permiso.descripcion }}
+                                                    </span>
+                                                </div>
+                                                <div class="form-check form-switch mb-0 ps-0 d-flex align-items-center">
+                                                    <input class="form-check-input cursor-pointer" type="checkbox"
+                                                        v-model="permiso.activado" :id="`switch-${permiso.id}`" style="width: 2.2em; height: 1.1em; margin-left: 0;"
+                                                        @click.stop>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="modal-footer">
-                                <button @click="cerrarModal" class="btn btn-outline-secondary">
+                                <button @click="cerrarModal" class="btn btn-secondary">
                                     <i class="fas fa-times-circle"></i>
                                     Cerrar</button>
                                 <button :disabled="guardando_rol"
                                     @click="rol.accion === 0 ? guardarRol() : modificarRol()" class="btn btn-success">
-                                    <i class="fas fa-check-circle"></i>
+                                    <i class="fas fa-save"></i>
                                     <span v-if="guardando_rol" class="spinner-border spinner-border-sm me-1"></span>
                                     {{ rol.accion === 0 ? 'Guardar' : 'Modificar' }}
                                 </button>
@@ -127,8 +154,6 @@
                 </div>
             </div>
         </div>
-
-
     </main>
 </template>
 
@@ -294,34 +319,61 @@ export default {
 </script>
 
 <style scoped>
-.table-roles .badge {
-    font-size: 0.75rem;
-    padding: 0.25em 0.5em;
-    border-radius: 15px;
-    min-width: 100px;
-}
-
-.card {
-    border: none;
-    border-radius: 8px;
-}
-
-.table th,
-.table td {
-    vertical-align: middle;
-}
-
-.btn-group .dropdown-menu {
-    min-width: 120px;
-}
-
-.form-check-input:checked {
-    background-color: #52BE80;
-    border-color: #52BE80;
-    border-radius:10px;
-}
-
 .dropdown-toggle::after {
     display: none !important;
+}
+
+/* Hover transitions and helpers */
+.transition-hover {
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.transition-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+.cursor-pointer {
+    cursor: pointer;
+}
+
+/* Clases específicas para diseño extra compacto */
+.table-compact th, .table-compact td {
+    padding: 3px 5px !important;
+    vertical-align: middle !important;
+    font-size: 10.5px !important;
+}
+.table-compact th {
+    font-weight: 700 !important;
+    font-size: 10px !important;
+}
+.font-size-13 { font-size: 13px !important; }
+.font-size-10 { font-size: 10px !important; }
+.btn-xs {
+    padding: 3px 8px !important;
+    font-size: 10.5px !important;
+    border-radius: 4px !important;
+}
+
+.form-check-input {
+    border-radius: 2em !important;
+}
+.form-check-input:checked {
+    background-color: #198754;
+    border-color: #198754;
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.4s ease-in-out;
+}
+@keyframes fadeIn {
+    0%   { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+.animate-bounce {
+    animation: bounce 2s infinite;
+}
+@keyframes bounce {
+    0%, 100% { transform: translateY(-5%); animation-timing-function: cubic-bezier(0.8,0,1,1); }
+    50%       { transform: none; animation-timing-function: cubic-bezier(0,0,0.2,1); }
 }
 </style>

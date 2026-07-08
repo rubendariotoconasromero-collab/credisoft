@@ -1,251 +1,441 @@
 <template>
-    <main>
+    <main class="pagos-programados-report">
+        <!-- Preloader -->
         <div v-if="preloader" class="preloader">
-            <div class="spinner"></div>
-            <!-- <p>Generando reporte...</p> -->
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
         </div>
 
-        <div class="page-content">
+        <div class="page-content px-0 mx-0">
             <div class="container-fluid">
-                <!-- start page title -->
-                <div class="row">
-                    <div class="col-12">
-                        <div class="page-title-box d-flex align-items-center justify-content-between">
-                            <div class="page-title">
-                                <h4 class="mb-0 font-size-18 text-uppercase">
-                                    <i class="fas fa-address-book"></i>
-                                    Reporte Pagos Programados</h4>
-                               
-                            </div>
-                        </div>
+
+                <!-- CARD PRINCIPAL -->
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-primary bg-gradient py-2 d-flex justify-content-between align-items-center">
+                        <h5 class="header-title my-0 fw-bold text-white text-uppercase mx-auto" style="font-size: 14px; letter-spacing: 0.5px;">
+                            <i class="fas fa-calendar-check me-2"></i> Reporte de Pagos Programados
+                        </h5>
                     </div>
-                </div>
-                <!-- end page title -->
-                <div class="page-content-wrapper">
-                    <div v-if="vista==0" class="row">
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <div class="row mb-3">
-                                            <div class="col-md-12 my-2">
 
-                                                <div class="input-group">
-                                                    <input type="date" name="" id="" class="form-control" v-model="fecha_inicio">
-                                                    <button class="btn-outline-success btn mx-2">
-                                                        <i class="fas fa-arrow-right"></i>
-                                                        Desde
-                                                    </button>
-                                                    
-                                                    <button class="btn-outline-danger btn mx-2">
-                                                        <i class="fas fa-arrow-left"></i>
-                                                        Hasta
-                                                    </button>
-                                                    <input type="date" name="" id="" class="form-control" v-model="fecha_fin">
+                    <div class="card-body pt-2">
 
-                                                </div>
-                                            </div>
-
-                                            <div class="col-md-12 my-3">
-                                                <button class="btn btn-outline-warning w-100" @click="generarReportePagosProgramados()">
-                                                    <i class="fas fa-print"></i>
-                                                    Generar Reporte
-                                                </button>
-                                            </div>
-                                        </div>
-                                      
+                        <!-- FILTROS -->
+                        <div class="card bg-light border-0 mb-3">
+                            <div class="card-body p-2">
+                                <div class="row g-2 align-items-end">
+                                    <!-- Fecha Inicio -->
+                                    <div class="col-md-2">
+                                        <label class="form-label mb-0 text-muted fw-bold text-uppercase" style="font-size: 9px;">Desde</label>
+                                        <input v-model="filtros.fecha_inicio" type="date" class="form-control form-control-sm" @change="getPagosProgramados" />
+                                    </div>
+                                    <!-- Fecha Fin -->
+                                    <div class="col-md-2">
+                                        <label class="form-label mb-0 text-muted fw-bold text-uppercase" style="font-size: 9px;">Hasta</label>
+                                        <input v-model="filtros.fecha_fin" type="date" class="form-control form-control-sm" @change="getPagosProgramados" />
+                                    </div>
+                                    <!-- Buscar Cliente -->
+                                    <div class="col-md-3">
+                                        <label class="form-label mb-0 text-muted fw-bold text-uppercase" style="font-size: 9px;">Cliente</label>
+                                        <input v-model="filtros.buscar_cliente" type="text" class="form-control form-control-sm" placeholder="Nombre o CI..." @input="debouncedGet" />
+                                    </div>
+                                    <!-- Asesor -->
+                                    <div class="col-md-2">
+                                        <label class="form-label mb-0 text-muted fw-bold text-uppercase" style="font-size: 9px;">Asesor</label>
+                                        <select v-model="filtros.id_asesor" class="form-select form-select-sm" @change="getPagosProgramados">
+                                            <option value="">Todos</option>
+                                            <option v-for="a in asesores" :key="a.id" :value="a.id">{{ a.personal }}</option>
+                                        </select>
+                                    </div>
+                                    <!-- Frecuencia -->
+                                    <div class="col-md-1">
+                                        <label class="form-label mb-0 text-muted fw-bold text-uppercase" style="font-size: 9px;">Frec.</label>
+                                        <select v-model="filtros.lapso_capital" class="form-select form-select-sm" @change="getPagosProgramados">
+                                            <option value="">Todas</option>
+                                            <option value="Semanal">Semanal</option>
+                                            <option value="Quincenal">Quincenal</option>
+                                            <option value="Mensual">Mensual</option>
+                                        </select>
+                                    </div>
+                                    <!-- Botones Filtrar/Limpiar -->
+                                    <div class="col-md-2 d-flex gap-1">
+                                        <button class="btn btn-primary btn-xs px-3 flex-grow-1" @click="getPagosProgramados" style="font-size: 11px; height: 31px; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                            <i class="fas fa-search"></i> <span>Filtrar</span>
+                                        </button>
+                                        <button class="btn btn-outline-secondary btn-xs px-3 flex-grow-1" @click="limpiarFiltros" style="font-size: 11px; height: 31px; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                            <i class="fas fa-trash-alt"></i> <span>Limpiar</span>
+                                        </button>
                                     </div>
                                 </div>
-                                <!-- End Card -->
+
+                                <!-- Exportaciones -->
+                                <div class="row g-2 mt-1">
+                                    <div class="col-12 d-flex gap-2 justify-content-end">
+                                        <button class="btn btn-outline-danger btn-xs px-3" @click="exportarPdf" style="font-size: 11px;">
+                                            <i class="fas fa-file-pdf me-1"></i> Exportar PDF
+                                        </button>
+                                        <button class="btn btn-outline-success btn-xs px-3" @click="exportarExcel" style="font-size: 11px;">
+                                            <i class="fas fa-file-excel me-1"></i> Exportar Excel
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                            <!-- end col -->
                         </div>
-                        <!-- end row -->
+
+                        <!-- TARJETAS RESUMEN -->
+                        <div class="row g-2 mb-3">
+                            <!-- Card 1: Cuotas Programadas -->
+                            <div class="col-md-3">
+                                <div class="card border-0 shadow-sm totalizer-card bg-primary-gradient text-white">
+                                    <div class="card-body p-2 d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <span class="totalizer-label d-block text-uppercase">Cuotas Programadas</span>
+                                            <h6 class="totalizer-val my-1 fw-bold">{{ cuotas.length }}</h6>
+                                        </div>
+                                        <div class="totalizer-icon bg-white-opacity-20 rounded-circle p-2">
+                                            <i class="fas fa-calendar-alt fa-lg"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Card 2: Capital Total -->
+                            <div class="col-md-3">
+                                <div class="card border-0 shadow-sm totalizer-card bg-info-gradient text-white">
+                                    <div class="card-body p-2 d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <span class="totalizer-label d-block text-uppercase">Capital Total</span>
+                                            <h6 class="totalizer-val my-1 fw-bold">{{ formatMoney(totales.capital) }}</h6>
+                                        </div>
+                                        <div class="totalizer-icon bg-white-opacity-20 rounded-circle p-2">
+                                            <i class="fas fa-coins fa-lg"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Card 3: Interés Total -->
+                            <div class="col-md-3">
+                                <div class="card border-0 shadow-sm totalizer-card bg-warning-gradient text-white">
+                                    <div class="card-body p-2 d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <span class="totalizer-label d-block text-uppercase">Interés Total</span>
+                                            <h6 class="totalizer-val my-1 fw-bold">{{ formatMoney(totales.interes) }}</h6>
+                                        </div>
+                                        <div class="totalizer-icon bg-white-opacity-20 rounded-circle p-2">
+                                            <i class="fas fa-percent fa-lg"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Card 4: Total a Cobrar -->
+                            <div class="col-md-3">
+                                <div class="card border-0 shadow-sm totalizer-card bg-success-gradient text-white">
+                                    <div class="card-body p-2 d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <span class="totalizer-label d-block text-uppercase">Total a Cobrar</span>
+                                            <h6 class="totalizer-val my-1 fw-bold">{{ formatMoney(totales.total) }}</h6>
+                                        </div>
+                                        <div class="totalizer-icon bg-white-opacity-20 rounded-circle p-2">
+                                            <i class="fas fa-hand-holding-usd fa-lg"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ENCABEZADO DE LA TABLA -->
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold text-dark my-0 text-uppercase animate-fade-in" style="font-size: 12px;">
+                                <i class="fas fa-list me-1 text-primary"></i> Cuotas Encontradas ({{ cuotas.length }})
+                            </h6>
+                        </div>
+
+                        <!-- TABLA -->
+                        <div class="table-responsive" style="font-size: 11px">
+                            <table class="table table-hover table-sm align-middle table-compact">
+                                <thead class="thead-pp text-uppercase fw-bold text-center">
+                                    <tr>
+                                        <th>Cód.</th>
+                                        <th>Cliente</th>
+                                        <th>Asesor</th>
+                                        <th>Cuota</th>
+                                        <th>Frecuencia</th>
+                                        <th>Fecha Venc.</th>
+                                        <th>Capital</th>
+                                        <th>Interés</th>
+                                        <th>Total</th>
+                                        <th>Días</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="item in cuotas" :key="item.cuota_id" class="animate-fade-in">
+                                        <td class="fw-bold text-primary text-center">#{{ item.credito_id }}</td>
+                                        <td class="text-start">
+                                            <div class="text-uppercase fw-bold text-dark" style="font-size: 10.5px;">{{ item.cliente_nombre }}</div>
+                                            <div class="text-muted fw-normal" style="font-size: 9px; margin-top: 1px;">
+                                                <i class="far fa-id-card text-secondary me-1"></i>C.I. {{ item.cliente_ci }}
+                                            </div>
+                                        </td>
+                                        <td class="text-uppercase text-muted">{{ item.asesor_nombre }}</td>
+                                        <td class="text-center">
+                                            <span class="badge-pp badge-pp-primary">
+                                                {{ item.nro_cuota }}/{{ item.nro_cuotas }}
+                                            </span>
+                                        </td>
+                                        <td class="text-center text-muted" style="font-size: 10px;">{{ item.lapso_capital }}</td>
+                                        <td class="text-center fw-bold">{{ formatDate(item.fecha_vencimiento) }}</td>
+                                        <td class="fw-bold text-end" style="color:#1e3a8a;">{{ formatMoney(item.capital_pendiente, item.moneda) }}</td>
+                                        <td class="fw-bold text-end" style="color:#d97706;">{{ formatMoney(item.interes_pendiente, item.moneda) }}</td>
+                                        <td class="fw-bold text-end text-success">{{ formatMoney(item.monto_pendiente, item.moneda) }}</td>
+                                        <td class="text-center">
+                                            <span :class="badgeDias(item.dias_para_pago)">
+                                                {{ labelDias(item.dias_para_pago) }}
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span :class="item.cuota_estado === 3 ? 'badge-pp badge-pp-parcial' : 'badge-pp badge-pp-pendiente'">
+                                                {{ item.cuota_estado === 3 ? 'Parcial' : 'Pendiente' }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <tr v-if="cuotas.length === 0">
+                                        <td colspan="11" class="text-center text-muted py-5 bg-white rounded border">
+                                            <i class="fas fa-calendar-times fa-3x mb-3 text-secondary animate-bounce"></i>
+                                            <p class="mb-0 fw-bold font-size-13 text-muted">No se encontraron cuotas programadas para los filtros seleccionados.</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
                     </div>
-
                 </div>
-                <!-- end page-content-wrapper-->
-            </div>
-            <!-- Container-fluid -->
 
-            
+            </div>
         </div>
-        
-      
     </main>
 </template>
 
 <script>
-    import moment from 'moment';
-    import Swal from 'sweetalert2'
+import moment from 'moment';
+import Swal from 'sweetalert2';
+import debounce from 'lodash/debounce';
 
-
-    export default {
-        data() {
-            return {
-
-                preloader:false,
-                vista:0,
-
-
-                fecha_inicio:moment().format('YYYY-MM-DD'),
-                fecha_fin: moment().add(1, 'weeks').format('YYYY-MM-DD'),
-
-
-  
-
+export default {
+    data() {
+        return {
+            preloader: false,
+            cuotas: [],
+            asesores: [],
+            filtros: {
+                fecha_inicio: moment().format('YYYY-MM-DD'),
+                fecha_fin: moment().add(7, 'days').format('YYYY-MM-DD'),
+                buscar_cliente: '',
+                id_asesor: '',
+                lapso_capital: ''
+            },
+            totales: {
+                capital: 0,
+                interes: 0,
+                total: 0
+            }
+        };
+    },
+    methods: {
+        async getPagosProgramados() {
+            this.preloader = true;
+            try {
+                const response = await axios.get('/get_pagos_programados_rep', { params: this.filtros });
+                this.cuotas = response.data;
+                this.calcularTotales();
+            } catch (error) {
+                console.error('Error al obtener pagos programados:', error);
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Ocurrió un problema al obtener el reporte de pagos programados.' });
+            } finally {
+                this.preloader = false;
             }
         },
-     
-        methods: {
-            generarReportePagosProgramados(){
-            
-                // Construye la URL con el parámetro fecha_inicio
-                const url = '/generar_reporte_pagos_programados?fecha_final='+this.fecha_fin
-                +'&fecha_inicial='+this.fecha_inicio;
-
-                // Abre una nueva pestaña o ventana con la URL
-                window.open(url, '_blank');
-            },
-          
-
+        async getAsesores() {
+            try {
+                const response = await axios.get('/get_asesores');
+                this.asesores = response.data;
+            } catch (error) {
+                console.error('Error al obtener asesores:', error);
+            }
         },
-        async mounted() {
-            this.preloader = true;
-            console.log('Component mounted.');
-            this.preloader=false;
+        calcularTotales() {
+            let cap = 0, int = 0, tot = 0;
+            this.cuotas.forEach(c => {
+                cap += parseFloat(c.capital_pendiente || 0);
+                int += parseFloat(c.interes_pendiente || 0);
+                tot += parseFloat(c.monto_pendiente || 0);
+            });
+            this.totales = { capital: cap, interes: int, total: tot };
+        },
+        limpiarFiltros() {
+            this.filtros = {
+                fecha_inicio: moment().format('YYYY-MM-DD'),
+                fecha_fin: moment().add(7, 'days').format('YYYY-MM-DD'),
+                buscar_cliente: '',
+                id_asesor: '',
+                lapso_capital: ''
+            };
+            this.getPagosProgramados();
+        },
+        exportarPdf() {
+            const params = new URLSearchParams(this.filtros).toString();
+            window.open('/exportar_pagos_programados_pdf?' + params, '_blank');
+        },
+        exportarExcel() {
+            const params = new URLSearchParams(this.filtros).toString();
+            window.open('/exportar_pagos_programados_excel?' + params, '_blank');
+        },
+        badgeDias(dias) {
+            const d = parseInt(dias);
+            if (d < 0)   return 'badge-pp badge-pp-vencida';
+            if (d === 0) return 'badge-pp badge-pp-hoy';
+            if (d <= 3)  return 'badge-pp badge-pp-pronto';
+            return 'badge-pp badge-pp-ok';
+        },
+        labelDias(dias) {
+            const d = parseInt(dias);
+            if (d < 0)  return Math.abs(d) + 'd vencida';
+            if (d === 0) return 'HOY';
+            return 'En ' + d + 'd';
+        },
+        formatMoney(value, currency = 'Bs.') {
+            if (value === null || value === undefined) return '-';
+            const formatted = new Intl.NumberFormat('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
+            return `${formatted} ${currency}`;
+        },
+        formatDate(date) {
+            if (!date) return '-';
+            return moment(date).format('DD/MM/YYYY');
         }
-
-
+    },
+    created() {
+        this.debouncedGet = debounce(this.getPagosProgramados, 400);
+    },
+    async mounted() {
+        await Promise.all([this.getPagosProgramados(), this.getAsesores()]);
     }
-
+};
 </script>
-
-<style>
-.image-container {
-    width: 100%;
-    height: auto;
-    margin-bottom:1rem;
-}
-.image-container img {
-    width: 100%;
-    height: auto;
-    max-width: 100%; /* Evita que la imagen se estire más allá de su tamaño natural */
-}
-
-</style>
 
 <style scoped>
 .preloader {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 99999;
 }
 
-.spinner {
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #3498db;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
+/* Thead con gradiente — aplica directo a th para evitar que Bootstrap lo sobreescriba */
+.thead-pp th {
+    background: linear-gradient(135deg, #1e3a8a, #3b82f6) !important;
+    color: #ffffff !important;
+    border-color: #2d4fa0 !important;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-p {
-  color: white;
-  margin-top: 10px;
-}
-</style>
-
-<style>
-
-
-/* Estilo general del dropdown y su contenedor */
-.dropdown-wrapper {
-    background-color: #f8f9fa;
-    border-radius: 0.375rem;
-    transition: background-color 0.3s ease-in-out;
-}
-
-.dropdown-wrapper:hover {
-    background-color: #e9ecef;
-}
-
-/* Estilo del elemento seleccionado */
-.selected-item {
-    border-radius: 0.375rem;
-    background-color: #ffffff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    transition: background-color 0.3s ease;
-}
-
-.selected-item:hover {
-    background-color: #f1f3f5;
-}
-
-/* Estilo del dropdown cuando está visible o invisible */
-.dropdown-popover {
-    background-color: white;
-    border-radius: 0.375rem;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-    max-height: 250px;
-    overflow-y: auto;
-    transition: all 0.3s ease-in-out;
-}
-
-.dropdown-popover.visible {
-    display: block;
-}
-
-.dropdown-popover.invisible {
-    display: none;
-}
-
-/* Estilo del campo de entrada (input) */
-.form-control-sm {
-    border: none;
-    padding: 0.5rem;
-    font-size: 14px;
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #ced4da;
-    transition: background-color 0.3s ease-in-out;
-}
-
-.form-control-sm:focus {
-    background-color: #ffffff;
-    outline: none;
-}
-
-/* Estilo de los elementos de la lista (li) */
-.list-group-item {
-    padding: 0.5rem 1rem;
-    transition: background-color 0.2s ease-in-out;
-}
-
-.list-group-item:hover {
-    background-color: #f1f3f5;
-}
-
-/* Estilo del mensaje de lista vacía */
-.text-muted {
-    font-size: 13px;
-}
-
-/* Estilo de los resultados */
-.fw-bold {
+/* Badges base — pill redondeado */
+.badge-pp {
+    display: inline-block;
+    padding: 2px 9px;
+    font-size: 9px !important;
     font-weight: 600;
+    border-radius: 20px;
+    min-width: 60px;
+    text-align: center;
+    white-space: nowrap;
+}
+.badge-pp-primary  { background-color: #1e3a8a; color: #fff; }
+.badge-pp-vencida  { background-color: #dc2626; color: #fff; }
+.badge-pp-hoy      { background-color: #d97706; color: #fff; }
+.badge-pp-pronto   { background-color: #f59e0b; color: #fff; }
+.badge-pp-ok       { background-color: #059669; color: #fff; }
+.badge-pp-parcial  { background-color: #0284c7; color: #fff; }
+.badge-pp-pendiente { background-color: #4b5563; color: #fff; }
+
+.table-compact th, .table-compact td {
+    padding: 3px 5px !important;
+    vertical-align: middle !important;
+    font-size: 10.5px !important;
+}
+.table-compact th {
+    font-weight: 700 !important;
+    font-size: 10px !important;
+}
+.font-size-13 { font-size: 13px !important; }
+.font-size-12 { font-size: 12px !important; }
+.font-size-11 { font-size: 11px !important; }
+.font-size-10 { font-size: 10px !important; }
+.font-size-9  { font-size: 9px !important; }
+.btn-xs {
+    padding: 3px 8px !important;
+    font-size: 10.5px !important;
+    border-radius: 4px !important;
+}
+
+/* Gradientes */
+.bg-primary-gradient {
+    background: linear-gradient(135deg, #1e3a8a, #3b82f6) !important;
+}
+.bg-info-gradient {
+    background: linear-gradient(135deg, #155e75, #06b6d4) !important;
+}
+.bg-warning-gradient {
+    background: linear-gradient(135deg, #d97706, #f59e0b) !important;
+}
+.bg-success-gradient {
+    background: linear-gradient(135deg, #065f46, #10b981) !important;
+}
+
+.totalizer-card {
+    border-radius: 6px;
+    transition: transform 0.2s ease-in-out;
+}
+.totalizer-card:hover {
+    transform: translateY(-2px);
+}
+.totalizer-label {
+    font-size: 8.5px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    opacity: 0.85;
+}
+.totalizer-val {
+    font-size: 14px !important;
+    letter-spacing: 0.2px;
+}
+.bg-white-opacity-20 {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.4s ease-in-out;
+}
+@keyframes fadeIn {
+    0%   { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+.animate-bounce {
+    animation: bounce 2s infinite;
+}
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(-5%);
+        animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+    }
+    50% {
+        transform: none;
+        animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+    }
 }
 </style>

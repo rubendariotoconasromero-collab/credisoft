@@ -123,7 +123,7 @@
         }
         .pt-2 {
             padding-top: 10px;
-            font-size:12px;
+            font-size: 12px;
             font-weight: 400;
         }
     </style>
@@ -165,38 +165,35 @@
 
         <table class="two-col-table">
             <tr>
-                <td style="border:1px solid #000; border:radius:10px;">
-                    <table class="data-table">
-                        id_plan_pago
-                        <tr>
-                            <th>Crédito</th>
-                            <td>{{ $informacion->id_plan_pago }}</td>
-                        </tr>
-                        <tr>
-                            <th>Cédula de Identidad</th>
-                            <td>{{ $informacion->ci }} {{ $informacion->lugar_expedicion }}</td>
-                        </tr>
-                        <tr>
-                            <th>Cliente</th>
-                            <td>{{ $informacion->cliente }}</td>
-                        </tr>
-                        <tr>
-                            <th>Pago</th>
-                            {{-- <td>{{ $informacion->nro_cuotas }} {{ $informacion->lapso_capital }}</td> --}}
-                            <td>{{ $informacion->lapso_capital }}</td>
-
-                        </tr>
-                        
-                         <tr>
-                            <th>Garantia</th>
-                            <td>{{ $informacion->tipo_garantia }}</td>
-                        </tr>
-                    </table>
+                <td>
+                    <div style="border: 1px solid #000; border-radius: 10px; padding: 10px;">
+                        <table class="data-table" style="margin-bottom: 0;">
+                            <tr>
+                                <th>Crédito</th>
+                                <td>{{ $informacion->id_plan_pago }}</td>
+                            </tr>
+                            <tr>
+                                <th>Cédula de Identidad</th>
+                                <td>{{ $informacion->ci }} {{ $informacion->lugar_expedicion }}</td>
+                            </tr>
+                            <tr>
+                                <th>Cliente</th>
+                                <td>{{ $informacion->cliente }}</td>
+                            </tr>
+                            <tr>
+                                <th>Pago</th>
+                                <td>{{ $informacion->lapso_capital }}</td>
+                            </tr>
+                             <tr>
+                                <th>Garantia</th>
+                                <td>{{ $informacion->tipo_garantia }}</td>
+                            </tr>
+                        </table>
+                    </div>
                 </td>
                 <td>
                     <div style="border: 1px solid #000; border-radius: 10px; padding: 10px;">
-                        <table class="data-table" >
-                            
+                        <table class="data-table" style="margin-bottom: 0;">
                              <tr>
                                 <th>Fecha Credito</th>
                                 <td>{{ $informacion->fecha_credito }}</td>
@@ -213,47 +210,35 @@
                                 <th>Cuotas</th>
                                 <td>{{ $informacion->nro_cuotas }}</td>
                             </tr>
-                            {{-- <tr>
-                                <th>Forma de Pago</th>
-                                <td>{{ $informacion->lapso_capital }}</td>
-                            </tr> --}}
-                           
                         </table>
                     </div>
                 </td>
             </tr>
         </table>
 
-        <table class="two-col-table">
-            <tr>
-                <td>
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th style="text-align:center;border-top:1px solid #2a2a2a; border-bottom:1px solid #2a2a2a; border-left:1px solid #2a2a2a">Nro</th>
-                                <th style="text-align:center;border-top:1px solid #2a2a2a; border-bottom:1px solid #2a2a2a;">Fecha</th>
-                                <th style="text-align:center;border-top:1px solid #2a2a2a; border-bottom:1px solid #2a2a2a;">Capital</th>
-                                <th style="text-align:center;border-top:1px solid #2a2a2a; border-bottom:1px solid #2a2a2a;">Interes</th>
-                                <th style="text-align:center;border-top:1px solid #2a2a2a; border-bottom:1px solid #2a2a2a;">Saldo Capital</th>
-                                <th style="text-align:center;border-top:1px solid #2a2a2a; border-bottom:1px solid #2a2a2a;border-right:1px solid #2a2a2a">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($detalles as $detalle)
-                            <tr>
-                                <td style="text-align:center">{{ $detalle->nro }}</td>
-                                <td style="text-align:center">{{ $detalle->fecha }}</td>
-                                <td style="text-align:center">{{ number_format($detalle->capital?? 0, 2) }}</td>
-                                <td style="text-align:center">{{ $detalle->interes }}</td>
-                                <td style="text-align:center">{{ number_format($detalle->saldo_capital?? 0, 2) }}</td>
-
-                                <td style="text-align:center">{{ number_format($detalle->total_cuota?? 0, 2) }}</td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </td>
-            </tr>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="text-align:center;border-top:1px solid #2a2a2a; border-bottom:1px solid #2a2a2a; border-left:1px solid #2a2a2a">Nro</th>
+                    <th style="text-align:center;border-top:1px solid #2a2a2a; border-bottom:1px solid #2a2a2a;">Fecha</th>
+                    <th style="text-align:center;border-top:1px solid #2a2a2a; border-bottom:1px solid #2a2a2a;">Capital</th>
+                    <th style="text-align:center;border-top:1px solid #2a2a2a; border-bottom:1px solid #2a2a2a;">Interes</th>
+                    <th style="text-align:center;border-top:1px solid #2a2a2a; border-bottom:1px solid #2a2a2a;">Saldo Capital</th>
+                    <th style="text-align:center;border-top:1px solid #2a2a2a; border-bottom:1px solid #2a2a2a;border-right:1px solid #2a2a2a">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($detalles as $detalle)
+                <tr>
+                    <td style="text-align:center">{{ $detalle->nro }}</td>
+                    <td style="text-align:center">{{ $detalle->fecha }}</td>
+                    <td style="text-align:center">{{ number_format($detalle->capital?? 0, 2) }}</td>
+                    <td style="text-align:center">{{ $detalle->interes }}</td>
+                    <td style="text-align:center">{{ number_format($detalle->saldo_capital?? 0, 2) }}</td>
+                    <td style="text-align:center">{{ number_format($detalle->total_cuota?? 0, 2) }}</td>
+                </tr>
+                @endforeach
+            </tbody>
         </table>
 
         <!-- Footer Note -->

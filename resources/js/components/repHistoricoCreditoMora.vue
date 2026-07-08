@@ -1,330 +1,445 @@
 <template>
     <main>
         <div v-if="preloader" class="preloader">
-            <div class="spinner"></div>
-            <!-- <p>Generando reporte...</p> -->
+            <div class="spinner-border text-danger" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
         </div>
 
-        <div class="page-content">
+        <div class="page-content px-0 mx-0">
             <div class="container-fluid">
-                <!-- start page title -->
-                <div class="row">
-                    <div class="col-12">
-                        <div class="page-title-box d-flex align-items-center justify-content-between">
-                            <div class="page-title">
-                                <h4 class="mb-0 font-size-18 text-uppercase">
-                                    <i class="fas fa-address-book"></i>
-                                    Reporte Creditos en Mora</h4>
-                               
+
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-danger py-2 d-flex justify-content-between align-items-center">
+                        <h5 class="header-title my-0 fw-bold text-white text-uppercase mx-auto" style="font-size:14px;">
+                            <i class="fas fa-exclamation-triangle me-2"></i> Reporte de Créditos en Mora
+                        </h5>
+                    </div>
+
+                    <div class="card-body pt-2">
+
+                        <!-- FILTROS -->
+                        <div class="card bg-light border-0 mb-3">
+                            <div class="card-body p-2">
+                                <div class="row g-2 align-items-end">
+
+                                    <div class="col-md-1">
+                                        <label class="form-label mb-0" style="font-size:10px;font-weight:600;">Cód. Crédito</label>
+                                        <input v-model="filtros.id_credito" type="text" class="form-control form-control-sm" placeholder="Ej: 123" @input="getCreditosMora" />
+                                    </div>
+
+                                    <div class="col-md-3">
+                                        <label class="form-label mb-0" style="font-size:10px;font-weight:600;">Cliente (Nombre o CI)</label>
+                                        <input v-model="filtros.buscar_cliente" type="text" class="form-control form-control-sm" placeholder="Nombre o CI..." @input="getCreditosMora" />
+                                    </div>
+
+                                    <div class="col-md-2">
+                                        <label class="form-label mb-0" style="font-size:10px;font-weight:600;">Asesor</label>
+                                        <select v-model="filtros.id_asesor" class="form-select form-select-sm" @change="getCreditosMora">
+                                            <option value="">Todos los asesores</option>
+                                            <option v-for="a in asesores" :key="a.id" :value="a.id">{{ a.personal }}</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-2">
+                                        <label class="form-label mb-0" style="font-size:10px;font-weight:600;">Días mora mínimos</label>
+                                        <input v-model="filtros.dias_mora_min" type="number" min="0" class="form-control form-control-sm" placeholder="Ej: 30" @change="getCreditosMora" />
+                                    </div>
+
+                                    <div class="col-md-4 d-flex gap-1 align-items-end">
+                                        <button class="btn btn-danger btn-xs px-2 flex-grow-1" @click="getCreditosMora" style="font-size:10.5px;height:31px;">
+                                            <i class="fas fa-search me-1"></i> Filtrar
+                                        </button>
+                                        <button class="btn btn-outline-secondary btn-xs px-2 flex-grow-1" @click="limpiarFiltros" style="font-size:10.5px;height:31px;">
+                                            <i class="fas fa-trash-alt me-1"></i> Limpiar
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-xs px-2 flex-grow-1" @click="exportarPdf" :disabled="creditos.length === 0" style="font-size:10.5px;height:31px;">
+                                            <i class="fas fa-file-pdf me-1"></i> PDF
+                                        </button>
+                                        <button class="btn btn-outline-success btn-xs px-2 flex-grow-1" @click="exportarExcel" :disabled="creditos.length === 0" style="font-size:10.5px;height:31px;">
+                                            <i class="fas fa-file-excel me-1"></i> Excel
+                                        </button>
+                                    </div>
+
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-                <!-- end page title -->
-                <div class="page-content-wrapper">
-                    <div v-if="vista==0" class="row">
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <div class="row mb-3">
-                                            <div class="col-md-7 my-2">
 
-                                                <div class="input-group">
-                                                    <!-- <input type="date" name="" id="" class="form-control">
-                                                    <button class="btn-outline-success btn border-0 mx-2">
-                                                        <i class="fas fa-arrow-right"></i>
-                                                        Desde
-                                                    </button> -->
-                                                    
-                                                    <button class="btn-outline-danger btn mx-2">
-                                                        <i class="fas fa-arrow-right"></i>
-                                                        Hasta
-                                                    </button>
-                                                    <input type="date" name="" id="" class="form-control text-start" v-model="fecha_fin">
-
-                                                </div>
-                                            </div>
-
-                                            <div class="col-md-7 my-3">
-                                                <button class="btn btn-outline-warning w-100" @click="generarReporteCreditosMora()">
-                                                    <i class="fas fa-print"></i>
-                                                    Generar Reporte
-                                                </button>
-                                            </div>
+                        <!-- RESUMEN TOTALES -->
+                        <div v-if="creditos.length > 0" class="row g-2 mb-3">
+                            <!-- Card 1: Créditos en mora -->
+                            <div class="col-md-3">
+                                <div class="card border-0 shadow-sm totalizer-card bg-primary-gradient text-white">
+                                    <div class="card-body p-2 d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <span class="totalizer-label d-block text-uppercase">Créditos en mora</span>
+                                            <h6 class="totalizer-val my-1 fw-bold">{{ creditos.length }}</h6>
                                         </div>
-                                      
+                                        <div class="totalizer-icon bg-white-opacity-20 rounded-circle p-2">
+                                            <i class="fas fa-coins fa-lg"></i>
+                                        </div>
                                     </div>
                                 </div>
-                                <!-- End Card -->
                             </div>
-                            <!-- end col -->
+
+                            <!-- Card 2: Total cuotas vencidas -->
+                            <div class="col-md-3">
+                                <div class="card border-0 shadow-sm totalizer-card bg-warning-gradient text-white">
+                                    <div class="card-body p-2 d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <span class="totalizer-label d-block text-uppercase">Total cuotas vencidas</span>
+                                            <h6 class="totalizer-val my-1 fw-bold">{{ totalCuotasMora }}</h6>
+                                        </div>
+                                        <div class="totalizer-icon bg-white-opacity-20 rounded-circle p-2">
+                                            <i class="fas fa-file-invoice-dollar fa-lg"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Card 3: Capital pendiente -->
+                            <div class="col-md-3">
+                                <div class="card border-0 shadow-sm totalizer-card bg-success-gradient text-white">
+                                    <div class="card-body p-2 d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <span class="totalizer-label d-block text-uppercase">Capital pendiente</span>
+                                            <h6 class="totalizer-val my-1 fw-bold">{{ formatMoney(totalCapitalMora) }}</h6>
+                                        </div>
+                                        <div class="totalizer-icon bg-white-opacity-20 rounded-circle p-2">
+                                            <i class="fas fa-percent fa-lg"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Card 4: Deuda total en mora -->
+                            <div class="col-md-3">
+                                <div class="card border-0 shadow-sm totalizer-card bg-danger-gradient text-white">
+                                    <div class="card-body p-2 d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <span class="totalizer-label d-block text-uppercase">Deuda total en mora</span>
+                                            <h6 class="totalizer-val my-1 fw-bold">{{ formatMoney(totalDeudaMora) }}</h6>
+                                        </div>
+                                        <div class="totalizer-icon bg-white-opacity-20 rounded-circle p-2">
+                                            <i class="fas fa-exclamation-circle fa-lg animate-pulse"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <!-- end row -->
+
+                        <!-- ENCABEZADO TABLA -->
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold text-dark my-0 text-uppercase" style="font-size:12px;">
+                                <i class="fas fa-list me-1 text-danger"></i> Clientes con Cuotas Vencidas ({{ creditos.length }})
+                            </h6>
+                        </div>
+
+                        <!-- TABLA PRINCIPAL -->
+                        <div class="table-responsive" style="font-size:11px;">
+                            <table class="table table-hover table-sm align-middle table-compact">
+                                <thead class="table-danger text-white text-uppercase fw-bold text-center">
+                                    <tr>
+                                        <th style="width:30px;"></th>
+                                        <th>Cód.</th>
+                                        <th>Cliente</th>
+                                        <th>C.I.</th>
+                                        <th>Asesor</th>
+                                        <th>Cuotas Mora</th>
+                                        <th>Días Mora</th>
+                                        <th>Saldo Capital</th>
+                                        <th>Capital Pendiente</th>
+                                        <th>Interés Pendiente</th>
+                                        <th>Mora</th>
+                                        <th>Total Deuda Mora</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template v-for="c in creditos" :key="c.plan_pago_id">
+                                        <!-- Fila principal del crédito -->
+                                        <tr class="align-middle">
+                                            <td class="text-center">
+                                                <button class="btn btn-xs py-0 px-1 fw-bold"
+                                                    :class="isExpanded(c.plan_pago_id) ? 'btn-secondary' : 'btn-outline-danger'"
+                                                    @click="toggleExpand(c.plan_pago_id)"
+                                                    style="font-size:9px;border-radius:3px;"
+                                                    :title="isExpanded(c.plan_pago_id) ? 'Ocultar cuotas' : 'Ver cuotas'"
+                                                >
+                                                    <i class="fas" :class="isExpanded(c.plan_pago_id) ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                                                </button>
+                                            </td>
+                                            <td class="fw-bold text-danger text-center">#{{ c.credito_id }}</td>
+                                            <td class="fw-bold text-uppercase">{{ c.cliente_nombre }}</td>
+                                            <td class="text-center">{{ c.cliente_ci }}</td>
+                                            <td class="text-uppercase" style="font-size:10px;">{{ c.asesor_nombre }}</td>
+                                            <td class="text-center">
+                                                <span class="badge bg-danger rounded-pill">{{ c.cuotas_mora_count }}</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span :class="badgeDias(c.dias_mora_max)">{{ c.dias_mora_max }} días</span>
+                                            </td>
+                                            <td class="text-end fw-bold text-primary">{{ formatMoney(c.saldo_pendiente) }}</td>
+                                            <td class="text-end">{{ formatMoney(c.total_capital_mora) }}</td>
+                                            <td class="text-end text-muted">{{ formatMoney(c.total_interes_mora) }}</td>
+                                            <td class="text-end text-danger">{{ formatMoney(c.total_multas_mora) }}</td>
+                                            <td class="text-end fw-bold text-danger">{{ formatMoney(c.total_cuota_mora) }}</td>
+                                        </tr>
+
+                                        <!-- Filas de cuotas en mora (misma tabla → columnas alineadas con el crédito) -->
+                                        <template v-if="isExpanded(c.plan_pago_id)">
+                                            <tr v-for="cuota in c.cuotas_mora" :key="cuota.id" class="cuota-row">
+                                                <td class="cuota-indent"></td>
+
+                                                <!-- Identificación de la cuota (ocupa Cód · Cliente · CI · Asesor · Cuotas) -->
+                                                <td colspan="5" class="text-start ps-4">
+                                                    <span class="text-danger me-1 fw-bold">↳</span>
+                                                    <span class="fw-bold">Cuota #{{ cuota.numero }}</span>
+                                                    <span class="text-muted mx-1">·</span>
+                                                    <span class="text-muted">vence {{ formatDate(cuota.fecha) }}</span>
+                                                    <span class="badge ms-2" :class="getEstadoCuota(cuota).clase" style="font-size:8.5px;">
+                                                        {{ getEstadoCuota(cuota).texto }}
+                                                    </span>
+                                                    <span class="text-muted ms-2" style="font-size:9px;">
+                                                        ({{ cuota.dias_transcurridos }} días transc.)
+                                                    </span>
+                                                </td>
+
+                                                <!-- Días Mora (alineado con "Días Mora" del crédito) -->
+                                                <td class="text-center">
+                                                    <span :class="badgeDias(cuota.dias_pasados)" style="font-size:9px;">
+                                                        {{ cuota.dias_pasados }} días
+                                                    </span>
+                                                </td>
+
+                                                <!-- Saldo Capital -->
+                                                <td class="text-end">{{ formatMoney(cuota.saldo_capital) }}</td>
+
+                                                <!-- Capital Pendiente (alineado con total del crédito) -->
+                                                <td class="text-end">
+                                                    <div>{{ formatMoney(cuota.capital_neto) }}</div>
+                                                    <div v-if="parseFloat(cuota.capital_pagado_total) > 0" class="text-success lh-1 mt-1" style="font-size:8.5px;">
+                                                        Pagado: {{ formatMoney(cuota.capital_pagado_total) }} ({{ cuota.porcentaje_capital_pagado }}%)
+                                                    </div>
+                                                </td>
+
+                                                <!-- Interés Pendiente (acumulado) con desglose devengado/moratorio -->
+                                                <td class="text-end">
+                                                    <div class="text-muted">{{ formatMoney(cuota.interes_acumulado_neto) }}</div>
+                                                    <div class="lh-1 mt-1" style="font-size:8.5px;">
+                                                        <span class="text-primary">Dev: {{ formatMoney(cuota.interes_devengado_neto) }}</span>
+                                                        <span class="text-danger ms-1">Mor: {{ formatMoney(cuota.interes_moratorio_neto) }}</span>
+                                                    </div>
+                                                    <div v-if="parseFloat(cuota.interes_pagado_total) > 0" class="text-success lh-1" style="font-size:8.5px;">
+                                                        Pagado: {{ formatMoney(cuota.interes_pagado_total) }}
+                                                    </div>
+                                                </td>
+
+                                                <!-- Mora (alineado con "Mora" del crédito) -->
+                                                <td class="text-end text-danger">
+                                                    <div>{{ formatMoney(cuota.mora_fija_neta) }}</div>
+                                                    <div v-if="parseFloat(cuota.mora_pagada_total) > 0" class="text-success lh-1 mt-1" style="font-size:8.5px;">
+                                                        Pagado: {{ formatMoney(cuota.mora_pagada_total) }}
+                                                    </div>
+                                                </td>
+
+                                                <!-- Total a Pagar (alineado con "Total Deuda Mora" del crédito) -->
+                                                <td class="text-end fw-bold text-danger">{{ formatMoney(cuota.total_a_pagar) }}</td>
+                                            </tr>
+                                        </template>
+                                    </template>
+
+                                    <!-- Fila vacía -->
+                                    <tr v-if="creditos.length === 0 && !preloader">
+                                        <td colspan="12" class="text-center text-muted py-5">
+                                            <i class="fas fa-check-circle fa-3x mb-2 text-success d-block"></i>
+                                            No se encontraron créditos en mora con los filtros seleccionados.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
                     </div>
-
                 </div>
-                <!-- end page-content-wrapper-->
-            </div>
-            <!-- Container-fluid -->
 
-            
+            </div>
         </div>
-        
-      
     </main>
 </template>
 
 <script>
-    import moment from 'moment';
-    import Swal from 'sweetalert2'
+import moment from 'moment';
+import Swal from 'sweetalert2';
+import debounce from 'lodash/debounce';
 
-
-    export default {
-        data() {
-            return {
-
-
-                cliente: {
-                    id: 0,
-                    nombre: '',
-                    fecha_nacimiento: '',
-                    ci: '',
-                    lugar_expedicion: '',
-                    buscar: '',
-                },
-                id_cliente:0,
-                isVisibleCliente: false,
-                items_cliente: [],  // Lista de clientes obtenida desde la base de datos
-                items_creditos:[],
-              
-                preloader:false,
-                vista:0,
-
-
-                fecha_fin:moment().format('YYYY-MM-DD'),
-  
-
-            }
+export default {
+    data() {
+        return {
+            preloader: false,
+            creditos: [],
+            asesores: [],
+            expandedRows: {},
+            filtros: {
+                id_credito:    '',
+                buscar_cliente: '',
+                id_asesor:     '',
+                dias_mora_min: '',
+            },
+        };
+    },
+    computed: {
+        totalCuotasMora() {
+            return this.creditos.reduce((s, c) => s + (parseInt(c.cuotas_mora_count) || 0), 0);
         },
-        computed:{
-            filteredItemsCliente() {
-                const searchTermLower = this.cliente.ci.toLowerCase();  // Utilizamos 'ci' como el campo de búsqueda, pero puedes modificarlo
-                return this.items_cliente.filter(item => 
-                    item.ci.toLowerCase().includes(searchTermLower) || 
-                    item.nombre.toLowerCase().includes(searchTermLower)
-                );
-            }
+        totalCapitalMora() {
+            return this.creditos.reduce((s, c) => s + (parseFloat(c.total_capital_mora) || 0), 0);
         },
-        methods: {
-            generarReporteCreditosMora(){
-                
-
-                // Construye la URL con el parámetro fecha_inicio
-                const url = '/rep_creditos_mora?fecha_fin='+this.fecha_fin;
-
-                // Abre una nueva pestaña o ventana con la URL
-                window.open(url, '_blank');
-            },
-            generarPdfCuotasPlanPago(id_plan_pago){
-                // Construye la URL con el parámetro fecha_inicio
-                const url = '/rep_extracto_credito?id_plan_pago='+id_plan_pago;
-
-                // Abre una nueva pestaña o ventana con la URL
-                window.open(url, '_blank');
-            },
-            limpiar(){
-                this.limpiarInputCliente();
-                this.id_cliente=0;
-                this.items_creditos=[];
-            },
-
-            limpiarInputCliente(){
-
-                this.cliente= {
-                    id: 0,
-                    nombre: '',
-                    fecha_nacimiento: '',
-                    ci: '',
-                    lugar_expedicion: '',
-                    buscar: '',
-                };
-                
-            },
-            async seleccionarCliente(cliente) {
-                this.preloader=true;
-                this.cliente = {
-                    ...this.cliente,
-                    buscar: cliente.nombre + ' - ' + cliente.ci,
-                    id: cliente.id,
-                    fecha_nacimiento: cliente.fecha_nacimiento,
-                    lugar_expedicion: cliente.lugar_expedicion
-                };
-                this.isVisibleCliente = false;  // Ocultar el dropdown después de la selección
-                this.id_cliente=cliente.id;
-                await this.getCreditos();
-                this.preloader=false;
-
-            },
-   
-            async getClientes(){
-                await axios.get('/get_clientes_rep').then((response)=>{
-                    this.items_cliente=response.data;
-                    console.log(response.data);
-                })
-                .catch((error)=>{
-                    console.log(error.message);
-                })
-            },
-
-            async getCreditos(){
-                await axios.get('/get_creditos_rep?id_cliente='+this.id_cliente).then((response)=>{
-                    this.items_creditos=response.data;
-                    console.log(response.data);
-                })
-                .catch((error)=>{
-                    console.log(error.message);
-                })
-            },
-
+        totalDeudaMora() {
+            return this.creditos.reduce((s, c) => s + (parseFloat(c.total_cuota_mora) || 0), 0);
         },
-        async mounted() {
+    },
+    methods: {
+        getCreditosMora: debounce(async function () {
             this.preloader = true;
-            console.log('Component mounted.');
-            await this.getClientes();
-            this.preloader=false;
-        }
+            try {
+                const response = await axios.get('/get_creditos_mora_rep', { params: this.filtros });
+                this.creditos = response.data;
+            } catch (error) {
+                console.error(error);
+                Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo cargar el reporte de mora.' });
+            } finally {
+                this.preloader = false;
+            }
+        }, 400),
 
+        async getAsesores() {
+            try {
+                const { data } = await axios.get('/get_asesores');
+                this.asesores = data;
+            } catch (e) {
+                console.error(e);
+            }
+        },
 
-    }
+        limpiarFiltros() {
+            this.filtros = { id_credito: '', buscar_cliente: '', id_asesor: '', dias_mora_min: '' };
+            this.expandedRows = {};
+            this.getCreditosMora();
+        },
 
+        exportarPdf() {
+            const params = new URLSearchParams(this.filtros).toString();
+            window.open('/exportar_creditos_mora_pdf?' + params, '_blank');
+        },
+
+        exportarExcel() {
+            const params = new URLSearchParams(this.filtros).toString();
+            window.open('/exportar_creditos_mora_excel?' + params, '_blank');
+        },
+
+        toggleExpand(planPagoId) {
+            this.expandedRows = {
+                ...this.expandedRows,
+                [planPagoId]: !this.expandedRows[planPagoId],
+            };
+        },
+
+        isExpanded(planPagoId) {
+            return !!this.expandedRows[planPagoId];
+        },
+
+        badgeDias(dias) {
+            if (dias >= 90)  return 'badge bg-danger';
+            if (dias >= 30)  return 'badge bg-warning text-dark';
+            return 'badge bg-secondary';
+        },
+
+        getEstadoCuota(cuota) {
+            // Todas las cuotas de este reporte están vencidas (fecha < hoy)
+            if (cuota.estado === 3) {
+                return { texto: 'Pago Parcial', clase: 'bg-warning text-dark border border-warning' };
+            }
+            return { texto: 'Vencida', clase: 'bg-danger text-white' };
+        },
+
+        formatMoney(value) {
+            if (value === null || value === undefined) return '-';
+            return new Intl.NumberFormat('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value) + ' Bs.';
+        },
+
+        formatDate(date) {
+            if (!date) return '-';
+            return moment(date).format('DD/MM/YYYY');
+        },
+    },
+    async mounted() {
+        await Promise.all([this.getCreditosMora(), this.getAsesores()]);
+    },
+};
 </script>
-
-<style>
-.image-container {
-    width: 100%;
-    height: auto;
-    margin-bottom:1rem;
-}
-.image-container img {
-    width: 100%;
-    height: auto;
-    max-width: 100%; /* Evita que la imagen se estire más allá de su tamaño natural */
-}
-
-</style>
 
 <style scoped>
 .preloader {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.4); display: flex;
+    justify-content: center; align-items: center; z-index: 99999;
+}
+.table-compact th, .table-compact td {
+    padding: 3px 5px !important;
+    vertical-align: middle !important;
+    font-size: 10.5px !important;
+}
+.table-compact th { font-weight: 700 !important; font-size: 10px !important; }
+.border-start-3 { border-left-width: 3px !important; }
+.btn-xs { padding: 3px 8px !important; font-size: 10.5px !important; border-radius: 4px !important; }
+
+/* Gradients para los totalizadores */
+.bg-primary-gradient {
+    background: linear-gradient(135deg, #1e3a8a, #3b82f6) !important;
+}
+.bg-warning-gradient {
+    background: linear-gradient(135deg, #d97706, #f59e0b) !important;
+}
+.bg-success-gradient {
+    background: linear-gradient(135deg, #065f46, #10b981) !important;
+}
+.bg-danger-gradient {
+    background: linear-gradient(135deg, #7f1d1d, #ef4444) !important;
 }
 
-.spinner {
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #3498db;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
+.totalizer-card {
+    border-radius: 6px;
+    transition: transform 0.2s ease-in-out;
+}
+.totalizer-card:hover {
+    transform: translateY(-2px);
+}
+.totalizer-label {
+    font-size: 8.5px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    opacity: 0.85;
+}
+.totalizer-val {
+    font-size: 14px !important;
+    letter-spacing: 0.2px;
+}
+.bg-white-opacity-20 {
+    background-color: rgba(255, 255, 255, 0.2);
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+/* Filas de detalle de cuotas en mora (dentro de la tabla principal) */
+.cuota-row td {
+    background-color: #fff7f7 !important;
+    border-bottom: 1px solid #fde2e2 !important;
+    font-size: 10px !important;
+    vertical-align: middle !important;
 }
-
-p {
-  color: white;
-  margin-top: 10px;
+/* Barra lateral que agrupa visualmente las cuotas bajo su crédito */
+.cuota-row .cuota-indent {
+    border-left: 3px solid #dc3545 !important;
 }
-</style>
-
-<style>
-
-
-/* Estilo general del dropdown y su contenedor */
-.dropdown-wrapper {
-    background-color: #f8f9fa;
-    border-radius: 0.375rem;
-    transition: background-color 0.3s ease-in-out;
-}
-
-.dropdown-wrapper:hover {
-    background-color: #e9ecef;
-}
-
-/* Estilo del elemento seleccionado */
-.selected-item {
-    border-radius: 0.375rem;
-    background-color: #ffffff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    transition: background-color 0.3s ease;
-}
-
-.selected-item:hover {
-    background-color: #f1f3f5;
-}
-
-/* Estilo del dropdown cuando está visible o invisible */
-.dropdown-popover {
-    background-color: white;
-    border-radius: 0.375rem;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-    max-height: 250px;
-    overflow-y: auto;
-    transition: all 0.3s ease-in-out;
-}
-
-.dropdown-popover.visible {
-    display: block;
-}
-
-.dropdown-popover.invisible {
-    display: none;
-}
-
-/* Estilo del campo de entrada (input) */
-.form-control-sm {
-    border: none;
-    padding: 0.5rem;
-    font-size: 14px;
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #ced4da;
-    transition: background-color 0.3s ease-in-out;
-}
-
-.form-control-sm:focus {
-    background-color: #ffffff;
-    outline: none;
-}
-
-/* Estilo de los elementos de la lista (li) */
-.list-group-item {
-    padding: 0.5rem 1rem;
-    transition: background-color 0.2s ease-in-out;
-}
-
-.list-group-item:hover {
-    background-color: #f1f3f5;
-}
-
-/* Estilo del mensaje de lista vacía */
-.text-muted {
-    font-size: 13px;
-}
-
-/* Estilo de los resultados */
-.fw-bold {
-    font-weight: 600;
+.cuota-row .badge {
+    min-width: auto !important;
 }
 </style>

@@ -23,14 +23,14 @@
                                 <button @click="cambiarTab('FLUJO_CAJA')"
                                         :class="['nav-link px-4 fw-bold text-uppercase', tabActivo === 'FLUJO_CAJA' ? 'active' : '']"
                                         type="button">
-                                    <i class="fas fa-stream me-2"></i> Flujo de Caja
+                                    Flujo de Caja
                                 </button>
                             </li>
                             <li class="nav-item mx-1">
                                 <button @click="cambiarTab('LIBRO_DIARIO')"
                                         :class="['nav-link px-4 fw-bold text-uppercase', tabActivo === 'LIBRO_DIARIO' ? 'active' : '']"
                                         type="button">
-                                    <i class="fas fa-arrow-circle-down me-2"></i> Libro Diario
+                                    Libro Diario
                                 </button>
                             </li>
                         </ul>
@@ -44,26 +44,26 @@
                             <div v-show="tabActivo === 'FLUJO_CAJA'">
 
                                 <!-- Filtros -->
-                                <div class="row mb-3 g-2 align-items-end">
+                                <div class="row mb-2 g-2 align-items-end">
                                     <div class="col-md-2">
-                                        <label class="form-label small fw-bold text-muted mb-1">Tipo de Libro</label>
-                                        <select v-model="filtrosCaja.tipo_libro" class="form-select shadow-sm border-0" @change="buscarCaja()">
+                                        <label class="form-label small fw-bold text-muted mb-1" style="font-size: 0.75rem;">Tipo de Libro</label>
+                                        <select v-model="filtrosCaja.tipo_libro" class="form-select form-select-sm shadow-sm border-0" @change="buscarCaja()">
                                             <option value="GENERAL">Libro General</option>
                                             <option value="OPERATIVO">Libro Operativo (Caja)</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label small fw-bold text-muted mb-1">Rango de Fechas</label>
-                                        <div class="input-group shadow-sm">
-                                            <span class="input-group-text bg-white text-muted fw-bold" style="font-size:11px;">DESDE</span>
-                                            <input type="date" @change="buscarCaja()" v-model="filtrosCaja.fecha_inicio" class="form-control border-start-0">
-                                            <span class="input-group-text bg-white text-muted fw-bold border-start-0" style="font-size:11px;">HASTA</span>
-                                            <input type="date" @change="buscarCaja()" v-model="filtrosCaja.fecha_final" class="form-control border-start-0">
+                                    <div class="col-md-3">
+                                        <label class="form-label small fw-bold text-muted mb-1" style="font-size: 0.75rem;">Rango de Fechas</label>
+                                        <div class="input-group input-group-sm shadow-sm">
+                                            <span class="input-group-text bg-white text-muted fw-bold" style="font-size: 9px; padding: 0.25rem 0.5rem;">DESDE</span>
+                                            <input type="date" @change="buscarCaja()" v-model="filtrosCaja.fecha_inicio" class="form-control form-control-sm border-start-0" style="padding: 0.25rem 0.4rem; font-size: 0.8rem;">
+                                            <span class="input-group-text bg-white text-muted fw-bold border-start-0" style="font-size: 9px; padding: 0.25rem 0.5rem;">HASTA</span>
+                                            <input type="date" @change="buscarCaja()" v-model="filtrosCaja.fecha_final" class="form-control form-control-sm border-start-0" style="padding: 0.25rem 0.4rem; font-size: 0.8rem;">
                                         </div>
                                     </div>
                                     <div class="col-md-2">
-                                        <label class="form-label small fw-bold text-muted mb-1">Tipo de Movimiento</label>
-                                        <select v-model="filtrosCaja.tipo" class="form-select shadow-sm border-0" @change="buscarCaja()">
+                                        <label class="form-label small fw-bold text-muted mb-1" style="font-size: 0.75rem;">Tipo de Movimiento</label>
+                                        <select v-model="filtrosCaja.tipo" class="form-select form-select-sm shadow-sm border-0" @change="buscarCaja()">
                                             <option value="TODOS">Todos</option>
                                             <option value="CAPITAL"       v-if="filtrosCaja.tipo_libro === 'GENERAL'">Pago de Capital</option>
                                             <option value="INTERES">Pago de Interés</option>
@@ -77,20 +77,20 @@
                                         </select>
                                     </div>
                                     <div class="col-md-2">
-                                        <label class="form-label small fw-bold text-muted mb-1">Buscar (Descripción)</label>
+                                        <label class="form-label small fw-bold text-muted mb-1" style="font-size: 0.75rem;">Buscar (Descripción)</label>
                                         <input v-model="filtrosCaja.buscar" @keyup.enter="buscarCaja()" type="text"
-                                               class="form-control shadow-sm border-0" placeholder="Ej: CREDITO: 5034" />
+                                               class="form-control form-control-sm shadow-sm border-0" placeholder="Ej: CREDITO: 5034" />
                                     </div>
                                     <div class="col-md-1">
-                                        <button class="btn btn-success w-100 shadow-sm fw-bold" @click="buscarCaja()">
+                                        <button class="btn btn-success btn-sm w-100 shadow-sm fw-bold" @click="buscarCaja()">
                                             <i class="fas fa-search"></i>
                                         </button>
                                     </div>
-                                    <div class="col-md-1 d-flex gap-1 justify-content-end">
-                                        <button @click="exportarCaja()" class="btn btn-success btn-sm shadow-sm fw-bold" title="Exportar Excel">
+                                    <div class="col-md-2 d-flex gap-1 justify-content-end">
+                                        <button @click="exportarCaja()" class="btn btn-success btn-sm shadow-sm fw-bold w-50" title="Exportar Excel">
                                             <i class="fas fa-file-excel"></i>
                                         </button>
-                                        <button @click="imprimirCaja()" class="btn btn-warning btn-sm shadow-sm fw-bold" title="Imprimir PDF">
+                                        <button @click="imprimirCaja()" class="btn btn-warning btn-sm shadow-sm fw-bold w-50" title="Imprimir PDF">
                                             <i class="fas fa-print"></i>
                                         </button>
                                     </div>
@@ -99,30 +99,52 @@
                                 <!-- Tabla Flujo de Caja -->
                                 <div class="table-responsive">
                                     <table class="table table-sm table-bordered table-hover align-middle ledger-table mb-0 table-striped">
-                                        <thead class="table-primary text-center align-middle">
+                                        <thead class="header-flujo text-center align-middle">
                                             <tr>
                                                 <th width="4%">Nro</th>
                                                 <th width="9%">Fecha</th>
                                                 <th width="12%" class="text-start ps-2">Tipo</th>
                                                 <th class="text-start ps-2">Descripción</th>
-                                                <th width="11%" class="text-success bg-success bg-opacity-10">Debe (Bs)</th>
-                                                <th width="11%" class="text-danger bg-danger bg-opacity-10">Haber (Bs)</th>
-                                                <th width="13%" class="bg-warning bg-opacity-25 fw-bold">Capital Total</th>
+                                                <th width="11%">Debe (Bs)</th>
+                                                <th width="11%">Haber (Bs)</th>
+                                                <th width="13%">Capital Total</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr v-for="item in movimientosCaja" :key="item.nro">
+                                            <!-- Saldo de apertura del periodo (solo en la primera página) -->
+                                            <tr v-if="movimientosCaja.length > 0 && paginacionCaja.current_page === 1" class="fila-saldo-anterior">
+                                                <td></td>
+                                                <td class="text-center fw-semibold text-muted">{{ filtrosCaja.fecha_inicio }}</td>
+                                                <td colspan="3" class="ps-2 fst-italic text-muted text-uppercase" style="font-size:0.72rem;">
+                                                    <i class="fas fa-flag-checkered me-1"></i> Saldo Anterior (apertura del periodo)
+                                                </td>
+                                                <td class="text-end col-saldo fw-bold">{{ formatNumero(saldoAnteriorCaja) }}</td>
+                                            </tr>
+                                            <tr v-for="item in movimientosCaja" :key="item.nro"
+                                                :class="{ 'fila-transfer': item.tipo === 'TRANSFER_INTERNO' }">
                                                 <td class="text-center text-muted">{{ item.nro }}</td>
-                                                <td class="text-center">{{ item.fecha }}</td>
+                                                <td class="text-center fw-semibold text-dark">{{ item.fecha }}</td>
                                                 <td class="text-start fw-bold text-secondary ps-2" style="font-size:0.7rem;">{{ item.tipo }}</td>
-                                                <td class="ps-2 text-dark text-uppercase" style="font-size:0.75rem;">{{ item.descripcion }}</td>
-                                                <td class="text-end fw-semibold text-success bg-success bg-opacity-10">
+                                                <td class="ps-2 text-dark text-uppercase fw-semibold" style="font-size:0.75rem;">
+                                                    {{ item.descripcion }}
+                                                    <span v-if="item.tipo === 'TRANSFER_INTERNO'" class="badge bg-secondary ms-1" style="font-size:0.6rem;" title="Movimiento interno bóveda↔caja: no altera el capital total">
+                                                        <i class="fas fa-exchange-alt"></i> Neto cero
+                                                    </span>
+                                                    <button v-if="item.id_plan_pago"
+                                                            class="btn btn-link btn-sm p-0 ms-1 align-baseline text-primary"
+                                                            style="font-size:0.75rem;"
+                                                            title="Ver información del crédito asociado"
+                                                            @click="verCredito(item.id_plan_pago)">
+                                                        <i class="fas fa-info-circle"></i>
+                                                    </button>
+                                                </td>
+                                                <td class="text-end col-debe">
                                                     {{ item.debe > 0 ? formatNumero(item.debe) : '' }}
                                                 </td>
-                                                <td class="text-end fw-semibold text-danger bg-danger bg-opacity-10">
+                                                <td class="text-end col-haber">
                                                     {{ item.haber > 0 ? formatNumero(item.haber) : '' }}
                                                 </td>
-                                                <td class="text-end fw-bold bg-warning bg-opacity-25">
+                                                <td class="text-end col-saldo">
                                                     {{ formatNumero(item.saldo) }}
                                                 </td>
                                             </tr>
@@ -133,19 +155,25 @@
                                                 </td>
                                             </tr>
                                         </tbody>
-                                        <tfoot class="table-secondary fw-bold text-dark">
+                                        <tfoot class="fw-bold text-dark">
                                             <tr>
-                                                <td colspan="4" class="text-end pe-3">TOTAL DEL PERIODO:</td>
-                                                <td class="text-end text-success">{{ formatNumero(totalIngresosCaja) }}</td>
-                                                <td class="text-end text-danger">{{ formatNumero(totalEgresosCaja) }}</td>
-                                                <td class="text-end text-muted" style="font-size:0.7rem;">excl. transf. internas</td>
+                                                <td colspan="4" class="text-end pe-3 bg-light">TOTAL DEL PERIODO:</td>
+                                                <td class="text-end col-debe-total">{{ formatNumero(totalIngresosCaja) }}</td>
+                                                <td class="text-end col-haber-total">{{ formatNumero(totalEgresosCaja) }}</td>
+                                                <td class="text-end col-saldo-total">{{ formatNumero(saldoFinalCaja) }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="6" class="text-end pe-3 text-muted" style="font-size:0.7rem;">
+                                                    Saldo Anterior {{ formatNumero(saldoAnteriorCaja) }} + Debe − Haber = Saldo Final &nbsp;·&nbsp; (totales excl. transferencias internas)
+                                                </td>
+                                                <td class="text-end col-saldo-total" style="font-size:0.7rem;">SALDO FINAL</td>
                                             </tr>
                                         </tfoot>
                                     </table>
                                 </div>
 
                                 <!-- Capital Total (último asiento) -->
-                                <div class="d-flex justify-content-end mt-3">
+                                <div class="d-flex justify-content-end mt-2">
                                     <div class="card border-0 shadow rounded-3 bg-dark text-white" style="min-width:340px;">
                                         <div class="card-body py-2 px-4 d-flex justify-content-between align-items-center gap-4">
                                             <div>
@@ -165,26 +193,26 @@
                                 </div>
 
                                 <!-- Paginación Flujo de Caja -->
-                                <div class="d-flex justify-content-between align-items-center mt-3" v-if="paginacionCaja.last_page > 1">
-                                    <span class="text-muted small">
-                                        Página {{ paginacionCaja.current_page }} de {{ paginacionCaja.last_page }}
-                                        ({{ paginacionCaja.total }} registros)
-                                    </span>
-                                    <nav>
-                                        <ul class="pagination shadow-sm mb-0">
-                                            <li class="page-item" :class="{disabled: paginacionCaja.current_page <= 1}">
-                                                <a class="page-link" href="#" @click.prevent="cambiarPaginaCaja(paginacionCaja.current_page - 1)">Anterior</a>
-                                            </li>
-                                            <li class="page-item" v-for="page in pagesNumberCaja" :key="page"
-                                                :class="{active: page == paginacionCaja.current_page}">
-                                                <a class="page-link" href="#" @click.prevent="cambiarPaginaCaja(page)">{{ page }}</a>
-                                            </li>
-                                            <li class="page-item" :class="{disabled: paginacionCaja.current_page >= paginacionCaja.last_page}">
-                                                <a class="page-link" href="#" @click.prevent="cambiarPaginaCaja(paginacionCaja.current_page + 1)">Siguiente</a>
-                                            </li>
-                                        </ul>
-                                    </nav>
-                                </div>
+                                <div class="d-flex justify-content-between align-items-center mt-2" v-if="paginacionCaja.last_page > 1">
+                                     <span class="text-muted small" style="font-size: 0.75rem;">
+                                         Página {{ paginacionCaja.current_page }} de {{ paginacionCaja.last_page }}
+                                         ({{ paginacionCaja.total }} registros)
+                                     </span>
+                                     <nav>
+                                         <ul class="pagination pagination-sm shadow-sm mb-0">
+                                             <li class="page-item" :class="{disabled: paginacionCaja.current_page <= 1}">
+                                                 <a class="page-link" href="#" @click.prevent="cambiarPaginaCaja(paginacionCaja.current_page - 1)">Ant</a>
+                                             </li>
+                                             <li class="page-item" v-for="page in pagesNumberCaja" :key="page"
+                                                 :class="{active: page == paginacionCaja.current_page}">
+                                                 <a class="page-link" href="#" @click.prevent="cambiarPaginaCaja(page)">{{ page }}</a>
+                                             </li>
+                                             <li class="page-item" :class="{disabled: paginacionCaja.current_page >= paginacionCaja.last_page}">
+                                                 <a class="page-link" href="#" @click.prevent="cambiarPaginaCaja(paginacionCaja.current_page + 1)">Sig</a>
+                                             </li>
+                                         </ul>
+                                     </nav>
+                                 </div>
                             </div>
 
                             <!-- ================================================ -->
@@ -194,19 +222,19 @@
                             <div v-show="tabActivo === 'LIBRO_DIARIO'">
 
                                 <!-- Filtros Libro Diario -->
-                                <div class="row mb-3 g-2 align-items-end">
-                                    <div class="col-md-4">
-                                        <label class="form-label small fw-bold text-muted mb-1">Rango de Fechas</label>
-                                        <div class="input-group shadow-sm">
-                                            <span class="input-group-text bg-white text-muted fw-bold" style="font-size:11px;">DESDE</span>
-                                            <input type="date" @change="buscarDiario()" v-model="filtrosDiario.fecha_inicio" class="form-control border-start-0">
-                                            <span class="input-group-text bg-white text-muted fw-bold border-start-0" style="font-size:11px;">HASTA</span>
-                                            <input type="date" @change="buscarDiario()" v-model="filtrosDiario.fecha_final" class="form-control border-start-0">
+                                <div class="row mb-2 g-2 align-items-end">
+                                    <div class="col-md-3">
+                                        <label class="form-label small fw-bold text-muted mb-1" style="font-size: 0.75rem;">Rango de Fechas</label>
+                                        <div class="input-group input-group-sm shadow-sm">
+                                            <span class="input-group-text bg-white text-muted fw-bold" style="font-size: 9px; padding: 0.25rem 0.5rem;">DESDE</span>
+                                            <input type="date" @change="buscarDiario()" v-model="filtrosDiario.fecha_inicio" class="form-control form-control-sm border-start-0" style="padding: 0.25rem 0.4rem; font-size: 0.8rem;">
+                                            <span class="input-group-text bg-white text-muted fw-bold border-start-0" style="font-size: 9px; padding: 0.25rem 0.5rem;">HASTA</span>
+                                            <input type="date" @change="buscarDiario()" v-model="filtrosDiario.fecha_final" class="form-control form-control-sm border-start-0" style="padding: 0.25rem 0.4rem; font-size: 0.8rem;">
                                         </div>
                                     </div>
                                     <div class="col-md-3">
-                                        <label class="form-label small fw-bold text-muted mb-1">Tipo de Ingreso</label>
-                                        <select v-model="filtrosDiario.tipo" class="form-select shadow-sm border-0" @change="buscarDiario()">
+                                        <label class="form-label small fw-bold text-muted mb-1" style="font-size: 0.75rem;">Tipo de Ingreso</label>
+                                        <select v-model="filtrosDiario.tipo" class="form-select form-select-sm shadow-sm border-0" @change="buscarDiario()">
                                             <option value="TODOS">Todos los ingresos</option>
                                             <option value="INTERES">Pago de Interés</option>
                                             <option value="MORA">Multas / Mora</option>
@@ -215,20 +243,20 @@
                                         </select>
                                     </div>
                                     <div class="col-md-3">
-                                        <label class="form-label small fw-bold text-muted mb-1">Buscar (Descripción)</label>
+                                        <label class="form-label small fw-bold text-muted mb-1" style="font-size: 0.75rem;">Buscar (Descripción)</label>
                                         <input v-model="filtrosDiario.buscar" @keyup.enter="buscarDiario()" type="text"
-                                               class="form-control shadow-sm border-0" placeholder="Descripción..." />
+                                               class="form-control form-control-sm shadow-sm border-0" placeholder="Descripción..." />
                                     </div>
                                     <div class="col-md-1">
-                                        <button class="btn btn-success w-100 shadow-sm fw-bold" @click="buscarDiario()">
+                                        <button class="btn btn-success btn-sm w-100 shadow-sm fw-bold" @click="buscarDiario()">
                                             <i class="fas fa-search"></i>
                                         </button>
                                     </div>
-                                    <div class="col-md-1 d-flex gap-1 justify-content-end">
-                                        <button @click="exportarDiario()" class="btn btn-success btn-sm shadow-sm fw-bold" title="Exportar Excel">
+                                    <div class="col-md-2 d-flex gap-1 justify-content-end">
+                                        <button @click="exportarDiario()" class="btn btn-success btn-sm shadow-sm fw-bold w-50" title="Exportar Excel">
                                             <i class="fas fa-file-excel"></i>
                                         </button>
-                                        <button @click="imprimirDiario()" class="btn btn-warning btn-sm shadow-sm fw-bold" title="Imprimir PDF">
+                                        <button @click="imprimirDiario()" class="btn btn-warning btn-sm shadow-sm fw-bold w-50" title="Imprimir PDF">
                                             <i class="fas fa-print"></i>
                                         </button>
                                     </div>
@@ -237,53 +265,57 @@
                                 <!-- Tabla Libro Diario -->
                                 <div class="table-responsive">
                                     <table class="table table-sm table-bordered table-hover align-middle ledger-table mb-0 table-striped">
-                                        <thead class="table-success text-center align-middle">
+                                        <thead class="header-diario text-center align-middle" style="font-size: 0.75rem;">
                                             <tr>
                                                 <th width="4%">Nro</th>
                                                 <th width="9%">Fecha</th>
-                                                <th width="13%" class="text-start ps-2">Tipo de Ingreso</th>
+                                                <th width="14%" class="text-start ps-2">Tipo de Ingreso</th>
                                                 <th class="text-start ps-2">Detalle / Descripción</th>
-                                                <th width="12%" class="text-success bg-success bg-opacity-10">Debe (Bs)</th>
-                                                <th width="12%" class="text-danger bg-danger bg-opacity-10">Haber (Bs)</th>
-                                                <th width="13%" class="bg-warning bg-opacity-25 fw-bold">Total Acum. (Bs)</th>
+                                                <th width="14%">Ingreso (Bs)</th>
+                                                <th width="16%">Acumulado Ingresos (Bs)</th>
                                             </tr>
                                         </thead>
-                                        <tbody>
+                                        <tbody style="font-size: 0.75rem;">
                                             <tr v-for="item in ingresosDiarioPaginados" :key="'ing_' + item.nro">
                                                 <td class="text-center text-muted">{{ item.nro }}</td>
-                                                <td class="text-center">{{ item.fecha }}</td>
-                                                <td class="text-start fw-bold text-dark ps-2" style="font-size:0.7rem;">{{ item.tipo }}</td>
-                                                <td class="ps-2 text-dark text-uppercase" style="font-size:0.75rem;">{{ item.descripcion }}</td>
-                                                <td class="text-end fw-semibold text-success bg-success bg-opacity-10">
+                                                <td class="text-center fw-semibold text-dark">{{ item.fecha }}</td>
+                                                <td class="text-start fw-bold text-secondary ps-2">{{ item.tipo }}</td>
+                                                <td class="ps-2 text-dark text-uppercase fw-semibold">
+                                                    {{ item.descripcion }}
+                                                    <button v-if="item.id_plan_pago"
+                                                            class="btn btn-link btn-sm p-0 ms-1 align-baseline text-primary"
+                                                            style="font-size:0.75rem;"
+                                                            title="Ver información del crédito asociado"
+                                                            @click="verCredito(item.id_plan_pago)">
+                                                        <i class="fas fa-info-circle"></i>
+                                                    </button>
+                                                </td>
+                                                <td class="text-end col-debe">
                                                     {{ item.debe > 0 ? formatNumero(item.debe) : '' }}
                                                 </td>
-                                                <td class="text-end fw-semibold text-danger bg-danger bg-opacity-10">
-                                                    {{ item.haber > 0 ? formatNumero(item.haber) : '' }}
-                                                </td>
-                                                <td class="text-end fw-bold bg-warning bg-opacity-25">
+                                                <td class="text-end col-saldo">
                                                     {{ formatNumero(item.totalAcumulado) }}
                                                 </td>
                                             </tr>
                                             <tr v-if="ingresosDiario.length === 0">
-                                                <td colspan="7" class="text-center py-5 text-muted fst-italic">
+                                                <td colspan="6" class="text-center py-5 text-muted fst-italic">
                                                     <i class="fas fa-folder-open fa-2x d-block mb-2 opacity-25"></i>
                                                     No hay ingresos en el período seleccionado.
                                                 </td>
                                             </tr>
                                         </tbody>
-                                        <tfoot class="table-success fw-bold text-dark">
+                                        <tfoot class="fw-bold text-dark" style="font-size: 0.75rem;">
                                             <tr>
-                                                <td colspan="4" class="text-end pe-3">TOTAL INGRESOS DEL PERIODO:</td>
-                                                <td class="text-end fs-6">{{ formatNumero(totalIngresosDiario) }}</td>
-                                                <td></td>
-                                                <td class="text-end fs-6 bg-warning bg-opacity-25">{{ formatNumero(totalIngresosDiario) }}</td>
+                                                <td colspan="4" class="text-end pe-3 bg-light">TOTAL INGRESOS DEL PERIODO:</td>
+                                                <td class="text-end col-debe-total">{{ formatNumero(totalIngresosDiario) }}</td>
+                                                <td class="text-end col-saldo-total">{{ formatNumero(totalIngresosDiario) }}</td>
                                             </tr>
                                         </tfoot>
                                     </table>
                                 </div>
 
                                 <!-- Capital Total (Libro Diario) -->
-                                <div class="d-flex justify-content-end mt-3">
+                                <div class="d-flex justify-content-end mt-2">
                                     <div class="card border-0 shadow rounded-3 bg-dark text-white" style="min-width:340px;">
                                         <div class="card-body py-2 px-4 d-flex justify-content-between align-items-center gap-4">
                                             <div>
@@ -303,31 +335,135 @@
                                 </div>
 
                                 <!-- Paginación Libro Diario (client-side) -->
-                                <div class="d-flex justify-content-between align-items-center mt-3" v-if="paginacionDiario.last_page > 1">
-                                    <span class="text-muted small">
-                                        Página {{ paginacionDiario.current_page }} de {{ paginacionDiario.last_page }}
-                                        ({{ paginacionDiario.total }} registros)
-                                    </span>
-                                    <nav>
-                                        <ul class="pagination shadow-sm mb-0">
-                                            <li class="page-item" :class="{disabled: paginacionDiario.current_page <= 1}">
-                                                <a class="page-link" href="#" @click.prevent="cambiarPaginaDiario(paginacionDiario.current_page - 1)">Anterior</a>
-                                            </li>
-                                            <li class="page-item" v-for="page in pagesNumberDiario" :key="page"
-                                                :class="{active: page == paginacionDiario.current_page}">
-                                                <a class="page-link" href="#" @click.prevent="cambiarPaginaDiario(page)">{{ page }}</a>
-                                            </li>
-                                            <li class="page-item" :class="{disabled: paginacionDiario.current_page >= paginacionDiario.last_page}">
-                                                <a class="page-link" href="#" @click.prevent="cambiarPaginaDiario(paginacionDiario.current_page + 1)">Siguiente</a>
-                                            </li>
-                                        </ul>
-                                    </nav>
-                                </div>
+                                <div class="d-flex justify-content-between align-items-center mt-2" v-if="paginacionDiario.last_page > 1">
+                                     <span class="text-muted small" style="font-size: 0.75rem;">
+                                         Página {{ paginacionDiario.current_page }} de {{ paginacionDiario.last_page }}
+                                         ({{ paginacionDiario.total }} registros)
+                                     </span>
+                                     <nav>
+                                         <ul class="pagination pagination-sm shadow-sm mb-0">
+                                             <li class="page-item" :class="{disabled: paginacionDiario.current_page <= 1}">
+                                                 <a class="page-link" href="#" @click.prevent="cambiarPaginaDiario(paginacionDiario.current_page - 1)">Ant</a>
+                                             </li>
+                                             <li class="page-item" v-for="page in pagesNumberDiario" :key="page"
+                                                 :class="{active: page == paginacionDiario.current_page}">
+                                                 <a class="page-link" href="#" @click.prevent="cambiarPaginaDiario(page)">{{ page }}</a>
+                                             </li>
+                                             <li class="page-item" :class="{disabled: paginacionDiario.current_page >= paginacionDiario.last_page}">
+                                                 <a class="page-link" href="#" @click.prevent="cambiarPaginaDiario(paginacionDiario.current_page + 1)">Sig</a>
+                                             </li>
+                                         </ul>
+                                     </nav>
+                                 </div>
                             </div>
 
                         </div><!-- /tab-content -->
                     </div><!-- /card-body -->
                 </div><!-- /card -->
+            </div>
+        </div>
+
+        <!-- ================================================ -->
+        <!-- MODAL: INFORMACIÓN DEL CRÉDITO ASOCIADO           -->
+        <!-- ================================================ -->
+        <div class="modal fade" id="modalCreditoConsulta" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content border-0 shadow-lg">
+                    <div class="modal-header bg-success bg-gradient text-white py-2">
+                        <h6 class="modal-title fw-bold text-uppercase mb-0">
+                            <i class="fas fa-file-invoice-dollar me-2"></i>
+                            Información del Crédito
+                            <span v-if="creditoInfo"> #{{ creditoInfo.credito_id }}</span>
+                        </h6>
+                        <button type="button" class="btn-close btn-close-white" @click="cerrarModalCredito"></button>
+                    </div>
+
+                    <div class="modal-body p-3">
+                        <div v-if="cargandoCredito" class="text-center py-5">
+                            <div class="spinner-border text-success" role="status"></div>
+                            <p class="text-muted mt-2 mb-0 small">Cargando información del crédito...</p>
+                        </div>
+
+                        <div v-else-if="creditoInfo">
+                            <!-- Datos del cliente -->
+                            <div class="card border-0 bg-light mb-2">
+                                <div class="card-body py-2 px-3">
+                                    <h6 class="text-success fw-bold text-uppercase mb-2" style="font-size:0.75rem;">
+                                        <i class="fas fa-user me-1"></i> Cliente
+                                    </h6>
+                                    <div class="row g-1" style="font-size:0.8rem;">
+                                        <div class="col-md-6"><strong>Nombre:</strong> <span class="text-uppercase">{{ creditoInfo.cliente }}</span></div>
+                                        <div class="col-md-3"><strong>C.I.:</strong> {{ creditoInfo.ci }} {{ creditoInfo.lugar_expedicion }}</div>
+                                        <div class="col-md-3"><strong>Asesor:</strong> <span class="text-uppercase">{{ creditoInfo.asesor }}</span></div>
+                                        <div class="col-md-6"><strong>Dirección:</strong> {{ creditoInfo.direccion || '—' }}</div>
+                                        <div class="col-md-6"><strong>Teléfono(s):</strong> {{ creditoInfo.telefonos && creditoInfo.telefonos.length ? creditoInfo.telefonos.join(', ') : '—' }}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Datos del crédito -->
+                            <div class="card border-0 bg-light mb-2">
+                                <div class="card-body py-2 px-3">
+                                    <h6 class="text-success fw-bold text-uppercase mb-2" style="font-size:0.75rem;">
+                                        <i class="fas fa-coins me-1"></i> Crédito
+                                    </h6>
+                                    <div class="row g-1" style="font-size:0.8rem;">
+                                        <div class="col-md-4"><strong>Cód. Crédito:</strong> #{{ creditoInfo.credito_id }}</div>
+                                        <div class="col-md-4"><strong>Cód. Plan:</strong> {{ creditoInfo.plan_pago_id }}</div>
+                                        <div class="col-md-4"><strong>Estado:</strong> <span :class="estadoPlanClase(creditoInfo.estado_plan)">{{ estadoPlanTexto(creditoInfo.estado_plan) }}</span></div>
+                                        <div class="col-md-4"><strong>Monto:</strong> {{ formatNumero(creditoInfo.importe_solicitud) }} {{ creditoInfo.moneda }}</div>
+                                        <div class="col-md-4"><strong>Total a pagar:</strong> {{ formatNumero(creditoInfo.total_pagar) }} {{ creditoInfo.moneda }}</div>
+                                        <div class="col-md-4"><strong>Saldo pendiente:</strong> <span class="fw-bold text-danger">{{ formatNumero(creditoInfo.saldo_pendiente) }} {{ creditoInfo.moneda }}</span></div>
+                                        <div class="col-md-4"><strong>Plazo:</strong> {{ creditoInfo.nro_cuotas }} ({{ creditoInfo.lapso_capital }})</div>
+                                        <div class="col-md-4"><strong>Tasa:</strong> {{ creditoInfo.tasa }}%</div>
+                                        <div class="col-md-4"><strong>Garantía:</strong> {{ creditoInfo.tipo_garantia || '—' }}</div>
+                                        <div class="col-md-4"><strong>Desembolso:</strong> {{ formatFecha(creditoInfo.fecha_desembolso) }}</div>
+                                        <div class="col-md-4"><strong>Inicio plan:</strong> {{ formatFecha(creditoInfo.fecha_inicio) }}</div>
+                                        <div class="col-md-4"><strong>Fin plan:</strong> {{ formatFecha(creditoInfo.fecha_fin) }}</div>
+                                        <div class="col-md-12"><strong>Destino:</strong> {{ creditoInfo.destino_prestamo || '—' }}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Resumen de cuotas -->
+                            <div class="row g-2 text-center">
+                                <div class="col">
+                                    <div class="border rounded py-2 bg-white">
+                                        <div class="fw-bold fs-5 text-dark">{{ creditoInfo.total_cuotas }}</div>
+                                        <div class="text-muted text-uppercase" style="font-size:0.65rem;">Cuotas Totales</div>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="border rounded py-2 bg-white">
+                                        <div class="fw-bold fs-5 text-success">{{ creditoInfo.cuotas_pagadas }}</div>
+                                        <div class="text-muted text-uppercase" style="font-size:0.65rem;">Pagadas</div>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="border rounded py-2 bg-white">
+                                        <div class="fw-bold fs-5 text-warning">{{ creditoInfo.cuotas_pendientes }}</div>
+                                        <div class="text-muted text-uppercase" style="font-size:0.65rem;">Pendientes</div>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="border rounded py-2 bg-white">
+                                        <div class="fw-bold fs-5 text-danger">{{ creditoInfo.cuotas_vencidas }}</div>
+                                        <div class="text-muted text-uppercase" style="font-size:0.65rem;">Vencidas</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-else class="text-center py-5 text-muted">
+                            <i class="fas fa-exclamation-circle fa-2x mb-2 d-block opacity-50"></i>
+                            No se pudo cargar la información del crédito.
+                        </div>
+                    </div>
+
+                    <div class="modal-footer py-2">
+                        <button type="button" class="btn btn-secondary btn-sm" @click="cerrarModalCredito">Cerrar</button>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
@@ -356,7 +492,9 @@ export default {
             movimientosCaja:   [],
             totalIngresosCaja: 0,
             totalEgresosCaja:  0,
-            saldoBoveda:       0,
+            saldoBoveda:       0,   // capital total real (bóveda+caja) al corte — tarjeta
+            saldoAnteriorCaja: 0,   // saldo de apertura del periodo
+            saldoFinalCaja:    0,   // saldo final del periodo (según filtros)
             paginacionCaja: { current_page: 1, last_page: 1, total: 0 },
 
             // ── Libro Diario ───────────────────────────────────────────
@@ -371,6 +509,11 @@ export default {
             saldoTotalDiario:    0,
             paginaActualDiario:  1,
             libroDiarioCargado:  false,
+
+            // ── Modal Crédito asociado ─────────────────────────────────
+            creditoInfo:     null,
+            cargandoCredito: false,
+            modalCredito:    null,
 
             offset: 2,
         };
@@ -478,7 +621,9 @@ export default {
                 this.paginacionCaja    = response.data.movimientos;
                 this.totalIngresosCaja = response.data.totales.ingresos;
                 this.totalEgresosCaja  = response.data.totales.egresos;
-                this.saldoBoveda       = response.data.saldo_boveda ?? 0;
+                this.saldoBoveda       = response.data.capital_total_real ?? 0;
+                this.saldoAnteriorCaja = response.data.saldo_anterior ?? 0;
+                this.saldoFinalCaja    = response.data.saldo_boveda ?? 0;
             } catch (error) {
                 console.error(error);
                 Swal.fire('Error', 'No se pudieron cargar los movimientos.', 'error');
@@ -528,7 +673,7 @@ export default {
                         return { ...item, nro: idx + 1, totalAcumulado: acumulado };
                     });
                 this.totalIngresosDiario = acumulado;
-                this.saldoTotalDiario    = response.data.saldo_boveda ?? 0;
+                this.saldoTotalDiario    = response.data.capital_total_real ?? 0;
                 this.libroDiarioCargado  = true;
             } catch (error) {
                 console.error(error);
@@ -546,6 +691,55 @@ export default {
         async imprimirDiario() {
             const qs = new URLSearchParams({ ...this.filtrosDiario, tipo_libro: 'GENERAL' }).toString();
             await this.generarPDF(`/reportes/ingresos?${qs}`);
+        },
+
+        // ── Crédito asociado ──────────────────────────────────────────
+        async verCredito(idPlanPago) {
+            if (!idPlanPago) return;
+            this.creditoInfo = null;
+            this.cargandoCredito = true;
+
+            // Abrir modal (instancia Bootstrap reutilizable)
+            if (!this.modalCredito) {
+                this.modalCredito = new bootstrap.Modal(document.getElementById('modalCreditoConsulta'));
+            }
+            this.modalCredito.show();
+
+            try {
+                const response = await axios.get('/consulta-financiera/info-credito', {
+                    params: { id_plan_pago: idPlanPago },
+                });
+                this.creditoInfo = response.data;
+            } catch (error) {
+                console.error(error);
+                this.creditoInfo = null;
+                Swal.fire('Error', error.response?.data?.error || 'No se pudo cargar la información del crédito.', 'error');
+            } finally {
+                this.cargandoCredito = false;
+            }
+        },
+
+        cerrarModalCredito() {
+            if (this.modalCredito) this.modalCredito.hide();
+        },
+
+        formatFecha(fecha) {
+            if (!fecha) return '—';
+            return moment(fecha).format('DD/MM/YYYY');
+        },
+
+        estadoPlanTexto(estado) {
+            const mapa = { 0: 'Anulado', 1: 'Vigente', 2: 'Finalizado' };
+            return mapa[estado] ?? 'Desconocido';
+        },
+
+        estadoPlanClase(estado) {
+            const mapa = {
+                0: 'badge bg-dark',
+                1: 'badge bg-success',
+                2: 'badge bg-secondary',
+            };
+            return mapa[estado] ?? 'badge bg-light text-dark';
         },
     },
 };
@@ -582,15 +776,71 @@ export default {
 .custom-tabs .nav-link.active:hover { color: #fff !important; }
 
 /* Tabla */
-.ledger-table { font-size: 0.8rem; }
+.ledger-table { font-size: 0.75rem; }
 .ledger-table th {
     vertical-align: middle;
     text-transform: uppercase;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     letter-spacing: 0.5px;
-    padding: 10px 5px;
+    padding: 6px 5px;
 }
-.ledger-table td { vertical-align: middle; padding: 6px 5px; }
+.ledger-table td { vertical-align: middle; padding: 4px 5px; }
+
+/* Color updates for high contrast and clarity */
+.ledger-table thead.header-flujo th,
+.ledger-table thead.header-diario th {
+    background-color: #198754 !important; /* Premium Success Green */
+    color: #ffffff !important;
+    border-bottom: 2px solid #157347 !important;
+}
+
+.ledger-table th, .ledger-table td {
+    border: 1px solid #b2c1d3 !important; /* Higher contrast borders (Slate-300 level) for strong structure */
+}
+
+/* Custom column contrast styling */
+.col-debe {
+    background-color: #e8f5e9 !important; /* Very light high-quality green background */
+    color: #1b5e20 !important; /* Dark forest green text */
+    font-weight: 600;
+}
+.col-haber {
+    background-color: #ffebee !important; /* Very light high-quality red background */
+    color: #c62828 !important; /* Dark crimson red text */
+    font-weight: 600;
+}
+.col-saldo {
+    background-color: #fffde7 !important; /* Very light high-quality gold/yellow background */
+    color: #263238 !important; /* Dark slate grey text */
+    font-weight: 700;
+}
+
+/* Footer Totals styling */
+.col-debe-total {
+    background-color: #c8e6c9 !important; /* Higher contrast green for total */
+    color: #1b5e20 !important;
+}
+.col-haber-total {
+    background-color: #ffcdd2 !important; /* Higher contrast red for total */
+    color: #c62828 !important;
+}
+.col-saldo-total {
+    background-color: #fff9c4 !important; /* Higher contrast yellow for total */
+    color: #263238 !important;
+}
+
+/* Fila de saldo anterior (apertura del periodo) */
+.fila-saldo-anterior td {
+    background-color: #fff8e1 !important;
+    border-top: 2px solid #ffca28 !important;
+    border-bottom: 2px solid #ffca28 !important;
+}
+/* Filas de transferencia interna (neto cero) — atenuadas para distinguirlas */
+.fila-transfer td {
+    background-color: #f1f3f5 !important;
+    color: #6c757d !important;
+    font-style: italic;
+}
 
 /* Preloader */
 .preloader {

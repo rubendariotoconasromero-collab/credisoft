@@ -1,80 +1,92 @@
 <template>
     <main>
-        <div class="page-content">
+        <div class="page-content px-0 mx-0">
             <div class="container-fluid">
-                <div class="card">
-                    <div class="card-header bg-warning py-2">
-                        <h5 class="header-title my-0 text-center fw-bold text-dark text-uppercase">
-                            Gestión de Usuarios
+                <!-- CARD PRINCIPAL -->
+                <div class="card shadow-sm border-0 animate-fade-in">
+                    <div class="card-header bg-warning bg-gradient py-2 d-flex justify-content-between align-items-center">
+                        <h5 class="header-title my-0 fw-bold text-dark text-uppercase mx-auto" style="font-size: 14px; letter-spacing: 0.5px;">
+                            <i class="fas fa-users-cog me-2"></i> Gestión de Usuarios
                         </h5>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body pt-2">
 
-                        <div class="row mb-3">
-                            <div class="col-md-8">
-                                <div class="input-group">
-                                    <select v-model="criterio" class="form-control form-select">
-                                        <option value="users.personal">Nombre personal</option>
-                                        <option value="users.ci">CI</option>
-                                    </select>
-                                    <input :placeholder="'Ingrese texto a buscar'" v-model="buscar" type="text"
-                                        class="form-control" @input="buscarUsuario()">
-                                    <button class="btn btn-success btn-sm">
-                                        <i class="fas fa-search"></i>
-                                    </button>
+                        <!-- FILTROS Y ACCIONES -->
+                        <div class="card bg-light border-0 mb-3 animate-fade-in">
+                            <div class="card-body p-2">
+                                <div class="row g-2 align-items-center">
+                                    <!-- Criterio -->
+                                    <div class="col-md-3">
+                                        <select v-model="criterio" class="form-select form-select-sm" @change="buscarUsuario()">
+                                            <option value="users.personal">Nombre personal</option>
+                                            <option value="users.ci">CI</option>
+                                        </select>
+                                    </div>
+                                    <!-- Buscar -->
+                                    <div class="col-md-5">
+                                        <input placeholder="Ingrese texto a buscar..." v-model="buscar" type="text"
+                                            class="form-control form-control-sm" @input="buscarUsuario()">
+                                    </div>
+                                    <!-- Acciones -->
+                                    <div class="col-md-4 d-flex justify-content-end gap-1">
+                                        <button @click="abrirModalNuevo()" class="btn btn-success btn-xs px-3" style="font-size: 10.5px; height: 31px; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                            <i class="fas fa-plus-circle"></i> <span>Nuevo usuario</span>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="col-md-4 text-end">
-                                <button @click="abrirModalNuevo()" class="btn btn-success">
-                                    <i class="fas fa-plus-circle"></i>
-                                    Nuevo usuario
-                                </button>
-                            </div>
-
                         </div>
-                        <div class="table-responsive table-users" style="font-size:12px">
-                            <table class="table table-striped table-hover table-sm ">
-                                <thead class="text-white text-uppercase table-success">
+
+                        <!-- ENCABEZADO LISTADO -->
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold text-dark my-0 text-uppercase animate-fade-in" style="font-size: 12px;">
+                                <i class="fas fa-users me-1 text-success"></i> Usuarios Registrados ({{ pagination.total }})
+                            </h6>
+                        </div>
+
+                        <!-- TABLA -->
+                        <div class="table-responsive" style="font-size: 11px">
+                            <table class="table table-hover table-striped table-sm align-middle table-compact">
+                                <thead class="table-success text-white text-uppercase fw-bold text-center">
                                     <tr>
-                                        <th class="text-dark text-center text-uppercase fw-bold">Usuario</th>
-                                        <th class="text-dark text-center text-uppercase fw-bold">Personal</th>
-                                        <th class="text-dark text-center text-uppercase fw-bold">CI</th>
-                                        <th class="text-dark text-center text-uppercase fw-bold">Telefono</th>
-                                        <th class="text-dark text-center text-uppercase fw-bold">Rol</th>
-                                        <th class="text-dark text-center text-uppercase fw-bold">Vigencia Pass</th>
-                                        <th class="text-dark text-center text-uppercase fw-bold">Estado</th>
-                                        <th class="text-dark text-center text-uppercase fw-bold">Acciones</th>
+                                        <th class="text-start">Usuario</th>
+                                        <th class="text-start">Personal</th>
+                                        <th>CI</th>
+                                        <th>Teléfono</th>
+                                        <th class="text-start">Rol</th>
+                                                                                <th>Vig. Contraseña</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr class="" v-for="item in lista_usuarios" :key="item.id">
-
-                                        <td class="text-capitalize">{{ item.name }}</td>
-                                        <td class="text-capitalize fw-bold">{{ item.personal }}</td>
-                                        <td class="text-capitalize fw-bold">{{ item.ci }}</td>
-                                        <td class="text-capitalize">{{ item.telefono }}</td>
-                                        <td class="text-capitalize">{{ item.rol }}</td>
+                                    <tr v-for="item in lista_usuarios" :key="item.id" class="animate-fade-in">
+                                        <td class="fw-bold text-primary text-start text-uppercase">{{ item.name }}</td>
+                                        <td class="text-uppercase fw-bold text-dark text-start">{{ item.personal }}</td>
+                                        <td class="text-center fw-bold text-dark">{{ item.ci }}</td>
+                                        <td class="text-center text-muted">{{ item.telefono }}</td>
+                                        <td class="text-start text-uppercase text-muted" style="font-size: 10px;">{{ item.rol }}</td>
                                         <td class="text-center">
                                             <div v-if="item.dias_restantes !== null">
-                                                <span v-if="item.dias_restantes < 0" class="badge bg-danger">Vencida</span>
-                                                <span v-else-if="item.dias_restantes <= 7" class="badge bg-warning text-dark">
-                                                    Vence en {{ item.dias_restantes }} días
+                                                <span v-if="item.dias_restantes < 0" class="badge bg-danger text-uppercase font-size-10 px-2 rounded" style="width: 100px; display: inline-block; text-align: center;">Vencida</span>
+                                                <span v-else-if="item.dias_restantes <= 7" class="badge bg-warning text-dark text-uppercase font-size-10 px-2 rounded" style="width: 100px; display: inline-block; text-align: center;">
+                                                    {{ item.dias_restantes }} días
                                                 </span>
-                                                <span v-else class="badge bg-info">
-                                                    Ok ({{ item.dias_restantes }} días)
+                                                <span v-else class="badge bg-info text-white text-uppercase font-size-10 px-2 rounded" style="width: 100px; display: inline-block; text-align: center;">
+                                                    {{ item.dias_restantes }} días
                                                 </span>
                                             </div>
                                             <span v-else class="text-muted small">Indefinido</span>
                                         </td>
-                                        <td class="text-capitalize text-center">
-                                            <span v-if="item.estado == 1" class="badge bg-success">Activo</span>
-                                            <span v-else class="badge bg-danger">Inactivo</span>
+                                        <td class="text-center">
+                                            <span v-if="item.estado == 1" class="badge bg-success text-uppercase font-size-10 px-2 rounded" style="width: 80px; display: inline-block; text-align: center;">Activo</span>
+                                            <span v-else class="badge bg-secondary text-uppercase font-size-10 px-2 rounded" style="width: 80px; display: inline-block; text-align: center;">Inactivo</span>
                                         </td>
                                         <td class="text-center">
                                             <div class="btn-group my-0 py-0">
                                                 <a style="cursor:pointer;"
                                                     class="text-success dropdown-toggle btn-sm my-0 py-0 text-center"
-                                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                                    data-bs-toggle="dropdown" data-bs-strategy="fixed" aria-expanded="false">
                                                     <i class="fas fa-ellipsis-h fa-lg fa-fw fs-3"></i>
                                                 </a>
                                                 <ul class="dropdown-menu my-0 py-0">
@@ -92,24 +104,27 @@
                                                 </ul>
                                             </div>
                                         </td>
-
+                                    </tr>
+                                    <tr v-if="lista_usuarios.length === 0">
+                                        <td colspan="8" class="text-center text-muted py-5 bg-white rounded border">
+                                            <i class="fas fa-search fa-3x mb-3 text-secondary animate-bounce"></i>
+                                            <p class="mb-0 fw-bold font-size-13 text-muted">No se encontraron usuarios con los criterios seleccionados.</p>
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
-                            <br>
-                            <br>
+                            
                             <!-- Card Pagination -->
-                            <div class="card-footer py-4">
+                            <div class="card-footer py-2 bg-transparent border-0 d-flex justify-content-end">
                                 <nav>
-                                    <ul class="pagination justify-content-end mb-0">
+                                    <ul class="pagination pagination-sm mb-0">
                                         <li class="page-item" v-if="pagination.current_page > 1">
                                             <a class="page-link" href="#"
                                                 @click.prevent="cambiarPagina(pagination.current_page - 1)">Ant</a>
                                         </li>
                                         <li class="page-item" v-for="page in pagesNumber" :key="page"
                                             :class="[page == isActived ? 'active' : '']">
-                                            <a class="page-link" href="#" @click.prevent="cambiarPagina(page)"
-                                                :v-text="page">{{ page }}</a>
+                                            <a class="page-link" href="#" @click.prevent="cambiarPagina(page)">{{ page }}</a>
                                         </li>
                                         <li class="page-item" v-if="pagination.current_page < pagination.last_page">
                                             <a class="page-link" href="#"
@@ -130,13 +145,13 @@
             <div class="modal-dialog">
                 <form class="needs-validation" novalidate>
                     <div class="modal-content border border-secondary border-2">
-                        <div class="modal-header bg-warning">
-                            <h1 v-if="usuario.accion==0" class="modal-title text-dark fs-5" id="exampleModalLabel">
-                                Registro nuevo
-                                usuario</h1>
-                            <h1 v-if="usuario.accion==1" class="modal-title text-dark fs-5" id="exampleModalLabel">
-                                Modificar
-                                usuario</h1>
+                        <div class="modal-header bg-warning py-2 text-dark">
+                            <h5 v-if="usuario.accion==0" class="modal-title fw-bold text-dark text-uppercase" id="exampleModalLabel" style="font-size: 14px;">
+                                <i class="fas fa-user-plus me-2"></i> Registro Nuevo Usuario
+                            </h5>
+                            <h5 v-if="usuario.accion==1" class="modal-title fw-bold text-dark text-uppercase" id="exampleModalLabel" style="font-size: 14px;">
+                                <i class="fas fa-user-edit me-2"></i> Modificar Usuario
+                            </h5>
                             <button @click="cerrarModalNuevo()" type="button" class="btn-close" data-bs-dismiss="modal"
                                 aria-label="Close"></button>
                         </div>
@@ -160,6 +175,7 @@
                                     class="text-danger">
                                     * Debe ingresar un CI
                                 </small>
+
                             </div>
 
                             <div class="form-group mb-2">
@@ -170,6 +186,7 @@
                                     class="text-danger">
                                     * Debe ingresar un nr. de telefono
                                 </small>
+
                             </div>
 
                             <div class="form-group mb-2">
@@ -180,6 +197,7 @@
                                     class="text-danger">
                                     * Debe ingresar un nombre para el usuario
                                 </small>
+
                             </div>
 
                             <div class="form-group mb-2">
@@ -200,7 +218,7 @@
 
                             <div class="form-group mb-2">
                                 <label for="rol">Rol</label>
-                                <select v-model="usuario.id_rol" class="form-control" :required="true" id="rol">
+                                <select v-model="usuario.id_rol" class="form-select" :required="true" id="rol">
                                     <option value="0" selected hidden disabled>Seleccione un rol</option>
                                     <option v-for="item in lista_roles" :value="item.id" :key="item.id">
                                         {{ item.nombre }}</option>
@@ -541,14 +559,99 @@
 </script>
 
 <style scoped>
-    .dropdown-toggle::after {
-        display: none !important;
-    }
+.dropdown-toggle::after {
+    display: none !important;
+}
 
-    .table-users .badge{
-        font-size: 12px;
-        padding: 0.25em 0.5em;
-        border-radius: 15px;
-        min-width:100px;
-    }
+/* Estilos personalizados para inputs y selects de filtros */
+.form-select-sm {
+    border: 1px solid #ced4da !important;
+    background-color: #ffffff !important;
+    color: #495057 !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 0.75rem center !important;
+    background-size: 16px 12px !important;
+    padding-right: 2rem !important;
+    height: 31px !important;
+    font-size: 11px !important;
+    border-radius: 4px !important;
+}
+
+.form-control-sm {
+    border: 1px solid #ced4da !important;
+    background-color: #ffffff !important;
+    color: #495057 !important;
+    height: 31px !important;
+    font-size: 11px !important;
+    border-radius: 4px !important;
+}
+
+.form-select-sm:focus, .form-control-sm:focus {
+    border-color: #198754 !important;
+    box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25) !important;
+}
+
+/* Estilo para select general (ej. en modales) */
+.form-select {
+    border: 1px solid #ced4da !important;
+    background-color: #ffffff !important;
+    color: #495057 !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 0.75rem center !important;
+    background-size: 16px 12px !important;
+    padding-right: 2rem !important;
+}
+.form-select:focus {
+    border-color: #198754 !important;
+    box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25) !important;
+}
+
+/* Clases específicas para diseño extra compacto */
+.table-compact th, .table-compact td {
+    padding: 3px 5px !important;
+    vertical-align: middle !important;
+    font-size: 10.5px !important;
+}
+.table-compact th {
+    font-weight: 700 !important;
+    font-size: 10px !important;
+}
+.font-size-13 { font-size: 13px !important; }
+.font-size-10 { font-size: 10px !important; }
+.btn-xs {
+    padding: 3px 8px !important;
+    font-size: 10.5px !important;
+    border-radius: 4px !important;
+}
+
+/* Paginación con verde success */
+.pagination .page-item.active .page-link {
+    background-color: #198754 !important;
+    border-color: #198754 !important;
+    color: #ffffff !important;
+}
+.pagination .page-link {
+    color: #198754;
+}
+.pagination .page-link:hover {
+    color: #146c43;
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.4s ease-in-out;
+}
+@keyframes fadeIn {
+    0%   { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+.animate-bounce {
+    animation: bounce 2s infinite;
+}
+@keyframes bounce {
+    0%, 100% { transform: translateY(-5%); animation-timing-function: cubic-bezier(0.8,0,1,1); }
+    50%       { transform: none; animation-timing-function: cubic-bezier(0,0,0.2,1); }
+}
 </style>

@@ -23,6 +23,17 @@ class ConsultaFinancieraController extends Controller
         $movimientos = $this->obtenerConsultaSQLBase($fecha_final, $tipo_libro);
         $procesado = $this->procesarMovimientosYCalcularSaldos($movimientos, $request, 'TODOS');
 
+        // Capital Total REAL de bóveda+caja al corte (no depende de filtros ni del tipo de libro).
+        // Se calcula sobre el conjunto GENERAL completo; TRANSFER_INTERNO es neto cero.
+        $movGeneral = ($tipo_libro === 'GENERAL')
+            ? $movimientos
+            : $this->obtenerConsultaSQLBase($fecha_final, 'GENERAL');
+        $capital_total_real = 0;
+        foreach ($movGeneral as $m) {
+            $capital_total_real += ($m->debe - $m->haber);
+        }
+        $capital_total_real = round($capital_total_real, 2);
+
         // Paginación Manual del Arreglo (solo para tabla General)
         $page = (int)$request->input('page', 1);
         $perPage = 15;
@@ -60,8 +71,82 @@ class ConsultaFinancieraController extends Controller
                 'ingresos' => round($procesado['ingresos'], 2),
                 'egresos'  => round($procesado['egresos'], 2),
             ],
-            'saldo_boveda' => $procesado['saldo_boveda'],
+            'saldo_boveda'       => $procesado['saldo_boveda'],     // saldo final del periodo (según filtros)
+            'saldo_anterior'     => $procesado['saldo_anterior'],   // saldo de apertura del periodo
+            'capital_total_real' => $capital_total_real,            // bóveda+caja real al corte (sin filtros)
         ]);
+    }
+
+    // =========================================================
+    // 1.b INFORMACIÓN DEL CRÉDITO ASOCIADO A UN MOVIMIENTO
+    // =========================================================
+    public function getInfoCreditoAsociado(Request $request)
+    {
+        $id_plan_pago = $request->input('id_plan_pago');
+
+        if (empty($id_plan_pago)) {
+            return response()->json(['error' => 'No se especificó el crédito.'], 422);
+        }
+
+        $info = DB::table('plan_pago')
+            ->join('solicitud', 'solicitud.id', '=', 'plan_pago.id_solicitud')
+            ->join('cliente', 'cliente.id', '=', 'solicitud.id_cliente')
+            ->join('users', 'users.id', '=', 'solicitud.id_usuario')
+            ->where('plan_pago.id', $id_plan_pago)
+            ->select(
+                'plan_pago.id as plan_pago_id',
+                'solicitud.id as credito_id',
+                'solicitud.importe_solicitud',
+                'solicitud.moneda',
+                'solicitud.tasa',
+                'solicitud.nro_cuotas',
+                'solicitud.lapso_capital',
+                'solicitud.fecha_desembolso',
+                'solicitud.destino_prestamo',
+                'solicitud.tipo_garantia',
+                'plan_pago.total_pagar',
+                'plan_pago.saldo_pendiente',
+                'plan_pago.fecha_inicio',
+                'plan_pago.fecha_fin',
+                'plan_pago.estado as estado_plan',
+                'cliente.id as cliente_id',
+                'cliente.nombre as cliente',
+                'cliente.ci',
+                'cliente.lugar_expedicion',
+                'users.personal as asesor'
+            )
+            ->first();
+
+        if (!$info) {
+            return response()->json(['error' => 'No se encontró el crédito asociado.'], 404);
+        }
+
+        // Resumen de cuotas del plan
+        $cuotas = DB::table('cuota')->where('id_plan_pago', $id_plan_pago)->get();
+        $hoy = now()->startOfDay();
+
+        $info->total_cuotas      = $cuotas->count();
+        $info->cuotas_pagadas    = $cuotas->where('estado', 2)->count();
+        $info->cuotas_pendientes = $cuotas->whereIn('estado', [1, 3])->count();
+        $info->cuotas_vencidas   = $cuotas->whereIn('estado', [1, 3])
+            ->filter(fn($c) => \Carbon\Carbon::parse($c->fecha)->startOfDay()->lt($hoy))
+            ->count();
+
+        // Teléfonos de contacto del cliente
+        $info->telefonos = DB::table('telefono')
+            ->where('id_cliente', $info->cliente_id)
+            ->pluck('numero')
+            ->toArray();
+
+        // Dirección del cliente (tabla aparte)
+        $dir = DB::table('direccion')->where('id_cliente', $info->cliente_id)->first();
+        $info->direccion = $dir
+            ? collect([$dir->descripcion, $dir->zona, $dir->ciudad, $dir->departamento])
+                ->filter()
+                ->implode(', ')
+            : null;
+
+        return response()->json($info);
     }
 
     // =========================================================
@@ -161,16 +246,16 @@ class ConsultaFinancieraController extends Controller
             ->where('pago.estado', 1)->where('pago.pago_interes', '>', 0)->whereDate('pago.fecha_pago', '<=', $fecha_final)
             ->select('pago.fecha_pago as fecha', DB::raw("'INTERES' as tipo"),
                 DB::raw("CONCAT('INTERES, CREDITO: ', cuota.id_plan_pago, ', CUOTA: ', cuota.numero, ' | ', UPPER(COALESCE(pago.tipo_pago, 'COMPLETO'))) as descripcion"),
-                'pago.pago_interes as debe', DB::raw('0 as haber'), 'pago.created_at');
+                'pago.pago_interes as debe', DB::raw('0 as haber'), 'pago.created_at', 'cuota.id_plan_pago as id_plan_pago');
 
         $q_mora = DB::table('pago')->join('cuota', 'pago.id_cuota', '=', 'cuota.id')
             ->where('pago.estado', 1)->where('pago.pago_mora', '>', 0)->whereDate('pago.fecha_pago', '<=', $fecha_final)
             ->select('pago.fecha_pago as fecha', DB::raw("'MORA' as tipo"),
                 DB::raw("CONCAT('MORA, CREDITO: ', cuota.id_plan_pago, ', CUOTA: ', cuota.numero, ' | ', UPPER(COALESCE(pago.tipo_pago, 'COMPLETO'))) as descripcion"),
-                'pago.pago_mora as debe', DB::raw('0 as haber'), 'pago.created_at');
+                'pago.pago_mora as debe', DB::raw('0 as haber'), 'pago.created_at', 'cuota.id_plan_pago as id_plan_pago');
 
         $q_gastosadm = DB::table('pago_administrativo')->where('estado', 0)->where('monto', '>', 0)->whereDate('fecha', '<=', $fecha_final)
-            ->select('fecha', DB::raw("'GASTOSADM' as tipo"), DB::raw("CONCAT('GASTOSADM, CREDITO: ', id_plan_pago) as descripcion"), 'monto as debe', DB::raw('0 as haber'), 'fecha as created_at');
+            ->select('fecha', DB::raw("'GASTOSADM' as tipo"), DB::raw("CONCAT('GASTOSADM, CREDITO: ', id_plan_pago) as descripcion"), 'monto as debe', DB::raw('0 as haber'), 'fecha as created_at', 'id_plan_pago');
 
         // "Transferencia desde Bóveda" se excluye de INGRESO_CAJA porque
         // el lado bóveda ya aparece como TRANSFER_INTERNO (neto cero).
@@ -179,7 +264,7 @@ class ConsultaFinancieraController extends Controller
             ->where('estado', 1)
             ->whereDate('fecha', '<=', $fecha_final)
             ->where('descripcion', 'not like', '%Transferencia desde Bóveda%')
-            ->select('fecha', DB::raw("'INGRESO_CAJA' as tipo"), 'descripcion', 'monto as debe', DB::raw('0 as haber'), 'created_at');
+            ->select('fecha', DB::raw("'INGRESO_CAJA' as tipo"), 'descripcion', 'monto as debe', DB::raw('0 as haber'), 'created_at', DB::raw('NULL as id_plan_pago'));
 
         // "Transferencia a Bóveda" se excluye de EGRESO_CAJA porque
         // el lado bóveda aparece como TRANSFER_INTERNO (neto cero).
@@ -188,7 +273,7 @@ class ConsultaFinancieraController extends Controller
             ->whereDate('fecha', '<=', $fecha_final)
             ->where('descripcion', 'not like', '%Transferencia a Bóveda%')
             ->where('descripcion', 'not like', '%Transferencia a Boveda%')
-            ->select('fecha', DB::raw("'EGRESO_CAJA' as tipo"), 'descripcion', DB::raw('0 as debe'), 'monto as haber', 'created_at');
+            ->select('fecha', DB::raw("'EGRESO_CAJA' as tipo"), 'descripcion', DB::raw('0 as debe'), 'monto as haber', 'created_at', DB::raw('NULL as id_plan_pago'));
 
         $query = $q_interes->unionAll($q_mora)->unionAll($q_gastosadm)->unionAll($q_ingreso)->unionAll($q_gasto);
 
@@ -198,17 +283,17 @@ class ConsultaFinancieraController extends Controller
                 ->where('pago.estado', 1)->where('pago.pago_capital', '>', 0)->whereDate('pago.fecha_pago', '<=', $fecha_final)
                 ->select('pago.fecha_pago as fecha', DB::raw("'CAPITAL' as tipo"),
                     DB::raw("CONCAT('CAPITAL, CREDITO: ', cuota.id_plan_pago, ', CUOTA: ', cuota.numero, ' | ', UPPER(COALESCE(pago.tipo_pago, 'COMPLETO'))) as descripcion"),
-                    'pago.pago_capital as debe', DB::raw('0 as haber'), 'pago.created_at');
+                    'pago.pago_capital as debe', DB::raw('0 as haber'), 'pago.created_at', 'cuota.id_plan_pago as id_plan_pago');
 
             $q_desembolso = DB::table('desembolso')->where('estado', 0)->whereDate('fecha', '<=', $fecha_final)
-                ->select('fecha', DB::raw("'DESEMBOLSO' as tipo"), DB::raw("CONCAT('DESEMBOLSO, CREDITO: ', id_plan_pago) as descripcion"), DB::raw('0 as debe'), 'monto as haber', 'fecha as created_at');
+                ->select('fecha', DB::raw("'DESEMBOLSO' as tipo"), DB::raw("CONCAT('DESEMBOLSO, CREDITO: ', id_plan_pago) as descripcion"), DB::raw('0 as debe'), 'monto as haber', 'fecha as created_at', 'id_plan_pago');
 
             // Ingresos REALES a bóveda (excluye "Transferencia desde Caja" — es transferencia interna)
             $q_boveda_in = DB::table('movimientos_boveda')
                 ->where('tipo_movimiento', 'ingreso')
                 ->where('descripcion', 'not like', '%Transferencia desde Caja%')
                 ->whereDate('fecha', '<=', $fecha_final)
-                ->select('fecha', DB::raw("'BOVEDA_INGRESO' as tipo"), 'descripcion', 'monto as debe', DB::raw('0 as haber'), 'created_at');
+                ->select('fecha', DB::raw("'BOVEDA_INGRESO' as tipo"), 'descripcion', 'monto as debe', DB::raw('0 as haber'), 'created_at', DB::raw('NULL as id_plan_pago'));
 
             // Egresos REALES de bóveda (excluye otorgamiento de préstamos y "Transferencia a Caja" — es interna)
             $q_boveda_out = DB::table('movimientos_boveda')
@@ -216,7 +301,7 @@ class ConsultaFinancieraController extends Controller
                 ->where('descripcion', '!=', 'Otorgamiento de préstamo')
                 ->where('descripcion', 'not like', '%Transferencia a Caja%')
                 ->whereDate('fecha', '<=', $fecha_final)
-                ->select('fecha', DB::raw("'BOVEDA_EGRESO' as tipo"), 'descripcion', DB::raw('0 as debe'), 'monto as haber', 'created_at');
+                ->select('fecha', DB::raw("'BOVEDA_EGRESO' as tipo"), 'descripcion', DB::raw('0 as debe'), 'monto as haber', 'created_at', DB::raw('NULL as id_plan_pago'));
 
             // Transferencias internas bóveda ↔ caja: debe = haber → neto cero en el saldo
             // "Transferencia a Caja" (salida de bóveda) y "Transferencia desde Caja" (retorno a bóveda)
@@ -234,7 +319,7 @@ class ConsultaFinancieraController extends Controller
                            ->where('descripcion', 'like', '%Retorno de Caja al Cierre%');
                     });
                 })
-                ->select('fecha', DB::raw("'TRANSFER_INTERNO' as tipo"), 'descripcion', 'monto as debe', 'monto as haber', 'created_at');
+                ->select('fecha', DB::raw("'TRANSFER_INTERNO' as tipo"), 'descripcion', 'monto as debe', 'monto as haber', 'created_at', DB::raw('NULL as id_plan_pago'));
 
             $query = $query->unionAll($q_capital)->unionAll($q_desembolso)
                            ->unionAll($q_boveda_in)->unionAll($q_boveda_out)
@@ -251,49 +336,59 @@ class ConsultaFinancieraController extends Controller
         $buscar_filtro = strtolower($request->input('buscar', ''));
 
         $saldo_acumulado = 0;
+        $saldo_anterior = 0;
         $lista_final = [];
         $nro = 1;
         $suma_ingresos = 0;
         $suma_egresos = 0;
 
         foreach ($movimientos as $mov) {
+            // --- Filtros que determinan si el movimiento ENTRA al libro ---
+            // Se aplican ANTES de acumular el saldo para que el saldo corrido se
+            // calcule SOLO sobre las filas visibles. Así cada fila cumple siempre:
+            //   saldo = saldo anterior + debe - haber
+            if ($modo_reporte === 'INGRESOS' && ($mov->debe <= 0 || $mov->tipo === 'TRANSFER_INTERNO')) continue;
+            if ($modo_reporte === 'EGRESOS'  && ($mov->haber <= 0 || $mov->tipo === 'TRANSFER_INTERNO')) continue;
+            if ($tipo_filtro !== 'TODOS' && $mov->tipo !== $tipo_filtro) continue;
+            if ($buscar_filtro !== '' && !str_contains(strtolower($mov->descripcion), $buscar_filtro)) continue;
+
+            // Saldo corrido sobre las filas que pasaron los filtros
             $saldo_acumulado += $mov->debe;
             $saldo_acumulado -= $mov->haber;
 
-            // Filtro por tipo de reporte (Ingresos/Egresos puros)
-            // Las transferencias internas (debe = haber) se excluyen del libro de ingresos y egresos
-            if ($modo_reporte === 'INGRESOS' && ($mov->debe <= 0 || $mov->tipo === 'TRANSFER_INTERNO')) continue;
-            if ($modo_reporte === 'EGRESOS'  && ($mov->haber <= 0 || $mov->tipo === 'TRANSFER_INTERNO')) continue;
-
             $fecha_mov = date('Y-m-d', strtotime($mov->fecha));
 
-            if ($fecha_mov >= $fecha_inicio) {
-                if ($tipo_filtro !== 'TODOS' && $mov->tipo !== $tipo_filtro) continue;
-                if ($buscar_filtro !== '' && !str_contains(strtolower($mov->descripcion), $buscar_filtro)) continue;
-
-                // Las transferencias internas son neto cero — no deben inflar los totales
-                if ($mov->tipo !== 'TRANSFER_INTERNO') {
-                    $suma_ingresos += $mov->debe;
-                    $suma_egresos  += $mov->haber;
-                }
-
-                $lista_final[] = (object)[
-                    'nro' => $nro++,
-                    'fecha' => date('d/m/Y', strtotime($mov->fecha)),
-                    'tipo' => $mov->tipo,
-                    'descripcion' => $mov->descripcion,
-                    'debe' => (float)$mov->debe,
-                    'haber' => (float)$mov->haber,
-                    'saldo' => round($saldo_acumulado, 2)
-                ];
+            if ($fecha_mov < $fecha_inicio) {
+                // Antes del periodo: solo arrastra el saldo de apertura, no se lista.
+                $saldo_anterior = $saldo_acumulado;
+                continue;
             }
+
+            // Las transferencias internas son neto cero — no deben inflar los totales
+            if ($mov->tipo !== 'TRANSFER_INTERNO') {
+                $suma_ingresos += $mov->debe;
+                $suma_egresos  += $mov->haber;
+            }
+
+            $lista_final[] = (object)[
+                'nro' => $nro++,
+                'fecha' => date('d/m/Y', strtotime($mov->fecha)),
+                'tipo' => $mov->tipo,
+                'descripcion' => $mov->descripcion,
+                'debe' => (float)$mov->debe,
+                'haber' => (float)$mov->haber,
+                'monto' => $mov->debe > 0 ? (float)$mov->debe : (float)$mov->haber,
+                'saldo' => round($saldo_acumulado, 2),
+                'id_plan_pago' => $mov->id_plan_pago ?? null,
+            ];
         }
 
         return [
-            'lista'        => $lista_final,
-            'ingresos'     => $suma_ingresos,
-            'egresos'      => $suma_egresos,
-            'saldo_boveda' => round($saldo_acumulado, 2),
+            'lista'          => $lista_final,
+            'ingresos'       => $suma_ingresos,
+            'egresos'        => $suma_egresos,
+            'saldo_boveda'   => round($saldo_acumulado, 2),
+            'saldo_anterior' => round($saldo_anterior, 2),
         ];
     }
 

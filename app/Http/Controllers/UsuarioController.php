@@ -27,7 +27,7 @@ class UsuarioController extends Controller
         ->select('users.*', 'rol.nombre as rol')
         ->where($request->criterio, 'like', '%'.$request->buscar.'%')
         ->orderBy('users.id', 'desc')
-        ->paginate(50);
+        ->paginate(20);
 
         // Agregamos lógica para calcular días restantes
         foreach ($usuarios as $user) {

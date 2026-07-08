@@ -5,10 +5,12 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use DB;
 use Mpdf\Mpdf;
+use App\Traits\CalculaAmortizaciones;
 
 
 class VistasReporteController extends Controller
 {
+    use CalculaAmortizaciones;
     //
 
     public function indexExtracto(){
@@ -155,18 +157,52 @@ class VistasReporteController extends Controller
 
     public function getCreditosMoraRep(Request $request)
     {
-        $id_credito = $request->id_credito;
-        $buscar_cliente = $request->buscar_cliente;
+        return response()->json($this->buildCreditosMoraQuery($request));
+    }
 
-        // Fetch credits in arrears (with at least one unpaid cuota past due)
+    public function exportarCreditosMoraPdf(Request $request)
+    {
+        $creditos = $this->buildCreditosMoraQuery($request);
+        $empresa  = DB::table('mi_empresa')->first();
+        $data = [
+            'creditos'       => $creditos,
+            'empresa'        => $empresa,
+            'usuario'        => auth()->user()->name,
+            'fecha_reporte'  => now()->format('d/m/Y'),
+        ];
+        $this->generatePDF($data, 'vistasReportes.pdf_creditos_mora', 'Creditos_Mora_' . date('Y-m-d'), 'L');
+    }
+
+    public function exportarCreditosMoraExcel(Request $request)
+    {
+        $creditos = $this->buildCreditosMoraQuery($request);
+        $empresa  = DB::table('mi_empresa')->first();
+        $data = [
+            'creditos'      => $creditos,
+            'empresa'       => $empresa,
+            'usuario'       => auth()->user()->name,
+            'fecha_reporte' => now()->format('d/m/Y'),
+        ];
+        return response(view('vistasReportes.excel_creditos_mora', $data))
+            ->header('Content-Type', 'application/vnd.ms-excel; charset=utf-8')
+            ->header('Content-Disposition', 'attachment; filename="Creditos_Mora_' . date('Y-m-d') . '.xls"');
+    }
+
+    private function buildCreditosMoraQuery(Request $request)
+    {
+        $id_credito    = $request->id_credito;
+        $buscar_cliente = $request->buscar_cliente;
+        $id_asesor     = $request->id_asesor;
+        $dias_mora_min = $request->dias_mora_min;
+
         $query = DB::table('plan_pago')
             ->join('solicitud', 'solicitud.id', '=', 'plan_pago.id_solicitud')
             ->join('cliente', 'cliente.id', '=', 'solicitud.id_cliente')
             ->join('users', 'users.id', '=', 'solicitud.id_usuario')
             ->join('cuota', 'cuota.id_plan_pago', '=', 'plan_pago.id')
-            ->whereIn('cuota.estado', [1, 3]) // 1: Sin pagar, 3: Pago parcial
-            ->whereDate('cuota.fecha', '<', now()) // Vencidas
-            ->whereIn('plan_pago.estado', [1, 2]) // Vigente o Terminado
+            ->whereIn('cuota.estado', [1, 3])
+            ->whereDate('cuota.fecha', '<', now())
+            ->whereIn('plan_pago.estado', [1, 2])
             ->select(
                 'plan_pago.id as plan_pago_id',
                 'solicitud.id as credito_id',
@@ -176,53 +212,49 @@ class VistasReporteController extends Controller
                 'solicitud.tasa',
                 'solicitud.nro_cuotas',
                 'solicitud.lapso_capital',
+                'plan_pago.saldo_pendiente',
                 'cliente.nombre as cliente_nombre',
                 'cliente.ci as cliente_ci',
                 'users.personal as asesor_nombre',
+                'users.id as id_asesor',
                 DB::raw('COUNT(cuota.id) as cuotas_mora_count'),
-                DB::raw('DATEDIFF(NOW(), MIN(cuota.fecha)) as dias_mora_max'),
-                // Formulas aligned with DATABASE.md to subtract already paid amounts in partial payments (estado 3)
+                DB::raw('MAX(DATEDIFF(NOW(), cuota.fecha)) as dias_mora_max'),
                 DB::raw('SUM(cuota.capital - cuota.capital_pagado) as total_capital_mora'),
                 DB::raw('SUM(cuota.interes - cuota.interes_pagado) as total_interes_mora'),
                 DB::raw('SUM(cuota.total - (cuota.capital_pagado + cuota.interes_pagado)) as total_cuota_mora'),
-                // Dynamic multa: 3 BOB per delayed day minus any already paid mora (mora_pagada)
                 DB::raw('SUM(CASE WHEN DATEDIFF(NOW(), cuota.fecha) > 0 THEN (DATEDIFF(NOW(), cuota.fecha) * 3) - cuota.mora_pagada ELSE 0 END) as total_multas_mora')
             )
             ->groupBy(
-                'plan_pago.id',
-                'solicitud.id',
-                'solicitud.id_cliente',
-                'solicitud.importe_solicitud',
-                'solicitud.moneda',
-                'solicitud.tasa',
-                'solicitud.nro_cuotas',
-                'solicitud.lapso_capital',
-                'cliente.nombre',
-                'cliente.ci',
-                'users.personal'
+                'plan_pago.id', 'solicitud.id', 'solicitud.id_cliente',
+                'solicitud.importe_solicitud', 'solicitud.moneda', 'solicitud.tasa',
+                'solicitud.nro_cuotas', 'solicitud.lapso_capital', 'plan_pago.saldo_pendiente',
+                'cliente.nombre', 'cliente.ci', 'users.personal', 'users.id'
             );
 
         if (!empty($id_credito)) {
             $query->where('solicitud.id', $id_credito);
         }
-
         if (!empty($buscar_cliente)) {
-            $query->where(function($q) use ($buscar_cliente) {
+            $query->where(function ($q) use ($buscar_cliente) {
                 $q->where('cliente.nombre', 'LIKE', '%' . $buscar_cliente . '%')
                   ->orWhere('cliente.ci', 'LIKE', '%' . $buscar_cliente . '%');
             });
         }
+        if (!empty($id_asesor) && is_numeric($id_asesor)) {
+            $query->where('solicitud.id_usuario', (int) $id_asesor);
+        }
+        if (!empty($dias_mora_min) && is_numeric($dias_mora_min)) {
+            $query->havingRaw('MAX(DATEDIFF(NOW(), cuota.fecha)) >= ?', [(int) $dias_mora_min]);
+        }
 
         $creditos = $query->orderBy('dias_mora_max', 'desc')->get();
 
-        // Attach specific past due cuotas for modal popups with precise outstanding details
         foreach ($creditos as $credito) {
-            // Fetch contact telephones of the client
             $telefonos = DB::table('telefono')
                 ->where('id_cliente', $credito->id_cliente)
                 ->select('numero', 'tipo', 'relacion')
                 ->get()
-                ->map(function($t) {
+                ->map(function ($t) {
                     $label = $t->numero;
                     if (!empty($t->tipo) || !empty($t->relacion)) {
                         $sub = [];
@@ -235,34 +267,32 @@ class VistasReporteController extends Controller
                 ->toArray();
 
             $credito->cliente_telefonos = empty($telefonos) ? 'Sin teléfonos' : implode(', ', $telefonos);
-            $credito->telefonos_list = $telefonos;
+            $credito->telefonos_list    = $telefonos;
 
-            $credito->cuotas_mora = DB::table('cuota')
-                ->where('id_plan_pago', $credito->plan_pago_id)
-                ->whereIn('estado', [1, 3])
-                ->whereDate('fecha', '<', now())
-                ->orderBy('numero', 'asc')
-                ->select(
-                    'id',
-                    'numero',
-                    'fecha',
-                    'capital',
-                    'interes',
-                    'total',
-                    'estado',
-                    'capital_pagado',
-                    'interes_pagado',
-                    'mora_pagada',
-                    DB::raw('DATEDIFF(NOW(), fecha) as dias_retraso'),
-                    DB::raw('CASE WHEN DATEDIFF(NOW(), fecha) > 0 THEN (DATEDIFF(NOW(), fecha) * 3) - mora_pagada ELSE 0 END as multa_acumulada'),
-                    DB::raw('capital - capital_pagado as capital_pendiente'),
-                    DB::raw('interes - interes_pagado as interes_pendiente'),
-                    DB::raw('total - (capital_pagado + interes_pagado) as total_pendiente')
-                )
-                ->get();
+            // Amortización en tiempo real (misma lógica que la pantalla de cobros):
+            // calcula interés devengado, moratorio, acumulado, mora fija y total a pagar.
+            $amortizacion = $this->calcularAmortizacionesCuotas($credito->plan_pago_id);
+
+            // Solo las cuotas vencidas (estado pendiente/parcial con fecha vencida).
+            $hoy = now()->startOfDay();
+            $cuotasMora = $amortizacion['cuotas']->filter(function ($cuota) use ($hoy) {
+                return in_array($cuota->estado, [1, 3])
+                    && \Carbon\Carbon::parse($cuota->fecha)->startOfDay()->lt($hoy);
+            })->values();
+
+            $credito->cuotas_mora = $cuotasMora;
+
+            // Totales del crédito recalculados desde la amortización para que
+            // coincidan con la suma de las cuotas mostradas (incluye moratorio + mora fija).
+            $credito->cuotas_mora_count  = $cuotasMora->count();
+            $credito->total_capital_mora = round($cuotasMora->sum('capital_neto'), 2);
+            $credito->total_interes_mora = round($cuotasMora->sum('interes_acumulado_neto'), 2);
+            $credito->total_multas_mora  = round($cuotasMora->sum('mora_fija_neta'), 2);
+            $credito->total_cuota_mora   = round($cuotasMora->sum('total_a_pagar'), 2);
+            $credito->dias_mora_max      = (int) $cuotasMora->max('dias_pasados');
         }
 
-        return response()->json($creditos);
+        return $creditos;
     }
 
     public function generarReporteExtracto(Request $request){
@@ -445,6 +475,100 @@ class VistasReporteController extends Controller
     public function indexPagosProgramados(){
         return view('vistasReportes.repPagosProgramados');
     }
+
+    public function getPagosProgramadosRep(Request $request)
+    {
+        return response()->json($this->buildPagosProgramadosQuery($request));
+    }
+
+    public function exportarPagosProgramadosPdf(Request $request)
+    {
+        $cuotas  = $this->buildPagosProgramadosQuery($request);
+        $empresa = DB::table('mi_empresa')->first();
+        $data = [
+            'cuotas'        => $cuotas,
+            'empresa'       => $empresa,
+            'usuario'       => auth()->user()->name,
+            'fecha_reporte' => now()->format('d/m/Y'),
+            'filtros'       => $request->all(),
+        ];
+        $this->generatePDF($data, 'vistasReportes.pdf_pagos_programados', 'Pagos_Programados_' . date('Y-m-d'));
+    }
+
+    public function exportarPagosProgramadosExcel(Request $request)
+    {
+        $cuotas  = $this->buildPagosProgramadosQuery($request);
+        $empresa = DB::table('mi_empresa')->first();
+        $data = [
+            'cuotas'        => $cuotas,
+            'empresa'       => $empresa,
+            'usuario'       => auth()->user()->name,
+            'fecha_reporte' => now()->format('d/m/Y'),
+            'filtros'       => $request->all(),
+        ];
+        return response(view('vistasReportes.excel_pagos_programados', $data))
+            ->header('Content-Type', 'application/vnd.ms-excel; charset=utf-8')
+            ->header('Content-Disposition', 'attachment; filename="Pagos_Programados_' . date('Y-m-d') . '.xls"');
+    }
+
+    private function buildPagosProgramadosQuery(Request $request)
+    {
+        $query = DB::table('cuota')
+            ->join('plan_pago', 'plan_pago.id', '=', 'cuota.id_plan_pago')
+            ->join('solicitud', 'solicitud.id', '=', 'plan_pago.id_solicitud')
+            ->join('cliente', 'cliente.id', '=', 'solicitud.id_cliente')
+            ->join('users', 'users.id', '=', 'solicitud.id_usuario')
+            ->whereIn('cuota.estado', [1, 3])
+            ->where('plan_pago.estado', 1)
+            ->select(
+                'solicitud.id as credito_id',
+                'plan_pago.id as plan_pago_id',
+                'solicitud.id_cliente',
+                'cliente.nombre as cliente_nombre',
+                'cliente.ci as cliente_ci',
+                'users.personal as asesor_nombre',
+                'users.id as id_asesor',
+                'solicitud.nro_cuotas',
+                'solicitud.lapso_capital',
+                'solicitud.moneda',
+                'cuota.id as cuota_id',
+                'cuota.numero as nro_cuota',
+                'cuota.fecha as fecha_vencimiento',
+                'cuota.capital',
+                'cuota.interes',
+                'cuota.total',
+                'cuota.capital_pagado',
+                'cuota.interes_pagado',
+                'cuota.estado as cuota_estado',
+                DB::raw('DATEDIFF(cuota.fecha, CURDATE()) as dias_para_pago'),
+                DB::raw('cuota.capital - cuota.capital_pagado as capital_pendiente'),
+                DB::raw('cuota.interes - cuota.interes_pagado as interes_pendiente'),
+                DB::raw('cuota.total - (cuota.capital_pagado + cuota.interes_pagado) as monto_pendiente')
+            );
+
+        if ($request->filled('fecha_inicio')) {
+            $query->whereDate('cuota.fecha', '>=', $request->fecha_inicio);
+        }
+        if ($request->filled('fecha_fin')) {
+            $query->whereDate('cuota.fecha', '<=', $request->fecha_fin);
+        }
+        if ($request->filled('buscar_cliente')) {
+            $busqueda = '%' . $request->buscar_cliente . '%';
+            $query->where(function ($q) use ($busqueda) {
+                $q->where('cliente.nombre', 'LIKE', $busqueda)
+                  ->orWhere('cliente.ci', 'LIKE', $busqueda);
+            });
+        }
+        if ($request->filled('id_asesor') && is_numeric($request->id_asesor)) {
+            $query->where('solicitud.id_usuario', (int) $request->id_asesor);
+        }
+        if ($request->filled('lapso_capital')) {
+            $query->where('solicitud.lapso_capital', $request->lapso_capital);
+        }
+
+        return $query->orderBy('cuota.fecha', 'asc')->orderBy('solicitud.id', 'asc')->get();
+    }
+
     public function generarReportesPagosProgramados(Request $request){
 
             // $fechaActual = Carbon::now(); // Obtiene la fecha y hora actual
@@ -624,9 +748,119 @@ class VistasReporteController extends Controller
     public function indexPorcentajesPagos(){
         return view('vistasReportes.repPorcentajesPagos');
     }
-    private function generatePDF($data, $url_vista, $nombre_reporte)
+
+    public function getPorcentajesCreditosRep(Request $request)
     {
-        $mpdf = new Mpdf();
+        return response()->json($this->buildAvanceCreditosQuery($request));
+    }
+
+    public function exportarAvanceCreditosPdf(Request $request)
+    {
+        $registros = $this->buildAvanceCreditosQuery($request);
+        $empresa   = DB::table('mi_empresa')->first();
+        $data = [
+            'registros'     => $registros,
+            'empresa'       => $empresa,
+            'usuario'       => auth()->user()->name,
+            'fecha_reporte' => now()->format('d/m/Y'),
+            'filtros'       => $request->all(),
+        ];
+        $this->generatePDF($data, 'vistasReportes.pdf_avance_creditos', 'Avance_Creditos_' . date('Y-m-d'));
+    }
+
+    public function exportarAvanceCreditosExcel(Request $request)
+    {
+        $registros = $this->buildAvanceCreditosQuery($request);
+        $empresa   = DB::table('mi_empresa')->first();
+        $data = [
+            'registros'     => $registros,
+            'empresa'       => $empresa,
+            'usuario'       => auth()->user()->name,
+            'fecha_reporte' => now()->format('d/m/Y'),
+            'filtros'       => $request->all(),
+        ];
+        return response(view('vistasReportes.excel_avance_creditos', $data))
+            ->header('Content-Type', 'application/vnd.ms-excel; charset=utf-8')
+            ->header('Content-Disposition', 'attachment; filename="Avance_Creditos_' . date('Y-m-d') . '.xls"');
+    }
+
+    private function buildAvanceCreditosQuery(Request $request)
+    {
+        $query = DB::table('plan_pago')
+            ->join('solicitud', 'solicitud.id', '=', 'plan_pago.id_solicitud')
+            ->join('cliente', 'cliente.id', '=', 'solicitud.id_cliente')
+            ->join('users', 'users.id', '=', 'solicitud.id_usuario')
+            ->join('cuota', 'cuota.id_plan_pago', '=', 'plan_pago.id')
+            ->select(
+                'plan_pago.id as plan_pago_id',
+                'solicitud.id as credito_id',
+                'solicitud.id_cliente',
+                'solicitud.importe_solicitud',
+                'solicitud.moneda',
+                'solicitud.lapso_capital',
+                'solicitud.nro_cuotas',
+                'plan_pago.total_pagar',
+                'plan_pago.saldo_pendiente',
+                'plan_pago.estado as estado_plan',
+                'cliente.nombre as cliente_nombre',
+                'cliente.ci as cliente_ci',
+                'users.personal as asesor_nombre',
+                'users.id as id_asesor',
+                DB::raw('SUM(cuota.capital_pagado) as capital_pagado'),
+                DB::raw('SUM(cuota.interes_pagado) as interes_pagado'),
+                DB::raw('COUNT(CASE WHEN cuota.estado = 2 THEN 1 END) as cuotas_pagadas'),
+                DB::raw('ROUND(CASE WHEN plan_pago.total_pagar > 0 THEN (SUM(cuota.capital_pagado) / plan_pago.total_pagar) * 100 ELSE 0 END, 2) as porcentaje_pagado')
+            )
+            ->groupBy(
+                'plan_pago.id', 'solicitud.id', 'solicitud.id_cliente',
+                'solicitud.importe_solicitud', 'solicitud.moneda', 'solicitud.lapso_capital',
+                'solicitud.nro_cuotas', 'plan_pago.total_pagar', 'plan_pago.saldo_pendiente',
+                'plan_pago.estado', 'cliente.nombre', 'cliente.ci', 'users.personal', 'users.id'
+            );
+
+        // Estado del plan
+        if ($request->filled('estado_plan') && $request->estado_plan !== 'todos') {
+            $query->where('plan_pago.estado', (int) $request->estado_plan);
+        } else {
+            $query->whereIn('plan_pago.estado', [1, 2]);
+        }
+
+        // Rango de porcentaje
+        if ($request->filled('pct_inicio')) {
+            $query->havingRaw('ROUND(CASE WHEN plan_pago.total_pagar > 0 THEN (SUM(cuota.capital_pagado) / plan_pago.total_pagar) * 100 ELSE 0 END, 2) >= ?', [(float) $request->pct_inicio]);
+        }
+        if ($request->filled('pct_fin')) {
+            $query->havingRaw('ROUND(CASE WHEN plan_pago.total_pagar > 0 THEN (SUM(cuota.capital_pagado) / plan_pago.total_pagar) * 100 ELSE 0 END, 2) <= ?', [(float) $request->pct_fin]);
+        }
+
+        // Cliente
+        if ($request->filled('buscar_cliente')) {
+            $busqueda = '%' . $request->buscar_cliente . '%';
+            $query->where(function ($q) use ($busqueda) {
+                $q->where('cliente.nombre', 'LIKE', $busqueda)
+                  ->orWhere('cliente.ci', 'LIKE', $busqueda);
+            });
+        }
+
+        // Asesor
+        if ($request->filled('id_asesor') && is_numeric($request->id_asesor)) {
+            $query->where('solicitud.id_usuario', (int) $request->id_asesor);
+        }
+
+        // Frecuencia
+        if ($request->filled('lapso_capital')) {
+            $query->where('solicitud.lapso_capital', $request->lapso_capital);
+        }
+
+        return $query->orderBy('porcentaje_pagado', 'desc')->get();
+    }
+    private function generatePDF($data, $url_vista, $nombre_reporte, $orientation = 'P')
+    {
+        $mpdf = new Mpdf([
+            'mode'        => 'utf-8',
+            'format'      => 'A4',
+            'orientation' => $orientation, // 'P' vertical (default) | 'L' horizontal
+        ]);
 
         // Configurar el pie de página con el número de página
         $mpdf->SetFooter('Página {PAGENO} de {nbpg}');  // {PAGENO} es el número de la página actual y {nbpg} es el número total de páginas
@@ -721,6 +955,95 @@ class VistasReporteController extends Controller
         return view('vistasReportes.repDesembolsos');
     }
 
+    public function getDesembolsosRep(Request $request)
+    {
+        return response()->json($this->buildDesembolsosQuery($request));
+    }
+
+    public function exportarDesembolsosPdf(Request $request)
+    {
+        $registros         = $this->buildDesembolsosQuery($request);
+        $total_desembolso  = $registros->sum('monto');
+        $total_pago_adm    = $registros->sum('monto_pago_adm');
+        $empresa           = DB::table('mi_empresa')->first();
+        $data = [
+            'registros'        => $registros,
+            'total_desembolso' => $total_desembolso,
+            'total_pago_adm'   => $total_pago_adm,
+            'empresa'          => $empresa,
+            'usuario'          => auth()->user()->name,
+            'fecha_reporte'    => now()->format('d/m/Y'),
+            'filtros'          => $request->all(),
+        ];
+        $this->generatePDF($data, 'vistasReportes.pdf_desembolsos', 'Desembolsos_' . date('Y-m-d'));
+    }
+
+    public function exportarDesembolsosExcel(Request $request)
+    {
+        $registros         = $this->buildDesembolsosQuery($request);
+        $total_desembolso  = $registros->sum('monto');
+        $total_pago_adm    = $registros->sum('monto_pago_adm');
+        $empresa           = DB::table('mi_empresa')->first();
+        $data = [
+            'registros'        => $registros,
+            'total_desembolso' => $total_desembolso,
+            'total_pago_adm'   => $total_pago_adm,
+            'empresa'          => $empresa,
+            'usuario'          => auth()->user()->name,
+            'fecha_reporte'    => now()->format('d/m/Y'),
+            'filtros'          => $request->all(),
+        ];
+        return response(view('vistasReportes.excel_desembolsos', $data))
+            ->header('Content-Type', 'application/vnd.ms-excel; charset=utf-8')
+            ->header('Content-Disposition', 'attachment; filename="Desembolsos_' . date('Y-m-d') . '.xls"');
+    }
+
+    private function buildDesembolsosQuery(Request $request)
+    {
+        $query = DB::table('desembolso')
+            ->join('plan_pago', 'plan_pago.id', '=', 'desembolso.id_plan_pago')
+            ->join('solicitud', 'solicitud.id', '=', 'plan_pago.id_solicitud')
+            ->join('cliente', 'cliente.id', '=', 'solicitud.id_cliente')
+            ->join('users', 'users.id', '=', 'solicitud.id_usuario')
+            ->select(
+                'plan_pago.id as id_plan_pago',
+                'solicitud.id as credito_id',
+                'desembolso.fecha as fecha_desembolso',
+                'cliente.nombre as cliente_nombre',
+                'cliente.ci as cliente_ci',
+                'users.personal as asesor_nombre',
+                'users.id as id_asesor',
+                'solicitud.estado as estado_credito',
+                'solicitud.tipo_garantia',
+                'solicitud.lapso_capital',
+                'solicitud.nro_cuotas',
+                'solicitud.moneda',
+                'solicitud.monto_pago_adm',
+                'desembolso.monto'
+            );
+
+        if ($request->filled('fecha_inicio')) {
+            $query->whereDate('desembolso.fecha', '>=', $request->fecha_inicio);
+        }
+        if ($request->filled('fecha_fin')) {
+            $query->whereDate('desembolso.fecha', '<=', $request->fecha_fin);
+        }
+        if ($request->filled('buscar_cliente')) {
+            $busqueda = '%' . $request->buscar_cliente . '%';
+            $query->where(function ($q) use ($busqueda) {
+                $q->where('cliente.nombre', 'LIKE', $busqueda)
+                  ->orWhere('cliente.ci', 'LIKE', $busqueda);
+            });
+        }
+        if ($request->filled('id_asesor') && is_numeric($request->id_asesor)) {
+            $query->where('solicitud.id_usuario', (int) $request->id_asesor);
+        }
+        if ($request->filled('lapso_capital')) {
+            $query->where('solicitud.lapso_capital', $request->lapso_capital);
+        }
+
+        return $query->orderBy('desembolso.fecha', 'desc')->get();
+    }
 
     public function reporteDesembolsos(Request $request){
         $registros = DB::table('desembolso')
