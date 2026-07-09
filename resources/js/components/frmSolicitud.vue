@@ -767,7 +767,7 @@
                                                     <td class="text-end pe-3 fw-bold">{{ formatNumero(orden_pago_actual.monto_interes_calculado) }}</td>
                                                 </tr>
                                                 <tr class="border-bottom">
-                                                    <td class="ps-3 text-muted">Mora Calculada:</td>
+                                                    <td class="ps-3 text-muted">Multa Calculada:</td>
                                                     <td class="text-end pe-3 fw-bold text-danger">{{ formatNumero(orden_pago_actual.monto_mora_calculado) }}</td>
                                                 </tr>
 
@@ -776,7 +776,7 @@
                                                     <td class="text-end pe-3">-{{ formatNumero(orden_pago_actual.monto_condonado_interes) }}</td>
                                                 </tr>
                                                 <tr v-if="orden_pago_actual.se_condono_mora" class="bg-light text-success fst-italic">
-                                                    <td class="ps-3"><i class="fas fa-arrow-down me-1"></i> Desc. Mora:</td>
+                                                    <td class="ps-3"><i class="fas fa-arrow-down me-1"></i> Desc. Multa:</td>
                                                     <td class="text-end pe-3">-{{ formatNumero(orden_pago_actual.monto_condonado_mora) }}</td>
                                                 </tr>
 

@@ -173,7 +173,7 @@
                                             <span class="d-block fw-bold text-success fs-6">{{ formatNumero(calcularTotalPagado(cuota)) }} Bs</span>
                                             <span class="d-block text-muted lh-1 mb-1" style="font-size: 0.65rem;">
                                                 Cap: {{ formatNumero(cuota.capital_pagado_total) }} | Int: {{ formatNumero(cuota.interes_pagado_total) }}
-                                                <template v-if="parseFloat(cuota.mora_pagada) > 0">| Mora: {{ formatNumero(cuota.mora_pagada) }}</template>
+                                                <template v-if="parseFloat(cuota.mora_pagada) > 0">| Multa: {{ formatNumero(cuota.mora_pagada) }}</template>
                                             </span>
                                             <button @click="verDetallePagos(cuota)" class="btn btn-outline-success btn-sm py-0 px-2 shadow-sm" style="font-size: 0.65rem;" title="Ver detalle de pagos">
                                                 <i class="fas fa-receipt"></i> Ver Historial
@@ -185,7 +185,7 @@
                                     <td>
                                         <div v-if="parseFloat(cuota.mora_fija_neta) > 0 && cuota.estado != 2" class="mb-1">
                                             <span class="badge bg-danger text-white rounded-pill shadow-sm" style="min-width: 90px; font-size: 0.65rem;">
-                                                Mora {{ cuota.dias_pasados }} Dias
+                                                Multa {{ cuota.dias_pasados }} Días
                                             </span>
                                         </div>
                                         <span class="badge rounded-pill shadow-sm" :class="getEstadoCuota(cuota).clase" style="min-width: 90px; font-size: 0.65rem;">
@@ -261,7 +261,7 @@
                                         <th>Fecha del Pago</th>
                                         <th class="text-end">Abono Capital</th>
                                         <th class="text-end">Abono Interés</th>
-                                        <th class="text-end text-danger">Abono Mora</th>
+                                        <th class="text-end text-danger">Abono Multa</th>
                                         <th class="text-end fw-bold">Total Recibo</th>
                                     </tr>
                                 </thead>
@@ -399,7 +399,7 @@ export default {
             }
             if (cuota.estado == 1) {
                 if (cuota.dias_pasados > 0) {
-                    return { texto: 'En Mora', clase: 'bg-danger text-white' }; 
+                    return { texto: 'Con Multa', clase: 'bg-danger text-white' }; 
                 } else {
                     return { texto: 'Pendiente', clase: 'bg-info text-white' }; 
                 }

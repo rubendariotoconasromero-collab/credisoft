@@ -209,7 +209,7 @@
                                         <th style="width: 95px;">Estado</th>
                                         <th class="table-info text-dark" style="width: 90px;">Fecha Pago</th>
                                         <th class="table-info text-dark" style="width: 95px;">Recibido</th>
-                                        <th class="table-info text-dark" style="width: 90px;">Mora Cobrada</th>
+                                        <th class="table-info text-dark" style="width: 90px;">Multa Cobrada</th>
                                         <th class="table-info text-dark" style="width: 70px;">Acciones</th>
                                     </tr>
                                 </thead>
@@ -313,7 +313,7 @@
                                     <span class="fw-bold text-dark">{{ formatMoney(pagoSeleccionado.pago_interes) }}</span>
                                 </div>
                                 <div class="d-flex justify-content-between small text-muted">
-                                    <span class="text-danger">Mora Cobrada:</span>
+                                    <span class="text-danger">Multa Cobrada:</span>
                                     <span class="fw-bold text-danger">{{ formatMoney(pagoSeleccionado.pago_mora) }}</span>
                                 </div>
                             </div>

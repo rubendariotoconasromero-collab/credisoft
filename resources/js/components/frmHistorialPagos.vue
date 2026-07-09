@@ -241,7 +241,7 @@
                                         <th class="text-start text-dark">Cuota #</th>
                                         <th class="text-end text-dark">A Capital</th>
                                         <th class="text-end text-dark">A Interés</th>
-                                        <th class="text-end text-warning">A Mora</th>
+                                        <th class="text-end text-warning">A Multa</th>
                                         <th class="text-end text-info">Condonado</th>
                                         <th class="text-end bg-success text-white">Efectivo Ingresado</th>
                                     </tr>

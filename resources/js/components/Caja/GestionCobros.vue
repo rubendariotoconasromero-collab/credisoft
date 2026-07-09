@@ -144,8 +144,8 @@
                                         <th class="text-dark fw-bold text-start">Cliente</th>
                                         <th class="text-dark fw-bold text-end border-start">Int. Calc.</th>
                                         <th class="text-dark fw-bold text-end">Int. Cond.</th>
-                                        <th class="text-dark fw-bold text-end border-start">Mora Calc.</th>
-                                        <th class="text-dark fw-bold text-end">Mora Cond.</th>
+                                        <th class="text-dark fw-bold text-end border-start">Multa Calc.</th>
+                                        <th class="text-dark fw-bold text-end">Multa Cond.</th>
                                         <th class="text-dark fw-bold text-end border-start bg-warning bg-opacity-10">Total Cobrar</th>
                                         <th class="text-dark fw-bold">Estado</th>
                                         <th class="text-dark fw-bold">Acción</th>
@@ -255,7 +255,7 @@
                             <div class="d-flex justify-content-between mb-1"><strong>Inicio:</strong> <span>{{ formatDate(plan_pago.fecha_inicio_plan) }}</span></div>
                             <div class="d-flex justify-content-between mb-1"><strong>Fin:</strong> <span>{{ formatDate(plan_pago.fecha_fin_plan) }}</span></div>
                             <div v-if="dias_mora > 0" class="d-flex justify-content-between">
-                                <span class="fw-bold text-danger">Mora General:</span>
+                                <span class="fw-bold text-danger">Multa General:</span>
                                 <span class="fw-bold text-danger">{{ dias_mora }} Días</span>
                             </div>
                         </div>
@@ -278,7 +278,7 @@
                                 <th class="text-center text-primary">Int. Devengado</th>
                                 <th class="text-center text-danger">Int. Moratorio</th>
                                 
-                                <th class="text-center text-danger">Mora a Pagar</th>
+                                <th class="text-center text-danger">Multa a Pagar</th>
                                 <th class="text-center fw-bold">Total a Pagar</th>
 
                                 <th class="text-center">Int. Acumulado</th>
@@ -407,8 +407,8 @@
                                     <i class="fas fa-info-circle"></i>
                                     Solo se registra {{
                                         paymentDetails.modalidad === 'solo_interes' ? 'el interés' :
-                                        paymentDetails.modalidad === 'solo_mora' ? 'la mora' :
-                                        'interés + mora'
+                                        paymentDetails.modalidad === 'solo_mora' ? 'la multa' :
+                                        'interés + multa'
                                     }}. El capital permanece pendiente.
                                 </div>
                             </div>
@@ -446,7 +446,7 @@
                                             </li>
 
                                             <li class="list-group-item d-flex justify-content-between align-items-center px-0 bg-transparent pt-1 border-bottom-0">
-                                                <span class="text-muted small">Multa Fija (Mora)</span>
+                                                <span class="text-muted small">Multa Fija</span>
                                                 <span class="fw-bold text-danger">{{ formatNumero(totalMulta) }}</span>
                                             </li>
                                         </ul>
@@ -610,8 +610,8 @@ export default {
             modalidades: [
                 { value: 'completo',     label: 'Cuota Completa',        classActive: 'btn-success' },
                 { value: 'solo_interes', label: 'Solo Interés',          classActive: 'btn-primary' },
-                { value: 'solo_mora',    label: 'Solo Mora',             classActive: 'btn-danger' },
-                { value: 'interes_mora', label: 'Interés + Mora',        classActive: 'btn-warning text-dark' },
+                { value: 'solo_mora',    label: 'Solo Multa',            classActive: 'btn-danger' },
+                { value: 'interes_mora', label: 'Interés + Multa',       classActive: 'btn-warning text-dark' },
                 { value: 'parcial',      label: 'Pago Parcial (libre)',  classActive: 'btn-info text-white' },
             ]
         };

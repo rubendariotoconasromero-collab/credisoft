@@ -349,7 +349,7 @@
                                                                 <i class="fas fa-exclamation-triangle fa-lg"></i>
                                                             </div>
                                                             <div>
-                                                                <div class="small text-uppercase text-muted fw-bold" style="font-size: 0.65rem;">Multa Mora</div>
+                                                                <div class="small text-uppercase text-muted fw-bold" style="font-size: 0.65rem;">Multa</div>
                                                                 <div class="d-flex align-items-baseline">
                                                                     <span class="fw-bold text-dark fs-6">
                                                                         {{ formatNumero(pago_previo.detalle_mora) }}
@@ -418,7 +418,7 @@
                                                             id="checkCondMora" 
                                                             v-model="pago_previo.condonar_mora"
                                                             @change="toggleCondonacion('mora')">
-                                                        <label class="form-check-label small fw-bold" for="checkCondMora">Condonar Mora</label>
+                                                        <label class="form-check-label small fw-bold" for="checkCondMora">Condonar Multa</label>
                                                     </div>
                                                     <div class="input-group input-group-sm" v-if="pago_previo.condonar_mora">
                                                         <input type="number" class="form-control" 
@@ -564,7 +564,7 @@
                                                     <td class="text-center">
                                                         <div v-if="parseFloat(cuota.mora_fija_neta) > 0 && cuota.estado != 2" class="mb-1">
                                                             <span class="badge bg-danger text-white rounded-pill" style="font-size: 0.55rem; min-width: 70px;">
-                                                                Mora {{ cuota.dias_pasados }}d
+                                                                Multa {{ cuota.dias_pasados }}d
                                                             </span>
                                                         </div>
                                                         <span class="badge rounded-pill" :class="getEstadoCuota(cuota).clase" style="font-size:0.65rem; min-width: 90px;">
@@ -1152,7 +1152,7 @@ export default {
 
                 let txt = [];
                 if (sumaInteres > 0) txt.push(`Interés Acum. (Cuotas 1-${ultimaCuotaInt})`);
-                if (sumaMora > 0) txt.push(`Multas Mora`);
+                if (sumaMora > 0) txt.push(`Multas`);
                 this.pago_previo.descripcion = "Pago Previo: " + txt.join(" + ");
             }
         },
