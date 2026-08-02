@@ -223,7 +223,7 @@ export default {
         async toggleCustomerStatus(customer) {
             try {
                 const endpoint = customer.estado === 1 ? "/desactivar_cliente" : "/activar_cliente";
-                await axios.get(`${endpoint}?id_cliente=${customer.id}`);
+                await axios.post(endpoint, { id_cliente: customer.id });
                 await this.fetchCustomers(1);
             } catch (error) {
                 console.error("Error toggling status:", error);

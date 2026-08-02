@@ -216,13 +216,13 @@ export default {
         },
         async activateGuarantor(item) {
             try {
-                await axios.get(`/activar_codeudor?id_codeudor=${item.id}`);
+                await axios.post('/activar_codeudor', { id_codeudor: item.id });
                 await this.fetchGuarantors();
             } catch (error) { console.error(error); }
         },
         async deactivateGuarantor(item) {
             try {
-                await axios.get(`/desactivar_codeudor?id_codeudor=${item.id}`);
+                await axios.post('/desactivar_codeudor', { id_codeudor: item.id });
                 await this.fetchGuarantors();
             } catch (error) { console.error(error); }
         },

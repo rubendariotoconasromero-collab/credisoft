@@ -16,8 +16,9 @@ class UserSeeder extends Seeder
     {
         $now = Carbon::now();
         // La contraseña por defecto será 'password123' para todos
-        $password = Hash::make('admin123'); 
+        $password = Hash::make('admin123');
 
+        // El usuario ADMINISTRADOR siempre se crea (base, en cualquier entorno).
         $users = [
             [
                 'name' => 'administrador',
@@ -33,6 +34,10 @@ class UserSeeder extends Seeder
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
+        ];
+
+        // Usuarios de prueba (cajero, oficial, encargado): solo en modo demo.
+        $usuariosDemo = [
             [
                 'name' => 'cajero_user',
                 'personal' => 'Maria Gomez (Cajera)',
@@ -76,6 +81,10 @@ class UserSeeder extends Seeder
                 'updated_at' => $now,
             ]
         ];
+
+        if (config('app.seed_demo_data')) {
+            $users = array_merge($users, $usuariosDemo);
+        }
 
         DB::table('users')->insert($users);
     }

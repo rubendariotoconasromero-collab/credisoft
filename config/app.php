@@ -33,6 +33,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Cargar Datos de Demostración (Seeders)
+    |--------------------------------------------------------------------------
+    |
+    | Cuando está en true, DatabaseSeeder carga datos ficticios de prueba
+    | (clientes, codeudores, solicitudes, socios y usuarios de demo). En
+    | producción debe quedar en false para sembrar únicamente los datos base
+    | (permisos, roles, motivos y el usuario administrador).
+    |
+    */
+
+    'seed_demo_data' => (bool) env('SEED_DEMO_DATA', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Debug Mode
     |--------------------------------------------------------------------------
     |

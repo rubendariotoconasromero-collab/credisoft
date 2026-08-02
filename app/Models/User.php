@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Support\Facades\DB;
 
 class User extends Authenticatable
 {
@@ -56,5 +57,30 @@ class User extends Authenticatable
     {
         // El segundo parámetro es la llave foránea en esta tabla
         return $this->belongsTo(Rol::class, 'id_rol');
+    }
+
+    /**
+     * Verifica si el rol del usuario tiene asignado un permiso (por nombre).
+     * Fuente única de verdad para el control de acceso a módulos.
+     */
+    public function tienePermiso($nombre): bool
+    {
+        if (empty($this->id_rol)) {
+            return false;
+        }
+
+        return DB::table('permiso_rol')
+            ->join('permiso', 'permiso.id', '=', 'permiso_rol.id_permiso')
+            ->where('permiso_rol.id_rol', $this->id_rol)
+            ->where('permiso.nombre', $nombre)
+            ->exists();
+    }
+
+    /**
+     * Nombre del rol del usuario (para mostrar en la interfaz).
+     */
+    public function getRoleNameAttribute(): ?string
+    {
+        return optional($this->rol)->nombre;
     }
 }

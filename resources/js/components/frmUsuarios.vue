@@ -365,7 +365,7 @@
                 this.getRoles();
             },
             activar(usuario) {
-                axios.get('/activar_usuario?id_usuario=' + usuario.id).then((response) => {
+                axios.post('/activar_usuario', { id_usuario: usuario.id }).then((response) => {
                         console.log(response);
                     })
                     .catch((error) => {
@@ -383,7 +383,7 @@
                     })
             },
             desactivar(usuario) {
-                axios.get('/desactivar_usuario?id_usuario=' + usuario.id).then((response) => {
+                axios.post('/desactivar_usuario', { id_usuario: usuario.id }).then((response) => {
                         console.log(response);
                     })
                     .catch((error) => {

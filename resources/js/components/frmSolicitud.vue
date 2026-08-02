@@ -2340,7 +2340,7 @@ export default {
         },
         async activarSolicitud(item) {
             try {
-                await axios.get(`/activar_solicitud?id_solicitud=${item.id}`);
+                await axios.post('/activar_solicitud', { id_solicitud: item.id });
                 this.getSolicitudes(this.pagination.current_page);
                 Swal.fire({
                     icon: "success",
@@ -2370,7 +2370,7 @@ export default {
             });
             if (result.isConfirmed) {
                 try {
-                    await axios.get(`/desactivar_solicitud?id_solicitud=${item.id}`);
+                    await axios.post('/desactivar_solicitud', { id_solicitud: item.id });
                     this.getSolicitudes(this.pagination.current_page);
                     
                     Swal.fire({

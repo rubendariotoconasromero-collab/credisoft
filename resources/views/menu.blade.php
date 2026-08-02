@@ -220,7 +220,7 @@
                             <li><a href="javascript:void(0)" class="dropdown-item"><i class="mdi mdi-power text-muted me-2"></i> Logout</a></li>
                         </ul>
                     </div>
-                    <p class="text-white-50 m-0">{{ auth()->user()->role_name ?? 'Administrasaubtor' }}</p>
+                    <p class="text-white-50 m-0">{{ auth()->user()->role_name ?? 'Usuario' }}</p>
                 </div>
             </div>
         </div>
@@ -293,19 +293,36 @@
                 </li>
                 @endif
 
-                @if($login_controller->permisoSistema('informacion', auth()->user()->id_rol))
+                @php
+                    $id_rol_actual = auth()->user()->id_rol;
+                    $puede_informacion = $login_controller->permisoSistema('informacion', $id_rol_actual);
+                    $puede_usuarios    = $login_controller->permisoSistema('usuarios', $id_rol_actual);
+                    $puede_socios      = $login_controller->permisoSistema('socios', $id_rol_actual);
+                    $puede_roles       = $login_controller->permisoSistema('roles', $id_rol_actual);
+                @endphp
+                @if($puede_informacion || $puede_usuarios || $puede_socios || $puede_roles)
                 <li>
                     <a href="javascript: void(0);" class="nav-link has-arrow waves-effect {{ in_array($current_route, ['informacion', 'usuarios', 'roles', 'configuracion', 'boveda']) ? 'mm-active' : '' }}">
                         <i class="fas fa-cogs"></i>
                         <span>Administración</span>
                     </a>
                     <ul class="sub-menu" aria-expanded="false">
+                        @if($puede_informacion)
                         <li><a href="/informacion" class="{{ $current_route == 'informacion' ? 'mm-active' : '' }}">Información Empresa</a></li>
+                        @endif
+                        @if($puede_usuarios)
                         <li><a href="/usuarios" class="{{ $current_route == 'usuarios' ? 'mm-active' : '' }}">Gestión de usuarios</a></li>
+                        @endif
+                        @if($puede_socios)
                         <li><a href="/socio" class="{{ $current_route == 'socio' ? 'mm-active' : '' }}">Gestión de socios</a></li>
+                        @endif
+                        @if($puede_roles)
                         <li><a href="/roles" class="{{ $current_route == 'roles' ? 'mm-active' : '' }}">Roles</a></li>
+                        @endif
+                        @if($puede_informacion)
                         <li><a href="/configuracion" class="{{ $current_route == 'configuracion' ? 'mm-active' : '' }}">Motivos Ingresos y Egresos</a></li>
                         <li><a href="/boveda" class="{{ $current_route == 'boveda' ? 'mm-active' : '' }}">Boveda</a></li>
+                        @endif
                     </ul>
                 </li>
                 @endif

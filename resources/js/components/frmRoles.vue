@@ -186,7 +186,7 @@ export default {
         async toggleEstado(rol, action) {
             try {
                 const endpoint = action === 'activar' ? '/activar_rol' : '/desactivar_rol';
-                await axios.get(`${endpoint}?id_rol=${rol.id}`);
+                await axios.post(endpoint, { id_rol: rol.id });
                 await this.getArrayRoles();
                 this.showSuccess('Estado actualizado correctamente');
             } catch (error) {
