@@ -15,6 +15,7 @@ use App\Http\Controllers\ConsultaFinancieraController;
 use App\Http\Controllers\SocioController;
 use App\Http\Controllers\ConfiguracionController;
 use App\Http\Controllers\PlanPagoController;
+use App\Http\Controllers\SesionController;
 
 
 /*
@@ -25,10 +26,15 @@ use App\Http\Controllers\PlanPagoController;
 | CONTROL DE ACCESO
 | - Rutas públicas: solo login.
 | - Todo lo demás requiere sesión (grupo 'auth').
-| - Las PÁGINAS de módulo y las ACCIONES DE ESCRITURA (crear/editar/anular/
-|   activar/desactivar) están protegidas con 'permiso:<nombre>', que valida
-|   el permiso del rol contra la tabla permiso_rol. Impide abrir un módulo o
-|   ejecutar una escritura sin el permiso, aunque se llame la URL directa.
+| - Fase C: la app es una SPA. Cualquier ruta GET que no matchee algo
+|   definido arriba cae en la ruta catch-all al final de este archivo, que
+|   sirve el shell (resources/views/app.blade.php). Vue Router decide qué
+|   módulo mostrar según la URL, y su guard de navegación (routes.js) exige
+|   el permiso correspondiente — mismo nombre de permiso que se usaba antes
+|   en el middleware 'permiso:<nombre>' de cada página.
+| - Las ACCIONES DE ESCRITURA (crear/editar/anular/activar/desactivar) siguen
+|   protegidas server-side con 'permiso:<nombre>' — esa es la seguridad real,
+|   independiente de lo que decida mostrar el router en el cliente.
 | - Los endpoints de LECTURA (get_x, listados, reportes) quedan bajo 'auth'
 |   (nadie sin sesión los consume). Muchos son compartidos entre módulos, por
 |   eso no se restringen individualmente por permiso.
@@ -48,18 +54,22 @@ Route::post('/login_process', 'App\Http\Controllers\LoginController@loginProcess
 // ==========================================================================
 Route::middleware('auth')->group(function () {
 
-    // /administracion es el "shell" de la SPA y el destino post-login:
-    // debe quedar accesible para cualquier usuario autenticado (el menú se
-    // adapta a sus permisos). Por eso NO lleva 'permiso'.
+    // /administracion es el destino post-login (redirect()->intended) y
+    // sirve el shell SPA. Accesible a cualquier usuario autenticado (el
+    // menú decide qué módulos mostrar según sus permisos). Por eso NO
+    // lleva 'permiso'.
     Route::get('/administracion', 'App\Http\Controllers\LoginController@administracion')->name('administracion');
     Route::post('/administracion', 'App\Http\Controllers\LoginController@logout')->name('logout');
+
+    // Bootstrap de sesión para el cliente SPA (Vue Router): datos del
+    // usuario + permisos de su rol, para armar el menú y los guards.
+    Route::get('/me', [SesionController::class, 'me']);
 
     // permisos (lectura, usados por el módulo de roles)
     Route::get('/get_permisos', 'App\Http\Controllers\PermisoController@getPermisos');
     Route::get('/get_permisos_rol', 'App\Http\Controllers\PermisoController@getPermisoRol');
 
     // ==================== ROLES  [permiso: roles] ====================
-    Route::get('/roles', 'App\Http\Controllers\RolController@index')->middleware('permiso:roles');
     Route::get('/get_roles', 'App\Http\Controllers\RolController@getRoles');
     Route::get('/get_roles_usuarios', 'App\Http\Controllers\RolController@getRolesUsuarios');
     Route::post('/activar_rol', 'App\Http\Controllers\RolController@activar')->middleware('permiso:roles');
@@ -68,7 +78,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/modify_rol', 'App\Http\Controllers\RolController@modify')->middleware('permiso:roles');
 
     // ==================== USUARIOS  [permiso: usuarios] ====================
-    Route::get('/usuarios', 'App\Http\Controllers\UsuarioController@index')->middleware('permiso:usuarios');
     Route::get('/get_usuarios', 'App\Http\Controllers\UsuarioController@getUsuarios');
     Route::get('/get_usuarios_sin', 'App\Http\Controllers\UsuarioController@getUsuariosSin');
     Route::post('/activar_usuario', 'App\Http\Controllers\UsuarioController@activar')->middleware('permiso:usuarios');
@@ -77,12 +86,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/modify_usuario', 'App\Http\Controllers\UsuarioController@modify')->middleware('permiso:usuarios');
 
     // ==================== MI EMPRESA  [permiso: informacion] ====================
-    Route::get('/informacion', 'App\Http\Controllers\MiEmpresaController@index')->middleware('permiso:informacion');
     Route::post('/modify_miempresa', 'App\Http\Controllers\MiEmpresaController@modify')->middleware('permiso:informacion');
     Route::get('/get_mi_empresa', 'App\Http\Controllers\MiEmpresaController@getMiEmpresa');
 
     // ==================== CLIENTE  [permiso: cliente] ====================
-    Route::get('/clientes', 'App\Http\Controllers\ClienteController@index')->middleware('permiso:cliente');
     Route::get('/get_clientes', 'App\Http\Controllers\ClienteController@getClientes');
     Route::get('/get_clientes_paginate', 'App\Http\Controllers\ClienteController@getClientesPaginate');
     Route::get('/get_clientes_sin', 'App\Http\Controllers\ClienteController@getClientesSin');
@@ -103,7 +110,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/get_cliente_info', [ClienteController::class, 'getClienteInfo']);
 
     // ==================== SOLICITUD  [permiso: solicitudprestamos] ====================
-    Route::get('/solicitud', 'App\Http\Controllers\SolicitudController@index')->middleware('permiso:solicitudprestamos');
     Route::get('/get_solicitudes', 'App\Http\Controllers\SolicitudController@getSolicitudes');
     Route::get('/get_garantias', 'App\Http\Controllers\SolicitudController@getGarantias');
     Route::post('/activar_solicitud', 'App\Http\Controllers\SolicitudController@activarSolicitud')->middleware('permiso:solicitudprestamos');
@@ -131,7 +137,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/listar_cuotas_plan_reprogramacion', 'App\Http\Controllers\SolicitudController@listarCuotasPlanReprogramacion');
 
     // ==================== PLAN DE PAGOS  [permiso: planpagos] ====================
-    Route::get('/plan_pago', 'App\Http\Controllers\PlanPagoController@index')->middleware('permiso:planpagos');
     Route::get('/get_planespago', 'App\Http\Controllers\PlanPagoController@getPlanesPago');
     Route::get('/get_planespago_caja', 'App\Http\Controllers\PlanPagoController@getPlanesPagoCaja');
     Route::get('/get_cuotas_plan', 'App\Http\Controllers\PlanPagoController@getCuotasPlan');
@@ -168,7 +173,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/imprimir/recibo/{codigo_transaccion}', 'App\Http\Controllers\PagoController@generarTicketPago');
 
     // ==================== DASHBOARD  [permiso: paneladministracion] ====================
-    Route::get('/dashboard', [AdministracionController::class, 'index'])->name('dashboard')->middleware('permiso:paneladministracion');
+    // Nota: se retiró '/dashboard' (AdministracionController@index) — el método
+    // 'index' no existe en ese controlador; era una ruta rota y sin uso.
     Route::get('/cantidad_clientes', [AdministracionController::class, 'getCantidadClientes']);
     Route::get('/cantidad_solicitudes', [AdministracionController::class, 'getCantidadSolicitudes']);
     Route::get('/cantidad_planes', [AdministracionController::class, 'getCantidadPlanes']);
@@ -184,7 +190,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/delete_respaldo', 'App\Http\Controllers\RespaldoController@deleteRespaldo')->middleware('permiso:solicitudprestamos');
 
     // ==================== REPORTES  [permiso: reportes] ====================
-    Route::get('/reportes', 'App\Http\Controllers\ReporteController@index')->middleware('permiso:reportes');
     Route::get('/reporte_listado_clientes', 'App\Http\Controllers\ReporteController@listadoClientes');
     Route::get('/get_planes_pago_cliente', 'App\Http\Controllers\ReporteController@getPlanesPagoCliente');
     Route::get('/reporte_planes_pago_cuotas_cliente', 'App\Http\Controllers\ReporteController@reportePlanesCuotasCliente');
@@ -204,7 +209,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/reportes/plan-pago-reprogramado-pdf', [ReporteController::class, 'generarPlanReprogramadoPDF']);
 
     // ==================== CAJA  [permiso: controlcaja] ====================
-    Route::get('/caja', 'App\Http\Controllers\CajaController@index')->middleware('permiso:controlcaja');
     Route::get('/get_caja', 'App\Http\Controllers\CajaController@getCaja');
     Route::get('/get_caja_fecha', 'App\Http\Controllers\CajaController@getCajaFecha');
     Route::post('/caja/aperturar', 'App\Http\Controllers\CajaController@save')->middleware('permiso:controlcaja');
@@ -233,18 +237,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/caja/movimientos/reporte-pdf', [CajaMovimientosController::class, 'generarReporteLista']);
 
     // caja - submenús de historial  [permiso: controlcaja]
-    Route::get('/historial_desembolsos_pagos', 'App\Http\Controllers\CajaController@historialDesembolsosPagos')->middleware('permiso:controlcaja');
     Route::get('/historial_desembolsos_pagos_listado', 'App\Http\Controllers\CajaController@historialDesembolsosPagosListado');
     Route::post('/anular_desembolso', 'App\Http\Controllers\CajaController@anularDesembolso')->middleware('permiso:controlcaja');
-    Route::get('/historial_ingresos', 'App\Http\Controllers\CajaController@historialIngresos')->middleware('permiso:controlcaja');
     Route::get('/historial_ingresos_listado', 'App\Http\Controllers\IngresoController@historialIngresosListado');
     Route::get('/historial_ingresos_listado_caja', 'App\Http\Controllers\IngresoController@historialIngresosListadoCaja');
     Route::post('/anular_ingreso', 'App\Http\Controllers\IngresoController@anularIngreso')->middleware('permiso:controlcaja');
-    Route::get('/historial_gastos', 'App\Http\Controllers\CajaController@historialGastos')->middleware('permiso:controlcaja');
     Route::get('/historial_gastos_listado', 'App\Http\Controllers\GastoController@historialGastosListado');
     Route::get('/historial_egresos_listado_caja', 'App\Http\Controllers\GastoController@historialEgresosListadoCaja');
     Route::post('/anular_gasto', 'App\Http\Controllers\GastoController@anularGasto')->middleware('permiso:controlcaja');
-    Route::get('/historial_pagos', 'App\Http\Controllers\CajaController@historialPagos')->middleware('permiso:controlcaja');
     Route::get('/movimientos_caja', 'App\Http\Controllers\CajaController@getMovimientosCaja');
 
     // gasto / ingreso corrientes  [permiso: controlcaja]
@@ -254,12 +254,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/get_ingresos_corrientes', 'App\Http\Controllers\IngresoController@getIngresosCorrientes');
 
     // Historial de pagos (anulación)  [permiso: controlcaja]
-    Route::get('/historial-pagos', [HistorialPagosController::class, 'index'])->middleware('permiso:controlcaja');
     Route::post('/pagos/anular/{id}', [HistorialPagosController::class, 'anular'])->middleware('permiso:controlcaja');
     Route::get('/historial-pagos/detalles/{codigo}', [HistorialPagosController::class, 'show']);
 
     // ==================== ESTADO RESULTADOS  [permiso: consultasfinancieras] ====================
-    Route::get('/estado_resultados', 'App\Http\Controllers\EstadoResultadosController@index')->middleware('permiso:consultasfinancieras');
     Route::get('/get_pagos_administrativos', 'App\Http\Controllers\EstadoResultadosController@getPagosAdministrativos');
     Route::get('/get_monto_intereses', 'App\Http\Controllers\EstadoResultadosController@getMontoIntereses');
     Route::get('/get_monto_multas', 'App\Http\Controllers\EstadoResultadosController@getMontoMultas');
@@ -267,7 +265,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/get_monto_total_egresos', 'App\Http\Controllers\EstadoResultadosController@getMontoTotalEgresos');
 
     // ==================== CODEUDORES  [permiso: codeudores] ====================
-    Route::get('/codeudores', 'App\Http\Controllers\CodeudorController@index')->middleware('permiso:codeudores');
     Route::post('/save_codeudor', 'App\Http\Controllers\CodeudorController@save')->middleware('permiso:codeudores');
     Route::get('/get_codeudores', 'App\Http\Controllers\CodeudorController@getCodeudores');
     Route::get('/get_direcciones_telefono_codeudor', 'App\Http\Controllers\CodeudorController@getDireccionesTelefonos');
@@ -283,7 +280,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/codeudor/reporte', [CodeudorController::class, 'imprimirReporteCodeudores']);
 
     // ==================== CONSULTAS FINANCIERAS  [permiso: consultasfinancieras] ====================
-    Route::get('/consultas_financieras', 'App\Http\Controllers\ConsultaFinancieraController@index')->middleware('permiso:consultasfinancieras');
     Route::get('/libro-mayor', [ConsultaFinancieraController::class, 'getLibroMayor']);
     Route::get('/consulta-financiera/info-credito', [ConsultaFinancieraController::class, 'getInfoCreditoAsociado']);
     Route::get('/reportes/libro-mayor', [ConsultaFinancieraController::class, 'imprimirLibroMayor']);
@@ -297,53 +293,42 @@ Route::middleware('auth')->group(function () {
     Route::get('/export-planes_pago', 'App\Http\Controllers\ExportController@exportPlanPago');
 
     // ==================== VISTAS REPORTES  [permiso: reportes] ====================
-    Route::get('/index_rep_extracto', 'App\Http\Controllers\VistasReporteController@indexExtracto')->middleware('permiso:reportes');
     Route::get('/get_clientes_rep', 'App\Http\Controllers\VistasReporteController@getClientesRep');
     Route::get('/get_creditos_rep', 'App\Http\Controllers\VistasReporteController@getCreditosRep');
     Route::get('/get_creditos_mora_rep', 'App\Http\Controllers\VistasReporteController@getCreditosMoraRep');
     Route::get('/rep_extracto_credito', 'App\Http\Controllers\VistasReporteController@generarReporteExtracto');
     Route::get('/get_detalle_credito_extracto', 'App\Http\Controllers\VistasReporteController@getDetalleCreditoExtracto');
 
-    Route::get('/hist_credito_mora', 'App\Http\Controllers\VistasReporteController@indexHistCreditoMora')->middleware('permiso:reportes');
     Route::get('/exportar_creditos_mora_pdf', 'App\Http\Controllers\VistasReporteController@exportarCreditosMoraPdf');
     Route::get('/exportar_creditos_mora_excel', 'App\Http\Controllers\VistasReporteController@exportarCreditosMoraExcel');
     Route::get('/rep_creditos_mora', 'App\Http\Controllers\VistasReporteController@generarReporteCreditosMora');
 
-    Route::get('/cliente_mora', 'App\Http\Controllers\VistasReporteController@indexClientesMora')->middleware('permiso:reportes');
     Route::get('/rep_clientes_mora', 'App\Http\Controllers\VistasReporteController@generarReporteClientesMora');
 
-    Route::get('/index_rep_pagos_realizados', 'App\Http\Controllers\VistasReporteController@indexPagosRealizados')->middleware('permiso:reportes');
     Route::get('/generar_reporte_pagos_realizados', 'App\Http\Controllers\VistasReporteController@generarReportePagosRealizados');
 
-    Route::get('/index_pagos_programados', 'App\Http\Controllers\VistasReporteController@indexPagosProgramados')->middleware('permiso:reportes');
     Route::get('/generar_reporte_pagos_programados', 'App\Http\Controllers\VistasReporteController@generarReportesPagosProgramados');
     Route::get('/get_pagos_programados_rep', 'App\Http\Controllers\VistasReporteController@getPagosProgramadosRep');
     Route::get('/exportar_pagos_programados_pdf', 'App\Http\Controllers\VistasReporteController@exportarPagosProgramadosPdf');
     Route::get('/exportar_pagos_programados_excel', 'App\Http\Controllers\VistasReporteController@exportarPagosProgramadosExcel');
 
-    Route::get('/index_movimientos_credito', 'App\Http\Controllers\VistasReporteController@indexMovimientosCredito')->middleware('permiso:reportes');
     Route::get('/reporte_extracto_movimientos', 'App\Http\Controllers\VistasReporteController@reporteExtractoMovimientos');
 
-    Route::get('/index_porcentajes_pagos', 'App\Http\Controllers\VistasReporteController@indexPorcentajesPagos')->middleware('permiso:reportes');
     Route::get('/rep_porcentajes_creditos', 'App\Http\Controllers\VistasReporteController@reportePorcentajesCreditos');
     Route::get('/get_avance_creditos_rep', 'App\Http\Controllers\VistasReporteController@getPorcentajesCreditosRep');
     Route::get('/exportar_avance_creditos_pdf', 'App\Http\Controllers\VistasReporteController@exportarAvanceCreditosPdf');
     Route::get('/exportar_avance_creditos_excel', 'App\Http\Controllers\VistasReporteController@exportarAvanceCreditosExcel');
 
-    Route::get('/index_desembolsos', 'App\Http\Controllers\VistasReporteController@indexDesembolsos')->middleware('permiso:reportes');
     Route::get('/reporte_desembolsos', 'App\Http\Controllers\VistasReporteController@reporteDesembolsos');
     Route::get('/get_desembolsos_rep', 'App\Http\Controllers\VistasReporteController@getDesembolsosRep');
     Route::get('/exportar_desembolsos_pdf', 'App\Http\Controllers\VistasReporteController@exportarDesembolsosPdf');
     Route::get('/exportar_desembolsos_excel', 'App\Http\Controllers\VistasReporteController@exportarDesembolsosExcel');
 
-    Route::get('/index_desembolsos_oficial', 'App\Http\Controllers\VistasReporteController@indexDesembolsosOficial')->middleware('permiso:reportes');
     Route::get('/reporte_desembolsos_oficial', 'App\Http\Controllers\VistasReporteController@reporteDesembolsosOficial');
 
-    Route::get('/index_desembolsos_pendientes', 'App\Http\Controllers\VistasReporteController@indexDesembolsosPendientes')->middleware('permiso:reportes');
     Route::get('/reporte_desembolsos_pendientes', 'App\Http\Controllers\VistasReporteController@reporteDesembolsosPendientes');
 
     // ==================== CONFIGURACIÓN (Motivos)  [permiso: informacion] ====================
-    Route::get('/configuracion', 'App\Http\Controllers\ConfiguracionController@indexConfiguracion')->middleware('permiso:informacion');
     Route::get('/get_motivos_ingresos', 'App\Http\Controllers\ConfiguracionController@getMotivosIngresos');
     Route::post('/guardar_motivo_ingreso', 'App\Http\Controllers\ConfiguracionController@guardarMotivoIngreso')->middleware('permiso:informacion');
     Route::post('/modificar_motivo_ingreso', 'App\Http\Controllers\ConfiguracionController@modificarMotivoIngreso')->middleware('permiso:informacion');
@@ -358,7 +343,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/get_motivos_gastos_activos', [ConfiguracionController::class, 'getMotivosGastoPorTipo']);
 
     // ==================== BÓVEDA  [permiso: informacion] ====================
-    Route::get('/boveda', 'App\Http\Controllers\BovedaController@indexBoveda')->middleware('permiso:informacion');
     Route::get('/get_movimientos_boveda', 'App\Http\Controllers\BovedaController@getMovimientosBoveda');
     Route::get('/get_boveda', 'App\Http\Controllers\BovedaController@getBoveda');
     Route::post('/ingresar_boveda', 'App\Http\Controllers\BovedaController@ingresarBoveda')->middleware('permiso:informacion');
@@ -366,17 +350,15 @@ Route::middleware('auth')->group(function () {
     Route::post('/aperturar_boveda', 'App\Http\Controllers\BovedaController@aperturarBoveda')->middleware('permiso:informacion');
 
     // ==================== PERFIL (cualquier usuario autenticado) ====================
-    Route::get('/perfil', [PerfilController::class, 'index']);
     Route::get('/perfil/get_datos', [PerfilController::class, 'getPerfil']);
     Route::post('/perfil/update_info', [PerfilController::class, 'updateInformacion']);
     Route::post('/perfil/update_password', [PerfilController::class, 'updatePassword']);
 
     // ==================== SOCIOS  [permiso: socios] ====================
-    // La página admin y las escrituras llevan permiso; las lecturas quedan
-    // disponibles porque también las usa la vista de Bóveda.
+    // Las escrituras llevan permiso; las lecturas quedan disponibles porque
+    // también las usa la vista de Bóveda.
     Route::prefix('socio')->group(function () {
         Route::get('/activos', [SocioController::class, 'getSociosActivos']);
-        Route::get('/', [SocioController::class, 'indexAdmin'])->middleware('permiso:socios');
         Route::get('/get_socios', [SocioController::class, 'index']);
         Route::post('/registrar', [SocioController::class, 'store'])->middleware('permiso:socios');
         Route::put('/actualizar', [SocioController::class, 'update'])->middleware('permiso:socios');
@@ -384,4 +366,17 @@ Route::middleware('auth')->group(function () {
         Route::put('/activar', [SocioController::class, 'activar'])->middleware('permiso:socios');
         Route::get('/selectSocio', [SocioController::class, 'selectSocio']); // Útil para la vista de Bóveda
     });
+
+    // ==========================================================================
+    //  SHELL SPA — CATCH-ALL (Fase C)
+    // ==========================================================================
+    // Cualquier GET autenticado que no matcheó ninguna ruta de arriba (es
+    // decir, cualquier "página" de módulo: /caja, /roles, /clientes, etc.,
+    // más rutas ya retiradas como /roles, /usuarios, /solicitud...) sirve el
+    // mismo shell. Vue Router (resources/js/router) decide del lado del
+    // cliente qué componente mostrar y valida el permiso correspondiente.
+    // DEBE quedar como la ÚLTIMA ruta del grupo para no tapar nada de arriba.
+    Route::get('/{any}', function () {
+        return view('app');
+    })->where('any', '.*')->name('spa');
 });

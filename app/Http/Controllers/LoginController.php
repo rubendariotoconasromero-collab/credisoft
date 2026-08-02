@@ -40,7 +40,9 @@ class LoginController extends Controller
     }
 
     public function administracion(){
-        return view('frmAdministracion');
+        // Fase C: sirve el shell SPA; Vue Router resuelve el contenido
+        // ("Panel Informativo") según la URL. Reemplaza a frmAdministracion.blade.php.
+        return view('app');
     }
 
     public function logout(Request $request){

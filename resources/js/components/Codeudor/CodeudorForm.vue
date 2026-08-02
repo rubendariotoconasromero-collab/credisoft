@@ -82,32 +82,18 @@
                                 <div class="row">
                                     <div class="col-md-12">
                                         <label class="fw-bold text-dark">Seleccione una actividad:</label>
-                                        <div class="input-group mt-0 pt-0">
-                                            <textarea 
-                                                @keydown.enter.prevent 
-                                                :disabled="accion === 2" 
-                                                v-model="actividadClase.buscar" 
-                                                class="form-control text-dark" 
-                                                placeholder="Buscar actividad..."
-                                                @input="filtrarActividades(actividadClase.buscar)" 
-                                                autocomplete="off" 
-                                                rows="2">
-                                            </textarea>
-                                        </div>
+                                        <live-search
+                                            v-model="actividadClase.buscar"
+                                            :options="nombresActividades"
+                                            placeholder="Buscar actividad..."
+                                            color="success"
+                                            variant="select"
+                                            :disabled="accion === 2"
+                                            @selected="seleccionarActividadPorNombre"
+                                        />
                                         <small v-if="(!currentGuarantor.actividad || actividadClase.buscar == '') && currentGuarantor.enviado" class="text-danger">
                                             Ingrese una actividad *
                                         </small>
-                                    </div>
-                                    <div class="col-md-12" style="position:relative;">
-                                        <template v-if="filteredItemsActividades.length > 0">
-                                            <div class="com-completion-results shadow" style="z-index: 1050; position: absolute; top: 100%; width: 100%; background: #fff; border: 1px solid #ececec; max-height: 250px; overflow: auto;">
-                                                <ul style="list-style: none; padding: 0; margin: 0">
-                                                    <li v-for="(actividadItem, index) in filteredItemsActividades" :key="index" @click="seleccionarActividad(actividadItem)" style="cursor: pointer; padding: 8px; border-bottom: 1px solid #ececec;">
-                                                        <h6 style="font-size: 14px; color: #000; margin: 0;">{{ actividadItem.nombre }}</h6>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </template>
                                     </div>
                                 </div>
                             </div>
@@ -324,7 +310,6 @@ export default {
             modifyGuarantor: false,
 
             actividades: [],
-            filteredItemsActividades: [], // Antes filteredActivities
             actividadClase: { id_actividad: 0, buscar: "" },
 
             // Foto
@@ -344,6 +329,9 @@ export default {
             if (this.accion === 0) return "Agregar Nuevo Garante/Codeudor";
             if (this.accion === 1) return "Modificar Garante/Codeudor";
             return `Información del Garante/Codeudor: ${this.currentGuarantor.nombre || ''}`;
+        },
+        nombresActividades() {
+            return this.actividades.map(a => a.nombre);
         }
     },
     watch: {
@@ -521,21 +509,16 @@ export default {
             } catch (error) { console.error(error); }
         },
 
-        filtrarActividades(keyword) {
-            if (keyword === "") { 
-                this.filteredItemsActividades = []; 
-                return; 
+        seleccionarActividadPorNombre(nombre) {
+            const item = this.actividades.find(a => a.nombre === nombre);
+            if (item) {
+                this.actividadClase.id_actividad = item.id;
+                this.currentGuarantor.actividad = item.nombre;
+            } else {
+                // Campo limpiado (clear) o texto libre sin coincidencia exacta
+                this.actividadClase.id_actividad = 0;
+                this.currentGuarantor.actividad = "";
             }
-            this.filteredItemsActividades = this.actividades.filter((act) => 
-                act.nombre.toLowerCase().includes(keyword.toLowerCase())
-            );
-        },
-
-        seleccionarActividad(item) {
-            this.actividadClase.id_actividad = item.id;
-            this.actividadClase.buscar = item.nombre;
-            this.currentGuarantor.actividad = item.nombre; // Asegura que se guarde en el modelo principal
-            this.filteredItemsActividades = [];
         },
 
         // --- Lógica Foto ---
@@ -643,8 +626,4 @@ export default {
 /* Estilos específicos del form */
 .customer-photo { width: 200px; height: 200px; object-fit: cover; border-radius: 50%; border: 3px solid #198754; }
 .image-preview-container { display: flex; justify-content: center; align-items: center; min-height: 220px; }
-.activity-dropdown::-webkit-scrollbar { width: 8px; }
-.com-completion-results::-webkit-scrollbar { width: 8px; }
-.com-completion-results::-webkit-scrollbar-track { background: #f1f1f1; }
-.com-completion-results::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
 </style>

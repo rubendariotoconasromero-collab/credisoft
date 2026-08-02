@@ -1,22 +1,26 @@
 <template>
-    <div class="ls-wrapper position-relative" ref="wrapper">
+    <div class="ls-wrapper position-relative" :class="variant === 'select' ? 'ls-variant-select' : ''" ref="wrapper">
 
         <!-- Control row -->
         <div class="ls-control d-flex align-items-center border bg-white"
-             :class="isOpen ? `border-${color} border-opacity-75` : 'border-secondary border-opacity-25'">
+             :class="[isOpen ? `border-${color} border-opacity-75` : 'border-secondary border-opacity-25', disabled ? 'ls-disabled' : '']">
 
-            <span class="ls-icon-search ps-2 text-muted opacity-50">
+            <span v-if="variant !== 'select'" class="ls-icon-search ps-2 text-muted opacity-50">
                 <i class="fas fa-search" style="font-size:0.65rem;"></i>
             </span>
 
             <input
                 ref="inputEl"
                 type="text"
-                class="ls-input form-control border-0 shadow-none fw-semibold text-uppercase"
-                :class="`text-${color === 'danger' ? 'danger' : 'dark'}`"
+                class="ls-input form-control border-0 shadow-none"
+                :class="[
+                    `text-${color === 'danger' ? 'danger' : 'dark'}`,
+                    variant === 'compact' ? 'fw-semibold text-uppercase' : ''
+                ]"
                 :placeholder="placeholder"
                 :value="modelValue"
                 :required="required"
+                :disabled="disabled"
                 autocomplete="off"
                 @input="onInput"
                 @focus="onFocus"
@@ -27,7 +31,7 @@
             />
 
             <!-- Clear -->
-            <button v-if="modelValue"
+            <button v-if="modelValue && !disabled"
                     type="button"
                     class="ls-btn btn btn-link p-0 px-1 text-muted border-0"
                     tabindex="-1"
@@ -36,12 +40,13 @@
             </button>
 
             <!-- Chevron toggle -->
-            <button type="button"
-                    class="ls-btn btn btn-link p-0 px-2 border-0 border-start"
-                    :class="`text-${color}`"
+            <button v-if="!disabled"
+                    type="button"
+                    class="ls-btn btn btn-link p-0 px-2 border-0"
+                    :class="variant === 'select' ? 'ls-chevron-select' : ['text-' + color, 'border-start']"
                     tabindex="-1"
                     @mousedown.prevent="toggle">
-                <i class="fas" :class="isOpen ? 'fa-chevron-up' : 'fa-chevron-down'" style="font-size:0.65rem;"></i>
+                <i class="fas" :class="isOpen ? 'fa-chevron-up' : 'fa-chevron-down'" :style="variant === 'select' ? 'font-size:0.8rem;' : 'font-size:0.65rem;'"></i>
             </button>
         </div>
 
@@ -90,6 +95,10 @@ export default {
         color:       { type: String,  default: 'primary' }, // success | danger | primary | warning
         required:    { type: Boolean, default: false },
         loading:     { type: Boolean, default: false },
+        disabled:    { type: Boolean, default: false },
+        // 'compact': estilo actual (input delgado, texto en mayúsculas). Usado por frmBoveda.vue — no tocar el default.
+        // 'select' : bordes redondeados y alto similar a un <select>/<textarea rows="2">, texto en formato normal.
+        variant:     { type: String,  default: 'compact' },
     },
     emits: ['update:modelValue', 'selected'],
     data() {
@@ -112,9 +121,11 @@ export default {
             this.highlighted = -1;
         },
         onFocus() {
+            if (this.disabled) return;
             this.isOpen = true;
         },
         open() {
+            if (this.disabled) return;
             this.isOpen = true;
         },
         close() {
@@ -176,6 +187,14 @@ export default {
     border-radius: 0 !important;
     transition: border-color 0.15s ease;
 }
+.ls-disabled {
+    background-color: #e9ecef !important;
+    opacity: 0.8;
+}
+.ls-disabled .ls-input {
+    background-color: transparent !important;
+    cursor: not-allowed;
+}
 .ls-input {
     font-size: 0.8rem;
     padding: 3px 6px;
@@ -212,4 +231,40 @@ export default {
 .ls-slide-leave-active { transition: opacity 0.1s ease, transform 0.1s ease; }
 .ls-slide-enter-from,
 .ls-slide-leave-to  { opacity: 0; transform: translateY(-4px); }
+
+/* Variante "select": mismo aspecto "aplomado" que los <select>/<input> del
+   tema (fondo #f0f1f2, sin borde visible), pero alto de un <textarea rows="2"> */
+.ls-variant-select.ls-wrapper {
+    --ls-select-bg: #f0f1f2;
+}
+.ls-variant-select .ls-control {
+    border: none !important;
+    border-radius: 0 !important;
+    background-color: var(--ls-select-bg) !important;
+    min-height: calc(3em + 1.5rem + 2px); /* equivalente a <textarea class="form-control" rows="2"> */
+    align-items: flex-start;
+    padding: 0.75rem 0.5rem 0.75rem 1rem;
+}
+.ls-variant-select .ls-input {
+    font-size: 1rem;
+    font-weight: 300;
+    padding: 0;
+    line-height: 1.5;
+    align-self: flex-start;
+    background-color: transparent !important;
+}
+.ls-variant-select .ls-btn {
+    align-self: flex-start;
+}
+.ls-variant-select .ls-chevron-select {
+    color: #343a40;
+    opacity: 0.6;
+}
+.ls-variant-select .ls-dropdown {
+    border-radius: 0 !important;
+    background-color: #fff !important;
+}
+.ls-variant-select .ls-control.ls-disabled {
+    background-color: #e9ecef !important;
+}
 </style>

@@ -6,6 +6,7 @@
 
 import './bootstrap';
 import { createApp } from 'vue';
+import router from './router'; // Fase B: usado solo por las páginas que renderizan <router-view> (el shell SPA en /spa). No afecta a las páginas MPA existentes.
 
 
 
@@ -51,6 +52,7 @@ import frmConsultaFinanciera from './components/frmConsultaFinanciera.vue';
 import PerfilUsuarioComponent from './components/PerfilUsuarioComponent.vue';
 import frmSocio from './components/frmSocio.vue';
 import LiveSearch from './components/Shared/LiveSearch.vue';
+import AppMenu from './components/layouts/AppMenu.vue';
 
 
 
@@ -86,6 +88,9 @@ app.component('frm-consultafinanciera', frmConsultaFinanciera);
 app.component('perfil-usuario-component', PerfilUsuarioComponent);
 app.component('frm-socio', frmSocio);
 app.component('live-search', LiveSearch);
+app.component('app-menu', AppMenu);
+
+app.use(router);
 
 
 

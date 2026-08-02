@@ -81,6 +81,9 @@
                                 </a>
                             <input type="password" class="form-control" id="userpassword" name="password"
                                 placeholder="Ingrese contraseña">
+                                <a class="btn btn-success -text-white" id="togglePassword" style="cursor:pointer" role="button" aria-label="Mostrar u ocultar contraseña" tabindex="0">
+                                    <i class="fas fa-eye" id="togglePasswordIcon"></i>
+                                </a>
                             </div>
                         </div>
 
@@ -226,6 +229,17 @@
 
     <!-- App js -->
     <script src="assets/js/app.js"></script>
+
+    <script>
+        document.getElementById('togglePassword').addEventListener('click', function () {
+            var input = document.getElementById('userpassword');
+            var icon = document.getElementById('togglePasswordIcon');
+            var isPassword = input.getAttribute('type') === 'password';
+            input.setAttribute('type', isPassword ? 'text' : 'password');
+            icon.classList.toggle('fa-eye', !isPassword);
+            icon.classList.toggle('fa-eye-slash', isPassword);
+        });
+    </script>
 
 </body>
 
