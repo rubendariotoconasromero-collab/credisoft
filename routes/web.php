@@ -16,6 +16,7 @@ use App\Http\Controllers\SocioController;
 use App\Http\Controllers\ConfiguracionController;
 use App\Http\Controllers\PlanPagoController;
 use App\Http\Controllers\SesionController;
+use App\Http\Controllers\PanelController;
 
 
 /*
@@ -183,6 +184,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/estadisticas_prestamos', [AdministracionController::class, 'getEstadisticasPrestamos']);
     Route::get('/top_clientes', [AdministracionController::class, 'getTopClientes']);
 
+    // Paneles de inicio por rol operativo (Cajero / Oficial de Crédito).
+    // Accesibles a cualquier autenticado, igual que el resto de este panel.
+    Route::get('/panel/cajero', [PanelController::class, 'getPanelCajero']);
+    Route::get('/panel/oficial', [PanelController::class, 'getPanelOficial']);
+
     // ==================== RESPALDOS (solicitud)  [permiso: solicitudprestamos] ====================
     Route::post('/imagenRespaldo', 'App\Http\Controllers\RespaldoController@guardarRespaldo')->middleware('permiso:solicitudprestamos');
     Route::post('/guardar_respaldos_imagenes', 'App\Http\Controllers\RespaldoController@guardarRespaldosImagenes')->middleware('permiso:solicitudprestamos');
@@ -328,26 +334,26 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/reporte_desembolsos_pendientes', 'App\Http\Controllers\VistasReporteController@reporteDesembolsosPendientes');
 
-    // ==================== CONFIGURACIÓN (Motivos)  [permiso: informacion] ====================
+    // ==================== CONFIGURACIÓN (Motivos)  [permiso: configuracion] ====================
     Route::get('/get_motivos_ingresos', 'App\Http\Controllers\ConfiguracionController@getMotivosIngresos');
-    Route::post('/guardar_motivo_ingreso', 'App\Http\Controllers\ConfiguracionController@guardarMotivoIngreso')->middleware('permiso:informacion');
-    Route::post('/modificar_motivo_ingreso', 'App\Http\Controllers\ConfiguracionController@modificarMotivoIngreso')->middleware('permiso:informacion');
-    Route::post('/desactivar_motivo_ingreso', 'App\Http\Controllers\ConfiguracionController@desactivarMotivoIngreso')->middleware('permiso:informacion');
-    Route::post('/activar_motivo_ingreso', 'App\Http\Controllers\ConfiguracionController@activarMotivoIngreso')->middleware('permiso:informacion');
+    Route::post('/guardar_motivo_ingreso', 'App\Http\Controllers\ConfiguracionController@guardarMotivoIngreso')->middleware('permiso:configuracion');
+    Route::post('/modificar_motivo_ingreso', 'App\Http\Controllers\ConfiguracionController@modificarMotivoIngreso')->middleware('permiso:configuracion');
+    Route::post('/desactivar_motivo_ingreso', 'App\Http\Controllers\ConfiguracionController@desactivarMotivoIngreso')->middleware('permiso:configuracion');
+    Route::post('/activar_motivo_ingreso', 'App\Http\Controllers\ConfiguracionController@activarMotivoIngreso')->middleware('permiso:configuracion');
     Route::get('/get_motivos_gastos', 'App\Http\Controllers\ConfiguracionController@getMotivosGastos');
-    Route::post('/guardar_motivo_gasto', 'App\Http\Controllers\ConfiguracionController@guardarMotivoGasto')->middleware('permiso:informacion');
-    Route::post('/modificar_motivo_gasto', 'App\Http\Controllers\ConfiguracionController@modificarMotivoGasto')->middleware('permiso:informacion');
-    Route::post('/desactivar_motivo_gasto', 'App\Http\Controllers\ConfiguracionController@desactivarMotivoGasto')->middleware('permiso:informacion');
-    Route::post('/activar_motivo_gasto', 'App\Http\Controllers\ConfiguracionController@activarMotivoGasto')->middleware('permiso:informacion');
+    Route::post('/guardar_motivo_gasto', 'App\Http\Controllers\ConfiguracionController@guardarMotivoGasto')->middleware('permiso:configuracion');
+    Route::post('/modificar_motivo_gasto', 'App\Http\Controllers\ConfiguracionController@modificarMotivoGasto')->middleware('permiso:configuracion');
+    Route::post('/desactivar_motivo_gasto', 'App\Http\Controllers\ConfiguracionController@desactivarMotivoGasto')->middleware('permiso:configuracion');
+    Route::post('/activar_motivo_gasto', 'App\Http\Controllers\ConfiguracionController@activarMotivoGasto')->middleware('permiso:configuracion');
     Route::get('/get_motivos_ingresos_activos', [ConfiguracionController::class, 'getMotivosIngresoPorTipo']);
     Route::get('/get_motivos_gastos_activos', [ConfiguracionController::class, 'getMotivosGastoPorTipo']);
 
-    // ==================== BÓVEDA  [permiso: informacion] ====================
+    // ==================== BÓVEDA  [permiso: boveda] ====================
     Route::get('/get_movimientos_boveda', 'App\Http\Controllers\BovedaController@getMovimientosBoveda');
     Route::get('/get_boveda', 'App\Http\Controllers\BovedaController@getBoveda');
-    Route::post('/ingresar_boveda', 'App\Http\Controllers\BovedaController@ingresarBoveda')->middleware('permiso:informacion');
-    Route::post('/retirar_boveda', 'App\Http\Controllers\BovedaController@retirarBoveda')->middleware('permiso:informacion');
-    Route::post('/aperturar_boveda', 'App\Http\Controllers\BovedaController@aperturarBoveda')->middleware('permiso:informacion');
+    Route::post('/ingresar_boveda', 'App\Http\Controllers\BovedaController@ingresarBoveda')->middleware('permiso:boveda');
+    Route::post('/retirar_boveda', 'App\Http\Controllers\BovedaController@retirarBoveda')->middleware('permiso:boveda');
+    Route::post('/aperturar_boveda', 'App\Http\Controllers\BovedaController@aperturarBoveda')->middleware('permiso:boveda');
 
     // ==================== PERFIL (cualquier usuario autenticado) ====================
     Route::get('/perfil/get_datos', [PerfilController::class, 'getPerfil']);

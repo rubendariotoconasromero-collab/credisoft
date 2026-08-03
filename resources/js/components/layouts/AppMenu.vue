@@ -13,7 +13,7 @@
                                 <i class="mdi mdi-chevron-down"></i>
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a href="javascript:void(0)" class="dropdown-item"><i class="mdi mdi-power text-muted me-2"></i> Logout</a></li>
+                                <li><a href="#" class="dropdown-item" @click.prevent="cerrarSesion"><i class="mdi mdi-power text-muted me-2"></i> Logout</a></li>
                             </ul>
                         </div>
                         <p class="text-white-50 m-0">{{ sesion.role_name || 'Usuario' }}</p>
@@ -89,10 +89,8 @@
                             <li v-if="tienePermiso('usuarios')"><router-link to="/usuarios" :class="{ 'mm-active': esActiva('usuarios') }">Gestión de usuarios</router-link></li>
                             <li v-if="tienePermiso('socios')"><router-link to="/socio" :class="{ 'mm-active': esActiva('socio') }">Gestión de socios</router-link></li>
                             <li v-if="tienePermiso('roles')"><router-link to="/roles" :class="{ 'mm-active': esActiva('roles') }">Roles</router-link></li>
-                            <template v-if="tienePermiso('informacion')">
-                                <li><router-link to="/configuracion" :class="{ 'mm-active': esActiva('configuracion') }">Motivos Ingresos y Egresos</router-link></li>
-                                <li><router-link to="/boveda" :class="{ 'mm-active': esActiva('boveda') }">Boveda</router-link></li>
-                            </template>
+                            <li v-if="tienePermiso('configuracion')"><router-link to="/configuracion" :class="{ 'mm-active': esActiva('configuracion') }">Motivos Ingresos y Egresos</router-link></li>
+                            <li v-if="tienePermiso('boveda')"><router-link to="/boveda" :class="{ 'mm-active': esActiva('boveda') }">Boveda</router-link></li>
                         </ul>
                     </li>
 
@@ -123,7 +121,8 @@
 </template>
 
 <script>
-import { sesion, cargarSesion, tienePermiso } from '../../router/session';
+import axios from 'axios';
+import { sesion, cargarSesion, tienePermiso, resetSesion } from '../../router/session';
 
 export default {
     name: 'AppMenu',
@@ -141,7 +140,9 @@ export default {
             return this.tienePermiso('informacion')
                 || this.tienePermiso('usuarios')
                 || this.tienePermiso('socios')
-                || this.tienePermiso('roles');
+                || this.tienePermiso('roles')
+                || this.tienePermiso('boveda')
+                || this.tienePermiso('configuracion');
         },
         esActivaAdministracion() {
             return ['/informacion', '/usuarios', '/roles', '/configuracion', '/boveda'].includes(this.$route.path);
@@ -164,6 +165,16 @@ export default {
         tienePermiso,
         esActiva(path) {
             return this.$route.path === '/' + path;
+        },
+        // Mismo flujo que AppHeader.vue: es un límite de sesión real, no
+        // algo que deba resolver el router internamente.
+        async cerrarSesion() {
+            try {
+                await axios.post('/administracion');
+            } finally {
+                resetSesion();
+                window.location.href = '/';
+            }
         },
     },
 };

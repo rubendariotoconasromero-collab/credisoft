@@ -29,10 +29,12 @@ class PermisoSeeder extends Seeder
             ['id' => 8, 'nombre' => 'cliente', 'descripcion' => 'Gestión de clientes', 'estado' => 1, 'created_at' => $now, 'updated_at' => $now],
             ['id' => 9, 'nombre' => 'solicitudprestamos', 'descripcion' => 'Gestión de solicitudes de prestamos', 'estado' => 1, 'created_at' => $now, 'updated_at' => $now],
             ['id' => 10, 'nombre' => 'reportes', 'descripcion' => 'Reportes', 'estado' => 1, 'created_at' => $now, 'updated_at' => $now],
+            ['id' => 11, 'nombre' => 'boveda', 'descripcion' => 'Gestión de bóveda física', 'estado' => 1, 'created_at' => $now, 'updated_at' => $now],
             ['id' => 12, 'nombre' => 'codeudores', 'descripcion' => 'Gestion de codeudores', 'estado' => 1, 'created_at' => $now, 'updated_at' => $now],
             ['id' => 13, 'nombre' => 'consultasfinancieras', 'descripcion' => 'Consultas financieras y reportes', 'estado' => 1, 'created_at' => $now, 'updated_at' => $now],
             ['id' => 14, 'nombre' => 'socios', 'descripcion' => 'Gestión de socios', 'estado' => 1, 'created_at' => $now, 'updated_at' => $now],
             ['id' => 15, 'nombre' => 'historial_clientes_creditos', 'descripcion' => 'Historial de clientes y créditos', 'estado' => 1, 'created_at' => $now, 'updated_at' => $now],
+            ['id' => 16, 'nombre' => 'configuracion', 'descripcion' => 'Configuración de motivos de ingresos y egresos', 'estado' => 1, 'created_at' => $now, 'updated_at' => $now],
         ];
 
         // Insertamos los datos en la tabla 'permiso'
