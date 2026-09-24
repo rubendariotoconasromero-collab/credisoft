@@ -110,9 +110,26 @@
                                                 <span v-else class="badge bg-danger rounded badge-custom">ANULADO</span>
                                             </td>
                                             <td class="text-center py-1">
-                                                <div class="d-flex flex-wrap gap-1 justify-content-center">
-                                                    <button class="btn btn-sm btn-outline-primary" :disabled="anulando !== null" @click="verDetalleMovimiento(item)">Ver detalle</button>
-                                                    <button v-if="puedeAnularMovimiento(item)" class="btn btn-sm btn-outline-danger" :disabled="anulando !== null" @click="anularIngreso(item)">Anular</button>
+                                                <div class="btn-group">
+                                                    <a style="cursor: pointer;"
+                                                        class="text-success dropdown-toggle btn-sm"
+                                                        data-bs-toggle="dropdown"
+                                                        aria-expanded="false"
+                                                        :class="{ 'disabled pe-none opacity-50': anulando !== null }">
+                                                        <i class="fas fa-ellipsis-h fs-5"></i>
+                                                    </a>
+                                                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 py-1" style="font-size: 0.82rem; min-width: 140px;">
+                                                        <li>
+                                                            <a class="dropdown-item text-primary py-1" href="#" @click.prevent="verDetalleMovimiento(item)">
+                                                                <i class="fas fa-eye me-2"></i> Ver detalle
+                                                            </a>
+                                                        </li>
+                                                        <li v-if="puedeAnularMovimiento(item)">
+                                                            <a class="dropdown-item text-danger py-1" href="#" @click.prevent="anularIngreso(item)">
+                                                                <i class="fas fa-times me-2"></i> Anular
+                                                            </a>
+                                                        </li>
+                                                    </ul>
                                                 </div>
                                             </td>
                                         </tr>
@@ -207,9 +224,26 @@
                                                 <span v-else class="badge bg-danger rounded badge-custom">ANULADO</span>
                                             </td>
                                             <td class="text-center py-1">
-                                                <div class="d-flex flex-wrap gap-1 justify-content-center">
-                                                    <button class="btn btn-sm btn-outline-primary" :disabled="anulando !== null" @click="verDetalleMovimiento(item)">Ver detalle</button>
-                                                    <button v-if="puedeAnularMovimiento(item)" class="btn btn-sm btn-outline-danger" :disabled="anulando !== null" @click="anularEgresoCaja(item)">Anular</button>
+                                                <div class="btn-group">
+                                                    <a style="cursor: pointer;"
+                                                        class="text-success dropdown-toggle btn-sm"
+                                                        data-bs-toggle="dropdown"
+                                                        aria-expanded="false"
+                                                        :class="{ 'disabled pe-none opacity-50': anulando !== null }">
+                                                        <i class="fas fa-ellipsis-h fs-5"></i>
+                                                    </a>
+                                                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 py-1" style="font-size: 0.82rem; min-width: 140px;">
+                                                        <li>
+                                                            <a class="dropdown-item text-primary py-1" href="#" @click.prevent="verDetalleMovimiento(item)">
+                                                                <i class="fas fa-eye me-2"></i> Ver detalle
+                                                            </a>
+                                                        </li>
+                                                        <li v-if="puedeAnularMovimiento(item)">
+                                                            <a class="dropdown-item text-danger py-1" href="#" @click.prevent="anularEgresoCaja(item)">
+                                                                <i class="fas fa-times me-2"></i> Anular
+                                                            </a>
+                                                        </li>
+                                                    </ul>
                                                 </div>
                                             </td>
                                         </tr>
@@ -304,9 +338,26 @@
                                                 <span v-else class="badge bg-danger rounded badge-custom">ANULADO</span>
                                             </td>
                                             <td class="text-center py-1">
-                                                <div class="d-flex flex-wrap gap-1 justify-content-center">
-                                                    <button class="btn btn-sm btn-outline-primary" :disabled="anulando !== null" @click="verDetalleMovimiento(item)">Ver detalle</button>
-                                                    <button v-if="puedeAnularMovimiento(item)" class="btn btn-sm btn-outline-danger" :disabled="anulando !== null" @click="anularIngreso(item)">Anular</button>
+                                                <div class="btn-group">
+                                                    <a style="cursor: pointer;"
+                                                        class="text-success dropdown-toggle btn-sm"
+                                                        data-bs-toggle="dropdown"
+                                                        aria-expanded="false"
+                                                        :class="{ 'disabled pe-none opacity-50': anulando !== null }">
+                                                        <i class="fas fa-ellipsis-h fs-5"></i>
+                                                    </a>
+                                                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 py-1" style="font-size: 0.82rem; min-width: 140px;">
+                                                        <li>
+                                                            <a class="dropdown-item text-primary py-1" href="#" @click.prevent="verDetalleMovimiento(item)">
+                                                                <i class="fas fa-eye me-2"></i> Ver detalle
+                                                            </a>
+                                                        </li>
+                                                        <li v-if="puedeAnularMovimiento(item)">
+                                                            <a class="dropdown-item text-danger py-1" href="#" @click.prevent="anularIngreso(item)">
+                                                                <i class="fas fa-times me-2"></i> Anular
+                                                            </a>
+                                                        </li>
+                                                    </ul>
                                                 </div>
                                             </td>
                                         </tr>
@@ -401,9 +452,26 @@
                                                 <span v-else class="badge bg-danger rounded badge-custom">ANULADO</span>
                                             </td>
                                             <td class="text-center py-1">
-                                                <div class="d-flex flex-wrap gap-1 justify-content-center">
-                                                    <button class="btn btn-sm btn-outline-primary" :disabled="anulando !== null" @click="verDetalleMovimiento(item)">Ver detalle</button>
-                                                    <button v-if="puedeAnularMovimiento(item)" class="btn btn-sm btn-outline-danger" :disabled="anulando !== null" @click="anularGasto(item)">Anular</button>
+                                                <div class="btn-group">
+                                                    <a style="cursor: pointer;"
+                                                        class="text-success dropdown-toggle btn-sm"
+                                                        data-bs-toggle="dropdown"
+                                                        aria-expanded="false"
+                                                        :class="{ 'disabled pe-none opacity-50': anulando !== null }">
+                                                        <i class="fas fa-ellipsis-h fs-5"></i>
+                                                    </a>
+                                                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 py-1" style="font-size: 0.82rem; min-width: 140px;">
+                                                        <li>
+                                                            <a class="dropdown-item text-primary py-1" href="#" @click.prevent="verDetalleMovimiento(item)">
+                                                                <i class="fas fa-eye me-2"></i> Ver detalle
+                                                            </a>
+                                                        </li>
+                                                        <li v-if="puedeAnularMovimiento(item)">
+                                                            <a class="dropdown-item text-danger py-1" href="#" @click.prevent="anularGasto(item)">
+                                                                <i class="fas fa-times me-2"></i> Anular
+                                                            </a>
+                                                        </li>
+                                                    </ul>
                                                 </div>
                                             </td>
                                         </tr>
