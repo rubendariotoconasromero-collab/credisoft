@@ -43,7 +43,7 @@ return [
     |
     */
 
-    'seed_demo_data' => (bool) env('SEED_DEMO_DATA', false),
+    'seed_demo_data' => (bool) env('SEED_DEMO_DATA', env('APP_ENV') === 'local'),
 
     /*
     |--------------------------------------------------------------------------

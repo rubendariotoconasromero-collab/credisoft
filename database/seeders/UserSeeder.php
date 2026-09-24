@@ -5,87 +5,33 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Carbon\Carbon;
 
 class UserSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        $now = Carbon::now();
-        // La contraseña por defecto será 'password123' para todos
-        $password = Hash::make('admin123');
-
-        // El usuario ADMINISTRADOR siempre se crea (base, en cualquier entorno).
-        $users = [
-            [
-                'name' => 'administrador',
-                'personal' => 'Juan Perez (Administrador)',
-                'email' => 'admin@empresa.com',
-                'estado' => 1,
-                'password' => $password,
-                'id_rol' => 1, // ID del rol Administrador
-                'ci' => '12345678',
-                'telefono' => '70000001',
-                'fecha_cambio_password' => $now,
-                'dias_vigencia' => 90,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ],
-        ];
-
-        // Usuarios de prueba (cajero, oficial, encargado): solo en modo demo.
-        $usuariosDemo = [
-            [
-                'name' => 'cajero_user',
-                'personal' => 'Maria Gomez (Cajera)',
-                'email' => 'cajero@empresa.com',
-                'estado' => 1,
-                'password' => $password,
-                'id_rol' => 2, // ID del rol Cajero
-                'ci' => '87654321',
-                'telefono' => '70000002',
-                'fecha_cambio_password' => $now,
-                'dias_vigencia' => 90,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ],
-            [
-                'name' => 'oficial_user',
-                'personal' => 'Carlos Lopez (Oficial)',
-                'email' => 'oficial@empresa.com',
-                'estado' => 1,
-                'password' => $password,
-                'id_rol' => 3, // ID del rol Oficial de Credito
-                'ci' => '11223344',
-                'telefono' => '70000003',
-                'fecha_cambio_password' => $now,
-                'dias_vigencia' => 90,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ],
-            [
-                'name' => 'encargado_user',
-                'personal' => 'Ana Torres (Encargada)',
-                'email' => 'encargado@empresa.com',
-                'estado' => 1,
-                'password' => $password,
-                'id_rol' => 4, // ID del rol Encargado de Agencia
-                'ci' => '55667788',
-                'telefono' => '70000004',
-                'fecha_cambio_password' => $now,
-                'dias_vigencia' => 90,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ]
-        ];
-
-        if (config('app.seed_demo_data')) {
-            $users = array_merge($users, $usuariosDemo);
+        $accounts = [['administrador', 'Administrador', 'Administrador DEMO']];
+        if (DevelopmentSeeder::enabled()) {
+            $accounts = array_merge($accounts, [
+                ['cajero_user', 'Cajero', 'Cajero A DEMO'],
+                ['cajero2_user', 'Cajero', 'Cajero B DEMO'],
+                ['oficial_user', 'Oficial de Credito', 'Oficial A DEMO'],
+                ['oficial2_user', 'Oficial de Credito', 'Oficial B DEMO'],
+                ['encargado_user', 'Encargado de Agencia', 'Encargado DEMO'],
+            ]);
         }
-
-        DB::table('users')->insert($users);
+        $password = Hash::make('admin123'); // Existing bootstrap credential, documented for development.
+        foreach ($accounts as $index => [$login, $role, $name]) {
+            // Do not reset an existing user's password on db:seed.
+            if (DB::table('users')->where('name', $login)->exists()) continue;
+            DB::table('users')->insert([
+                'name' => $login, 'personal' => $name, 'email' => $login.'@example.test',
+                'password' => $password, 'estado' => 1,
+                'id_rol' => DB::table('rol')->where('nombre', $role)->value('id'),
+                'ci' => 'DEMO-U'.($index + 1), 'telefono' => '0000000'.($index + 1),
+                'fecha_cambio_password' => today()->toDateString(), 'dias_vigencia' => 365,
+                'created_at' => now(), 'updated_at' => now(),
+            ]);
+        }
     }
 }

@@ -1,0 +1,3814 @@
+{
+    "generated_at": "2026-09-24T08:42:49-04:00",
+    "php": "8.2.29",
+    "versions": {
+        "dompdf/dompdf": "v2.0.3",
+        "laravel/framework": "v10.22.0",
+        "mpdf/mpdf": "v8.2.5",
+        "phpunit/phpunit": "10.3.3"
+    },
+    "route_count": 252,
+    "missing_methods": [
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_solicitud_respaldo",
+            "action": "App\\Http\\Controllers\\SolicitudController@getSolicitudRespaldo",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": false
+        }
+    ],
+    "routes": [
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "sanctum/csrf-cookie",
+            "action": "Laravel\\Sanctum\\Http\\Controllers\\CsrfCookieController@show",
+            "middleware": [
+                "web"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "_ignition/health-check",
+            "action": "Spatie\\LaravelIgnition\\Http\\Controllers\\HealthCheckController",
+            "middleware": [
+                "Spatie\\LaravelIgnition\\Http\\Middleware\\RunnableSolutionsEnabled"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "_ignition/execute-solution",
+            "action": "Spatie\\LaravelIgnition\\Http\\Controllers\\ExecuteSolutionController",
+            "middleware": [
+                "Spatie\\LaravelIgnition\\Http\\Middleware\\RunnableSolutionsEnabled"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "_ignition/update-config",
+            "action": "Spatie\\LaravelIgnition\\Http\\Controllers\\UpdateConfigController",
+            "middleware": [
+                "Spatie\\LaravelIgnition\\Http\\Middleware\\RunnableSolutionsEnabled"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "api/user",
+            "action": "Closure",
+            "middleware": [
+                "api",
+                "auth:sanctum"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "/",
+            "action": "App\\Http\\Controllers\\LoginController@irLogin",
+            "middleware": [
+                "web"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "login_process",
+            "action": "App\\Http\\Controllers\\LoginController@loginProcess",
+            "middleware": [
+                "web"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "administracion",
+            "action": "App\\Http\\Controllers\\LoginController@administracion",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "administracion",
+            "action": "App\\Http\\Controllers\\LoginController@logout",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "me",
+            "action": "App\\Http\\Controllers\\SesionController@me",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_permisos",
+            "action": "App\\Http\\Controllers\\PermisoController@getPermisos",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_permisos_rol",
+            "action": "App\\Http\\Controllers\\PermisoController@getPermisoRol",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_roles",
+            "action": "App\\Http\\Controllers\\RolController@getRoles",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_roles_usuarios",
+            "action": "App\\Http\\Controllers\\RolController@getRolesUsuarios",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "activar_rol",
+            "action": "App\\Http\\Controllers\\RolController@activar",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:roles"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "desactivar_rol",
+            "action": "App\\Http\\Controllers\\RolController@desactivar",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:roles"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "save_rol",
+            "action": "App\\Http\\Controllers\\RolController@save",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:roles"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "modify_rol",
+            "action": "App\\Http\\Controllers\\RolController@modify",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:roles"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_usuarios",
+            "action": "App\\Http\\Controllers\\UsuarioController@getUsuarios",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_usuarios_sin",
+            "action": "App\\Http\\Controllers\\UsuarioController@getUsuariosSin",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "activar_usuario",
+            "action": "App\\Http\\Controllers\\UsuarioController@activar",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:usuarios"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "desactivar_usuario",
+            "action": "App\\Http\\Controllers\\UsuarioController@desactivar",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:usuarios"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "save_usuario",
+            "action": "App\\Http\\Controllers\\UsuarioController@save",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:usuarios"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "modify_usuario",
+            "action": "App\\Http\\Controllers\\UsuarioController@modify",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:usuarios"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "modify_miempresa",
+            "action": "App\\Http\\Controllers\\MiEmpresaController@modify",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:informacion"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_mi_empresa",
+            "action": "App\\Http\\Controllers\\MiEmpresaController@getMiEmpresa",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_clientes",
+            "action": "App\\Http\\Controllers\\ClienteController@getClientes",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_clientes_paginate",
+            "action": "App\\Http\\Controllers\\ClienteController@getClientesPaginate",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_clientes_sin",
+            "action": "App\\Http\\Controllers\\ClienteController@getClientesSin",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_direcciones_telefono",
+            "action": "App\\Http\\Controllers\\ClienteController@getDireccionesTelefonos",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "activar_cliente",
+            "action": "App\\Http\\Controllers\\ClienteController@activar",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:cliente"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "desactivar_cliente",
+            "action": "App\\Http\\Controllers\\ClienteController@desactivar",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:cliente"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "save_cliente",
+            "action": "App\\Http\\Controllers\\ClienteController@save",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:cliente"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "modify_cliente",
+            "action": "App\\Http\\Controllers\\ClienteController@modify",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:cliente"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "clientes_pdf",
+            "action": "App\\Http\\Controllers\\ClienteController@clientesPdf2",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "fotoCliente",
+            "action": "App\\Http\\Controllers\\ClienteController@fotoCliente",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:cliente"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_creditos_cliente",
+            "action": "App\\Http\\Controllers\\ClienteController@getCreditosCliente",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_cuotas_planes",
+            "action": "App\\Http\\Controllers\\ClienteController@getCuotasPlanes",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_asesores",
+            "action": "App\\Http\\Controllers\\ClienteController@getAsesores",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_cantidad_clientes",
+            "action": "App\\Http\\Controllers\\ClienteController@getCantidadClientes",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "cantidades_clientes",
+            "action": "App\\Http\\Controllers\\ClienteController@cantidadesClientes",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "cliente/ficha-completa/{id}",
+            "action": "App\\Http\\Controllers\\ClienteController@getFichaCompleta",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "cliente/reporte",
+            "action": "App\\Http\\Controllers\\ClienteController@imprimirReporteClientes",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_cliente_info",
+            "action": "App\\Http\\Controllers\\ClienteController@getClienteInfo",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_solicitudes",
+            "action": "App\\Http\\Controllers\\SolicitudController@getSolicitudes",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_garantias",
+            "action": "App\\Http\\Controllers\\SolicitudController@getGarantias",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "activar_solicitud",
+            "action": "App\\Http\\Controllers\\SolicitudController@activarSolicitud",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:solicitudprestamos"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "desactivar_solicitud",
+            "action": "App\\Http\\Controllers\\SolicitudController@desactivarSolicitud",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:solicitudprestamos"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "guardar_observacion",
+            "action": "App\\Http\\Controllers\\SolicitudController@guardarObservacion",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:solicitudprestamos"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "save_solicitud",
+            "action": "App\\Http\\Controllers\\SolicitudController@save",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:solicitudprestamos"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_solicitud_respaldo",
+            "action": "App\\Http\\Controllers\\SolicitudController@getSolicitudRespaldo",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": false
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "modify_solicitud",
+            "action": "App\\Http\\Controllers\\SolicitudController@modify",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:solicitudprestamos"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "solicitud_garantia_imagenes",
+            "action": "App\\Http\\Controllers\\SolicitudController@guardarImagenes",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:solicitudprestamos"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "guardar_imagen",
+            "action": "App\\Http\\Controllers\\SolicitudController@guardarImagenIndividual",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:solicitudprestamos"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_imagenes_garantia",
+            "action": "App\\Http\\Controllers\\SolicitudController@getImagenesGarantia",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "eliminar_imagen",
+            "action": "App\\Http\\Controllers\\SolicitudController@eliminarImagen",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:solicitudprestamos"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "lista_cuotas_pdf",
+            "action": "App\\Http\\Controllers\\SolicitudController@ListaCuotasPdf",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "save_planpagos_cuotas",
+            "action": "App\\Http\\Controllers\\SolicitudController@savePlanPagosCuotas",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:solicitudprestamos"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "imprimir_cuotas_simulacion",
+            "action": "App\\Http\\Controllers\\SolicitudController@imprimirCuotasSimulacion",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "reporte_hoja_aprobacion",
+            "action": "App\\Http\\Controllers\\SolicitudController@reporteHojaAprobacion",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "reporte_hoja_solicitud",
+            "action": "App\\Http\\Controllers\\SolicitudController@reporteHojaSolicitud",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "guardar_garantias_imagenes",
+            "action": "App\\Http\\Controllers\\SolicitudController@guardarGarantiasImagenes",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:solicitudprestamos"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "solicitud/registrar-especial",
+            "action": "App\\Http\\Controllers\\SolicitudController@registrarSolicitudEspecial",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:solicitudprestamos"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "solicitud/aprobar-reprogramacion-final",
+            "action": "App\\Http\\Controllers\\SolicitudController@aprobarReprogramacionFinal",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:solicitudprestamos"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "reprogramacion/calcular/{id_plan_pago}",
+            "action": "App\\Http\\Controllers\\SolicitudController@calcularMonto",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "solicitud/datos-originales/{id_reprogramacion}",
+            "action": "App\\Http\\Controllers\\SolicitudController@obtenerDatosOriginales",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "solicitud/detalle-completo/{id_solicitud}",
+            "action": "App\\Http\\Controllers\\SolicitudController@getDetalleCompletoSolicitud",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_orden_pago_reprogramacion",
+            "action": "App\\Http\\Controllers\\SolicitudController@getOrdenPagoReprogramacion",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "listar_cuotas_plan_reprogramacion",
+            "action": "App\\Http\\Controllers\\SolicitudController@listarCuotasPlanReprogramacion",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_planespago",
+            "action": "App\\Http\\Controllers\\PlanPagoController@getPlanesPago",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_planespago_caja",
+            "action": "App\\Http\\Controllers\\PlanPagoController@getPlanesPagoCaja",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_cuotas_plan",
+            "action": "App\\Http\\Controllers\\PlanPagoController@getCuotasPlan",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "anular_planpago",
+            "action": "App\\Http\\Controllers\\PlanPagoController@anularPlanPago",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:planpagos"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "activar_planpago",
+            "action": "App\\Http\\Controllers\\PlanPagoController@activarPlanPago",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:planpagos"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "consulta_plan_pago_vigente",
+            "action": "App\\Http\\Controllers\\PlanPagoController@consultarPlanPagoCuotasCanceladas",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "lista_cuotas_planpago_pdf",
+            "action": "App\\Http\\Controllers\\PlanPagoController@ListaCuotasPlanPagoPdf",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "save_amortizacion",
+            "action": "App\\Http\\Controllers\\PlanPagoController@saveAmortizacion",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:planpagos"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "save_amortizacion_nuevo",
+            "action": "App\\Http\\Controllers\\PlanPagoController@saveAmortizacionNuevo",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:planpagos"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "liquidar_deuda",
+            "action": "App\\Http\\Controllers\\PlanPagoController@liquidarDeuda",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:planpagos"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "generar_contrato",
+            "action": "App\\Http\\Controllers\\PlanPagoController@generarContrato",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_cantidad_creditos",
+            "action": "App\\Http\\Controllers\\PlanPagoController@getCantidadCreditos",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_planes_pago_ligados",
+            "action": "App\\Http\\Controllers\\PlanPagoController@getPlanesPagoLigados",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_amortizaciones_plan",
+            "action": "App\\Http\\Controllers\\PlanPagoController@getAmortizacionesPlan",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_amortizaciones",
+            "action": "App\\Http\\Controllers\\PlanPagoController@getAmortizaciones",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "listar_amortizaciones_cuotas",
+            "action": "App\\Http\\Controllers\\PlanPagoController@listarAmortizaciones",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "listar_amortizaciones_cuotas_planpago",
+            "action": "App\\Http\\Controllers\\PlanPagoController@listarAmortizacionesPlanPago",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_pagos_cuota",
+            "action": "App\\Http\\Controllers\\PlanPagoController@getPagosPorCuota",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "save_pago",
+            "action": "App\\Http\\Controllers\\PagoController@save",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:controlcaja"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "pagar_cuotas",
+            "action": "App\\Http\\Controllers\\PagoController@pagarCuotas",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:controlcaja"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_pago",
+            "action": "App\\Http\\Controllers\\PagoController@getPago",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "anular_pago",
+            "action": "App\\Http\\Controllers\\PagoController@anularPago",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:controlcaja"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_pagos",
+            "action": "App\\Http\\Controllers\\PagoController@getPagos",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_pagos_lista_cuotas",
+            "action": "App\\Http\\Controllers\\PagoController@getPagosListaCuotas",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_pagos_lista_anulados",
+            "action": "App\\Http\\Controllers\\PagoController@getPagosListaAnulados",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_pagos_lista_cuotas_total",
+            "action": "App\\Http\\Controllers\\PagoController@getPagosListaCuotasTotal",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "fotoRespaldoPago",
+            "action": "App\\Http\\Controllers\\PagoController@imagenRespaldo",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:controlcaja"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_pagos_fecha",
+            "action": "App\\Http\\Controllers\\PagoController@getPagosFecha",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_pagos_lista_cuotas_fecha",
+            "action": "App\\Http\\Controllers\\PagoController@getPagosListaCuotasFecha",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_pagos_lista_anulados_fecha",
+            "action": "App\\Http\\Controllers\\PagoController@getPagosListaAnuladosFecha",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_pagos_lista_cuotas_total_fecha",
+            "action": "App\\Http\\Controllers\\PagoController@getPagosListaCuotasTotalFecha",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "imprimir/recibo/{codigo_transaccion}",
+            "action": "App\\Http\\Controllers\\PagoController@generarTicketPago",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "cantidad_clientes",
+            "action": "App\\Http\\Controllers\\AdministracionController@getCantidadClientes",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "cantidad_solicitudes",
+            "action": "App\\Http\\Controllers\\AdministracionController@getCantidadSolicitudes",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "cantidad_planes",
+            "action": "App\\Http\\Controllers\\AdministracionController@getCantidadPlanes",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "cantidad_creditos_x_usuario",
+            "action": "App\\Http\\Controllers\\AdministracionController@getCreditosPorUsuario",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "datos_pagos_grafico",
+            "action": "App\\Http\\Controllers\\AdministracionController@getDatosPagos",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "estadisticas_prestamos",
+            "action": "App\\Http\\Controllers\\AdministracionController@getEstadisticasPrestamos",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "top_clientes",
+            "action": "App\\Http\\Controllers\\AdministracionController@getTopClientes",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "panel/cajero",
+            "action": "App\\Http\\Controllers\\PanelController@getPanelCajero",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "panel/oficial",
+            "action": "App\\Http\\Controllers\\PanelController@getPanelOficial",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "imagenRespaldo",
+            "action": "App\\Http\\Controllers\\RespaldoController@guardarRespaldo",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:solicitudprestamos"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "guardar_respaldos_imagenes",
+            "action": "App\\Http\\Controllers\\RespaldoController@guardarRespaldosImagenes",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:solicitudprestamos"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_respaldos",
+            "action": "App\\Http\\Controllers\\RespaldoController@getRespaldos",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "delete_respaldo",
+            "action": "App\\Http\\Controllers\\RespaldoController@deleteRespaldo",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:solicitudprestamos"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "reporte_listado_clientes",
+            "action": "App\\Http\\Controllers\\ReporteController@listadoClientes",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_planes_pago_cliente",
+            "action": "App\\Http\\Controllers\\ReporteController@getPlanesPagoCliente",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "reporte_planes_pago_cuotas_cliente",
+            "action": "App\\Http\\Controllers\\ReporteController@reportePlanesCuotasCliente",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "reporte_general_solicitudes",
+            "action": "App\\Http\\Controllers\\ReporteController@reporteGeneralSolicitudes",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "reporte_solicitudes_aprobadas",
+            "action": "App\\Http\\Controllers\\ReporteController@reporteSolicitudesAprobadas",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "reporte_solicitudes_por_aprobar",
+            "action": "App\\Http\\Controllers\\ReporteController@reporteSolicitudesPorAprobar",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "reporte_solicitudes_anuladas",
+            "action": "App\\Http\\Controllers\\ReporteController@reporteSolicitudesAnuladas",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "reporte_solicitudes_por_usuario",
+            "action": "App\\Http\\Controllers\\ReporteController@reporteSolicitudesPorUsuario",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "reporte_solicitudes_por_rango",
+            "action": "App\\Http\\Controllers\\ReporteController@reporteSolicitudesPorRango",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "reporte_general_planes_pago",
+            "action": "App\\Http\\Controllers\\ReporteController@reporteGeneralPlanesPago",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "reporte_planes_pago_en_proceso",
+            "action": "App\\Http\\Controllers\\ReporteController@reportePlanesPagoEnProceso",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "reporte_planes_pago_cancelados",
+            "action": "App\\Http\\Controllers\\ReporteController@reportePlanesPagoCancelados",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_planes_pago_general",
+            "action": "App\\Http\\Controllers\\ReporteController@getPlanesPagoGeneral",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_planes_pago_general_pdf",
+            "action": "App\\Http\\Controllers\\ReporteController@getPlanesPagoGeneralPdf",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_solicitudes_general",
+            "action": "App\\Http\\Controllers\\ReporteController@getSolicitudesGeneral",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_solicitudes_general_pdf",
+            "action": "App\\Http\\Controllers\\ReporteController@getSolicitudesGeneralPdf",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "reportes/plan-pago-reprogramado-pdf",
+            "action": "App\\Http\\Controllers\\ReporteController@generarPlanReprogramadoPDF",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_caja",
+            "action": "App\\Http\\Controllers\\CajaController@getCaja",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_caja_fecha",
+            "action": "App\\Http\\Controllers\\CajaController@getCajaFecha",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "caja/aperturar",
+            "action": "App\\Http\\Controllers\\CajaController@save",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:controlcaja"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "close_caja",
+            "action": "App\\Http\\Controllers\\CajaController@closeCaja",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:controlcaja"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "caja_abierta",
+            "action": "App\\Http\\Controllers\\CajaController@cajaAbierta",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_pagos_caja",
+            "action": "App\\Http\\Controllers\\CajaController@getPagos",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_pagos_caja_amortizaciones",
+            "action": "App\\Http\\Controllers\\CajaController@getPagosAmortizaciones",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "exportar_pagos_pdf",
+            "action": "App\\Http\\Controllers\\CajaController@exportarPagosCaja",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "exportar_pagos_amortizacion_pdf",
+            "action": "App\\Http\\Controllers\\CajaController@exportarPagosCajaAmortizacion",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "exportar_ingresos_corrientes_pdf",
+            "action": "App\\Http\\Controllers\\CajaController@exportarIngresosCorrientesCaja",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "exportar_gastos_corrientes_pdf",
+            "action": "App\\Http\\Controllers\\CajaController@exportarGastosCorrientesCaja",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_planes_pago_sin_desembolso",
+            "action": "App\\Http\\Controllers\\CajaController@getPlanesPagoSinDesembolsar",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_planes_pago_sin_pago_adm",
+            "action": "App\\Http\\Controllers\\CajaController@getPlanesPagoSinPagoAdm",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "actualizar_desembolso",
+            "action": "App\\Http\\Controllers\\CajaController@actualizarDesembolso",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:controlcaja"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "guardar_pago_adm",
+            "action": "App\\Http\\Controllers\\CajaController@guardarPagoAdministrativo",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:controlcaja"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "reporte_cajas_fecha",
+            "action": "App\\Http\\Controllers\\CajaController@reporteCajasFecha",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_desembolsos",
+            "action": "App\\Http\\Controllers\\CajaController@getDesembolsos",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "exportar_desembolsos_caja_pdf",
+            "action": "App\\Http\\Controllers\\CajaController@exportarDesembolsosCaja",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "generar_comprobante_cliente",
+            "action": "App\\Http\\Controllers\\CajaController@generarComprobanteCliente",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_comprobante_cliente_data",
+            "action": "App\\Http\\Controllers\\CajaController@getComprobanteClienteData",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "lista_cuotas_pdf_caja",
+            "action": "App\\Http\\Controllers\\CajaController@ListaCuotasPdfCaja",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "caja/get-ordenes-reprogramacion",
+            "action": "App\\Http\\Controllers\\CajaController@getOrdenesReprogramacion",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "verificar-boveda",
+            "action": "App\\Http\\Controllers\\CajaController@verificarBoveda",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "caja/saldo-actual",
+            "action": "App\\Http\\Controllers\\CajaController@getSaldoCajaActual",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "caja/movimientos/listado",
+            "action": "App\\Http\\Controllers\\CajaMovimientosController@getListado",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "caja/movimientos/reporte-pdf",
+            "action": "App\\Http\\Controllers\\CajaMovimientosController@generarReporteLista",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "historial_desembolsos_pagos_listado",
+            "action": "App\\Http\\Controllers\\CajaController@historialDesembolsosPagosListado",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "anular_desembolso",
+            "action": "App\\Http\\Controllers\\CajaController@anularDesembolso",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:controlcaja"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "historial_ingresos_listado",
+            "action": "App\\Http\\Controllers\\IngresoController@historialIngresosListado",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "historial_ingresos_listado_caja",
+            "action": "App\\Http\\Controllers\\IngresoController@historialIngresosListadoCaja",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "anular_ingreso",
+            "action": "App\\Http\\Controllers\\IngresoController@anularIngreso",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:controlcaja"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "historial_gastos_listado",
+            "action": "App\\Http\\Controllers\\GastoController@historialGastosListado",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "historial_egresos_listado_caja",
+            "action": "App\\Http\\Controllers\\GastoController@historialEgresosListadoCaja",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "anular_gasto",
+            "action": "App\\Http\\Controllers\\GastoController@anularGasto",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:controlcaja"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "movimientos_caja",
+            "action": "App\\Http\\Controllers\\CajaController@getMovimientosCaja",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "save_gasto",
+            "action": "App\\Http\\Controllers\\GastoController@save",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:controlcaja"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_gastos_corrientes",
+            "action": "App\\Http\\Controllers\\GastoController@getGastosCorrientes",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "save_ingreso",
+            "action": "App\\Http\\Controllers\\IngresoController@save",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:controlcaja"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_ingresos_corrientes",
+            "action": "App\\Http\\Controllers\\IngresoController@getIngresosCorrientes",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "pagos/anular/{id}",
+            "action": "App\\Http\\Controllers\\HistorialPagosController@anular",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:controlcaja"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "historial-pagos/detalles/{codigo}",
+            "action": "App\\Http\\Controllers\\HistorialPagosController@show",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_pagos_administrativos",
+            "action": "App\\Http\\Controllers\\EstadoResultadosController@getPagosAdministrativos",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_monto_intereses",
+            "action": "App\\Http\\Controllers\\EstadoResultadosController@getMontoIntereses",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_monto_multas",
+            "action": "App\\Http\\Controllers\\EstadoResultadosController@getMontoMultas",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_monto_otros_ingresos",
+            "action": "App\\Http\\Controllers\\EstadoResultadosController@getMontoOtrosIngresos",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_monto_total_egresos",
+            "action": "App\\Http\\Controllers\\EstadoResultadosController@getMontoTotalEgresos",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "save_codeudor",
+            "action": "App\\Http\\Controllers\\CodeudorController@save",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:codeudores"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_codeudores",
+            "action": "App\\Http\\Controllers\\CodeudorController@getCodeudores",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_direcciones_telefono_codeudor",
+            "action": "App\\Http\\Controllers\\CodeudorController@getDireccionesTelefonos",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "modify_codeudor",
+            "action": "App\\Http\\Controllers\\CodeudorController@modify",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:codeudores"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "activar_codeudor",
+            "action": "App\\Http\\Controllers\\CodeudorController@activar",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:codeudores"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "desactivar_codeudor",
+            "action": "App\\Http\\Controllers\\CodeudorController@desactivar",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:codeudores"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "codeudores_pdf",
+            "action": "App\\Http\\Controllers\\CodeudorController@codeudoresPdf2",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "fotoCodeudor",
+            "action": "App\\Http\\Controllers\\CodeudorController@fotoCodeudor",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:codeudores"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_codeudores_sin",
+            "action": "App\\Http\\Controllers\\CodeudorController@getCodeudoresSin",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_codeudores_solicitud",
+            "action": "App\\Http\\Controllers\\CodeudorController@getCodeudorSolicitud",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_codeudores_solicitudes",
+            "action": "App\\Http\\Controllers\\CodeudorController@getCodeudoresSolicitudes",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_actividades",
+            "action": "App\\Http\\Controllers\\CodeudorController@getActividades",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "codeudor/reporte",
+            "action": "App\\Http\\Controllers\\CodeudorController@imprimirReporteCodeudores",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "libro-mayor",
+            "action": "App\\Http\\Controllers\\ConsultaFinancieraController@getLibroMayor",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "consulta-financiera/info-credito",
+            "action": "App\\Http\\Controllers\\ConsultaFinancieraController@getInfoCreditoAsociado",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "reportes/libro-mayor",
+            "action": "App\\Http\\Controllers\\ConsultaFinancieraController@imprimirLibroMayor",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "reportes/ingresos",
+            "action": "App\\Http\\Controllers\\ConsultaFinancieraController@imprimirReporteIngresos",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "reportes/egresos",
+            "action": "App\\Http\\Controllers\\ConsultaFinancieraController@imprimirReporteEgresos",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "reportes/libro-mayor/excel",
+            "action": "App\\Http\\Controllers\\ConsultaFinancieraController@exportarExcelLibroMayor",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "reportes/ingresos/excel",
+            "action": "App\\Http\\Controllers\\ConsultaFinancieraController@exportarExcelIngresos",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "reportes/egresos/excel",
+            "action": "App\\Http\\Controllers\\ConsultaFinancieraController@exportarExcelEgresos",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "export-planes_pago",
+            "action": "App\\Http\\Controllers\\ExportController@exportPlanPago",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_clientes_rep",
+            "action": "App\\Http\\Controllers\\VistasReporteController@getClientesRep",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_creditos_rep",
+            "action": "App\\Http\\Controllers\\VistasReporteController@getCreditosRep",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_creditos_mora_rep",
+            "action": "App\\Http\\Controllers\\VistasReporteController@getCreditosMoraRep",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "rep_extracto_credito",
+            "action": "App\\Http\\Controllers\\VistasReporteController@generarReporteExtracto",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_detalle_credito_extracto",
+            "action": "App\\Http\\Controllers\\VistasReporteController@getDetalleCreditoExtracto",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "exportar_creditos_mora_pdf",
+            "action": "App\\Http\\Controllers\\VistasReporteController@exportarCreditosMoraPdf",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "exportar_creditos_mora_excel",
+            "action": "App\\Http\\Controllers\\VistasReporteController@exportarCreditosMoraExcel",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "rep_creditos_mora",
+            "action": "App\\Http\\Controllers\\VistasReporteController@generarReporteCreditosMora",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "rep_clientes_mora",
+            "action": "App\\Http\\Controllers\\VistasReporteController@generarReporteClientesMora",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "generar_reporte_pagos_realizados",
+            "action": "App\\Http\\Controllers\\VistasReporteController@generarReportePagosRealizados",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "generar_reporte_pagos_programados",
+            "action": "App\\Http\\Controllers\\VistasReporteController@generarReportesPagosProgramados",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_pagos_programados_rep",
+            "action": "App\\Http\\Controllers\\VistasReporteController@getPagosProgramadosRep",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "exportar_pagos_programados_pdf",
+            "action": "App\\Http\\Controllers\\VistasReporteController@exportarPagosProgramadosPdf",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "exportar_pagos_programados_excel",
+            "action": "App\\Http\\Controllers\\VistasReporteController@exportarPagosProgramadosExcel",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "reporte_extracto_movimientos",
+            "action": "App\\Http\\Controllers\\VistasReporteController@reporteExtractoMovimientos",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "rep_porcentajes_creditos",
+            "action": "App\\Http\\Controllers\\VistasReporteController@reportePorcentajesCreditos",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_avance_creditos_rep",
+            "action": "App\\Http\\Controllers\\VistasReporteController@getPorcentajesCreditosRep",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "exportar_avance_creditos_pdf",
+            "action": "App\\Http\\Controllers\\VistasReporteController@exportarAvanceCreditosPdf",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "exportar_avance_creditos_excel",
+            "action": "App\\Http\\Controllers\\VistasReporteController@exportarAvanceCreditosExcel",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "reporte_desembolsos",
+            "action": "App\\Http\\Controllers\\VistasReporteController@reporteDesembolsos",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_desembolsos_rep",
+            "action": "App\\Http\\Controllers\\VistasReporteController@getDesembolsosRep",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "exportar_desembolsos_pdf",
+            "action": "App\\Http\\Controllers\\VistasReporteController@exportarDesembolsosPdf",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "exportar_desembolsos_excel",
+            "action": "App\\Http\\Controllers\\VistasReporteController@exportarDesembolsosExcel",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "reporte_desembolsos_oficial",
+            "action": "App\\Http\\Controllers\\VistasReporteController@reporteDesembolsosOficial",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "reporte_desembolsos_pendientes",
+            "action": "App\\Http\\Controllers\\VistasReporteController@reporteDesembolsosPendientes",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_motivos_ingresos",
+            "action": "App\\Http\\Controllers\\ConfiguracionController@getMotivosIngresos",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "guardar_motivo_ingreso",
+            "action": "App\\Http\\Controllers\\ConfiguracionController@guardarMotivoIngreso",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:configuracion"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "modificar_motivo_ingreso",
+            "action": "App\\Http\\Controllers\\ConfiguracionController@modificarMotivoIngreso",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:configuracion"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "desactivar_motivo_ingreso",
+            "action": "App\\Http\\Controllers\\ConfiguracionController@desactivarMotivoIngreso",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:configuracion"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "activar_motivo_ingreso",
+            "action": "App\\Http\\Controllers\\ConfiguracionController@activarMotivoIngreso",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:configuracion"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_motivos_gastos",
+            "action": "App\\Http\\Controllers\\ConfiguracionController@getMotivosGastos",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "guardar_motivo_gasto",
+            "action": "App\\Http\\Controllers\\ConfiguracionController@guardarMotivoGasto",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:configuracion"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "modificar_motivo_gasto",
+            "action": "App\\Http\\Controllers\\ConfiguracionController@modificarMotivoGasto",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:configuracion"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "desactivar_motivo_gasto",
+            "action": "App\\Http\\Controllers\\ConfiguracionController@desactivarMotivoGasto",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:configuracion"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "activar_motivo_gasto",
+            "action": "App\\Http\\Controllers\\ConfiguracionController@activarMotivoGasto",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:configuracion"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_motivos_ingresos_activos",
+            "action": "App\\Http\\Controllers\\ConfiguracionController@getMotivosIngresoPorTipo",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_motivos_gastos_activos",
+            "action": "App\\Http\\Controllers\\ConfiguracionController@getMotivosGastoPorTipo",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_movimientos_boveda",
+            "action": "App\\Http\\Controllers\\BovedaController@getMovimientosBoveda",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "get_boveda",
+            "action": "App\\Http\\Controllers\\BovedaController@getBoveda",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "ingresar_boveda",
+            "action": "App\\Http\\Controllers\\BovedaController@ingresarBoveda",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:boveda"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "retirar_boveda",
+            "action": "App\\Http\\Controllers\\BovedaController@retirarBoveda",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:boveda"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "aperturar_boveda",
+            "action": "App\\Http\\Controllers\\BovedaController@aperturarBoveda",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:boveda"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "perfil/get_datos",
+            "action": "App\\Http\\Controllers\\PerfilController@getPerfil",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "perfil/update_info",
+            "action": "App\\Http\\Controllers\\PerfilController@updateInformacion",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "perfil/update_password",
+            "action": "App\\Http\\Controllers\\PerfilController@updatePassword",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "socio/activos",
+            "action": "App\\Http\\Controllers\\SocioController@getSociosActivos",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "socio/get_socios",
+            "action": "App\\Http\\Controllers\\SocioController@index",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "POST"
+            ],
+            "uri": "socio/registrar",
+            "action": "App\\Http\\Controllers\\SocioController@store",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:socios"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "PUT"
+            ],
+            "uri": "socio/actualizar",
+            "action": "App\\Http\\Controllers\\SocioController@update",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:socios"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "PUT"
+            ],
+            "uri": "socio/desactivar",
+            "action": "App\\Http\\Controllers\\SocioController@desactivar",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:socios"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "PUT"
+            ],
+            "uri": "socio/activar",
+            "action": "App\\Http\\Controllers\\SocioController@activar",
+            "middleware": [
+                "web",
+                "auth",
+                "permiso:socios"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "socio/selectSocio",
+            "action": "App\\Http\\Controllers\\SocioController@selectSocio",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        },
+        {
+            "methods": [
+                "GET",
+                "HEAD"
+            ],
+            "uri": "{any}",
+            "action": "Closure",
+            "middleware": [
+                "web",
+                "auth"
+            ],
+            "method_exists": true
+        }
+    ],
+    "schema_from_migrations": {
+        "permiso": [
+            {
+                "operation": "create",
+                "migration": "2014_08_11_022336_create_permiso_table.php"
+            }
+        ],
+        "rol": [
+            {
+                "operation": "create",
+                "migration": "2014_09_11_022124_create_rol_table.php"
+            }
+        ],
+        "permiso_rol": [
+            {
+                "operation": "create",
+                "migration": "2014_09_11_022126_create_permiso_rol_table.php"
+            }
+        ],
+        "users": [
+            {
+                "operation": "create",
+                "migration": "2014_10_12_000000_create_users_table.php"
+            }
+        ],
+        "password_reset_tokens": [
+            {
+                "operation": "create",
+                "migration": "2014_10_12_100000_create_password_reset_tokens_table.php"
+            }
+        ],
+        "failed_jobs": [
+            {
+                "operation": "create",
+                "migration": "2019_08_19_000000_create_failed_jobs_table.php"
+            }
+        ],
+        "personal_access_tokens": [
+            {
+                "operation": "create",
+                "migration": "2019_12_14_000001_create_personal_access_tokens_table.php"
+            }
+        ],
+        "codeudor": [
+            {
+                "operation": "create",
+                "migration": "2023_09_13_111111_create_codeudor_table.php"
+            }
+        ],
+        "mi_empresa": [
+            {
+                "operation": "create",
+                "migration": "2023_09_13_174132_create_mi_empresa_table.php"
+            }
+        ],
+        "cliente": [
+            {
+                "operation": "create",
+                "migration": "2023_09_14_123712_create_cliente_table.php"
+            }
+        ],
+        "direccion": [
+            {
+                "operation": "create",
+                "migration": "2023_09_14_172259_create_direccion_table.php"
+            }
+        ],
+        "telefono": [
+            {
+                "operation": "create",
+                "migration": "2023_09_14_172311_create_telefono_table.php"
+            }
+        ],
+        "solicitud": [
+            {
+                "operation": "create",
+                "migration": "2023_09_16_125804_create_solicitud_table.php"
+            }
+        ],
+        "garantia": [
+            {
+                "operation": "create",
+                "migration": "2023_09_17_001026_create_garantia_table.php"
+            }
+        ],
+        "imagen": [
+            {
+                "operation": "create",
+                "migration": "2023_09_18_013147_create_imagen_table.php"
+            }
+        ],
+        "plan_pago": [
+            {
+                "operation": "create",
+                "migration": "2023_09_22_163054_create_planpagos_table.php"
+            }
+        ],
+        "cuota": [
+            {
+                "operation": "create",
+                "migration": "2023_09_22_172150_create_cuota_table.php"
+            },
+            {
+                "operation": "table",
+                "migration": "2026_03_08_162533_add_pagos_parciales_to_cuota_table.php"
+            },
+            {
+                "operation": "table",
+                "migration": "2026_03_08_162533_add_pagos_parciales_to_cuota_table.php"
+            }
+        ],
+        "caja": [
+            {
+                "operation": "create",
+                "migration": "2023_09_23_000019_create_caja_table.php"
+            }
+        ],
+        "pago": [
+            {
+                "operation": "create",
+                "migration": "2023_09_23_021002_create_pago_table.php"
+            },
+            {
+                "operation": "table",
+                "migration": "2026_03_08_162615_add_desglose_to_pago_table.php"
+            },
+            {
+                "operation": "table",
+                "migration": "2026_03_08_162615_add_desglose_to_pago_table.php"
+            },
+            {
+                "operation": "table",
+                "migration": "2026_05_31_000001_add_tipo_pago_to_pago_table.php"
+            },
+            {
+                "operation": "table",
+                "migration": "2026_05_31_000001_add_tipo_pago_to_pago_table.php"
+            }
+        ],
+        "respaldo": [
+            {
+                "operation": "create",
+                "migration": "2023_09_28_205219_create_respaldo_table.php"
+            }
+        ],
+        "egreso": [
+            {
+                "operation": "create",
+                "migration": "2023_10_02_171556_create_egreso_table.php"
+            }
+        ],
+        "ingreso": [
+            {
+                "operation": "create",
+                "migration": "2023_10_02_171619_create_ingreso_table.php"
+            }
+        ],
+        "pago_amortizacion": [
+            {
+                "operation": "create",
+                "migration": "2023_11_19_170155_create_pago_amortizacion_table.php"
+            }
+        ],
+        "desembolso": [
+            {
+                "operation": "create",
+                "migration": "2023_12_31_155824_create_desembolso_table.php"
+            }
+        ],
+        "pago_administrativo": [
+            {
+                "operation": "create",
+                "migration": "2024_01_04_095158_create_pago_administrativo_table.php"
+            }
+        ],
+        "solicitud_codeudor": [
+            {
+                "operation": "create",
+                "migration": "2024_01_15_091521_create_solicitud_codeudor_table.php"
+            }
+        ],
+        "solicitud_respaldo": [
+            {
+                "operation": "create",
+                "migration": "2024_01_15_091522_create_solicitud_respaldo_table.php"
+            }
+        ],
+        "plan_pago_respaldo": [
+            {
+                "operation": "create",
+                "migration": "2024_01_15_091523_create_plan_pago_respaldo_table.php"
+            }
+        ],
+        "cuota_respaldo": [
+            {
+                "operation": "create",
+                "migration": "2024_01_15_091524_create_cuota_respaldo_table.php"
+            }
+        ],
+        "motivo_ingreso": [
+            {
+                "operation": "create",
+                "migration": "2024_09_18_174402_create_motivo_ingreso_table.php"
+            },
+            {
+                "operation": "table",
+                "migration": "2026_03_30_014043_add_tipo_to_motivos_tables.php"
+            },
+            {
+                "operation": "table",
+                "migration": "2026_03_30_014043_add_tipo_to_motivos_tables.php"
+            }
+        ],
+        "motivo_gasto": [
+            {
+                "operation": "create",
+                "migration": "2024_09_18_174413_create_motivo_gasto_table.php"
+            },
+            {
+                "operation": "table",
+                "migration": "2026_03_30_014043_add_tipo_to_motivos_tables.php"
+            },
+            {
+                "operation": "table",
+                "migration": "2026_03_30_014043_add_tipo_to_motivos_tables.php"
+            }
+        ],
+        "movimientos_caja": [
+            {
+                "operation": "create",
+                "migration": "2024_09_23_101433_create_movimientos_caja_table.php"
+            }
+        ],
+        "boveda": [
+            {
+                "operation": "create",
+                "migration": "2024_09_26_151537_create_boveda_table.php"
+            },
+            {
+                "operation": "table",
+                "migration": "2026_03_29_161326_add_id_usuario_to_boveda_table.php"
+            },
+            {
+                "operation": "table",
+                "migration": "2026_03_29_161326_add_id_usuario_to_boveda_table.php"
+            }
+        ],
+        "movimientos_boveda": [
+            {
+                "operation": "create",
+                "migration": "2024_09_26_151721_create_movimientos_boveda_table.php"
+            },
+            {
+                "operation": "table",
+                "migration": "2026_03_29_171515_add_id_socio_to_movimientos_boveda_table.php"
+            },
+            {
+                "operation": "table",
+                "migration": "2026_03_29_171515_add_id_socio_to_movimientos_boveda_table.php"
+            }
+        ],
+        "transferencia_caja_boveda": [
+            {
+                "operation": "create",
+                "migration": "2024_09_26_152400_create_transferencia_caja_boveda_table.php"
+            }
+        ],
+        "actividades": [
+            {
+                "operation": "create",
+                "migration": "2025_03_28_004405_create_actividades_table.php"
+            }
+        ],
+        "imagenes_respaldo": [
+            {
+                "operation": "create",
+                "migration": "2025_05_26_072024_create_imagenes_respaldo_table.php"
+            }
+        ],
+        "orden_pago_reprogramaciones": [
+            {
+                "operation": "create",
+                "migration": "2026_01_20_214120_create_orden_pago_reprogramaciones_table.php"
+            }
+        ],
+        "socios": [
+            {
+                "operation": "create",
+                "migration": "2026_03_28_205046_create_socios_table.php"
+            }
+        ]
+    },
+    "controller_tables_static": {
+        "AdministracionController.php": [
+            "cliente",
+            "solicitud",
+            "plan_pago",
+            "pago",
+            "users",
+            "cuota"
+        ],
+        "BovedaController.php": [
+            "boveda",
+            "users",
+            "movimientos_boveda",
+            "socios",
+            "caja",
+            "ingreso",
+            "movimientos_caja"
+        ],
+        "CajaController.php": [
+            "caja",
+            "users",
+            "pago",
+            "egreso",
+            "boveda",
+            "movimientos_boveda",
+            "movimientos_caja",
+            "cuota",
+            "plan_pago",
+            "solicitud",
+            "cliente",
+            "pago_amortizacion",
+            "ingreso",
+            "pago_administrativo",
+            "desembolso",
+            "telefono",
+            "direccion",
+            "mi_empresa"
+        ],
+        "CajaMovimientosController.php": [
+            "ingreso",
+            "egreso",
+            "pago",
+            "cuota",
+            "plan_pago",
+            "solicitud",
+            "cliente",
+            "desembolso"
+        ],
+        "ClienteController.php": [
+            "cliente",
+            "direccion",
+            "telefono",
+            "solicitud",
+            "plan_pago",
+            "users",
+            "cuota",
+            "pago_amortizacion",
+            "rol",
+            "mi_empresa"
+        ],
+        "CodeudorController.php": [
+            "codeudor",
+            "direccion",
+            "telefono",
+            "cliente",
+            "mi_empresa",
+            "solicitud_codeudor",
+            "solicitud",
+            "actividades"
+        ],
+        "ConfiguracionController.php": [
+            "motivo_ingreso",
+            "motivo_gasto"
+        ],
+        "ConsultaFinancieraController.php": [
+            "plan_pago",
+            "solicitud",
+            "cliente",
+            "users",
+            "cuota",
+            "telefono",
+            "direccion",
+            "pago",
+            "pago_administrativo",
+            "ingreso",
+            "egreso",
+            "desembolso",
+            "movimientos_boveda",
+            "mi_empresa"
+        ],
+        "Controller.php": [],
+        "EstadoResultadosController.php": [
+            "pago_administrativo",
+            "cuota",
+            "pago_amortizacion",
+            "pago",
+            "ingreso",
+            "egreso",
+            "desembolso"
+        ],
+        "ExportController.php": [],
+        "GastoController.php": [
+            "caja",
+            "egreso",
+            "boveda",
+            "movimientos_boveda",
+            "movimientos_caja",
+            "users"
+        ],
+        "HistorialPagosController.php": [],
+        "IngresoController.php": [
+            "caja",
+            "ingreso",
+            "movimientos_caja",
+            "users"
+        ],
+        "LoginController.php": [
+            "users",
+            "rol",
+            "permiso_rol",
+            "permiso"
+        ],
+        "MiEmpresaController.php": [
+            "mi_empresa"
+        ],
+        "PagoController.php": [
+            "caja",
+            "pago",
+            "cuota",
+            "plan_pago",
+            "movimientos_caja",
+            "users",
+            "solicitud",
+            "cliente",
+            "plan_pago as pp",
+            "mi_empresa"
+        ],
+        "PanelController.php": [
+            "caja",
+            "users",
+            "pago",
+            "desembolso",
+            "ingreso",
+            "egreso",
+            "cuota",
+            "solicitud",
+            "plan_pago",
+            "cliente"
+        ],
+        "PerfilController.php": [
+            "rol",
+            "users"
+        ],
+        "PermisoController.php": [
+            "permiso",
+            "permiso_rol",
+            "rol"
+        ],
+        "PlanPagoController.php": [
+            "plan_pago",
+            "solicitud",
+            "cliente",
+            "users",
+            "cuota",
+            "desembolso",
+            "caja",
+            "ingreso",
+            "movimientos_caja",
+            "pago",
+            "pago_amortizacion",
+            "codeudor",
+            "solicitud_codeudor",
+            "rol"
+        ],
+        "ReporteController.php": [
+            "mi_empresa",
+            "solicitud",
+            "plan_pago",
+            "cliente",
+            "users",
+            "solicitud_codeudor",
+            "codeudor",
+            "pago_administrativo",
+            "cuota"
+        ],
+        "RespaldoController.php": [
+            "respaldo",
+            "imagenes_respaldo",
+            "solicitud"
+        ],
+        "RolController.php": [
+            "rol",
+            "permiso_rol"
+        ],
+        "SesionController.php": [
+            "permiso_rol",
+            "permiso"
+        ],
+        "SocioController.php": [],
+        "SolicitudController.php": [
+            "solicitud",
+            "garantia",
+            "solicitud_codeudor",
+            "cliente",
+            "users",
+            "imagen",
+            "plan_pago",
+            "cuota",
+            "direccion",
+            "telefono",
+            "codeudor",
+            "respaldo"
+        ],
+        "UsuarioController.php": [
+            "users",
+            "rol"
+        ],
+        "VistasReporteController.php": [
+            "cliente",
+            "plan_pago",
+            "solicitud",
+            "users",
+            "cuota",
+            "pago",
+            "mi_empresa",
+            "telefono",
+            "plan_pago as pp",
+            "desembolso",
+            "pago_administrativo"
+        ]
+    }
+}

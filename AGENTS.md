@@ -8,7 +8,7 @@ Léelo antes de modificar cualquier archivo relacionado con caja, bóveda, pagos
 ## Stack tecnológico
 
 - **Backend**: Laravel 10 (PHP 8)
-- **Frontend**: Vue 2 (SPA embebida via `resources/js/app.js`)
+- **Frontend**: Vue 3 + Vue Router 4 (SPA montada en `resources/js/app.js`, compilada con Vite)
 - **BD**: MySQL (via Laragon en desarrollo)
 - **PDF**: mPDF (reportes) + DomPDF (tickets de pago)
 - **UI**: Bootstrap 5, FontAwesome
@@ -239,4 +239,11 @@ modalidad = 'interes_mora':
 - Los movimientos en `movimientos_caja` y `movimientos_boveda` son inmutables (no se borran, se anulan lógicamente).
 - Las fechas se manejan con `Carbon` en backend. En frontend con `moment.js`.
 - El frontend usa `axios` para todas las llamadas a la API. Las rutas están en `routes/web.php`.
-- Los componentes Vue se registran en `resources/js/app.js`.
+- Los componentes compartidos se registran en `resources/js/app.js`; los módulos se cargan bajo demanda desde `resources/js/router/routes.js`.
+
+## Reglas operativas confirmadas el 2026-09-24
+
+- Se permite una caja abierta por usuario, con varios usuarios operando simultáneamente. La selección y autorización de caja debe respetar su propietario.
+- Los depósitos y transferencias bancarias deben registrarse separados del efectivo físico de caja y bóveda.
+- Para conciliar el efectivo institucional se suma el saldo físico de bóveda y el saldo de todas las cajas abiertas. Las cajas cerradas ya retornaron su efectivo.
+- Estas reglas son requisitos: el diagnóstico de etapa 1 detectó que todavía no se cumplen en todos los flujos. Ver `docs/diagnostico-etapa-1/README.md` antes de corregirlos.

@@ -1,4 +1,22 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Credisoft
+
+Sistema de microcrédito con Laravel 10, Vue 3, Vue Router 4, Vite y MySQL. Consultar [AGENTS.md](AGENTS.md) para las reglas de caja, bóveda y cobros.
+
+El [diagnóstico de etapa 1](docs/diagnostico-etapa-1/README.md) contiene el inventario funcional, incidencias reproducidas, reglas confirmadas y backlog de correcciones. Los requisitos del [entorno aislado](docs/diagnostico-etapa-1/entorno.md) permiten repetir el diagnóstico con datos ficticios.
+
+Para reiniciar una base de desarrollo con escenarios coherentes, consulta la [población para pruebas manuales](docs/poblacion-desarrollo.md): accesos, importes esperados y uso de `php artisan migrate:fresh --seed` (elimina los datos de la base seleccionada).
+
+```powershell
+php artisan test
+npm.cmd run build
+php tools/diagnostics/baseline.php
+```
+
+Las pruebas usan SQLite en memoria. El cálculo de amortización y los reportes con SQL de MySQL se verifican con la instancia temporal descrita en el diagnóstico. La base habitual no debe usarse para pruebas destructivas.
+
+---
+
+Documentación original del framework:
 
 <p align="center">
 <a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>

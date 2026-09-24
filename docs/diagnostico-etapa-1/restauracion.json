@@ -1,0 +1,529 @@
+{
+    "generated_at": "2026-09-24T12:53:36+00:00",
+    "synthetic_only": true,
+    "success": true,
+    "scope": "MySQL row hashes and canonical SHOW CREATE TABLE (explicit inherited column charset normalized); not a production backup or attachment restore",
+    "server_version": "8.4.3",
+    "tables": {
+        "actividades": {
+            "match": true,
+            "source": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "302b6b69cefdc1beaf4318fd8d013d658d5003375bab22d68fcada75bd908696"
+            },
+            "restored": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "302b6b69cefdc1beaf4318fd8d013d658d5003375bab22d68fcada75bd908696"
+            }
+        },
+        "boveda": {
+            "match": true,
+            "source": {
+                "count": 1,
+                "sha256": "e6017b13733100d53b8a7ab66412223860e5f0c229108e22a79711b03ba58cfb",
+                "ddl_canonical_sha256": "aacc176b2eec079f3de0abe1e67b6b046f82e99f5a34825d61cf8d212f516f1c"
+            },
+            "restored": {
+                "count": 1,
+                "sha256": "e6017b13733100d53b8a7ab66412223860e5f0c229108e22a79711b03ba58cfb",
+                "ddl_canonical_sha256": "aacc176b2eec079f3de0abe1e67b6b046f82e99f5a34825d61cf8d212f516f1c"
+            }
+        },
+        "caja": {
+            "match": true,
+            "source": {
+                "count": 1,
+                "sha256": "31e68247adfe5625ab8e47966b4c8d7cacf2890e980beeca7e429325331b62b7",
+                "ddl_canonical_sha256": "82273e0f68e07f190d8366dbaf7d7467c385badd4d7cc80f6b7d6984f3e9c358"
+            },
+            "restored": {
+                "count": 1,
+                "sha256": "31e68247adfe5625ab8e47966b4c8d7cacf2890e980beeca7e429325331b62b7",
+                "ddl_canonical_sha256": "82273e0f68e07f190d8366dbaf7d7467c385badd4d7cc80f6b7d6984f3e9c358"
+            }
+        },
+        "cliente": {
+            "match": true,
+            "source": {
+                "count": 1001,
+                "sha256": "942fbde9a46fa486bcecc1254b199df37526949dfe5df0a5b9113f12387665ea",
+                "ddl_canonical_sha256": "80f9a904efc43ebbeb6766963e5c1d0433fddde60c5d2ce629a8c94da5af7b18"
+            },
+            "restored": {
+                "count": 1001,
+                "sha256": "942fbde9a46fa486bcecc1254b199df37526949dfe5df0a5b9113f12387665ea",
+                "ddl_canonical_sha256": "80f9a904efc43ebbeb6766963e5c1d0433fddde60c5d2ce629a8c94da5af7b18"
+            }
+        },
+        "codeudor": {
+            "match": true,
+            "source": {
+                "count": 1,
+                "sha256": "5b0f6fc5aa165586c40721ba4eb129ada478fa0207e8291d2213af59f8e3269e",
+                "ddl_canonical_sha256": "88979627cce7ea276fad1c2aac218297c13b8afc9eafc4b4e8f5082525df1f3e"
+            },
+            "restored": {
+                "count": 1,
+                "sha256": "5b0f6fc5aa165586c40721ba4eb129ada478fa0207e8291d2213af59f8e3269e",
+                "ddl_canonical_sha256": "88979627cce7ea276fad1c2aac218297c13b8afc9eafc4b4e8f5082525df1f3e"
+            }
+        },
+        "cuota": {
+            "match": true,
+            "source": {
+                "count": 1,
+                "sha256": "e70379cbe5cbeb119be755c6d5106f3b854de538590c6e1e35c1e686aa415bec",
+                "ddl_canonical_sha256": "3b7beb145df20700b578114f742384970b69e79c250b5acfdd879058cebe511a"
+            },
+            "restored": {
+                "count": 1,
+                "sha256": "e70379cbe5cbeb119be755c6d5106f3b854de538590c6e1e35c1e686aa415bec",
+                "ddl_canonical_sha256": "3b7beb145df20700b578114f742384970b69e79c250b5acfdd879058cebe511a"
+            }
+        },
+        "cuota_respaldo": {
+            "match": true,
+            "source": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "543c778c8c4ba1a72f666db032dd3e9521258a9f0e25005cd696156db9728e27"
+            },
+            "restored": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "543c778c8c4ba1a72f666db032dd3e9521258a9f0e25005cd696156db9728e27"
+            }
+        },
+        "desembolso": {
+            "match": true,
+            "source": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "97244628466aaba50cb3d94a95a9995a09184cc3984708ddd68ce8880dffc5ee"
+            },
+            "restored": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "97244628466aaba50cb3d94a95a9995a09184cc3984708ddd68ce8880dffc5ee"
+            }
+        },
+        "direccion": {
+            "match": true,
+            "source": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "0e8aa8ed3680fe1775bebdc3f21491adbd0a9433ee01a9bb90d2d8ecbd794aa4"
+            },
+            "restored": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "0e8aa8ed3680fe1775bebdc3f21491adbd0a9433ee01a9bb90d2d8ecbd794aa4"
+            }
+        },
+        "egreso": {
+            "match": true,
+            "source": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "aa9b33cdcb28f7c23ecaf3e456e36070ca79da3697c0c68e1f0191e9e0394c82"
+            },
+            "restored": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "aa9b33cdcb28f7c23ecaf3e456e36070ca79da3697c0c68e1f0191e9e0394c82"
+            }
+        },
+        "failed_jobs": {
+            "match": true,
+            "source": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "c0d786d0d07de6732fc3f9f73c8fdbe8e01761f74554a2d41f2d58e9908dabba"
+            },
+            "restored": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "c0d786d0d07de6732fc3f9f73c8fdbe8e01761f74554a2d41f2d58e9908dabba"
+            }
+        },
+        "garantia": {
+            "match": true,
+            "source": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "efa41c2eb6b08eeb24af2d886ebb0d415b57e58038349b51ba0d24f9b839226f"
+            },
+            "restored": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "efa41c2eb6b08eeb24af2d886ebb0d415b57e58038349b51ba0d24f9b839226f"
+            }
+        },
+        "imagen": {
+            "match": true,
+            "source": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "9e45e72d8cebd0fadd1270c3dd87035fa71fce7ff8edd676dae0af676518d685"
+            },
+            "restored": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "9e45e72d8cebd0fadd1270c3dd87035fa71fce7ff8edd676dae0af676518d685"
+            }
+        },
+        "imagenes_respaldo": {
+            "match": true,
+            "source": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "8c3af88c74893a8b44cd44b10e43cb6f55f442305cb5f3f796ce0f630b05331e"
+            },
+            "restored": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "8c3af88c74893a8b44cd44b10e43cb6f55f442305cb5f3f796ce0f630b05331e"
+            }
+        },
+        "ingreso": {
+            "match": true,
+            "source": {
+                "count": 10000,
+                "sha256": "5153ad4f64f7777c609540f845fdeecc2fca4221f037576a852430d832420758",
+                "ddl_canonical_sha256": "83a2f3c0ca40c0b86906334450b9584a48c4da296f0f41c45d3267f40da81c31"
+            },
+            "restored": {
+                "count": 10000,
+                "sha256": "5153ad4f64f7777c609540f845fdeecc2fca4221f037576a852430d832420758",
+                "ddl_canonical_sha256": "83a2f3c0ca40c0b86906334450b9584a48c4da296f0f41c45d3267f40da81c31"
+            }
+        },
+        "mi_empresa": {
+            "match": true,
+            "source": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "f0927ca34dffbbecc01aa07a60d085caea9376d9d1040c6829c773f3fa575988"
+            },
+            "restored": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "f0927ca34dffbbecc01aa07a60d085caea9376d9d1040c6829c773f3fa575988"
+            }
+        },
+        "migrations": {
+            "match": true,
+            "source": {
+                "count": 46,
+                "sha256": "e254aaf0101dea934010b9e305f1b488183b94d79d3075c4bb2bcd93bc547ff7",
+                "ddl_canonical_sha256": "9db14b55da5b6559f10e0a28f78c39ddee7a3aa84996592f78cb28a8b9d64788"
+            },
+            "restored": {
+                "count": 46,
+                "sha256": "e254aaf0101dea934010b9e305f1b488183b94d79d3075c4bb2bcd93bc547ff7",
+                "ddl_canonical_sha256": "9db14b55da5b6559f10e0a28f78c39ddee7a3aa84996592f78cb28a8b9d64788"
+            }
+        },
+        "motivo_gasto": {
+            "match": true,
+            "source": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "1f87561a5b4c58bc41a49f9896fb66850ba608abd4eadcd091944c5289703a2d"
+            },
+            "restored": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "1f87561a5b4c58bc41a49f9896fb66850ba608abd4eadcd091944c5289703a2d"
+            }
+        },
+        "motivo_ingreso": {
+            "match": true,
+            "source": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "cb935ff474c9982444399ccd50f3637e2e71feeb02bdb4980bb68ffcbe9cff38"
+            },
+            "restored": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "cb935ff474c9982444399ccd50f3637e2e71feeb02bdb4980bb68ffcbe9cff38"
+            }
+        },
+        "movimientos_boveda": {
+            "match": true,
+            "source": {
+                "count": 2,
+                "sha256": "84a85bd631052979758f66dae19ebde773876fef134692685a961193ccc7822d",
+                "ddl_canonical_sha256": "e33d265fc0a2b74d612e1ab9a0855e7683a15f0e715cba979a13752fdae2eaac"
+            },
+            "restored": {
+                "count": 2,
+                "sha256": "84a85bd631052979758f66dae19ebde773876fef134692685a961193ccc7822d",
+                "ddl_canonical_sha256": "e33d265fc0a2b74d612e1ab9a0855e7683a15f0e715cba979a13752fdae2eaac"
+            }
+        },
+        "movimientos_caja": {
+            "match": true,
+            "source": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "b57b09bf472d05de4d9998854628f6fafbb9a1f2d11305d6060b32a400ec181f"
+            },
+            "restored": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "b57b09bf472d05de4d9998854628f6fafbb9a1f2d11305d6060b32a400ec181f"
+            }
+        },
+        "orden_pago_reprogramaciones": {
+            "match": true,
+            "source": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "ff3f007f2f4e3b0d8e41a43ddf10b1bb0c66a71b902f58b7fe66c7fcfeccd7cc"
+            },
+            "restored": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "ff3f007f2f4e3b0d8e41a43ddf10b1bb0c66a71b902f58b7fe66c7fcfeccd7cc"
+            }
+        },
+        "pago": {
+            "match": true,
+            "source": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "7886536c19751136d8d7b5258fab5df15c2961324b54d86afbcbb1cf2ff5d539"
+            },
+            "restored": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "7886536c19751136d8d7b5258fab5df15c2961324b54d86afbcbb1cf2ff5d539"
+            }
+        },
+        "pago_administrativo": {
+            "match": true,
+            "source": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "e390577d3ad40ebde98beee6f93f2f7c674caced6d7868385d1f8680579265ce"
+            },
+            "restored": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "e390577d3ad40ebde98beee6f93f2f7c674caced6d7868385d1f8680579265ce"
+            }
+        },
+        "pago_amortizacion": {
+            "match": true,
+            "source": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "bb1248d871a00cf3191a14936d882e408453da25b0094893c8a60be6af26db71"
+            },
+            "restored": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "bb1248d871a00cf3191a14936d882e408453da25b0094893c8a60be6af26db71"
+            }
+        },
+        "password_reset_tokens": {
+            "match": true,
+            "source": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "768123bec8eea559500238e6d78f116f827df757931bc7df2e337a0cbf7ba876"
+            },
+            "restored": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "768123bec8eea559500238e6d78f116f827df757931bc7df2e337a0cbf7ba876"
+            }
+        },
+        "permiso": {
+            "match": true,
+            "source": {
+                "count": 5,
+                "sha256": "036940e47ae6bb13d6ca41bc78cee512b7ba28af0c70b09b945d51ef23ef59c9",
+                "ddl_canonical_sha256": "b068a3a4ae843e63bd304e8c904bed5a10ceed7235b92d9588a89d0063ef1073"
+            },
+            "restored": {
+                "count": 5,
+                "sha256": "036940e47ae6bb13d6ca41bc78cee512b7ba28af0c70b09b945d51ef23ef59c9",
+                "ddl_canonical_sha256": "b068a3a4ae843e63bd304e8c904bed5a10ceed7235b92d9588a89d0063ef1073"
+            }
+        },
+        "permiso_rol": {
+            "match": true,
+            "source": {
+                "count": 4,
+                "sha256": "9795241ac0632241284a6e865d0a7f52ff8cef0f6016e2ae0dadfaea9431b824",
+                "ddl_canonical_sha256": "aeb516719a2e2f4f16d011c48d514755561dc973d2177174543c38f3287b3e53"
+            },
+            "restored": {
+                "count": 4,
+                "sha256": "9795241ac0632241284a6e865d0a7f52ff8cef0f6016e2ae0dadfaea9431b824",
+                "ddl_canonical_sha256": "aeb516719a2e2f4f16d011c48d514755561dc973d2177174543c38f3287b3e53"
+            }
+        },
+        "personal_access_tokens": {
+            "match": true,
+            "source": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "03c84b0a7264468422ca7f14266659023f16364ffc8b42f1aa3e3952044e01d6"
+            },
+            "restored": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "03c84b0a7264468422ca7f14266659023f16364ffc8b42f1aa3e3952044e01d6"
+            }
+        },
+        "plan_pago": {
+            "match": true,
+            "source": {
+                "count": 1,
+                "sha256": "b882ce0a00c31e2327275599d11ea38357190529941d9deb705cf6de7dacf0cd",
+                "ddl_canonical_sha256": "9d83eb15262021fa9cefd9370985d01dee12936857be76adb9a542de9c0db978"
+            },
+            "restored": {
+                "count": 1,
+                "sha256": "b882ce0a00c31e2327275599d11ea38357190529941d9deb705cf6de7dacf0cd",
+                "ddl_canonical_sha256": "9d83eb15262021fa9cefd9370985d01dee12936857be76adb9a542de9c0db978"
+            }
+        },
+        "plan_pago_respaldo": {
+            "match": true,
+            "source": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "d78dd4ed6d59f876755d25cfb929e9df7fd33ac5b01707b0cd301c2249c00fda"
+            },
+            "restored": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "d78dd4ed6d59f876755d25cfb929e9df7fd33ac5b01707b0cd301c2249c00fda"
+            }
+        },
+        "respaldo": {
+            "match": true,
+            "source": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "4650255fa69cf494b02203d20025ed39d1b4bbaf26ac04b1fdc228871e473c89"
+            },
+            "restored": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "4650255fa69cf494b02203d20025ed39d1b4bbaf26ac04b1fdc228871e473c89"
+            }
+        },
+        "rol": {
+            "match": true,
+            "source": {
+                "count": 2,
+                "sha256": "af76630712e606db8950b8a68bc75328c103261760e0f8d40017014b41de3629",
+                "ddl_canonical_sha256": "963900d4005649eeed1fa8af3a51b14303a6dca70bc818407aee8f6dd33c16b3"
+            },
+            "restored": {
+                "count": 2,
+                "sha256": "af76630712e606db8950b8a68bc75328c103261760e0f8d40017014b41de3629",
+                "ddl_canonical_sha256": "963900d4005649eeed1fa8af3a51b14303a6dca70bc818407aee8f6dd33c16b3"
+            }
+        },
+        "socios": {
+            "match": true,
+            "source": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "0dfc478354b10cf73753404c11d78e47314172a651ad976b3989325dd6488f86"
+            },
+            "restored": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "0dfc478354b10cf73753404c11d78e47314172a651ad976b3989325dd6488f86"
+            }
+        },
+        "solicitud": {
+            "match": true,
+            "source": {
+                "count": 1,
+                "sha256": "42239fbb85830fd50ce811ee69c1f09b5cbca1d2ae497b9281ea028d858d486d",
+                "ddl_canonical_sha256": "b409a7228615e8c3de8e20c3468d48659c1fe76d8441c9103858c86b589890f9"
+            },
+            "restored": {
+                "count": 1,
+                "sha256": "42239fbb85830fd50ce811ee69c1f09b5cbca1d2ae497b9281ea028d858d486d",
+                "ddl_canonical_sha256": "b409a7228615e8c3de8e20c3468d48659c1fe76d8441c9103858c86b589890f9"
+            }
+        },
+        "solicitud_codeudor": {
+            "match": true,
+            "source": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "c79e49a058546eedbdb17c1a1d08b219a0f1469488c939b13e5691625061be96"
+            },
+            "restored": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "c79e49a058546eedbdb17c1a1d08b219a0f1469488c939b13e5691625061be96"
+            }
+        },
+        "solicitud_respaldo": {
+            "match": true,
+            "source": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "f94f6894852747c478f15e54d5a9f7f1adbba30f6b1e2d72e319530419a96fbf"
+            },
+            "restored": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "f94f6894852747c478f15e54d5a9f7f1adbba30f6b1e2d72e319530419a96fbf"
+            }
+        },
+        "telefono": {
+            "match": true,
+            "source": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "0ce8a60482e01ee9491db932c58dd95ad2b9ca00cf53985e1de7b9e0a032a260"
+            },
+            "restored": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "0ce8a60482e01ee9491db932c58dd95ad2b9ca00cf53985e1de7b9e0a032a260"
+            }
+        },
+        "transferencia_caja_boveda": {
+            "match": true,
+            "source": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "aa1d9506a43d97103fa7b1b01bc5c4a79e8c2d0105a1273f465c790b83247344"
+            },
+            "restored": {
+                "count": 0,
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "ddl_canonical_sha256": "aa1d9506a43d97103fa7b1b01bc5c4a79e8c2d0105a1273f465c790b83247344"
+            }
+        },
+        "users": {
+            "match": true,
+            "source": {
+                "count": 4,
+                "sha256": "893015449461fd10ce32d80ed79dca0ea50044642c660cef0f3ec9b6fdd896aa",
+                "ddl_canonical_sha256": "12bf1d1a442f71ef4770aa9e72a544094ef865d83c3d25f18d347745b4efee05"
+            },
+            "restored": {
+                "count": 4,
+                "sha256": "893015449461fd10ce32d80ed79dca0ea50044642c660cef0f3ec9b6fdd896aa",
+                "ddl_canonical_sha256": "12bf1d1a442f71ef4770aa9e72a544094ef865d83c3d25f18d347745b4efee05"
+            }
+        }
+    }
+}

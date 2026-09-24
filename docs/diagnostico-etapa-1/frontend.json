@@ -1,0 +1,2789 @@
+{
+    "generated_at": "2026-09-24T08:52:23-04:00",
+    "scope": "Static candidate inventory; regex may include comments and cannot resolve variable URLs or concatenation.",
+    "screens": [
+        {
+            "path": "/administracion",
+            "component": "../components/PanelPrincipal.vue",
+            "permission": "null"
+        },
+        {
+            "path": "/caja",
+            "component": "../components/frmCaja.vue",
+            "permission": "controlcaja"
+        },
+        {
+            "path": "/historial_desembolsos_pagos",
+            "component": "../components/frmHistorialDesPagos.vue",
+            "permission": "controlcaja"
+        },
+        {
+            "path": "/historial_gastos",
+            "component": "../components/frmHistorialGastos.vue",
+            "permission": "controlcaja"
+        },
+        {
+            "path": "/historial_pagos",
+            "component": "../components/frmHistorialPagos.vue",
+            "permission": "controlcaja"
+        },
+        {
+            "path": "/historial_ingresos",
+            "component": "../components/frmHistorialIngresos.vue",
+            "permission": "controlcaja"
+        },
+        {
+            "path": "/clientes",
+            "component": "../components/frmCliente.vue",
+            "permission": "cliente"
+        },
+        {
+            "path": "/codeudores",
+            "component": "../components/frmCodeudores.vue",
+            "permission": "codeudores"
+        },
+        {
+            "path": "/consultas_financieras",
+            "component": "../components/frmConsultaFinanciera.vue",
+            "permission": "consultasfinancieras"
+        },
+        {
+            "path": "/estado_resultados",
+            "component": "../components/frmEstadoResultados.vue",
+            "permission": "consultasfinancieras"
+        },
+        {
+            "path": "/solicitud",
+            "component": "../components/frmSolicitud.vue",
+            "permission": "solicitudprestamos"
+        },
+        {
+            "path": "/plan_pago",
+            "component": "../components/frmPlanPago.vue",
+            "permission": "planpagos"
+        },
+        {
+            "path": "/informacion",
+            "component": "../components/frmInformacion.vue",
+            "permission": "informacion"
+        },
+        {
+            "path": "/usuarios",
+            "component": "../components/frmUsuarios.vue",
+            "permission": "usuarios"
+        },
+        {
+            "path": "/socio",
+            "component": "../components/frmSocio.vue",
+            "permission": "socios"
+        },
+        {
+            "path": "/roles",
+            "component": "../components/frmRoles.vue",
+            "permission": "roles"
+        },
+        {
+            "path": "/configuracion",
+            "component": "../components/frmConfiguracion.vue",
+            "permission": "configuracion"
+        },
+        {
+            "path": "/boveda",
+            "component": "../components/frmBoveda.vue",
+            "permission": "boveda"
+        },
+        {
+            "path": "/reportes",
+            "component": "../components/frmReporte.vue",
+            "permission": "reportes"
+        },
+        {
+            "path": "/index_rep_extracto",
+            "component": "../components/repExtracto.vue",
+            "permission": "reportes"
+        },
+        {
+            "path": "/hist_credito_mora",
+            "component": "../components/repHistoricoCreditoMora.vue",
+            "permission": "reportes"
+        },
+        {
+            "path": "/cliente_mora",
+            "component": "../components/repClientesMora.vue",
+            "permission": "reportes"
+        },
+        {
+            "path": "/index_rep_pagos_realizados",
+            "component": "../components/repPagosRealizados.vue",
+            "permission": "reportes"
+        },
+        {
+            "path": "/index_pagos_programados",
+            "component": "../components/repPagosProgramados.vue",
+            "permission": "reportes"
+        },
+        {
+            "path": "/index_movimientos_credito",
+            "component": "../components/repMovimientosCredito.vue",
+            "permission": "reportes"
+        },
+        {
+            "path": "/index_porcentajes_pagos",
+            "component": "../components/repAvanceCreditos.vue",
+            "permission": "reportes"
+        },
+        {
+            "path": "/index_desembolsos",
+            "component": "../components/repDesembolsos.vue",
+            "permission": "reportes"
+        },
+        {
+            "path": "/index_desembolsos_oficial",
+            "component": "../components/repDesembolsosOficial.vue",
+            "permission": "reportes"
+        },
+        {
+            "path": "/index_desembolsos_pendientes",
+            "component": "../components/repDesembolsosPendientes.vue",
+            "permission": "reportes"
+        },
+        {
+            "path": "/perfil",
+            "component": "../components/PerfilUsuarioComponent.vue",
+            "permission": "null"
+        },
+        {
+            "path": "/prohibido",
+            "component": "../components/Router/Prohibido.vue",
+            "permission": "null"
+        },
+        {
+            "path": "/:pathMatch(.*)*",
+            "component": "../components/Router/NoEncontrado.vue",
+            "permission": "null"
+        }
+    ],
+    "active_files": 69,
+    "calls": [
+        {
+            "file": "resources/js/components/Caja/GestionCobros.vue",
+            "line": 801,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_planespago_caja",
+            "probe": "/get_planespago_caja",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\PlanPagoController@getPlanesPagoCaja"
+        },
+        {
+            "file": "resources/js/components/Caja/GestionCobros.vue",
+            "line": 818,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/caja/get-ordenes-reprogramacion",
+            "probe": "/caja/get-ordenes-reprogramacion",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CajaController@getOrdenesReprogramacion"
+        },
+        {
+            "file": "resources/js/components/Caja/GestionCobros.vue",
+            "line": 838,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/listar_amortizaciones_cuotas?id_plan_pago=${item.id}",
+            "probe": "/listar_amortizaciones_cuotas",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\PlanPagoController@listarAmortizaciones"
+        },
+        {
+            "file": "resources/js/components/Caja/GestionCobros.vue",
+            "line": 953,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/pagar_cuotas",
+            "probe": "/pagar_cuotas",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\PagoController@pagarCuotas"
+        },
+        {
+            "file": "resources/js/components/Caja/GestionCobros.vue",
+            "line": 994,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/caja/cobrar-orden-reprogramacion",
+            "probe": "/caja/cobrar-orden-reprogramacion",
+            "status": "http_405",
+            "action": null
+        },
+        {
+            "file": "resources/js/components/Caja/ModalAperturaCaja.vue",
+            "line": 99,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_boveda",
+            "probe": "/get_boveda",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\BovedaController@getBoveda"
+        },
+        {
+            "file": "resources/js/components/Caja/ModalAperturaCaja.vue",
+            "line": 107,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/caja_abierta",
+            "probe": "/caja_abierta",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CajaController@cajaAbierta"
+        },
+        {
+            "file": "resources/js/components/Caja/ModalAperturaCaja.vue",
+            "line": 133,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/caja/aperturar",
+            "probe": "/caja/aperturar",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CajaController@save"
+        },
+        {
+            "file": "resources/js/components/Caja/ModalDetalleCaja.vue",
+            "line": 190,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/movimientos_caja",
+            "probe": "/movimientos_caja",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CajaController@getMovimientosCaja"
+        },
+        {
+            "file": "resources/js/components/Caja/ModalDetalleCaja.vue",
+            "line": 200,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/caja_abierta",
+            "probe": "/caja_abierta",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CajaController@cajaAbierta"
+        },
+        {
+            "file": "resources/js/components/Caja/ModalDetalleCaja.vue",
+            "line": 230,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/close_caja",
+            "probe": "/close_caja",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CajaController@closeCaja"
+        },
+        {
+            "file": "resources/js/components/Caja/ModalListaMovimientos.vue",
+            "line": 157,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/caja/movimientos/listado",
+            "probe": "/caja/movimientos/listado",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CajaMovimientosController@getListado"
+        },
+        {
+            "file": "resources/js/components/Caja/ModalMovimientoCaja.vue",
+            "line": 145,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/caja_abierta",
+            "probe": "/caja_abierta",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CajaController@cajaAbierta"
+        },
+        {
+            "file": "resources/js/components/Caja/ModalMovimientoCaja.vue",
+            "line": 262,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/caja/saldo-actual",
+            "probe": "/caja/saldo-actual",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CajaController@getSaldoCajaActual"
+        },
+        {
+            "file": "resources/js/components/Cliente/ClienteForm.vue",
+            "line": 391,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_direcciones_telefono?id_cliente=${id}",
+            "probe": "/get_direcciones_telefono",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ClienteController@getDireccionesTelefonos"
+        },
+        {
+            "file": "resources/js/components/Cliente/ClienteForm.vue",
+            "line": 413,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/save_cliente",
+            "probe": "/save_cliente",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ClienteController@save"
+        },
+        {
+            "file": "resources/js/components/Cliente/ClienteForm.vue",
+            "line": 438,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/modify_cliente",
+            "probe": "/modify_cliente",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ClienteController@modify"
+        },
+        {
+            "file": "resources/js/components/Cliente/ClienteForm.vue",
+            "line": 484,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_actividades",
+            "probe": "/get_actividades",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CodeudorController@getActividades"
+        },
+        {
+            "file": "resources/js/components/Codeudor/CodeudorForm.vue",
+            "line": 416,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_direcciones_telefono_codeudor?id_codeudor=${id}",
+            "probe": "/get_direcciones_telefono_codeudor",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CodeudorController@getDireccionesTelefonos"
+        },
+        {
+            "file": "resources/js/components/Codeudor/CodeudorForm.vue",
+            "line": 432,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/save_codeudor",
+            "probe": "/save_codeudor",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CodeudorController@save"
+        },
+        {
+            "file": "resources/js/components/Codeudor/CodeudorForm.vue",
+            "line": 456,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/modify_codeudor",
+            "probe": "/modify_codeudor",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CodeudorController@modify"
+        },
+        {
+            "file": "resources/js/components/Codeudor/CodeudorForm.vue",
+            "line": 507,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_actividades",
+            "probe": "/get_actividades",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CodeudorController@getActividades"
+        },
+        {
+            "file": "resources/js/components/Codeudor/CodeudorForm.vue",
+            "line": 542,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/fotoCodeudor",
+            "probe": "/fotoCodeudor",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CodeudorController@fotoCodeudor"
+        },
+        {
+            "file": "resources/js/components/frmAdministracion.vue",
+            "line": 160,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/cantidad_clientes",
+            "probe": "/cantidad_clientes",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\AdministracionController@getCantidadClientes"
+        },
+        {
+            "file": "resources/js/components/frmAdministracion.vue",
+            "line": 169,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/cantidad_solicitudes",
+            "probe": "/cantidad_solicitudes",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\AdministracionController@getCantidadSolicitudes"
+        },
+        {
+            "file": "resources/js/components/frmAdministracion.vue",
+            "line": 178,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/cantidad_planes",
+            "probe": "/cantidad_planes",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\AdministracionController@getCantidadPlanes"
+        },
+        {
+            "file": "resources/js/components/frmAdministracion.vue",
+            "line": 187,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/estadisticas_prestamos",
+            "probe": "/estadisticas_prestamos",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\AdministracionController@getEstadisticasPrestamos"
+        },
+        {
+            "file": "resources/js/components/frmAdministracion.vue",
+            "line": 197,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/cantidad_creditos_x_usuario",
+            "probe": "/cantidad_creditos_x_usuario",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\AdministracionController@getCreditosPorUsuario"
+        },
+        {
+            "file": "resources/js/components/frmAdministracion.vue",
+            "line": 208,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/datos_pagos_grafico",
+            "probe": "/datos_pagos_grafico",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\AdministracionController@getDatosPagos"
+        },
+        {
+            "file": "resources/js/components/frmAdministracion.vue",
+            "line": 218,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/top_clientes",
+            "probe": "/top_clientes",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\AdministracionController@getTopClientes"
+        },
+        {
+            "file": "resources/js/components/frmBoveda.vue",
+            "line": 572,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_boveda",
+            "probe": "/get_boveda",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\BovedaController@getBoveda"
+        },
+        {
+            "file": "resources/js/components/frmBoveda.vue",
+            "line": 584,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_movimientos_boveda",
+            "probe": "/get_movimientos_boveda",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\BovedaController@getMovimientosBoveda"
+        },
+        {
+            "file": "resources/js/components/frmBoveda.vue",
+            "line": 603,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/socio/activos",
+            "probe": "/socio/activos",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SocioController@getSociosActivos"
+        },
+        {
+            "file": "resources/js/components/frmBoveda.vue",
+            "line": 613,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_motivos_ingresos_activos?tipo=boveda",
+            "probe": "/get_motivos_ingresos_activos",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ConfiguracionController@getMotivosIngresoPorTipo"
+        },
+        {
+            "file": "resources/js/components/frmBoveda.vue",
+            "line": 625,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_motivos_gastos_activos?tipo=boveda",
+            "probe": "/get_motivos_gastos_activos",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ConfiguracionController@getMotivosGastoPorTipo"
+        },
+        {
+            "file": "resources/js/components/frmBoveda.vue",
+            "line": 659,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/aperturar_boveda",
+            "probe": "/aperturar_boveda",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\BovedaController@aperturarBoveda"
+        },
+        {
+            "file": "resources/js/components/frmBoveda.vue",
+            "line": 707,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/ingresar_boveda",
+            "probe": "/ingresar_boveda",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\BovedaController@ingresarBoveda"
+        },
+        {
+            "file": "resources/js/components/frmBoveda.vue",
+            "line": 769,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/retirar_boveda",
+            "probe": "/retirar_boveda",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\BovedaController@retirarBoveda"
+        },
+        {
+            "file": "resources/js/components/frmCaja.vue",
+            "line": 1028,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/verificar-boveda",
+            "probe": "/verificar-boveda",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CajaController@verificarBoveda"
+        },
+        {
+            "file": "resources/js/components/frmCaja.vue",
+            "line": 1076,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/caja/cobrar-orden-reprogramacion",
+            "probe": "/caja/cobrar-orden-reprogramacion",
+            "status": "http_405",
+            "action": null
+        },
+        {
+            "file": "resources/js/components/frmCaja.vue",
+            "line": 1176,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/guardar_motivo_ingreso",
+            "probe": "/guardar_motivo_ingreso",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ConfiguracionController@guardarMotivoIngreso"
+        },
+        {
+            "file": "resources/js/components/frmCaja.vue",
+            "line": 1201,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/guardar_motivo_gasto",
+            "probe": "/guardar_motivo_gasto",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ConfiguracionController@guardarMotivoGasto"
+        },
+        {
+            "file": "resources/js/components/frmCaja.vue",
+            "line": 1268,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/movimientos_caja",
+            "probe": "/movimientos_caja",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CajaController@getMovimientosCaja"
+        },
+        {
+            "file": "resources/js/components/frmCaja.vue",
+            "line": 1341,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_desembolsos?fecha_inicio=",
+            "probe": "/get_desembolsos",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CajaController@getDesembolsos"
+        },
+        {
+            "file": "resources/js/components/frmCaja.vue",
+            "line": 1453,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/guardar_pago_adm",
+            "probe": "/guardar_pago_adm",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CajaController@guardarPagoAdministrativo"
+        },
+        {
+            "file": "resources/js/components/frmCaja.vue",
+            "line": 1480,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_planes_pago_sin_pago_adm",
+            "probe": "/get_planes_pago_sin_pago_adm",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CajaController@getPlanesPagoSinPagoAdm"
+        },
+        {
+            "file": "resources/js/components/frmCaja.vue",
+            "line": 1525,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/actualizar_desembolso",
+            "probe": "/actualizar_desembolso",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CajaController@actualizarDesembolso"
+        },
+        {
+            "file": "resources/js/components/frmCaja.vue",
+            "line": 1549,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/actualizar_desembolso",
+            "probe": "/actualizar_desembolso",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CajaController@actualizarDesembolso"
+        },
+        {
+            "file": "resources/js/components/frmCaja.vue",
+            "line": 1568,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/caja/saldo-actual",
+            "probe": "/caja/saldo-actual",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CajaController@getSaldoCajaActual"
+        },
+        {
+            "file": "resources/js/components/frmCaja.vue",
+            "line": 1649,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_planes_pago_sin_desembolso",
+            "probe": "/get_planes_pago_sin_desembolso",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CajaController@getPlanesPagoSinDesembolsar"
+        },
+        {
+            "file": "resources/js/components/frmCaja.vue",
+            "line": 1725,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_pagos_caja?page=",
+            "probe": "/get_pagos_caja",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CajaController@getPagos"
+        },
+        {
+            "file": "resources/js/components/frmCaja.vue",
+            "line": 1748,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_pagos_caja_amortizaciones?page=",
+            "probe": "/get_pagos_caja_amortizaciones",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CajaController@getPagosAmortizaciones"
+        },
+        {
+            "file": "resources/js/components/frmCaja.vue",
+            "line": 1772,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_ingresos_corrientes?page=",
+            "probe": "/get_ingresos_corrientes",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\IngresoController@getIngresosCorrientes"
+        },
+        {
+            "file": "resources/js/components/frmCaja.vue",
+            "line": 1795,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_gastos_corrientes?page=",
+            "probe": "/get_gastos_corrientes",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\GastoController@getGastosCorrientes"
+        },
+        {
+            "file": "resources/js/components/frmCaja.vue",
+            "line": 1833,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/caja_abierta",
+            "probe": "/caja_abierta",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CajaController@cajaAbierta"
+        },
+        {
+            "file": "resources/js/components/frmCaja.vue",
+            "line": 1903,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_caja?page=",
+            "probe": "/get_caja",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CajaController@getCaja"
+        },
+        {
+            "file": "resources/js/components/frmCaja.vue",
+            "line": 1920,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_caja_fecha?page=",
+            "probe": "/get_caja_fecha",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CajaController@getCajaFecha"
+        },
+        {
+            "file": "resources/js/components/frmCaja.vue",
+            "line": 1937,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/caja_abierta",
+            "probe": "/caja_abierta",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CajaController@cajaAbierta"
+        },
+        {
+            "file": "resources/js/components/frmCliente.vue",
+            "line": 210,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_clientes",
+            "probe": "/get_clientes",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ClienteController@getClientes"
+        },
+        {
+            "file": "resources/js/components/frmCliente.vue",
+            "line": 242,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/cliente/reporte",
+            "probe": "/cliente/reporte",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ClienteController@imprimirReporteClientes"
+        },
+        {
+            "file": "resources/js/components/frmCliente.vue",
+            "line": 258,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/clientes_pdf",
+            "probe": "/clientes_pdf",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ClienteController@clientesPdf2"
+        },
+        {
+            "file": "resources/js/components/frmCliente.vue",
+            "line": 298,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/fotoCliente",
+            "probe": "/fotoCliente",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ClienteController@fotoCliente"
+        },
+        {
+            "file": "resources/js/components/frmCodeudores.vue",
+            "line": 211,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_codeudores",
+            "probe": "/get_codeudores",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CodeudorController@getCodeudores"
+        },
+        {
+            "file": "resources/js/components/frmCodeudores.vue",
+            "line": 219,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/activar_codeudor",
+            "probe": "/activar_codeudor",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CodeudorController@activar"
+        },
+        {
+            "file": "resources/js/components/frmCodeudores.vue",
+            "line": 225,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/desactivar_codeudor",
+            "probe": "/desactivar_codeudor",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CodeudorController@desactivar"
+        },
+        {
+            "file": "resources/js/components/frmCodeudores.vue",
+            "line": 241,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/codeudor/reporte",
+            "probe": "/codeudor/reporte",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CodeudorController@imprimirReporteCodeudores"
+        },
+        {
+            "file": "resources/js/components/frmCodeudores.vue",
+            "line": 255,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/codeudores_pdf",
+            "probe": "/codeudores_pdf",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CodeudorController@codeudoresPdf2"
+        },
+        {
+            "file": "resources/js/components/frmCodeudores.vue",
+            "line": 286,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/fotoCodeudor",
+            "probe": "/fotoCodeudor",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CodeudorController@fotoCodeudor"
+        },
+        {
+            "file": "resources/js/components/frmCodeudoresOld.vue",
+            "line": 748,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/get_actividades",
+            "probe": "/get_actividades",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CodeudorController@getActividades"
+        },
+        {
+            "file": "resources/js/components/frmCodeudoresOld.vue",
+            "line": 794,
+            "active_import_graph": false,
+            "method": "POST",
+            "url_literal": "/fotoCodeudor",
+            "probe": "/fotoCodeudor",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CodeudorController@fotoCodeudor"
+        },
+        {
+            "file": "resources/js/components/frmCodeudoresOld.vue",
+            "line": 876,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/get_codeudores?page=",
+            "probe": "/get_codeudores",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CodeudorController@getCodeudores"
+        },
+        {
+            "file": "resources/js/components/frmCodeudoresOld.vue",
+            "line": 965,
+            "active_import_graph": false,
+            "method": "POST",
+            "url_literal": "/save_codeudor",
+            "probe": "/save_codeudor",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CodeudorController@save"
+        },
+        {
+            "file": "resources/js/components/frmCodeudoresOld.vue",
+            "line": 1020,
+            "active_import_graph": false,
+            "method": "POST",
+            "url_literal": "/save_codeudor",
+            "probe": "/save_codeudor",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CodeudorController@save"
+        },
+        {
+            "file": "resources/js/components/frmCodeudoresOld.vue",
+            "line": 1091,
+            "active_import_graph": false,
+            "method": "POST",
+            "url_literal": "/modify_codeudor",
+            "probe": "/modify_codeudor",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CodeudorController@modify"
+        },
+        {
+            "file": "resources/js/components/frmCodeudoresOld.vue",
+            "line": 1132,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/activar_codeudor?id_codeudor=",
+            "probe": "/activar_codeudor",
+            "status": "spa_fallback_not_api",
+            "action": "Closure"
+        },
+        {
+            "file": "resources/js/components/frmCodeudoresOld.vue",
+            "line": 1144,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/desactivar_codeudor?id_codeudor=",
+            "probe": "/desactivar_codeudor",
+            "status": "spa_fallback_not_api",
+            "action": "Closure"
+        },
+        {
+            "file": "resources/js/components/frmCodeudoresOld.vue",
+            "line": 1177,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/get_direcciones_telefono_codeudor?id_codeudor=",
+            "probe": "/get_direcciones_telefono_codeudor",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CodeudorController@getDireccionesTelefonos"
+        },
+        {
+            "file": "resources/js/components/frmCodeudoresOld.vue",
+            "line": 1223,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/codeudores_pdf",
+            "probe": "/codeudores_pdf",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CodeudorController@codeudoresPdf2"
+        },
+        {
+            "file": "resources/js/components/frmConfiguracion.vue",
+            "line": 413,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_motivos_ingresos",
+            "probe": "/get_motivos_ingresos",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ConfiguracionController@getMotivosIngresos"
+        },
+        {
+            "file": "resources/js/components/frmConfiguracion.vue",
+            "line": 438,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/guardar_motivo_ingreso",
+            "probe": "/guardar_motivo_ingreso",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ConfiguracionController@guardarMotivoIngreso"
+        },
+        {
+            "file": "resources/js/components/frmConfiguracion.vue",
+            "line": 455,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/modificar_motivo_ingreso",
+            "probe": "/modificar_motivo_ingreso",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ConfiguracionController@modificarMotivoIngreso"
+        },
+        {
+            "file": "resources/js/components/frmConfiguracion.vue",
+            "line": 472,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/activar_motivo_ingreso",
+            "probe": "/activar_motivo_ingreso",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ConfiguracionController@activarMotivoIngreso"
+        },
+        {
+            "file": "resources/js/components/frmConfiguracion.vue",
+            "line": 490,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/desactivar_motivo_ingreso",
+            "probe": "/desactivar_motivo_ingreso",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ConfiguracionController@desactivarMotivoIngreso"
+        },
+        {
+            "file": "resources/js/components/frmConfiguracion.vue",
+            "line": 514,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_motivos_gastos",
+            "probe": "/get_motivos_gastos",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ConfiguracionController@getMotivosGastos"
+        },
+        {
+            "file": "resources/js/components/frmConfiguracion.vue",
+            "line": 539,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/guardar_motivo_gasto",
+            "probe": "/guardar_motivo_gasto",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ConfiguracionController@guardarMotivoGasto"
+        },
+        {
+            "file": "resources/js/components/frmConfiguracion.vue",
+            "line": 556,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/modificar_motivo_gasto",
+            "probe": "/modificar_motivo_gasto",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ConfiguracionController@modificarMotivoGasto"
+        },
+        {
+            "file": "resources/js/components/frmConfiguracion.vue",
+            "line": 573,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/activar_motivo_gasto",
+            "probe": "/activar_motivo_gasto",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ConfiguracionController@activarMotivoGasto"
+        },
+        {
+            "file": "resources/js/components/frmConfiguracion.vue",
+            "line": 591,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/desactivar_motivo_gasto",
+            "probe": "/desactivar_motivo_gasto",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ConfiguracionController@desactivarMotivoGasto"
+        },
+        {
+            "file": "resources/js/components/frmConsultaFinanciera.vue",
+            "line": 617,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/libro-mayor",
+            "probe": "/libro-mayor",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ConsultaFinancieraController@getLibroMayor"
+        },
+        {
+            "file": "resources/js/components/frmConsultaFinanciera.vue",
+            "line": 660,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/libro-mayor",
+            "probe": "/libro-mayor",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ConsultaFinancieraController@getLibroMayor"
+        },
+        {
+            "file": "resources/js/components/frmConsultaFinanciera.vue",
+            "line": 709,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/consulta-financiera/info-credito",
+            "probe": "/consulta-financiera/info-credito",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ConsultaFinancieraController@getInfoCreditoAsociado"
+        },
+        {
+            "file": "resources/js/components/frmEstadoResultados.vue",
+            "line": 261,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_monto_total_egresos",
+            "probe": "/get_monto_total_egresos",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\EstadoResultadosController@getMontoTotalEgresos"
+        },
+        {
+            "file": "resources/js/components/frmEstadoResultados.vue",
+            "line": 283,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_monto_intereses",
+            "probe": "/get_monto_intereses",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\EstadoResultadosController@getMontoIntereses"
+        },
+        {
+            "file": "resources/js/components/frmEstadoResultados.vue",
+            "line": 295,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_monto_multas",
+            "probe": "/get_monto_multas",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\EstadoResultadosController@getMontoMultas"
+        },
+        {
+            "file": "resources/js/components/frmEstadoResultados.vue",
+            "line": 306,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_monto_otros_ingresos",
+            "probe": "/get_monto_otros_ingresos",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\EstadoResultadosController@getMontoOtrosIngresos"
+        },
+        {
+            "file": "resources/js/components/frmHistorialDesPagos.vue",
+            "line": 359,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/historial_desembolsos_pagos_listado",
+            "probe": "/historial_desembolsos_pagos_listado",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CajaController@historialDesembolsosPagosListado"
+        },
+        {
+            "file": "resources/js/components/frmHistorialDesPagos.vue",
+            "line": 380,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_comprobante_cliente_data",
+            "probe": "/get_comprobante_cliente_data",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CajaController@getComprobanteClienteData"
+        },
+        {
+            "file": "resources/js/components/frmHistorialDesPagos.vue",
+            "line": 411,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/anular_desembolso",
+            "probe": "/anular_desembolso",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CajaController@anularDesembolso"
+        },
+        {
+            "file": "resources/js/components/frmHistorialGastos.vue",
+            "line": 670,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/historial_ingresos_listado_caja",
+            "probe": "/historial_ingresos_listado_caja",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\IngresoController@historialIngresosListadoCaja"
+        },
+        {
+            "file": "resources/js/components/frmHistorialGastos.vue",
+            "line": 693,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/historial_egresos_listado_caja",
+            "probe": "/historial_egresos_listado_caja",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\GastoController@historialEgresosListadoCaja"
+        },
+        {
+            "file": "resources/js/components/frmHistorialGastos.vue",
+            "line": 716,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/historial_ingresos_listado_general",
+            "probe": "/historial_ingresos_listado_general",
+            "status": "spa_fallback_not_api",
+            "action": "Closure"
+        },
+        {
+            "file": "resources/js/components/frmHistorialGastos.vue",
+            "line": 739,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/historial_gastos_listado_general",
+            "probe": "/historial_gastos_listado_general",
+            "status": "spa_fallback_not_api",
+            "action": "Closure"
+        },
+        {
+            "file": "resources/js/components/frmHistorialGastos.vue",
+            "line": 772,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/anular_ingreso_caja",
+            "probe": "/anular_ingreso_caja",
+            "status": "http_405",
+            "action": null
+        },
+        {
+            "file": "resources/js/components/frmHistorialGastos.vue",
+            "line": 808,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/anular_egreso_caja",
+            "probe": "/anular_egreso_caja",
+            "status": "http_405",
+            "action": null
+        },
+        {
+            "file": "resources/js/components/frmHistorialGastos.vue",
+            "line": 844,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/anular_gasto",
+            "probe": "/anular_gasto",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\GastoController@anularGasto"
+        },
+        {
+            "file": "resources/js/components/frmHistorialIngresos.vue",
+            "line": 418,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/historial_ingresos_listado_caja",
+            "probe": "/historial_ingresos_listado_caja",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\IngresoController@historialIngresosListadoCaja"
+        },
+        {
+            "file": "resources/js/components/frmHistorialIngresos.vue",
+            "line": 441,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/historial_ingresos_listado",
+            "probe": "/historial_ingresos_listado",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\IngresoController@historialIngresosListado"
+        },
+        {
+            "file": "resources/js/components/frmHistorialIngresos.vue",
+            "line": 474,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/anular_ingreso",
+            "probe": "/anular_ingreso",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\IngresoController@anularIngreso"
+        },
+        {
+            "file": "resources/js/components/frmHistorialPagos.vue",
+            "line": 355,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/historial-pagos/detalles/${item.codigo_transaccion}",
+            "probe": "/historial-pagos/detalles/1",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\HistorialPagosController@show"
+        },
+        {
+            "file": "resources/js/components/frmHistorialPagos.vue",
+            "line": 405,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/historial-pagos",
+            "probe": "/historial-pagos",
+            "status": "spa_fallback_not_api",
+            "action": "Closure"
+        },
+        {
+            "file": "resources/js/components/frmHistorialPagos.vue",
+            "line": 446,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/pagos/anular-transaccion",
+            "probe": "/pagos/anular-transaccion",
+            "status": "http_405",
+            "action": null
+        },
+        {
+            "file": "resources/js/components/frmInformacion.vue",
+            "line": 172,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_mi_empresa",
+            "probe": "/get_mi_empresa",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\MiEmpresaController@getMiEmpresa"
+        },
+        {
+            "file": "resources/js/components/frmInformacion.vue",
+            "line": 209,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/modify_miempresa",
+            "probe": "/modify_miempresa",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\MiEmpresaController@modify"
+        },
+        {
+            "file": "resources/js/components/frmPlanPago.vue",
+            "line": 1226,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/solicitud/detalle-completo/${id_solicitud_original}",
+            "probe": "/solicitud/detalle-completo/1",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@getDetalleCompletoSolicitud"
+        },
+        {
+            "file": "resources/js/components/frmPlanPago.vue",
+            "line": 1278,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/solicitud/registrar-especial",
+            "probe": "/solicitud/registrar-especial",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@registrarSolicitudEspecial"
+        },
+        {
+            "file": "resources/js/components/frmPlanPago.vue",
+            "line": 1325,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/reportes/plan-pago-reprogramado-pdf",
+            "probe": "/reportes/plan-pago-reprogramado-pdf",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ReporteController@generarPlanReprogramadoPDF"
+        },
+        {
+            "file": "resources/js/components/frmPlanPago.vue",
+            "line": 1687,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/reprogramacion/calcular/${idPlanPago}",
+            "probe": "/reprogramacion/calcular/1",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@calcularMonto"
+        },
+        {
+            "file": "resources/js/components/frmPlanPago.vue",
+            "line": 1698,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_garantias?id_solicitud=${id_solicitud}",
+            "probe": "/get_garantias",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@getGarantias"
+        },
+        {
+            "file": "resources/js/components/frmPlanPago.vue",
+            "line": 1774,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_amortizaciones_plan",
+            "probe": "/get_amortizaciones_plan",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\PlanPagoController@getAmortizacionesPlan"
+        },
+        {
+            "file": "resources/js/components/frmPlanPago.vue",
+            "line": 1785,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_asesores",
+            "probe": "/get_asesores",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ClienteController@getAsesores"
+        },
+        {
+            "file": "resources/js/components/frmPlanPago.vue",
+            "line": 1864,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/activar_planpago",
+            "probe": "/activar_planpago",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\PlanPagoController@activarPlanPago"
+        },
+        {
+            "file": "resources/js/components/frmPlanPago.vue",
+            "line": 1889,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/consulta_plan_pago_vigente?id_planpago=",
+            "probe": "/consulta_plan_pago_vigente",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\PlanPagoController@consultarPlanPagoCuotasCanceladas"
+        },
+        {
+            "file": "resources/js/components/frmPlanPago.vue",
+            "line": 1940,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/anular_planpago",
+            "probe": "/anular_planpago",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\PlanPagoController@anularPlanPago"
+        },
+        {
+            "file": "resources/js/components/frmPlanPago.vue",
+            "line": 2032,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/listar_amortizaciones_cuotas_planpago?id_plan_pago=",
+            "probe": "/listar_amortizaciones_cuotas_planpago",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\PlanPagoController@listarAmortizacionesPlanPago"
+        },
+        {
+            "file": "resources/js/components/frmPlanPago.vue",
+            "line": 2049,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_planespago?page=",
+            "probe": "/get_planespago",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\PlanPagoController@getPlanesPago"
+        },
+        {
+            "file": "resources/js/components/frmPlanPago_old.vue",
+            "line": 1573,
+            "active_import_graph": false,
+            "method": "POST",
+            "url_literal": "/save_amortizacion",
+            "probe": "/save_amortizacion",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\PlanPagoController@saveAmortizacion"
+        },
+        {
+            "file": "resources/js/components/frmPlanPago_old.vue",
+            "line": 1736,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/get_amortizaciones",
+            "probe": "/get_amortizaciones",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\PlanPagoController@getAmortizaciones"
+        },
+        {
+            "file": "resources/js/components/frmPlanPago_old.vue",
+            "line": 1750,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/get_amortizaciones_plan",
+            "probe": "/get_amortizaciones_plan",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\PlanPagoController@getAmortizacionesPlan"
+        },
+        {
+            "file": "resources/js/components/frmPlanPago_old.vue",
+            "line": 1765,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/get_cuotas_plan",
+            "probe": "/get_cuotas_plan",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\PlanPagoController@getCuotasPlan"
+        },
+        {
+            "file": "resources/js/components/frmPlanPago_old.vue",
+            "line": 1779,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/get_planes_pago_ligados",
+            "probe": "/get_planes_pago_ligados",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\PlanPagoController@getPlanesPagoLigados"
+        },
+        {
+            "file": "resources/js/components/frmPlanPago_old.vue",
+            "line": 1822,
+            "active_import_graph": false,
+            "method": "POST",
+            "url_literal": "/save_amortizacion",
+            "probe": "/save_amortizacion",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\PlanPagoController@saveAmortizacion"
+        },
+        {
+            "file": "resources/js/components/frmPlanPago_old.vue",
+            "line": 1892,
+            "active_import_graph": false,
+            "method": "POST",
+            "url_literal": "/save_amortizacion_nuevo",
+            "probe": "/save_amortizacion_nuevo",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\PlanPagoController@saveAmortizacionNuevo"
+        },
+        {
+            "file": "resources/js/components/frmPlanPago_old.vue",
+            "line": 1949,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/get_cantidad_creditos",
+            "probe": "/get_cantidad_creditos",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\PlanPagoController@getCantidadCreditos"
+        },
+        {
+            "file": "resources/js/components/frmPlanPago_old.vue",
+            "line": 1959,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/get_asesores",
+            "probe": "/get_asesores",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ClienteController@getAsesores"
+        },
+        {
+            "file": "resources/js/components/frmPlanPago_old.vue",
+            "line": 1993,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/get_usuarios_sin",
+            "probe": "/get_usuarios_sin",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\UsuarioController@getUsuariosSin"
+        },
+        {
+            "file": "resources/js/components/frmPlanPago_old.vue",
+            "line": 2002,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/caja_abierta",
+            "probe": "/caja_abierta",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CajaController@cajaAbierta"
+        },
+        {
+            "file": "resources/js/components/frmPlanPago_old.vue",
+            "line": 2060,
+            "active_import_graph": false,
+            "method": "POST",
+            "url_literal": "/save_amortizacion",
+            "probe": "/save_amortizacion",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\PlanPagoController@saveAmortizacion"
+        },
+        {
+            "file": "resources/js/components/frmPlanPago_old.vue",
+            "line": 2550,
+            "active_import_graph": false,
+            "method": "POST",
+            "url_literal": "/liquidar_deuda",
+            "probe": "/liquidar_deuda",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\PlanPagoController@liquidarDeuda"
+        },
+        {
+            "file": "resources/js/components/frmPlanPago_old.vue",
+            "line": 2703,
+            "active_import_graph": false,
+            "method": "POST",
+            "url_literal": "/liquidar_deuda",
+            "probe": "/liquidar_deuda",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\PlanPagoController@liquidarDeuda"
+        },
+        {
+            "file": "resources/js/components/frmPlanPago_old.vue",
+            "line": 3020,
+            "active_import_graph": false,
+            "method": "POST",
+            "url_literal": "/activar_planpago",
+            "probe": "/activar_planpago",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\PlanPagoController@activarPlanPago"
+        },
+        {
+            "file": "resources/js/components/frmPlanPago_old.vue",
+            "line": 3056,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/consulta_plan_pago_vigente?id_planpago=",
+            "probe": "/consulta_plan_pago_vigente",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\PlanPagoController@consultarPlanPagoCuotasCanceladas"
+        },
+        {
+            "file": "resources/js/components/frmPlanPago_old.vue",
+            "line": 3092,
+            "active_import_graph": false,
+            "method": "POST",
+            "url_literal": "/anular_planpago",
+            "probe": "/anular_planpago",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\PlanPagoController@anularPlanPago"
+        },
+        {
+            "file": "resources/js/components/frmPlanPago_old.vue",
+            "line": 3123,
+            "active_import_graph": false,
+            "method": "POST",
+            "url_literal": "/anular_pago",
+            "probe": "/anular_pago",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\PagoController@anularPago"
+        },
+        {
+            "file": "resources/js/components/frmPlanPago_old.vue",
+            "line": 3162,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/get_pago?id_cuota=",
+            "probe": "/get_pago",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\PagoController@getPago"
+        },
+        {
+            "file": "resources/js/components/frmPlanPago_old.vue",
+            "line": 3187,
+            "active_import_graph": false,
+            "method": "POST",
+            "url_literal": "/save_pago",
+            "probe": "/save_pago",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\PagoController@save"
+        },
+        {
+            "file": "resources/js/components/frmPlanPago_old.vue",
+            "line": 3301,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/listar_amortizaciones_cuotas?id_plan_pago=",
+            "probe": "/listar_amortizaciones_cuotas",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\PlanPagoController@listarAmortizaciones"
+        },
+        {
+            "file": "resources/js/components/frmPlanPago_old.vue",
+            "line": 3314,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/get_cuotas_plan?id_plan_pago=",
+            "probe": "/get_cuotas_plan",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\PlanPagoController@getCuotasPlan"
+        },
+        {
+            "file": "resources/js/components/frmPlanPago_old.vue",
+            "line": 3320,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/listar_amortizaciones?id_cuota=${cuota.id}",
+            "probe": "/listar_amortizaciones",
+            "status": "spa_fallback_not_api",
+            "action": "Closure"
+        },
+        {
+            "file": "resources/js/components/frmPlanPago_old.vue",
+            "line": 3337,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/get_planespago?page=",
+            "probe": "/get_planespago",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\PlanPagoController@getPlanesPago"
+        },
+        {
+            "file": "resources/js/components/frmReporte.vue",
+            "line": 1009,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_solicitudes_general_pdf",
+            "probe": "/get_solicitudes_general_pdf",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ReporteController@getSolicitudesGeneralPdf"
+        },
+        {
+            "file": "resources/js/components/frmReporte.vue",
+            "line": 1056,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_solicitudes_general",
+            "probe": "/get_solicitudes_general",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ReporteController@getSolicitudesGeneral"
+        },
+        {
+            "file": "resources/js/components/frmReporte.vue",
+            "line": 1095,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_planes_pago_general_pdf",
+            "probe": "/get_planes_pago_general_pdf",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ReporteController@getPlanesPagoGeneralPdf"
+        },
+        {
+            "file": "resources/js/components/frmReporte.vue",
+            "line": 1143,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_asesores",
+            "probe": "/get_asesores",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ClienteController@getAsesores"
+        },
+        {
+            "file": "resources/js/components/frmReporte.vue",
+            "line": 1194,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_planes_pago_general",
+            "probe": "/get_planes_pago_general",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ReporteController@getPlanesPagoGeneral"
+        },
+        {
+            "file": "resources/js/components/frmReporte.vue",
+            "line": 1541,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_planes_pago_cliente?id_cliente=",
+            "probe": "/get_planes_pago_cliente",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ReporteController@getPlanesPagoCliente"
+        },
+        {
+            "file": "resources/js/components/frmReporte.vue",
+            "line": 1553,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_clientes_paginate",
+            "probe": "/get_clientes_paginate",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ClienteController@getClientesPaginate"
+        },
+        {
+            "file": "resources/js/components/frmReporte.vue",
+            "line": 1577,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_usuarios_sin",
+            "probe": "/get_usuarios_sin",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\UsuarioController@getUsuariosSin"
+        },
+        {
+            "file": "resources/js/components/frmRoles.vue",
+            "line": 200,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_permisos",
+            "probe": "/get_permisos",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\PermisoController@getPermisos"
+        },
+        {
+            "file": "resources/js/components/frmRoles.vue",
+            "line": 210,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_roles",
+            "probe": "/get_roles",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\RolController@getRoles"
+        },
+        {
+            "file": "resources/js/components/frmRoles.vue",
+            "line": 227,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/save_rol",
+            "probe": "/save_rol",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\RolController@save"
+        },
+        {
+            "file": "resources/js/components/frmRoles.vue",
+            "line": 242,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/modify_rol",
+            "probe": "/modify_rol",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\RolController@modify"
+        },
+        {
+            "file": "resources/js/components/frmRoles.vue",
+            "line": 261,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_permisos_rol?id_rol=${rol.id}",
+            "probe": "/get_permisos_rol",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\PermisoController@getPermisoRol"
+        },
+        {
+            "file": "resources/js/components/frmSocio.vue",
+            "line": 253,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/socio/registrar",
+            "probe": "/socio/registrar",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SocioController@store"
+        },
+        {
+            "file": "resources/js/components/frmSocio.vue",
+            "line": 263,
+            "active_import_graph": true,
+            "method": "PUT",
+            "url_literal": "/socio/actualizar",
+            "probe": "/socio/actualizar",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SocioController@update"
+        },
+        {
+            "file": "resources/js/components/frmSocio.vue",
+            "line": 277,
+            "active_import_graph": true,
+            "method": "PUT",
+            "url_literal": "/socio/desactivar",
+            "probe": "/socio/desactivar",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SocioController@desactivar"
+        },
+        {
+            "file": "resources/js/components/frmSocio.vue",
+            "line": 290,
+            "active_import_graph": true,
+            "method": "PUT",
+            "url_literal": "/socio/activar",
+            "probe": "/socio/activar",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SocioController@activar"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud copy.vue",
+            "line": 1782,
+            "active_import_graph": false,
+            "method": "POST",
+            "url_literal": "/imagenRespaldo",
+            "probe": "/imagenRespaldo",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\RespaldoController@guardarRespaldo"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud copy.vue",
+            "line": 1834,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/delete_respaldo?id_respaldo=",
+            "probe": "/delete_respaldo",
+            "status": "spa_fallback_not_api",
+            "action": "Closure"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud copy.vue",
+            "line": 1852,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/get_respaldos?id_solicitud=",
+            "probe": "/get_respaldos",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\RespaldoController@getRespaldos"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud copy.vue",
+            "line": 1918,
+            "active_import_graph": false,
+            "method": "POST",
+            "url_literal": "/save_planpagos_cuotas",
+            "probe": "/save_planpagos_cuotas",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@savePlanPagosCuotas"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud copy.vue",
+            "line": 2266,
+            "active_import_graph": false,
+            "method": "POST",
+            "url_literal": "/solicitud_garantia_imagenes",
+            "probe": "/solicitud_garantia_imagenes",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@guardarImagenes"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud copy.vue",
+            "line": 2299,
+            "active_import_graph": false,
+            "method": "POST",
+            "url_literal": "/guardar_imagen",
+            "probe": "/guardar_imagen",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@guardarImagenIndividual"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud copy.vue",
+            "line": 2335,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/eliminar_imagen?id_imagen=",
+            "probe": "/eliminar_imagen",
+            "status": "spa_fallback_not_api",
+            "action": "Closure"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud copy.vue",
+            "line": 2365,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/get_garantias?id_solicitud=",
+            "probe": "/get_garantias",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@getGarantias"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud copy.vue",
+            "line": 2369,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/get_imagenes_garantia?id_garantia=",
+            "probe": "/get_imagenes_garantia",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@getImagenesGarantia"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud copy.vue",
+            "line": 2406,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/get_garantias?id_solicitud=",
+            "probe": "/get_garantias",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@getGarantias"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud copy.vue",
+            "line": 2410,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/get_imagenes_garantia?id_garantia=",
+            "probe": "/get_imagenes_garantia",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@getImagenesGarantia"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud copy.vue",
+            "line": 2672,
+            "active_import_graph": false,
+            "method": "POST",
+            "url_literal": "/save_solicitud",
+            "probe": "/save_solicitud",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@save"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud copy.vue",
+            "line": 2774,
+            "active_import_graph": false,
+            "method": "POST",
+            "url_literal": "/modify_solicitud",
+            "probe": "/modify_solicitud",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@modify"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud copy.vue",
+            "line": 2796,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/activar_solicitud?id_solicitud=",
+            "probe": "/activar_solicitud",
+            "status": "spa_fallback_not_api",
+            "action": "Closure"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud copy.vue",
+            "line": 2808,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/desactivar_solicitud?id_solicitud=",
+            "probe": "/desactivar_solicitud",
+            "status": "spa_fallback_not_api",
+            "action": "Closure"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud copy.vue",
+            "line": 2822,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/get_solicitudes?page=",
+            "probe": "/get_solicitudes",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@getSolicitudes"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud copy.vue",
+            "line": 2911,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/get_garantias?id_solicitud=",
+            "probe": "/get_garantias",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@getGarantias"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud copy.vue",
+            "line": 2936,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/get_codeudor_solicitud?id_solicitud=",
+            "probe": "/get_codeudor_solicitud",
+            "status": "spa_fallback_not_api",
+            "action": "Closure"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud copy.vue",
+            "line": 3005,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/get_garantias?id_solicitud=",
+            "probe": "/get_garantias",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@getGarantias"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud.vue",
+            "line": 1244,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_cliente_info",
+            "probe": "/get_cliente_info",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ClienteController@getClienteInfo"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud.vue",
+            "line": 1310,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_cliente_info",
+            "probe": "/get_cliente_info",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ClienteController@getClienteInfo"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud.vue",
+            "line": 1356,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/guardar_observacion",
+            "probe": "/guardar_observacion",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@guardarObservacion"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud.vue",
+            "line": 1466,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_orden_pago_reprogramacion?id_solicitud=${item.id}",
+            "probe": "/get_orden_pago_reprogramacion",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@getOrdenPagoReprogramacion"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud.vue",
+            "line": 1480,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/solicitud/detalle-completo/${item.id_solicitud_origen}",
+            "probe": "/solicitud/detalle-completo/1",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@getDetalleCompletoSolicitud"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud.vue",
+            "line": 1573,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/solicitud/aprobar-reprogramacion-final",
+            "probe": "/solicitud/aprobar-reprogramacion-final",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@aprobarReprogramacionFinal"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud.vue",
+            "line": 1703,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/guardar_observacion",
+            "probe": "/guardar_observacion",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@guardarObservacion"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud.vue",
+            "line": 1795,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_clientes_sin",
+            "probe": "/get_clientes_sin",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ClienteController@getClientesSin"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud.vue",
+            "line": 1808,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_codeudores_sin",
+            "probe": "/get_codeudores_sin",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CodeudorController@getCodeudoresSin"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud.vue",
+            "line": 1823,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_codeudores_solicitudes",
+            "probe": "/get_codeudores_solicitudes",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CodeudorController@getCodeudoresSolicitudes"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud.vue",
+            "line": 1831,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_solicitudes",
+            "probe": "/get_solicitudes",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@getSolicitudes"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud.vue",
+            "line": 1865,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_garantias?id_solicitud=${id_solicitud}",
+            "probe": "/get_garantias",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@getGarantias"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud.vue",
+            "line": 1887,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_codeudores_solicitud?id_solicitud=${solicitudId}",
+            "probe": "/get_codeudores_solicitud",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\CodeudorController@getCodeudorSolicitud"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud.vue",
+            "line": 2156,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/save_solicitud",
+            "probe": "/save_solicitud",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@save"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud.vue",
+            "line": 2191,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/modify_solicitud",
+            "probe": "/modify_solicitud",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@modify"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud.vue",
+            "line": 2343,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/activar_solicitud",
+            "probe": "/activar_solicitud",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@activarSolicitud"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud.vue",
+            "line": 2373,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/desactivar_solicitud",
+            "probe": "/desactivar_solicitud",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@desactivarSolicitud"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud.vue",
+            "line": 2443,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/save_planpagos_cuotas",
+            "probe": "/save_planpagos_cuotas",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@savePlanPagosCuotas"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud_old.vue",
+            "line": 2144,
+            "active_import_graph": false,
+            "method": "POST",
+            "url_literal": "/imagenRespaldo",
+            "probe": "/imagenRespaldo",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\RespaldoController@guardarRespaldo"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud_old.vue",
+            "line": 2198,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/delete_respaldo?id_respaldo=",
+            "probe": "/delete_respaldo",
+            "status": "spa_fallback_not_api",
+            "action": "Closure"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud_old.vue",
+            "line": 2216,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/get_respaldos?id_solicitud=",
+            "probe": "/get_respaldos",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\RespaldoController@getRespaldos"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud_old.vue",
+            "line": 2280,
+            "active_import_graph": false,
+            "method": "POST",
+            "url_literal": "/save_planpagos_cuotas",
+            "probe": "/save_planpagos_cuotas",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@savePlanPagosCuotas"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud_old.vue",
+            "line": 2624,
+            "active_import_graph": false,
+            "method": "POST",
+            "url_literal": "/solicitud_garantia_imagenes",
+            "probe": "/solicitud_garantia_imagenes",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@guardarImagenes"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud_old.vue",
+            "line": 2642,
+            "active_import_graph": false,
+            "method": "POST",
+            "url_literal": "/solicitud_garantia_imagenes",
+            "probe": "/solicitud_garantia_imagenes",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@guardarImagenes"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud_old.vue",
+            "line": 2675,
+            "active_import_graph": false,
+            "method": "POST",
+            "url_literal": "/guardar_imagen",
+            "probe": "/guardar_imagen",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@guardarImagenIndividual"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud_old.vue",
+            "line": 2713,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/eliminar_imagen?id_imagen=",
+            "probe": "/eliminar_imagen",
+            "status": "spa_fallback_not_api",
+            "action": "Closure"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud_old.vue",
+            "line": 2742,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/get_garantias?id_solicitud=",
+            "probe": "/get_garantias",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@getGarantias"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud_old.vue",
+            "line": 2746,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/get_imagenes_garantia?id_garantia=",
+            "probe": "/get_imagenes_garantia",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@getImagenesGarantia"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud_old.vue",
+            "line": 2785,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/get_garantias?id_solicitud=",
+            "probe": "/get_garantias",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@getGarantias"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud_old.vue",
+            "line": 2789,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/get_imagenes_garantia?id_garantia=",
+            "probe": "/get_imagenes_garantia",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@getImagenesGarantia"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud_old.vue",
+            "line": 3078,
+            "active_import_graph": false,
+            "method": "POST",
+            "url_literal": "/save_solicitud",
+            "probe": "/save_solicitud",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@save"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud_old.vue",
+            "line": 3175,
+            "active_import_graph": false,
+            "method": "POST",
+            "url_literal": "/save_solicitud",
+            "probe": "/save_solicitud",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@save"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud_old.vue",
+            "line": 3247,
+            "active_import_graph": false,
+            "method": "POST",
+            "url_literal": "/modify_solicitud",
+            "probe": "/modify_solicitud",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@modify"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud_old.vue",
+            "line": 3341,
+            "active_import_graph": false,
+            "method": "POST",
+            "url_literal": "/modify_solicitud",
+            "probe": "/modify_solicitud",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@modify"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud_old.vue",
+            "line": 3376,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/activar_solicitud?id_solicitud=",
+            "probe": "/activar_solicitud",
+            "status": "spa_fallback_not_api",
+            "action": "Closure"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud_old.vue",
+            "line": 3388,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/desactivar_solicitud?id_solicitud=",
+            "probe": "/desactivar_solicitud",
+            "status": "spa_fallback_not_api",
+            "action": "Closure"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud_old.vue",
+            "line": 3402,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/get_solicitudes?page=",
+            "probe": "/get_solicitudes",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@getSolicitudes"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud_old.vue",
+            "line": 3491,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/get_garantias?id_solicitud=",
+            "probe": "/get_garantias",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@getGarantias"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud_old.vue",
+            "line": 3518,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/get_codeudor_solicitud?id_solicitud=",
+            "probe": "/get_codeudor_solicitud",
+            "status": "spa_fallback_not_api",
+            "action": "Closure"
+        },
+        {
+            "file": "resources/js/components/frmSolicitud_old.vue",
+            "line": 3599,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/get_garantias?id_solicitud=",
+            "probe": "/get_garantias",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@getGarantias"
+        },
+        {
+            "file": "resources/js/components/frmUsuarios.vue",
+            "line": 368,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/activar_usuario",
+            "probe": "/activar_usuario",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\UsuarioController@activar"
+        },
+        {
+            "file": "resources/js/components/frmUsuarios.vue",
+            "line": 386,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/desactivar_usuario",
+            "probe": "/desactivar_usuario",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\UsuarioController@desactivar"
+        },
+        {
+            "file": "resources/js/components/frmUsuarios.vue",
+            "line": 404,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_usuarios?page=",
+            "probe": "/get_usuarios",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\UsuarioController@getUsuarios"
+        },
+        {
+            "file": "resources/js/components/frmUsuarios.vue",
+            "line": 420,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_roles_usuarios",
+            "probe": "/get_roles_usuarios",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\RolController@getRolesUsuarios"
+        },
+        {
+            "file": "resources/js/components/layouts/AppHeader.vue",
+            "line": 178,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/administracion",
+            "probe": "/administracion",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\LoginController@logout"
+        },
+        {
+            "file": "resources/js/components/layouts/AppMenu.vue",
+            "line": 171,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/administracion",
+            "probe": "/administracion",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\LoginController@logout"
+        },
+        {
+            "file": "resources/js/components/layouts/ModalDetalleCliente.vue",
+            "line": 209,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/cliente/ficha-completa/${idCliente}",
+            "probe": "/cliente/ficha-completa/1",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ClienteController@getFichaCompleta"
+        },
+        {
+            "file": "resources/js/components/Panel/PanelCajero.vue",
+            "line": 155,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/panel/cajero",
+            "probe": "/panel/cajero",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\PanelController@getPanelCajero"
+        },
+        {
+            "file": "resources/js/components/Panel/PanelOficialCredito.vue",
+            "line": 170,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/panel/oficial",
+            "probe": "/panel/oficial",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\PanelController@getPanelOficial"
+        },
+        {
+            "file": "resources/js/components/PerfilUsuarioComponent.vue",
+            "line": 184,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/perfil/get_datos",
+            "probe": "/perfil/get_datos",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\PerfilController@getPerfil"
+        },
+        {
+            "file": "resources/js/components/PerfilUsuarioComponent.vue",
+            "line": 197,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/perfil/update_info",
+            "probe": "/perfil/update_info",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\PerfilController@updateInformacion"
+        },
+        {
+            "file": "resources/js/components/PerfilUsuarioComponent.vue",
+            "line": 220,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/perfil/update_password",
+            "probe": "/perfil/update_password",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\PerfilController@updatePassword"
+        },
+        {
+            "file": "resources/js/components/PlanPago/DetallePlanPago.vue",
+            "line": 371,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_pagos_cuota",
+            "probe": "/get_pagos_cuota",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\PlanPagoController@getPagosPorCuota"
+        },
+        {
+            "file": "resources/js/components/repAvanceCreditos.vue",
+            "line": 264,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_avance_creditos_rep",
+            "probe": "/get_avance_creditos_rep",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\VistasReporteController@getPorcentajesCreditosRep"
+        },
+        {
+            "file": "resources/js/components/repAvanceCreditos.vue",
+            "line": 276,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_asesores",
+            "probe": "/get_asesores",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ClienteController@getAsesores"
+        },
+        {
+            "file": "resources/js/components/repClientesMora.vue",
+            "line": 341,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_creditos_mora_rep",
+            "probe": "/get_creditos_mora_rep",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\VistasReporteController@getCreditosMoraRep"
+        },
+        {
+            "file": "resources/js/components/repDesembolsos.vue",
+            "line": 235,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_desembolsos_rep",
+            "probe": "/get_desembolsos_rep",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\VistasReporteController@getDesembolsosRep"
+        },
+        {
+            "file": "resources/js/components/repDesembolsos.vue",
+            "line": 247,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_asesores",
+            "probe": "/get_asesores",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ClienteController@getAsesores"
+        },
+        {
+            "file": "resources/js/components/repDesembolsosOficial.vue",
+            "line": 108,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_asesores",
+            "probe": "/get_asesores",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ClienteController@getAsesores"
+        },
+        {
+            "file": "resources/js/components/repDesembolsosPendientes.vue",
+            "line": 108,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_asesores",
+            "probe": "/get_asesores",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ClienteController@getAsesores"
+        },
+        {
+            "file": "resources/js/components/repExtracto.vue",
+            "line": 383,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_creditos_rep",
+            "probe": "/get_creditos_rep",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\VistasReporteController@getCreditosRep"
+        },
+        {
+            "file": "resources/js/components/repExtracto.vue",
+            "line": 399,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_detalle_credito_extracto",
+            "probe": "/get_detalle_credito_extracto",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\VistasReporteController@getDetalleCreditoExtracto"
+        },
+        {
+            "file": "resources/js/components/repHistoricoCreditoMora.vue",
+            "line": 305,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_creditos_mora_rep",
+            "probe": "/get_creditos_mora_rep",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\VistasReporteController@getCreditosMoraRep"
+        },
+        {
+            "file": "resources/js/components/repHistoricoCreditoMora.vue",
+            "line": 317,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_asesores",
+            "probe": "/get_asesores",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ClienteController@getAsesores"
+        },
+        {
+            "file": "resources/js/components/repMovimientosCredito.vue",
+            "line": 254,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_clientes_rep",
+            "probe": "/get_clientes_rep",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\VistasReporteController@getClientesRep"
+        },
+        {
+            "file": "resources/js/components/repMovimientosCredito.vue",
+            "line": 264,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_creditos_rep?id_cliente=",
+            "probe": "/get_creditos_rep",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\VistasReporteController@getCreditosRep"
+        },
+        {
+            "file": "resources/js/components/repPagosProgramados.vue",
+            "line": 248,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_pagos_programados_rep",
+            "probe": "/get_pagos_programados_rep",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\VistasReporteController@getPagosProgramadosRep"
+        },
+        {
+            "file": "resources/js/components/repPagosProgramados.vue",
+            "line": 260,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_asesores",
+            "probe": "/get_asesores",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\ClienteController@getAsesores"
+        },
+        {
+            "file": "resources/js/components/repPorcentajesVenta.vue",
+            "line": 198,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/get_clientes_rep",
+            "probe": "/get_clientes_rep",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\VistasReporteController@getClientesRep"
+        },
+        {
+            "file": "resources/js/components/repPorcentajesVenta.vue",
+            "line": 208,
+            "active_import_graph": false,
+            "method": "GET",
+            "url_literal": "/get_creditos_rep?id_cliente=",
+            "probe": "/get_creditos_rep",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\VistasReporteController@getCreditosRep"
+        },
+        {
+            "file": "resources/js/components/Solicitud/ModalGarantias.vue",
+            "line": 112,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_garantias?id_solicitud=${idSolicitud}",
+            "probe": "/get_garantias",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@getGarantias"
+        },
+        {
+            "file": "resources/js/components/Solicitud/ModalGarantias.vue",
+            "line": 125,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_imagenes_garantia?id_garantia=${garantia.id}",
+            "probe": "/get_imagenes_garantia",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@getImagenesGarantia"
+        },
+        {
+            "file": "resources/js/components/Solicitud/ModalGarantias.vue",
+            "line": 286,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/guardar_garantias_imagenes",
+            "probe": "/guardar_garantias_imagenes",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@guardarGarantiasImagenes"
+        },
+        {
+            "file": "resources/js/components/Solicitud/ModalObservacion.vue",
+            "line": 83,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/guardar_observacion",
+            "probe": "/guardar_observacion",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SolicitudController@guardarObservacion"
+        },
+        {
+            "file": "resources/js/components/Solicitud/ModalRespaldos.vue",
+            "line": 123,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/get_respaldos?id_solicitud=${idSolicitud}",
+            "probe": "/get_respaldos",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\RespaldoController@getRespaldos"
+        },
+        {
+            "file": "resources/js/components/Solicitud/ModalRespaldos.vue",
+            "line": 287,
+            "active_import_graph": true,
+            "method": "POST",
+            "url_literal": "/guardar_respaldos_imagenes",
+            "probe": "/guardar_respaldos_imagenes",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\RespaldoController@guardarRespaldosImagenes"
+        },
+        {
+            "file": "resources/js/router/session.js",
+            "line": 36,
+            "active_import_graph": true,
+            "method": "GET",
+            "url_literal": "/me",
+            "probe": "/me",
+            "status": "matched",
+            "action": "App\\Http\\Controllers\\SesionController@me"
+        }
+    ]
+}

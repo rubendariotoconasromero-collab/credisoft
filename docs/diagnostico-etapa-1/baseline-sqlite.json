@@ -1,0 +1,131 @@
+{
+    "generated_at": "2026-09-24T08:46:47-04:00",
+    "engine": "sqlite",
+    "synthetic_only": true,
+    "scope": "Controller-level reproductions, not browser E2E or concurrency tests",
+    "scenarios": {
+        "FIN-01": {
+            "status": "reproduced",
+            "defect": true,
+            "expected_second": 1000,
+            "first": 1000,
+            "second": 1100
+        },
+        "FIN-02": {
+            "status": "reproduced",
+            "defect": true,
+            "capital": 1000,
+            "capital_pagado": 1,
+            "estado": 2,
+            "response": {
+                "estado_plan": 2,
+                "codigo_transaccion": "TRX-1790254008-1-526"
+            }
+        },
+        "FIN-03": {
+            "status": "reproduced",
+            "defect": true,
+            "http": 200,
+            "vault_before": 900,
+            "vault_after": 850,
+            "income_rows": 0
+        },
+        "FIN-04": {
+            "status": "reproduced",
+            "defect": true,
+            "expected_vault": 900,
+            "actual_vault": 850,
+            "active_income": 0
+        },
+        "FIN-05": {
+            "status": "reproduced",
+            "defect": true,
+            "first": 900,
+            "second": 850,
+            "expected": 900
+        },
+        "FIN-06": {
+            "status": "reproduced",
+            "defect": true,
+            "http": 200,
+            "capital_pagado_after_cancel": 1,
+            "estado_after_cancel": 2
+        },
+        "FIN-07": {
+            "status": "reproduced",
+            "defect": true,
+            "expected_cash": 2,
+            "actual_cash": 1
+        },
+        "FIN-08": {
+            "status": "reproduced",
+            "defect": true,
+            "disbursement_count": 2,
+            "expected": 1
+        },
+        "SEC-01": {
+            "status": "reproduced",
+            "defect": true,
+            "authenticated_after_rejected_login": true,
+            "http": 302
+        },
+        "FUN-01": {
+            "status": "reproduced",
+            "defect": true,
+            "error": "SQLSTATE[HY000]: General error: 1 no such column: users.id (Connection: sqlite, SQL: select count(*) as aggregate from (select \"cliente\".\"id\", \"cliente\".\"nombre\", \"cliente\".\"fecha_nacimiento\", \"cliente\".\"ci\", \"cliente\".\"sexo\", \"cliente\".\"estado_civil\", \"cliente\".\"vivienda\", \"cliente\".\"ingreso_mensual\", \"cliente\".\"estado\", \"cliente\".\"actividad\", \"cliente\".\"imagen\", \"cliente\".\"lugar_expedicion\" from \"cliente\" where \"users\".\"id\" = 1 group by \"cliente\".\"id\") as \"aggregate_table\")"
+        },
+        "FIN-09": {
+            "status": "reproduced",
+            "defect": true,
+            "physical_cash_expected": 100,
+            "actual_cash": 120
+        },
+        "SEC-02": {
+            "status": "reproduced",
+            "defect": true,
+            "http": 200,
+            "accepted_non_image": true,
+            "public_path_redirected_to_sandbox": true
+        },
+        "SEC-03": {
+            "status": "reproduced",
+            "defect": true,
+            "http": 200,
+            "role_has_no_permissions": true,
+            "scope": "HTTP route with auth middleware"
+        }
+    },
+    "benchmarks": {
+        "clientes_1001": {
+            "samples_ms": [
+                0.523,
+                0.555,
+                0.566,
+                0.593,
+                0.61
+            ],
+            "median_ms": 0.566,
+            "queries_last": 2,
+            "response_bytes": 6608
+        },
+        "detalle_cliente": {
+            "samples_ms": [
+                0.319,
+                0.323,
+                0.336,
+                0.391,
+                0.458
+            ],
+            "median_ms": 0.336,
+            "queries_last": 3,
+            "response_bytes": 331
+        }
+    },
+    "migration_count": 46,
+    "migration_ms": 242.83,
+    "fixture": {
+        "clients": 1001,
+        "users": 4,
+        "plans": 1
+    }
+}

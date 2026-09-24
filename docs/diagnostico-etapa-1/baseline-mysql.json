@@ -1,0 +1,176 @@
+{
+    "generated_at": "2026-09-24T08:53:31-04:00",
+    "engine": "mysql",
+    "synthetic_only": true,
+    "scope": "Controller-level reproductions, not browser E2E or concurrency tests",
+    "scenarios": {
+        "FIN-01": {
+            "status": "reproduced",
+            "defect": true,
+            "expected_second": 1000,
+            "first": 1000,
+            "second": 1100
+        },
+        "FIN-02": {
+            "status": "reproduced",
+            "defect": true,
+            "capital": 1000,
+            "capital_pagado": "1.00",
+            "estado": 2,
+            "response": {
+                "estado_plan": 2,
+                "codigo_transaccion": "TRX-1790254414-1-583"
+            }
+        },
+        "FIN-03": {
+            "status": "reproduced",
+            "defect": true,
+            "http": 200,
+            "vault_before": 900,
+            "vault_after": 850,
+            "income_rows": 0
+        },
+        "FIN-04": {
+            "status": "reproduced",
+            "defect": true,
+            "expected_vault": 900,
+            "actual_vault": 850,
+            "active_income": 0
+        },
+        "FIN-05": {
+            "status": "reproduced",
+            "defect": true,
+            "first": 900,
+            "second": 850,
+            "expected": 900
+        },
+        "FIN-06": {
+            "status": "reproduced",
+            "defect": true,
+            "http": 200,
+            "capital_pagado_after_cancel": "1.00",
+            "estado_after_cancel": 2
+        },
+        "FIN-07": {
+            "status": "reproduced",
+            "defect": true,
+            "expected_cash": 2,
+            "actual_cash": 1
+        },
+        "FIN-08": {
+            "status": "reproduced",
+            "defect": true,
+            "disbursement_count": 2,
+            "expected": 1
+        },
+        "SEC-01": {
+            "status": "reproduced",
+            "defect": true,
+            "authenticated_after_rejected_login": true,
+            "http": 302
+        },
+        "FUN-01": {
+            "status": "reproduced",
+            "defect": true,
+            "error": "SQLSTATE[42S22]: Column not found: 1054 Unknown column 'users.id' in 'where clause' (Connection: diagnostic, SQL: select count(*) as aggregate from (select `cliente`.`id`, `cliente`.`nombre`, `cliente`.`fecha_nacimiento`, `cliente`.`ci`, `cliente`.`sexo`, `cliente`.`estado_civil`, `cliente`.`vivienda`, `cliente`.`ingreso_mensual`, `cliente`.`estado`, `cliente`.`actividad`, `cliente`.`imagen`, `cliente`.`lugar_expedicion` from `cliente` where `users`.`id` = 1 group by `cliente`.`id`) as `aggregate_table`)"
+        },
+        "FIN-09": {
+            "status": "reproduced",
+            "defect": true,
+            "physical_cash_expected": 100,
+            "actual_cash": 120
+        },
+        "SEC-02": {
+            "status": "reproduced",
+            "defect": true,
+            "http": 200,
+            "accepted_non_image": true,
+            "public_path_redirected_to_sandbox": true
+        },
+        "SEC-03": {
+            "status": "reproduced",
+            "defect": true,
+            "http": 200,
+            "role_has_no_permissions": true,
+            "scope": "HTTP route with auth middleware"
+        },
+        "REP-01": {
+            "status": "reproduced",
+            "defect": true,
+            "before": 1000,
+            "after": 1100,
+            "expected": 1000
+        }
+    },
+    "benchmarks": {
+        "clientes_1001": {
+            "samples_ms": [
+                1.364,
+                1.541,
+                1.547,
+                1.805,
+                2.226
+            ],
+            "median_ms": 1.547,
+            "queries_last": 2,
+            "response_bytes": 6608
+        },
+        "detalle_cliente": {
+            "samples_ms": [
+                0.803,
+                0.858,
+                0.968,
+                1.071,
+                1.114
+            ],
+            "median_ms": 0.968,
+            "queries_last": 3,
+            "response_bytes": 331
+        },
+        "amortizacion_1_cuota": {
+            "samples_ms": [
+                0.42,
+                0.441,
+                0.489,
+                0.594,
+                0.828
+            ],
+            "median_ms": 0.489,
+            "queries_last": 1,
+            "response_bytes": 785
+        },
+        "libro_2_movimientos": {
+            "samples_ms": [
+                1.182,
+                1.201,
+                1.241,
+                1.306,
+                1.489
+            ],
+            "median_ms": 1.241,
+            "queries_last": 1,
+            "response_bytes": 725
+        },
+        "libro_10002_movimientos": {
+            "samples_ms": [
+                61.003,
+                65.329,
+                67.753,
+                72.29,
+                77.657
+            ],
+            "median_ms": 67.753,
+            "queries_last": 1,
+            "response_bytes": 1632696,
+            "page_rows": 15,
+            "unpaginated_income_rows": 10001
+        }
+    },
+    "migration_count": 46,
+    "migration_ms": 2892.46,
+    "fixture": {
+        "clients": 1001,
+        "users": 4,
+        "plans": 1
+    }
+}

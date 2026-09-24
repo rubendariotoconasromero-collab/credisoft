@@ -9,11 +9,8 @@ class RolSeeder extends Seeder
 {
     public function run()
     {
-        DB::table('rol')->insert([
-            ['nombre' => 'Administrador', 'estado' => 1],
-            ['nombre' => 'Cajero', 'estado' => 1],
-            ['nombre' => 'Oficial de Credito', 'estado' => 1],
-            ['nombre' => 'Encargado de Agencia', 'estado' => 1],
-        ]);
+        foreach (['Administrador', 'Cajero', 'Oficial de Credito', 'Encargado de Agencia'] as $name) {
+            DB::table('rol')->updateOrInsert(['nombre' => $name], ['estado' => 1]);
+        }
     }
 }

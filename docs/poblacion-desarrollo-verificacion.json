@@ -1,0 +1,30 @@
+{
+    "generated_at": "2026-09-24T10:26:04-04:00",
+    "mysql": "8.4.3",
+    "command": "migrate:fresh --seed (isolated MySQL; two runs)",
+    "success": true,
+    "result": {
+        "counts": {
+            "users": 6,
+            "permiso": 16,
+            "cliente": 16,
+            "codeudor": 8,
+            "solicitud": 13,
+            "plan_pago": 11,
+            "cuota": 42,
+            "pago": 7,
+            "desembolso": 10,
+            "caja": 11,
+            "movimientos_caja": 49,
+            "movimientos_boveda": 21
+        },
+        "open_cash": {
+            "2": 2060,
+            "3": 1500
+        },
+        "vault": 38257,
+        "physical_total": 41817,
+        "book_capital": 41817,
+        "amortization_rows_checked": 42
+    }
+}

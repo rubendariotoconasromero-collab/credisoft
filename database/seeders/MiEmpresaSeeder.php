@@ -12,16 +12,17 @@ class MiEmpresaSeeder extends Seeder
      */
     public function run(): void
     {
+        if (DB::table('mi_empresa')->exists()) return;
         DB::table('mi_empresa')->insert([
             'id' => 1,
-            'nombre' => 'Impulsa',
-            'nit' => '12345678',
-            'direccion' => 'Calle Avaroa # 125 - Montero - Santa Cruz',
-            'telefono' => '71225632',
-            'email' => 'impulsa@hotmail.com',
-            'logo' => 'empresa/6878d37f35d25.png',
-            'created_at' => null, // Tal como lo tienes en tu SQL
-            'updated_at' => '2025-07-17 11:10:35',
+            'nombre' => 'Credisoft DEMO',
+            'nit' => '0000000000',
+            'direccion' => 'Dirección ficticia de desarrollo - Montero',
+            'telefono' => '00000000',
+            'email' => 'empresa@example.test',
+            'logo' => 'logo_sistema_codesoft.png',
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
     }
 }

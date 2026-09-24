@@ -14,6 +14,7 @@ class ActividadSeeder extends Seeder
      */
     public function run(): void
     {
+        if (DB::table('actividades')->exists()) return;
         $sql = file_get_contents(database_path('seeders/sql/script_poblacion_actividades.sql'));
         DB::unprepared($sql);
 

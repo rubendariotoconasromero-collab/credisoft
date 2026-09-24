@@ -1,0 +1,24 @@
+{
+  "generated_at": "2026-09-24T09:14:55.5381043-04:00",
+  "build": {
+    "command": "npm.cmd run build",
+    "exit_code": 0,
+    "elapsed_ms": 6137
+  },
+  "tests": {
+    "command": "php artisan test",
+    "exit_code": 0,
+    "elapsed_ms": 1316,
+    "output": "\n   PASS  Tests\\Unit\\ExampleTest\n  ✓ that true is true                                                                                            0.01s  \n\n   PASS  Tests\\Feature\\DatabaseIsolationTest\n  ✓ only in memory database is available                                                                         0.20s  \n\n   PASS  Tests\\Feature\\ExampleTest\n  ✓ the application returns a successful response                                                                0.22s  \n\n  Tests:    3 passed (8 assertions)\n  Duration: 0.64s\n"
+  },
+  "php_lint": {
+    "files": 145,
+    "failures": []
+  },
+  "restore_success": true,
+  "mysql_scenarios": 14,
+  "git_diff_check": "passed",
+  "production_data_modified": false,
+  "browser_e2e": "not_executed",
+  "concurrency": "not_executed"
+}
