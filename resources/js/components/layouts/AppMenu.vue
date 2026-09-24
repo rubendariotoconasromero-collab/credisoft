@@ -24,15 +24,13 @@
             <div id="sidebar-menu">
                 <ul class="metismenu list-unstyled" id="side-menu">
 
-                    <template v-if="tienePermiso('paneladministracion')">
-                        <li class="menu-title">Menu</li>
-                        <li>
-                            <router-link to="/administracion" class="nav-link waves-effect" :class="{ 'mm-active': esActiva('administracion') }">
-                                <i class="fas fa-info-circle"></i>
-                                <span>Gráficos</span>
-                            </router-link>
-                        </li>
-                    </template>
+                    <li class="menu-title">Menu</li>
+                    <li>
+                        <router-link to="/administracion" class="nav-link waves-effect" :class="{ 'mm-active': esActiva('administracion') }">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Inicio</span>
+                        </router-link>
+                    </li>
 
                     <li v-if="tienePermiso('controlcaja')">
                         <a href="javascript: void(0);" class="nav-link has-arrow waves-effect" :class="{ 'mm-active': esActivaCaja }">
