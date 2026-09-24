@@ -506,7 +506,7 @@ export default {
                 if (address && address.lat && address.lng) {
                     this.initializeMap(parseFloat(address.lat), parseFloat(address.lng));
                 } else {
-                    this.initializeMap(-17.7833, -63.1821); 
+                    this.initializeMap(-17.338440, -63.246961);
                 }
             }).modal('show');
         },
