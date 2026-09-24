@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use DB;
-use PDF;
+use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use Mpdf\Mpdf;
@@ -227,7 +227,7 @@ class ClienteController extends Controller
             $query->where($request->criterio, 'LIKE', '%' . $request->buscar . '%');
         }
         if ($request->opcion_asesor > 0) {
-            $query->where('users.id', $request->opcion_asesor);
+            $query->whereIn('cliente.id', \App\Services\CarteraAccess::query('solicitud')->where('id_usuario', $request->opcion_asesor)->select('id_cliente'));
         }
         $clientes = $query->orderBy('cliente.id', 'desc')->get();
         return response()->json($clientes);
@@ -291,63 +291,12 @@ class ClienteController extends Controller
    
     public function fotoCliente(Request $request)
     {
-        DB::beginTransaction();
-        try {
-       
-
-            // Obtener el cliente actual para verificar si tiene imagen previa
-            $cliente = DB::table('cliente')
-                ->select('imagen')
-                ->where('id', $request->id_cliente)
-                ->first();
-
-            // Eliminar la imagen anterior si existe
-            if ($cliente->imagen && $cliente->imagen !== 'default.png') {
-                $rutaImagenAnterior = public_path('img/cliente/' . $cliente->imagen);
-                if (file_exists($rutaImagenAnterior)) {
-                    unlink($rutaImagenAnterior);
-                }
-            }
-
-            // Procesar la nueva imagen
-            $imagen = $request->file('imagen');
-            $extension = $imagen->getClientOriginalExtension();
-            $nombreArchivo = 'cliente_' . $request->id_cliente . '_' . time() . '.' . $extension;
-
-            // Mover la imagen al directorio público
-            $imagen->move(public_path('img/cliente'), $nombreArchivo);
-
-            // Actualizar la base de datos
-            DB::table('cliente')
-                ->where('id', $request->id_cliente)
-                ->update(['imagen' => $nombreArchivo]);
-
-            DB::commit();
-            
-            return response()->json([
-                'success' => true,
-                'imagen' => $nombreArchivo,
-                'message' => 'Foto actualizada correctamente'
-            ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            DB::rollback();
-            return response()->json([
-                'success' => false,
-                'error' => 'Error de validación',
-                'messages' => $e->validator->getMessageBag()
-            ], 422);
-        } catch (\Exception $e) {
-            DB::rollback();
-            return response()->json([
-                'success' => false,
-                'error' => 'Error al actualizar la foto',
-                'message' => $e->getMessage()
-            ], 500);
-        }
+        return response()->json(app(\App\Services\RecordPhoto::class)->replace($request, 'cliente', 'id_cliente'));
     }
     public function getCreditosCliente(Request $request){
         $cliente_creditos = DB::table('cliente')
         ->join('solicitud', 'cliente.id', '=', 'solicitud.id_cliente')
+            ->when(\App\Services\CarteraAccess::restricted(), fn ($query) => $query->where('solicitud.id_usuario', auth()->id()))
         ->join('plan_pago', 'plan_pago.id_solicitud', '=', 'solicitud.id')
         ->join('users', 'users.id', '=', 'solicitud.id_usuario')
         ->select('plan_pago.*', 'solicitud.*', 'plan_pago.id as id_plan_pago', 'users.personal as nombre_usuario', 
@@ -359,9 +308,10 @@ class ClienteController extends Controller
     }
 
     public function getCuotasPlanes(Request $request){
-        $cuotas = DB::table('cuota')
+        $cuotas = \App\Services\CarteraAccess::query('cuota')
         ->join('plan_pago', 'cuota.id_plan_pago', '=', 'plan_pago.id')
         ->join('solicitud', 'solicitud.id', '=', 'plan_pago.id_solicitud')
+            ->when(\App\Services\CarteraAccess::restricted(), fn ($query) => $query->where('solicitud.id_usuario', auth()->id()))
         ->join('cliente', 'cliente.id', '=', 'solicitud.id_cliente')
      
         ->select('cuota.*', DB::raw('DATEDIFF(NOW(), cuota.fecha) as dias_pasados'))
@@ -372,7 +322,7 @@ class ClienteController extends Controller
         $nuevoArrayConsulta = [];
 
         foreach ($cuotas as $cuota) {
-            $existe = DB::table('pago_amortizacion')
+            $existe = \App\Services\CarteraAccess::query('pago_amortizacion')
                 ->join('cuota', 'cuota.id', '=', 'pago_amortizacion.id_cuota')
                 ->where('pago_amortizacion.id_cuota', $cuota->id)
                 ->exists();
@@ -382,7 +332,7 @@ class ClienteController extends Controller
 
             if ($existe) {
                 // Realiza la segunda consulta
-                $consultaAdicional = DB::table('pago_amortizacion')
+                $consultaAdicional = \App\Services\CarteraAccess::query('pago_amortizacion')
                     ->select('pago_amortizacion.*', 'saldo_pendiente as saldo_capital', 'monto_pago as total', 'capital_pagado as capital', 'interes_pagado as interes', 'multa_pagada as ahorro')  // Ajusta los campos según tu estructura
                     ->where('id_cuota', $cuota->id)
                     ->get();
@@ -405,6 +355,7 @@ class ClienteController extends Controller
         $clientes = DB::table('cliente')
      
         ->join('solicitud', 'solicitud.id_cliente', '=', 'cliente.id')
+            ->when(\App\Services\CarteraAccess::restricted(), fn ($query) => $query->where('solicitud.id_usuario', auth()->id()))
         ->join('plan_pago', 'plan_pago.id_solicitud', '=', 'solicitud.id')
         ->join('users', 'solicitud.id_usuario', '=', 'users.id')
         ->select('users.personal', DB::raw('COUNT(DISTINCT cliente.id) as cant_clientes'))
@@ -420,6 +371,7 @@ class ClienteController extends Controller
 
         $clientes_sin = DB::table('cliente')
         ->leftJoin('solicitud', 'solicitud.id_cliente', '=', 'cliente.id')
+            ->when(\App\Services\CarteraAccess::restricted(), fn ($query) => $query->where('solicitud.id_usuario', auth()->id()))
         ->leftJoin('plan_pago', 'plan_pago.id_solicitud', '=', 'solicitud.id')
         ->leftJoin('users', 'solicitud.id_usuario', '=', 'users.id')
         ->select(DB::raw('COUNT(DISTINCT cliente.id) as cant_clientes'))
@@ -431,6 +383,7 @@ class ClienteController extends Controller
         $clientes_creditos = DB::table('cliente')
    
         ->join('solicitud', 'solicitud.id_cliente', '=', 'cliente.id')
+            ->when(\App\Services\CarteraAccess::restricted(), fn ($query) => $query->where('solicitud.id_usuario', auth()->id()))
         ->join('plan_pago', 'plan_pago.id_solicitud', '=', 'solicitud.id')
         ->join('users', 'solicitud.id_usuario', '=', 'users.id')
         ->select(DB::raw('count(DISTINCT cliente.id) as cant_clientes'))
@@ -460,7 +413,7 @@ class ClienteController extends Controller
             $mpdf->SetFooter('Generado por: ' . auth()->user()->name . ' | | Página {PAGENO}');
             $html = view($view, $data)->render();
             $mpdf->WriteHTML($html);
-            return response($mpdf->Output($filename, 'I'))
+            return response($mpdf->Output($filename, 'S'))
                 ->header('Content-Type', 'application/pdf')
                 ->header('Content-Disposition', "inline; filename=\"$filename\"");
         } catch (\Exception $e) {
@@ -553,7 +506,7 @@ class ClienteController extends Controller
 
         // Apply advisor filter
         if ($request->opcion_asesor > 0) {
-            $query->where('users.id', $request->opcion_asesor);
+            $query->whereIn('cliente.id', \App\Services\CarteraAccess::query('solicitud')->where('id_usuario', $request->opcion_asesor)->select('id_cliente'));
         }
         // Order and paginate
         //$perPage = 10; // Adjust as needed

@@ -1,0 +1,26 @@
+{
+    "incremental_migration_preserves_balances": true,
+    "independent_mysql_processes": true,
+    "same_owner_open": [
+        200,
+        422
+    ],
+    "close_vs_transfer": [
+        200,
+        422
+    ],
+    "physical_total_after_internal_operations": "1000.00",
+    "book_total_after_close": "1000.00",
+    "competing_withdrawals": [
+        200,
+        422
+    ],
+    "competing_collections": [
+        200,
+        422
+    ],
+    "competing_disbursements": [
+        200,
+        422
+    ]
+}

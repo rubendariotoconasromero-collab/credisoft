@@ -230,7 +230,7 @@
     <!-- Client Image -->
     <div class="client-image-container">
         @if ($cliente->imagen)
-            <img class="client-image" src="{{ public_path('img/cliente/' . $cliente->imagen) }}" alt="Foto del Cliente">
+            <img class="client-image" src="{{ \App\Services\PrivateImages::path('cliente', $cliente->imagen) }}" alt="Foto del Cliente">
         @else
             <img class="client-image" src="{{ public_path('img/cliente/default.png') }}" alt="Foto por defecto">
         @endif

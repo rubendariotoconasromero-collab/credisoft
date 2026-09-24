@@ -9,6 +9,17 @@ use Illuminate\Support\Facades\Auth;
 
 class BovedaController extends Controller
 {
+    public function cierresCaja(Request $request)
+    {
+        $request->validate(['page' => 'nullable|integer|min:1']);
+        return DB::table('caja_cierres')->join('users', 'users.id', '=', 'caja_cierres.id_usuario')
+            ->select('caja_cierres.*', 'users.personal as usuario')->orderByDesc('caja_cierres.id')->paginate(15)
+            ->through(function ($closing) {
+                $closing->resumen = json_decode($closing->resumen, true, 512, JSON_THROW_ON_ERROR);
+                return $closing;
+            });
+    }
+
     public function indexBoveda(){
         return view('frmBoveda');
     }
@@ -70,141 +81,32 @@ class BovedaController extends Controller
         ]);
     }
 
-    public function ingresarBoveda(Request $request){
-        // BUG-02: Validar input antes de operar
-        $request->validate([
-            'monto'      => 'required|numeric|min:0.01',
-            'descripcion'=> 'required|string|max:255',
-        ]);
-
-        if (!DB::table('boveda')->exists()) {
-            return response()->json(['message' => 'No existe una bóveda registrada'], 422);
-        }
-
-        DB::beginTransaction();
-        try {
-            $id_boveda = DB::table('boveda')->orderBy('id', 'desc')->value('id');
-            $monto     = (float) $request->monto;
-
-            DB::table('movimientos_boveda')->insert([
-                'tipo_movimiento' => 'ingreso',
-                'monto'           => $monto,
-                'descripcion'     => $request->descripcion,
-                'fecha'           => now(),
-                'id_boveda'       => $id_boveda,
-                'id_usuario'      => Auth::id(),
-                'id_socio'        => $request->id_socio ?? null,
-            ]);
-
-            DB::table('boveda')->where('id', $id_boveda)->update([
-                'saldo_actual' => DB::raw('saldo_actual + ' . $monto),
-            ]);
-
-            DB::commit();
-            return response()->json(['message' => 'Ingreso registrado correctamente'], 200);
-
-        } catch (\Exception $e) {
-            // BUG-03 resuelto: \Exception con namespace global
-            DB::rollBack();
-            return response()->json(['message' => 'Error al registrar el ingreso', 'error' => $e->getMessage()], 500);
-        }
+    public function ingresarBoveda(Request $request)
+    {
+        return $this->registrarMovimiento($request, 'ingreso');
     }
 
-    public function retirarBoveda(Request $request){
-        // BUG-02: Validar input antes de operar
-        $request->validate([
-            'monto'      => 'required|numeric|min:0.01',
-            'descripcion'=> 'required|string|max:255',
-        ]);
-
-        if (!DB::table('boveda')->exists()) {
-            return response()->json(['message' => 'No existe una bóveda registrada'], 422);
-        }
-
-        DB::beginTransaction();
-        try {
-            $id_boveda = DB::table('boveda')->orderBy('id', 'desc')->value('id');
-            $monto     = (float) $request->monto;
-
-            // BUG-01 resuelto: validar saldo suficiente en el backend
-            $saldoActual = (float) DB::table('boveda')->where('id', $id_boveda)->value('saldo_actual');
-            if ($saldoActual < $monto) {
-                DB::rollBack();
-                return response()->json(['message' => 'Saldo insuficiente en bóveda'], 422);
-            }
-
-            DB::table('movimientos_boveda')->insert([
-                'tipo_movimiento' => 'salida',
-                'monto'           => $monto,
-                'descripcion'     => $request->descripcion,
-                'fecha'           => now(),
-                'id_boveda'       => $id_boveda,
-                'id_usuario'      => Auth::id(),
-                'id_socio'        => $request->id_socio ?? null,
-            ]);
-
-            DB::table('boveda')->where('id', $id_boveda)->update([
-                'saldo_actual' => DB::raw('saldo_actual - ' . $monto),
-            ]);
-
-            // ── Contrapartida en Caja ──────────────────────────────────────
-            // Cuando se transfiere dinero de Bóveda a Caja, el monto debe
-            // reflejarse en el saldo de caja (tabla ingreso + movimientos_caja).
-            // Sin este registro, calcularSaldoCaja() no incluye el traspaso.
-            if (str_contains(strtolower($request->descripcion), 'transferencia a caja')) {
-                $id_caja = DB::table('caja')->where('estado', 1)->value('id');
-
-                if ($id_caja) {
-                    DB::table('ingreso')->insert([
-                        'monto'       => $monto,
-                        'descripcion' => 'Transferencia desde Bóveda',
-                        'id_usuario'  => Auth::id(),
-                        'fecha'       => now(),
-                        'id_caja'     => $id_caja,
-                    ]);
-
-                    DB::table('movimientos_caja')->insert([
-                        'tipo_movimiento' => 'ingreso',
-                        'monto'           => $monto,
-                        'descripcion'     => 'Transferencia desde Bóveda',
-                        'fecha'           => now(),
-                        'id_caja'         => $id_caja,
-                        'id_usuario'      => Auth::id(),
-                    ]);
-                }
-            }
-            // ──────────────────────────────────────────────────────────────
-
-            DB::commit();
-            return response()->json(['message' => 'Retiro registrado correctamente'], 200);
-
-        } catch (\Exception $e) {
-            // BUG-03 resuelto: \Exception con namespace global
-            DB::rollBack();
-            return response()->json(['message' => 'Error al registrar el retiro', 'error' => $e->getMessage()], 500);
-        }
+    public function retirarBoveda(Request $request)
+    {
+        return $this->registrarMovimiento($request, 'salida');
     }
 
-    public function aperturarBoveda(Request $request){
-        // BUG-05 resuelto: impedir múltiples aperturas
-        if (DB::table('boveda')->exists()) {
-            return response()->json(['message' => 'Ya existe una bóveda registrada. No se puede aperturar nuevamente.'], 422);
-        }
+    private function registrarMovimiento(Request $request, string $direction)
+    {
+        $request->validate(['monto' => 'required|numeric|min:0.01', 'descripcion' => 'required|string|max:255',
+            'id_socio' => 'nullable|integer|exists:socios,id', 'id_caja' => 'nullable|integer|exists:caja,id']);
+        $type = str_contains(mb_strtolower($request->descripcion), 'transferencia a caja') ? 'transferencia_caja' : 'boveda_'.$direction;
+        return app(\App\Services\Finance\Operations::class)->run($request, $type, function ($op) use ($request, $direction) {
+            app(\App\Services\Finance\VaultOperations::class)->move((int) Auth::id(), $direction,
+                $request->monto, $request->descripcion, $request->filled('id_caja') ? (int) $request->id_caja : null,
+                $request->filled('id_socio') ? (int) $request->id_socio : null, $op);
+            return ['message' => 'Movimiento registrado correctamente'];
+        });
+    }
 
-        DB::beginTransaction();
-        try {
-            DB::table('boveda')->insert([
-                'saldo_actual'   => 0,
-                'fecha_apertura' => now(),
-                'id_usuario'     => Auth::id(),
-            ]);
-
-            DB::commit();
-            return response()->json(['message' => 'Bóveda aperturada con éxito'], 200);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(['message' => 'Error al aperturar', 'error' => $e->getMessage()], 500);
-        }
+    public function aperturarBoveda(Request $request)
+    {
+        app(\App\Services\Finance\VaultOperations::class)->open((int) Auth::id());
+        return response()->json(['message' => 'Bóveda aperturada con éxito']);
     }
 }

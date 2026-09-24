@@ -176,7 +176,7 @@
     <script src="assets/libs/raphael/raphael.min.js"></script>
 
     <!-- App js -->
-    <script src="assets/js/app.js"></script>
+    <script src="{{ asset('assets/js/app.js') }}?v={{ filemtime(public_path('assets/js/app.js')) }}"></script>
     <!-- Incluye el JavaScript de Bootstrap (Popper.js y Bootstrap JS) -->
     <script src="assets/js/boostrap5.2.js" crossorigin="anonymous"></script>
 

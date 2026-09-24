@@ -17,7 +17,7 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class CheckPermiso
 {
-    public function handle(Request $request, Closure $next, string $permiso): Response
+    public function handle(Request $request, Closure $next, string ...$permisos): Response
     {
         $user = $request->user();
 
@@ -29,7 +29,7 @@ class CheckPermiso
             return redirect()->route('ir_login');
         }
 
-        if (!$user->tienePermiso($permiso)) {
+        if ($user->permisosActivos()->intersect($permisos)->isEmpty()) {
             abort(403, 'No tiene permiso para acceder a este módulo.');
         }
 

@@ -16,20 +16,25 @@ class LoginController extends Controller
     }
 
     public function loginProcess(Request $request){
+        $request->validate(['name' => 'required|string|max:255', 'password' => 'required|string|max:1024']);
         // Validación
         $credenciales=[
             'name'=> $request->name,
             'password'=> $request->password,
+            'estado'=> 1,
         ];
 
         if(Auth::attempt($credenciales)){
 
-            if(Auth::user()->estado==1){
+            if(Auth::user()->accesoActivo()){
                 $request->session()->regenerate();
                 return redirect()->intended(route('administracion'));
 
 
             }else{
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
                 $mensaje='El usuario se encuentra INHABILITADO';
                 return redirect()->route('ir_login')->with(['mensaje'=>$mensaje]);
             }
@@ -59,6 +64,7 @@ class LoginController extends Controller
         ->join('permiso', 'permiso_rol.id_permiso', '=', 'permiso.id')
         ->where('permiso.nombre', $permiso)
         ->where('users.id_rol', $id_rol)
+        ->where('users.estado', 1)->where('rol.estado', 1)->where('permiso.estado', 1)
         ->exists();
 
         return $permitido;

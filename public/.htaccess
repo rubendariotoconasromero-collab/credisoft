@@ -5,6 +5,9 @@
 
     RewriteEngine On
 
+    # Las imágenes de expedientes pasan siempre por autorización de Laravel.
+    RewriteRule ^img/(cliente|codeudor|pago|garantia|garantias|respaldos)/.*$ index.php [END,NC]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

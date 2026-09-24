@@ -33,7 +33,7 @@
                 </div>
 
                 <div class="col-md-7 d-flex justify-content-end">
-                    <div class="d-flex flex-wrap gap-2 justify-content-end text-end">
+                    <div v-if="puedeOperar" class="d-flex flex-wrap gap-2 justify-content-end text-end">
                         <button @click="$emit('ver-desembolsos')" class="btn btn-outline-info position-relative">
                             <i class="fas fa-dollar-sign me-1"></i> Desembolsos
                             <span v-if="conteoPendientes > 0" class="badge bg-danger rounded position-absolute top-0 end-0 translate-middle p-1">
@@ -91,7 +91,7 @@
                             <td class="text-uppercase text-end">{{ formatMoney(item.monto_inicial) }}</td>
                             <td class="text-uppercase text-end fw-bold">{{ calcularCierre(item) }}</td>
                             <td class="text-uppercase text-end text-success">{{ calcularIngresoTotal(item) }}</td>
-                            <td class="text-uppercase text-end text-danger">{{ formatMoney(item.egreso_total) }}</td>
+                            <td class="text-uppercase text-end text-danger">{{ formatMoney(item.resumen_financiero?.total_egresos ?? item.egreso_total) }}</td>
                             <td class="text-uppercase text-end fw-bold" 
                                 :class="calcularDiferencia(item) >= 0 ? 'text-success' : 'text-danger'">
                                 {{ calcularDiferencia(item) }}
@@ -147,6 +147,7 @@
 
 <script>
 import moment from "moment";
+import { tienePermiso } from '../../router/session';
 
 export default {
     props: {
@@ -166,6 +167,7 @@ export default {
         }
     },
     computed: {
+        puedeOperar() { return tienePermiso('controlcaja'); },
         pagesNumber() {
             if (!this.pagination.to) return [];
             let from = this.pagination.current_page - this.offset;
@@ -195,6 +197,7 @@ export default {
         },
         
         calcularIngresoTotal(item) {
+            if (item.resumen_financiero) return this.formatMoney(item.resumen_financiero.total_ingresos);
             const total = parseFloat(item.ingreso_total || 0) +
                           parseFloat(item.pago_administrativo_total || 0) +
                           parseFloat(item.ingreso_total_ingreso || 0) +
@@ -203,6 +206,7 @@ export default {
         },
 
         calcularCierre(item) {
+            if (item.resumen_financiero) return this.formatMoney(item.resumen_financiero.efectivo_esperado);
             const ingresos = parseFloat(this.calcularIngresoTotal(item));
             const egresos = parseFloat(item.egreso_total || 0);
             const inicial = parseFloat(item.monto_inicial || 0);
@@ -210,9 +214,7 @@ export default {
         },
 
         calcularDiferencia(item) {
-            const ingresos = parseFloat(this.calcularIngresoTotal(item));
-            const egresos = parseFloat(item.egreso_total || 0);
-            return this.formatMoney(ingresos - egresos);
+            return this.formatMoney(item.diferencia || 0);
         }
     }
 };

@@ -32,7 +32,7 @@ class SolicitudController extends Controller
     public function save(Request $request){
         DB::beginTransaction();
         try{
-            $id_solicitud=DB::table('solicitud')->insertGetId([
+            $id_solicitud=\App\Services\CarteraAccess::query('solicitud')->insertGetId([
                 'importe_solicitud'=>$request->importe_solicitud,
                 'moneda'=>$request->moneda,
                 'lapso_capital'=>$request->lapso_capital,
@@ -62,7 +62,7 @@ class SolicitudController extends Controller
                 'Empeño de electrodoméstico u Otros',
             ])) {
                 foreach ($request->garantias as $garantia) {
-                    DB::table('garantia')->insert([
+                    \App\Services\CarteraAccess::query('garantia')->insert([
                         'descripcion' => $garantia['descripcion'] ?? null,
                         'id_solicitud' => $id_solicitud,
                     ]);
@@ -90,7 +90,7 @@ class SolicitudController extends Controller
     public function modify(Request $request){
         DB::beginTransaction();
         try{
-            $id_solicitud=DB::table('solicitud')->where('id', $request->id_solicitud)->update([
+            $id_solicitud=\App\Services\CarteraAccess::query('solicitud')->where('id', $request->id_solicitud)->update([
                 'importe_solicitud'=>$request->importe_solicitud,
                 'moneda'=>$request->moneda,
                 'lapso_capital'=>$request->lapso_capital,
@@ -121,13 +121,13 @@ class SolicitudController extends Controller
            
                     // agregando
                     foreach($request->garantias as $garantia){
-                        if(!DB::table('garantia')
+                        if(!\App\Services\CarteraAccess::query('garantia')
                         ->join('solicitud','solicitud.id', '=', 'garantia.id_solicitud')
                         ->where('garantia.id', '=',$garantia['id_garantia'])
                         ->where('solicitud.id','=', $request->id_solicitud)
                         ->exists())
                         {
-                            DB::table('garantia')
+                            \App\Services\CarteraAccess::query('garantia')
                             ->insert([
                                 'descripcion'=>$garantia['descripcion'],
                                 'id_solicitud'=>$request->id_solicitud,
@@ -137,7 +137,7 @@ class SolicitudController extends Controller
                 }else{
                     foreach($request->garantias as $garantia){
                     
-                        DB::table('garantia')
+                        \App\Services\CarteraAccess::query('garantia')
                         ->insert([
                             'descripcion'=>$garantia['descripcion'],
                             'id_solicitud'=>$request->id_solicitud,
@@ -171,7 +171,7 @@ class SolicitudController extends Controller
 
     public function getSolicitudes(Request $request)
     {
-        $query = DB::table('solicitud')
+        $query = \App\Services\CarteraAccess::query('solicitud')
             ->join('cliente', 'cliente.id', '=', 'solicitud.id_cliente')
             ->join('users', 'users.id', '=', 'solicitud.id_usuario')
             ->select(
@@ -215,7 +215,7 @@ class SolicitudController extends Controller
             $query->where('solicitud.estado', $request->estado);
         }
 
-        if (Auth::user()->id_rol != 1) {
+        if (\App\Services\CarteraAccess::restricted()) {
             $query->where('users.id', Auth::id()); // Optimización: Auth::id() es más conciso
         }
 
@@ -225,21 +225,21 @@ class SolicitudController extends Controller
         return $solicitudes;
     }
     public function activarSolicitud(Request $request){
-        DB::table('solicitud')->where('solicitud.id', $request->id_solicitud)
+        \App\Services\CarteraAccess::query('solicitud')->where('solicitud.id', $request->id_solicitud)
         ->update([
             'estado'=>1
         ]);
     }
 
     public function desactivarSolicitud(Request $request){
-        DB::table('solicitud')->where('solicitud.id', $request->id_solicitud)
+        \App\Services\CarteraAccess::query('solicitud')->where('solicitud.id', $request->id_solicitud)
         ->update([
             'estado'=>0
         ]);
     }
 
     public function getGarantias(Request $request){
-        $garantias = DB::table('garantia')
+        $garantias = \App\Services\CarteraAccess::query('garantia')
         ->join('solicitud','garantia.id_solicitud', '=', 'solicitud.id')
         ->select('garantia.*')
         ->where('solicitud.id', $request->id_solicitud)
@@ -248,65 +248,9 @@ class SolicitudController extends Controller
         return ['garantias'=>$garantias];
     }
 
-    public function guardarImagenes(Request $request){
-        //$imagenes = json_decode($request->imagenes, true);
-        //dd($request->imagenes);
-        DB::beginTransaction();
-        try{
-            foreach ($request->imagenes as $arreglo) {
-                foreach ($arreglo as $item) {
-                    // Accede a los elementos individuales del arreglo $item
-                    $id_imagen = $item['id_imagen'];
-                    $id_garantia = $item['id_garantia'];
-                    $imagen = $item['imagen'];
-                    $imagen_file = $item['imagen_file'];
-                    
-                    //dd($imagen_file);
-    
-                    DB::table('imagen')
-                    ->join('garantia', 'garantia.id', '=', 'imagen.id_garantia')
-                    ->select('imagen.*')
-                    ->where('imagen.id_garantia', '=', $id_garantia)
-                    ->where('imagen.id','!=', $id_imagen) // Agregamos esta condición
-                    ->delete();
-                }
-    
-                foreach ($arreglo as $item) {
-                    // Accede a los elementos individuales del arreglo $item
-                    $id_imagen = $item['id_imagen'];
-                    $id_garantia = $item['id_garantia'];
-                    $imagen = $item['imagen'];
-                    $imagen_file = $item['imagen_file'];
-                    
-                    $imagen_existe=DB::table('imagen')
-                    ->join('garantia', 'garantia.id', '=', 'imagen.id_garantia')
-                    ->select('imagen.*')
-                    ->where('imagen.id_garantia', '=', $id_garantia)
-                    ->where('imagen.id','!=', $id_imagen) // Agregamos esta condición
-                    ->get();
-    
-    
-                    if(!empty($imagen_existe)){
-                        $nombreArchivo='';
-                        if(!empty($imagen_file)){
-                            // Obtiene el archivo de imagen del formulario
-                            $imagen = $imagen_file;
-                            // Genera un nombre único para el archivo de imagen
-                            $nombreArchivo = uniqid() . '.' . $imagen->getClientOriginalExtension();
-                            // Almacena la imagen en la carpeta public/img
-                            $imagen->move(public_path('img/garantias/'), $nombreArchivo);
-                        }
-                        DB::table('imagen')->insert([
-                            'imagen'=>$nombreArchivo,
-                            'id_garantia'=>$id_garantia,
-                        ]);
-                    }
-                }
-            }
-            DB::commit();
-        }catch(Exception $e){
-            DB::rollback();
-        }
+    public function guardarImagenes(Request $request)
+    {
+        return response()->json(['message' => 'Ruta retirada. Utilice el guardado de garantías del formulario actual.'], 410);
     }
 
     public function guardarImagenIndividual(Request $request)
@@ -317,22 +261,25 @@ class SolicitudController extends Controller
             'id_garantia' => 'required|integer|exists:garantia,id',
             'id_imagen' => 'nullable|integer|exists:imagen,id',
         ]);
+        if (!empty($validated['id_imagen'])) {
+            abort_unless(DB::table('imagen')->where('id', $validated['id_imagen'])->where('id_garantia', $validated['id_garantia'])->exists(), 422, 'La imagen no pertenece a la garantía.');
+        }
 
         DB::beginTransaction();
 
         try {
             // Ensure the img/garantia directory exists
-            $directory = public_path('img/garantia');
+            $directory = \App\Services\PrivateImages::directory('garantia');
             if (!file_exists($directory)) {
                 mkdir($directory, 0755, true);
             }
 
             // Handle the image file
             $image = $request->file('imagen');
-            $filename = uniqid() . '.' . $image->getClientOriginalExtension();
+            $filename = (string) \Illuminate\Support\Str::uuid() . '.' . $image->extension();
             $relativePath = 'img/garantia/' . $filename;
 
-            // Move the image to the public/img/garantia directory
+            // Move the image outside the web root
             $image->move($directory, $filename);
 
             // Prepare image data
@@ -342,9 +289,11 @@ class SolicitudController extends Controller
                 'updated_at' => now(),
             ];
 
-            if ($validated['id_imagen']) {
+            if (!empty($validated['id_imagen'])) {
+                $previousImage = \App\Services\CarteraAccess::query('imagen')->where('id', $validated['id_imagen'])->lockForUpdate()->value('imagen');
+                \App\Services\PrivateImages::deleteAfterCommit('garantia', $previousImage);
                 // Update existing image
-                DB::table('imagen')
+                \App\Services\CarteraAccess::query('imagen')
                     ->where('id', $validated['id_imagen'])
                     ->update($imageData);
 
@@ -352,7 +301,7 @@ class SolicitudController extends Controller
             } else {
                 // Insert new image
                 $imageData['created_at'] = now();
-                $imageId = DB::table('imagen')->insertGetId($imageData);
+                $imageId = \App\Services\CarteraAccess::query('imagen')->insertGetId($imageData);
             }
 
             DB::commit();
@@ -369,6 +318,9 @@ class SolicitudController extends Controller
                 'request' => $request->all(),
                 'exception' => $e,
             ]);
+            if (isset($directory, $filename) && is_file($directory.DIRECTORY_SEPARATOR.$filename)) {
+                @unlink($directory.DIRECTORY_SEPARATOR.$filename);
+            }
             return response()->json([
                 'message' => 'No se pudo guardar la imagen',
                 'error' => $e->getMessage(),
@@ -377,7 +329,7 @@ class SolicitudController extends Controller
     }
 
     public function getImagenesGarantia(Request $request){
-        $imagenes=DB::table('imagen')->join('garantia', 'imagen.id_garantia', '=', 'garantia.id')
+        $imagenes=\App\Services\CarteraAccess::query('imagen')->join('garantia', 'imagen.id_garantia', '=', 'garantia.id')
         ->select('imagen.*')
         ->where('imagen.id_garantia', $request->id_garantia)
         ->get();
@@ -385,12 +337,12 @@ class SolicitudController extends Controller
         return $imagenes;
     }
     public function eliminarImagen(Request $request){
-        DB::table('imagen')->where('imagen.id', $request->id_imagen)->delete();
+        \App\Services\CarteraAccess::query('imagen')->where('imagen.id', $request->id_imagen)->delete();
     }
 
     public function ListaCuotasPdf(Request $request){
         // 1. Obtenemos la información de la base de datos
-        $informacion = DB::table('solicitud')
+        $informacion = \App\Services\CarteraAccess::query('solicitud')
             ->join('cliente', 'cliente.id', '=', 'solicitud.id_cliente')
             ->join('users', 'users.id', '=', 'solicitud.id_usuario')
             ->where('solicitud.id', $request->id_solicitud)
@@ -432,12 +384,12 @@ class SolicitudController extends Controller
     public function savePlanPagosCuotas(Request $request){
         DB::beginTransaction();
         try{
-            $solicitud=DB::table('solicitud')
+            $solicitud=\App\Services\CarteraAccess::query('solicitud')
             ->where('solicitud.id', $request->id_solicitud)
             ->get();
     
             $detalles = json_decode($request->detalles, true);
-            $plan_pagoId = DB::table('plan_pago')->insertGetId([
+            $plan_pagoId = \App\Services\CarteraAccess::query('plan_pago')->insertGetId([
                 'fecha_inicio'=>$request->fecha_inicio_plan_pago,
                 'fecha_ultima_amortizacion'=>$request->fecha_primera_cuota,
                 'fecha_fin'=>$request->fecha_final,
@@ -453,7 +405,7 @@ class SolicitudController extends Controller
             ]);
 
             foreach($detalles as $detalle){
-                DB::table('cuota')->insert([
+                \App\Services\CarteraAccess::query('cuota')->insert([
                     'numero'=>$detalle['nro'],
                     'fecha'=>$detalle['fecha'],
                     'capital'=>$detalle['capital'],
@@ -466,7 +418,7 @@ class SolicitudController extends Controller
                 ]);
             }
 
-            DB::table('solicitud')->where('id', $request->id_solicitud)->update([
+            \App\Services\CarteraAccess::query('solicitud')->where('id', $request->id_solicitud)->update([
                 'estado'=>2
             ]);
 
@@ -494,11 +446,12 @@ class SolicitudController extends Controller
         ];
 
         // Generate the PDF using the provided template
-        $this->generatePDFMarcaAgua($html, 'reporte.calculo_cuotas_simulacion', 'calculo_cuotas_simulacion');
+        return $this->generatePDFMarcaAgua($html, 'reporte.calculo_cuotas_simulacion', 'calculo_cuotas_simulacion');
     }
 
     public function guardarGarantiasImagenes(Request $request)
     {
+        $createdFiles = [];
         try {
 
             // Basic input checks
@@ -521,21 +474,20 @@ class SolicitudController extends Controller
 
             // Handle deleted guarantees
             if (!empty($deletedGarantias)) {
-                DB::table('garantia')->whereIn('id', $deletedGarantias)->delete();
-                DB::table('imagen')->whereIn('id_garantia', $deletedGarantias)->delete();
+                foreach (\App\Services\CarteraAccess::query('imagen')->whereIn('id_garantia', $deletedGarantias)->get() as $oldImage) {
+                    \App\Services\PrivateImages::deleteAfterCommit('garantia', $oldImage->imagen);
+                }
+                \App\Services\CarteraAccess::query('imagen')->whereIn('id_garantia', $deletedGarantias)->delete();
+                \App\Services\CarteraAccess::query('garantia')->whereIn('id', $deletedGarantias)->delete();
                 \Log::info('Deleted garantias: ' . implode(', ', $deletedGarantias));
             }
 
             // Handle deleted images
             if (!empty($deletedImages)) {
-                $imagesToDelete = DB::table('imagen')->whereIn('id', $deletedImages)->get();
+                $imagesToDelete = \App\Services\CarteraAccess::query('imagen')->whereIn('id', $deletedImages)->get();
                 foreach ($imagesToDelete as $image) {
-                    $filePath = 'public/img/garantia/' . $image->imagen;
-                    if ($image->imagen !== 'default.png' && Storage::exists($filePath)) {
-                        Storage::delete($filePath);
-                        \Log::info("Deleted image file: {$filePath}");
-                    }
-                    DB::table('imagen')->where('id', $image->id)->delete();
+                    \App\Services\PrivateImages::deleteAfterCommit('garantia', $image->imagen);
+                    \App\Services\CarteraAccess::query('imagen')->where('id', $image->id)->delete();
                 }
                 \Log::info('Deleted images: ' . implode(', ', $deletedImages));
             }
@@ -553,21 +505,21 @@ class SolicitudController extends Controller
                 }
 
                 // Verify id_solicitud
-                if (!DB::table('solicitud')->where('id', $garantiaData['id_solicitud'])->exists()) {
+                if (!\App\Services\CarteraAccess::query('solicitud')->where('id', $garantiaData['id_solicitud'])->exists()) {
                     throw new Exception("Invalid id_solicitud at index {$index}");
                 }
 
                 // Update or create garantia
                 $garantiaId = $garantiaData['id'];
-                if ($garantiaId && DB::table('garantia')->where('id', $garantiaId)->exists()) {
-                    DB::table('garantia')->where('id', $garantiaId)->update([
+                if ($garantiaId && \App\Services\CarteraAccess::query('garantia')->where('id', $garantiaId)->exists()) {
+                    \App\Services\CarteraAccess::query('garantia')->where('id', $garantiaId)->update([
                         'id_solicitud' => $garantiaData['id_solicitud'],
                         'descripcion' => $garantiaData['descripcion'],
                         'updated_at' => now(),
                     ]);
                     \Log::info("Updated garantia ID: {$garantiaId}");
                 } else {
-                    $garantiaId = DB::table('garantia')->insertGetId([
+                    $garantiaId = \App\Services\CarteraAccess::query('garantia')->insertGetId([
                         'id_solicitud' => $garantiaData['id_solicitud'],
                         'descripcion' => $garantiaData['descripcion'],
                         'created_at' => now(),
@@ -580,7 +532,7 @@ class SolicitudController extends Controller
                 $imagenes = [];
                 foreach ($garantiaData['lista_imagenes'] as $imgIndex => $imagenData) {
                     // Skip existing images unless updating
-                    if (!empty($imagenData['id_imagen']) && $existingImage = DB::table('imagen')->where('id', $imagenData['id_imagen'])->first()) {
+                    if (!empty($imagenData['id_imagen']) && $existingImage = \App\Services\CarteraAccess::query('imagen')->where('id', $imagenData['id_imagen'])->first()) {
                         $imagenes[] = $existingImage;
                         \Log::info("Kept existing image ID: {$existingImage->id}");
                         continue;
@@ -593,7 +545,7 @@ class SolicitudController extends Controller
                     if (isset($imagenData['file_key']) && $request->hasFile($imagenData['file_key'])) {
                         $file = $request->file($imagenData['file_key']);
                         $mimeType = $file->getMimeType();
-                        $allowedMimes = ['image/jpeg', 'image/png', 'image/jpg'];
+                        $allowedMimes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
 
                         if (!in_array($mimeType, $allowedMimes) || $file->getSize() > 2048 * 1024) {
                             \Log::warning("Invalid image at garantia {$index}, image {$imgIndex}: MIME={$mimeType}, Size={$file->getSize()}");
@@ -601,12 +553,13 @@ class SolicitudController extends Controller
                         }
 
                         // Store image
-                        $fileName = time() . "_{$index}_{$imgIndex}." . $file->getClientOriginalExtension();
-                        $destinationPath = public_path('img/garantia');
+                        $fileName = (string) \Illuminate\Support\Str::uuid() . "." . $file->extension();
+                        $destinationPath = \App\Services\PrivateImages::directory('garantia');
                         if (!file_exists($destinationPath)) {
                             mkdir($destinationPath, 0755, true);
                         }
                         $file->move($destinationPath, $fileName);
+                        $createdFiles[] = $destinationPath.DIRECTORY_SEPARATOR.$fileName;
                         $fullFilePath = 'img/garantia/' . $fileName;
                         \Log::info("Stored image: {$fullFilePath}");
                     } else {
@@ -614,15 +567,15 @@ class SolicitudController extends Controller
                     }
 
                     // Insert or update image
-                    if ($imageId && DB::table('imagen')->where('id', $imageId)->exists()) {
-                        DB::table('imagen')->where('id', $imageId)->update([
+                    if ($imageId && \App\Services\CarteraAccess::query('imagen')->where('id', $imageId)->exists()) {
+                        \App\Services\CarteraAccess::query('imagen')->where('id', $imageId)->update([
                             'id_garantia' => $garantiaId,
                             'imagen' => $fileName,
                             'updated_at' => now(),
                         ]);
                         \Log::info("Updated image ID: {$imageId}");
                     } else {
-                        $imageId = DB::table('imagen')->insertGetId([
+                        $imageId = \App\Services\CarteraAccess::query('imagen')->insertGetId([
                             'id_garantia' => $garantiaId,
                             'imagen' => $fileName,
                             'created_at' => now(),
@@ -675,6 +628,7 @@ class SolicitudController extends Controller
 
         } catch (Exception $e) {
             DB::rollBack();
+            foreach ($createdFiles as $path) { if (is_file($path)) @unlink($path); }
             \Log::error('Error saving garantias: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
 
             return response()->json([
@@ -697,7 +651,7 @@ class SolicitudController extends Controller
                 ], 422);
             }
 
-            DB::table('solicitud')
+            \App\Services\CarteraAccess::query('solicitud')
                 ->where('id', $id_solicitud)
                 ->update([
                     'observacion' => empty($observacion)?'':$observacion,
@@ -725,7 +679,7 @@ class SolicitudController extends Controller
 
         $id_solicitud=$solicitud['id_solicitud'];
         $id_cliente=$solicitud['id_cliente'];
-        $credito=DB::table('plan_pago')->where('plan_pago.id_solicitud', $id_solicitud)->first();
+        $credito=\App\Services\CarteraAccess::query('plan_pago')->where('plan_pago.id_solicitud', $id_solicitud)->first();
 
         $direcciones=DB::table('direccion')->where('direccion.id_cliente', $id_cliente)->get();
 
@@ -823,7 +777,7 @@ class SolicitudController extends Controller
         ];
 
         // Generar el PDF
-        $this->generatePDF($data, 'reporte.hoja_aprobacion_credito', 'Hoja_Aprobacion_Credito');
+        return $this->generatePDF($data, 'reporte.hoja_aprobacion_credito', 'Hoja_Aprobacion_Credito');
     }
 
      public function reporteHojaSolicitud(Request $request)
@@ -930,7 +884,7 @@ class SolicitudController extends Controller
         ];
 
         // Generar el PDF
-        $this->generatePDF($data, 'reporte.hoja_solicitud_credito', 'Hoja_Solicitud_Credito');
+        return $this->generatePDF($data, 'reporte.hoja_solicitud_credito', 'Hoja_Solicitud_Credito');
     }
     
 
@@ -974,7 +928,9 @@ class SolicitudController extends Controller
             $mpdf->WriteHTML($html);
 
             // Generar el PDF
-            $mpdf->Output($nombre_reporte . '.pdf', 'I'); 
+            return response($mpdf->Output($nombre_reporte . '.pdf', 'S'))
+                ->header('Content-Type', 'application/pdf')
+                ->header('Content-Disposition', 'inline; filename="'.$nombre_reporte . '.pdf'.'"');
 
         } catch (\Exception $e) {
             \Log::error('Error al generar el PDF: ' . $e->getMessage());
@@ -1013,7 +969,9 @@ class SolicitudController extends Controller
             $mpdf->WriteHTML($html);
 
             // Generar el PDF
-            $mpdf->Output($nombre_reporte . '.pdf', 'I'); // 'I' para abrir en el navegador, 'D' para descargar
+            return response($mpdf->Output($nombre_reporte . '.pdf', 'S'))
+                ->header('Content-Type', 'application/pdf')
+                ->header('Content-Disposition', 'inline; filename="'.$nombre_reporte . '.pdf'.'"');
 
         } catch (\Exception $e) {
             // Manejo de errores
@@ -1026,7 +984,7 @@ class SolicitudController extends Controller
         $id_solicitud = $request->input('id_solicitud');
 
         // Fetch cuotas and plan_pago details
-        $cuotas = DB::table('cuota')
+        $cuotas = \App\Services\CarteraAccess::query('cuota')
             ->join('plan_pago', 'cuota.id_plan_pago', '=', 'plan_pago.id')
             ->join('solicitud', 'solicitud.id', '=', 'plan_pago.id_solicitud')
             ->select(
@@ -1079,7 +1037,7 @@ class SolicitudController extends Controller
             if ($cuota->estado == 1 && $fechaCuota->isPast()) {
                 $diasTranscurridos = $totalDiasCuota;
             } elseif ($fechaActual->between($fechaInicioCuota, $fechaCuota)) {
-                $diasTranscurridos = $fechaActual->diffInDays($fechaInicioCuota);
+                $diasTranscurridos = (int) $fechaActual->diffInDays($fechaInicioCuota, true);
             } else {
                 $diasTranscurridos = 0;
             }
@@ -1095,7 +1053,7 @@ class SolicitudController extends Controller
 
             // Set dias_pasados_mora for the first unpaid AND overdue cuota
             if ($index === $firstUnpaidOverdueIndex) {
-                $dias_pasados_mora = max(0, $fechaActual->diffInDays($fechaCuota));
+                $dias_pasados_mora = max(0, (int) $fechaActual->diffInDays($fechaCuota, true));
             }
 
             // Add to total accumulated interest
@@ -1280,9 +1238,9 @@ class SolicitudController extends Controller
     // Helper para copiar (reutilizable)
     private function copiarEntidadesAsociadas($idOriginal, $idNuevo) {
         // Garantías
-        $garantias = DB::table('garantia')->where('id_solicitud', $idOriginal)->get();
+        $garantias = \App\Services\CarteraAccess::query('garantia')->where('id_solicitud', $idOriginal)->get();
         foreach ($garantias as $g) {
-            DB::table('garantia')->insert([
+            \App\Services\CarteraAccess::query('garantia')->insert([
                 'descripcion' => $g->descripcion, 'id_solicitud' => $idNuevo, 
                 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()
             ]);
@@ -1293,9 +1251,9 @@ class SolicitudController extends Controller
             DB::table('solicitud_codeudor')->insert(['id_solicitud' => $idNuevo, 'id_codeudor' => $c->id_codeudor]);
         }
         // Respaldos
-        $respaldos = DB::table('respaldo')->where('id_solicitud', $idOriginal)->get();
+        $respaldos = \App\Services\CarteraAccess::query('respaldo')->where('id_solicitud', $idOriginal)->get();
         foreach ($respaldos as $r) {
-            DB::table('respaldo')->insert([
+            \App\Services\CarteraAccess::query('respaldo')->insert([
                 'descripcion' => $r->descripcion, 'imagen' => $r->imagen, 'id_solicitud' => $idNuevo,
                 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()
             ]);
@@ -1347,7 +1305,7 @@ class SolicitudController extends Controller
 
         if ($fechaBase) {
             $fechaBase = Carbon::parse($fechaBase)->startOfDay();
-            $diasTranscurridos = $fechaBase->diffInDays($hoy);
+            $diasTranscurridos = (int) $fechaBase->diffInDays($hoy, true);
 
             if ($diasTranscurridos > 0 && $capitalPendiente > 0 && $plan->tasa > 0) {
                 $tasaDiaria = ($plan->tasa / 100) / 30;

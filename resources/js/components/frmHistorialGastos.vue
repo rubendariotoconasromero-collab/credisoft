@@ -18,13 +18,13 @@
                         <li class="nav-item mx-1" role="presentation">
                             <button class="nav-link active px-4 py-2 fw-bold text-uppercase" id="ingresos-caja-tab" data-bs-toggle="pill"
                                 data-bs-target="#ingresos-caja" type="button" role="tab" aria-controls="ingresos-caja" aria-selected="true">
-                                <i class="fas fa-arrow-down me-1"></i> Ingresos (Caja Actual)
+                                <i class="fas fa-arrow-down me-1"></i> Ingresos (Cajas Abiertas)
                             </button>
                         </li>
                         <li class="nav-item mx-1" role="presentation">
                             <button class="nav-link px-4 py-2 fw-bold text-uppercase" id="egresos-caja-tab" data-bs-toggle="pill"
                                 data-bs-target="#egresos-caja" type="button" role="tab" aria-controls="egresos-caja" aria-selected="false">
-                                <i class="fas fa-arrow-up me-1"></i> Egresos (Caja Actual)
+                                <i class="fas fa-arrow-up me-1"></i> Egresos (Cajas Abiertas)
                             </button>
                         </li>
                         <li class="nav-item mx-1" role="presentation">
@@ -74,7 +74,7 @@
                                     <div class="card border-primary border-opacity-25 shadow-sm bg-primary bg-opacity-10 h-100 mb-0">
                                         <div class="card-body p-2 d-flex justify-content-between align-items-center">
                                             <div>
-                                                <span class="text-uppercase text-primary fw-bold d-block" style="font-size: 0.7rem;">Total Ingresos Caja Actual</span>
+                                                <span class="text-uppercase text-primary fw-bold d-block" style="font-size: 0.7rem;">Total Ingresos Cajas Abiertas</span>
                                                 <h4 class="mb-0 fw-bold text-dark">{{ formatNumero(totalIngresosCaja) }} <small class="fs-6 text-muted">Bs.</small></h4>
                                             </div>
                                             <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center shadow-sm" style="width: 40px; height: 40px;">
@@ -95,7 +95,7 @@
                                             <th class="text-end">Monto (Bs)</th>
                                             <th>Descripción</th>
                                             <th class="text-center">Estado</th>
-                                            <th class="text-center">Op.</th>
+                                            <th class="text-center">Acciones</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -106,21 +106,13 @@
                                             <td class="text-end font-monospace fw-bold text-success bg-success bg-opacity-10 py-1">{{ formatNumero(item.monto_ingreso) }}</td>
                                             <td class="text-muted py-1" style="font-size: 0.8rem;">{{ item.descripcion }}</td>
                                             <td class="text-center py-1">
-                                                <span v-if="item.estado == 1" class="badge bg-success rounded badge-custom">CANCELADO</span>
+                                                <span v-if="item.estado == 1" class="badge bg-success rounded badge-custom">REGISTRADO</span>
                                                 <span v-else class="badge bg-danger rounded badge-custom">ANULADO</span>
                                             </td>
                                             <td class="text-center py-1">
-                                                <div class="btn-group">
-                                                    <a style="cursor:pointer;" class="text-success dropdown-toggle btn-sm" data-bs-toggle="dropdown">
-                                                        <i class="fas fa-ellipsis-h fs-5"></i>
-                                                    </a>
-                                                    <ul class="dropdown-menu dropdown-menu-end shadow">
-                                                        <li @click="anularIngreso(item)">
-                                                            <a class="dropdown-item text-danger fw-bold" href="#">
-                                                                <i class="fas fa-times me-2"></i> Anular Ingreso
-                                                            </a>
-                                                        </li>
-                                                    </ul>
+                                                <div class="d-flex flex-wrap gap-1 justify-content-center">
+                                                    <button class="btn btn-sm btn-outline-primary" :disabled="anulando !== null" @click="verDetalleMovimiento(item)">Ver detalle</button>
+                                                    <button v-if="puedeAnularMovimiento(item)" class="btn btn-sm btn-outline-danger" :disabled="anulando !== null" @click="anularIngreso(item)">Anular</button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -179,7 +171,7 @@
                                     <div class="card border-danger border-opacity-25 shadow-sm bg-danger bg-opacity-10 h-100 mb-0">
                                         <div class="card-body p-2 d-flex justify-content-between align-items-center">
                                             <div>
-                                                <span class="text-uppercase text-danger fw-bold d-block" style="font-size: 0.7rem;">Total Egresos Caja Actual</span>
+                                                <span class="text-uppercase text-danger fw-bold d-block" style="font-size: 0.7rem;">Total Egresos Cajas Abiertas</span>
                                                 <h4 class="mb-0 fw-bold text-dark">{{ formatNumero(totalEgresosCaja) }} <small class="fs-6 text-muted">Bs.</small></h4>
                                             </div>
                                             <div class="bg-danger text-white rounded-circle d-flex justify-content-center align-items-center shadow-sm" style="width: 40px; height: 40px;">
@@ -200,7 +192,7 @@
                                             <th class="text-end text-white bg-danger border-danger">Monto (Bs)</th>
                                             <th>Descripción</th>
                                             <th class="text-center">Estado</th>
-                                            <th class="text-center">Op.</th>
+                                            <th class="text-center">Acciones</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -211,21 +203,13 @@
                                             <td class="text-end font-monospace fw-bold text-danger bg-danger bg-opacity-10 py-1">{{ formatNumero(item.monto_gasto) }}</td>
                                             <td class="text-muted py-1" style="font-size: 0.8rem;">{{ item.descripcion }}</td>
                                             <td class="text-center py-1">
-                                                <span v-if="item.estado == 1" class="badge bg-success rounded badge-custom">CANCELADO</span>
+                                                <span v-if="item.estado == 1" class="badge bg-success rounded badge-custom">REGISTRADO</span>
                                                 <span v-else class="badge bg-danger rounded badge-custom">ANULADO</span>
                                             </td>
                                             <td class="text-center py-1">
-                                                <div class="btn-group">
-                                                    <a style="cursor:pointer;" class="text-success dropdown-toggle btn-sm" data-bs-toggle="dropdown">
-                                                        <i class="fas fa-ellipsis-h fs-5"></i>
-                                                    </a>
-                                                    <ul class="dropdown-menu dropdown-menu-end shadow">
-                                                        <li @click="anularEgresoCaja(item)">
-                                                            <a class="dropdown-item text-danger fw-bold" href="#">
-                                                                <i class="fas fa-times me-2"></i> Anular Egreso
-                                                            </a>
-                                                        </li>
-                                                    </ul>
+                                                <div class="d-flex flex-wrap gap-1 justify-content-center">
+                                                    <button class="btn btn-sm btn-outline-primary" :disabled="anulando !== null" @click="verDetalleMovimiento(item)">Ver detalle</button>
+                                                    <button v-if="puedeAnularMovimiento(item)" class="btn btn-sm btn-outline-danger" :disabled="anulando !== null" @click="anularEgresoCaja(item)">Anular</button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -305,7 +289,7 @@
                                             <th class="text-end">Monto Ing. (Bs)</th>
                                             <th>Descripción</th>
                                             <th class="text-center">Estado</th>
-                                            <th class="text-center">Op.</th>
+                                            <th class="text-center">Acciones</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -316,21 +300,13 @@
                                             <td class="text-end font-monospace fw-bold text-success bg-success bg-opacity-10 py-1">{{ formatNumero(item.monto_ingreso) }}</td>
                                             <td class="text-muted py-1" style="font-size: 0.8rem;">{{ item.descripcion }}</td>
                                             <td class="text-center py-1">
-                                                <span v-if="item.estado == 1" class="badge bg-success rounded badge-custom">CANCELADO</span>
+                                                <span v-if="item.estado == 1" class="badge bg-success rounded badge-custom">REGISTRADO</span>
                                                 <span v-else class="badge bg-danger rounded badge-custom">ANULADO</span>
                                             </td>
                                             <td class="text-center py-1">
-                                                <div class="btn-group">
-                                                    <a style="cursor:pointer;" class="text-success dropdown-toggle btn-sm" data-bs-toggle="dropdown">
-                                                        <i class="fas fa-ellipsis-h fs-5"></i>
-                                                    </a>
-                                                    <ul class="dropdown-menu dropdown-menu-end shadow">
-                                                        <li @click="anularIngreso(item)">
-                                                            <a class="dropdown-item text-danger fw-bold" href="#">
-                                                                <i class="fas fa-times me-2"></i> Anular Ingreso
-                                                            </a>
-                                                        </li>
-                                                    </ul>
+                                                <div class="d-flex flex-wrap gap-1 justify-content-center">
+                                                    <button class="btn btn-sm btn-outline-primary" :disabled="anulando !== null" @click="verDetalleMovimiento(item)">Ver detalle</button>
+                                                    <button v-if="puedeAnularMovimiento(item)" class="btn btn-sm btn-outline-danger" :disabled="anulando !== null" @click="anularIngreso(item)">Anular</button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -410,7 +386,7 @@
                                             <th class="text-end text-white bg-danger border-danger">Monto (Bs)</th>
                                             <th>Descripción</th>
                                             <th class="text-center">Estado</th>
-                                            <th class="text-center">Op.</th>
+                                            <th class="text-center">Acciones</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -421,21 +397,13 @@
                                             <td class="text-end font-monospace fw-bold text-danger bg-danger bg-opacity-10 py-1">{{ formatNumero(item.monto_gasto) }}</td>
                                             <td class="text-muted py-1" style="font-size: 0.8rem;">{{ item.descripcion }}</td>
                                             <td class="text-center py-1">
-                                                <span v-if="item.estado == 1" class="badge bg-success rounded badge-custom">CANCELADO</span>
+                                                <span v-if="item.estado == 1" class="badge bg-success rounded badge-custom">REGISTRADO</span>
                                                 <span v-else class="badge bg-danger rounded badge-custom">ANULADO</span>
                                             </td>
                                             <td class="text-center py-1">
-                                                <div class="btn-group">
-                                                    <a style="cursor:pointer;" class="text-success dropdown-toggle btn-sm" data-bs-toggle="dropdown">
-                                                        <i class="fas fa-ellipsis-h fs-5"></i>
-                                                    </a>
-                                                    <ul class="dropdown-menu dropdown-menu-end shadow">
-                                                        <li @click="anularGasto(item)">
-                                                            <a class="dropdown-item text-danger fw-bold" href="#">
-                                                                <i class="fas fa-times me-2"></i> Anular Gasto
-                                                            </a>
-                                                        </li>
-                                                    </ul>
+                                                <div class="d-flex flex-wrap gap-1 justify-content-center">
+                                                    <button class="btn btn-sm btn-outline-primary" :disabled="anulando !== null" @click="verDetalleMovimiento(item)">Ver detalle</button>
+                                                    <button v-if="puedeAnularMovimiento(item)" class="btn btn-sm btn-outline-danger" :disabled="anulando !== null" @click="anularGasto(item)">Anular</button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -473,6 +441,9 @@
 <script>
 import moment from 'moment';
 import Swal from 'sweetalert2';
+import axios from 'axios';
+import { sesion, tienePermiso } from '../router/session';
+import { mostrarDetalleOperacion } from '../financialOperationDetail';
 
 export default {
     props: {
@@ -484,6 +455,7 @@ export default {
     data() {
         return {
             view: 0,
+            anulando: null,
             preloader: false,
             filtros: {
                 fecha_inicio: moment().subtract(1, 'month').format('YYYY-MM-DD'),
@@ -667,7 +639,7 @@ export default {
         },
         async getIngresosCaja(page) {
             this.preloader = true;
-            await axios.get('/historial_ingresos_listado_caja', {
+            return axios.get('/historial_ingresos_listado_caja', {
                 params: {
                     page: page,
                     fecha_inicio: this.filtros_caja.fecha_inicio,
@@ -680,9 +652,12 @@ export default {
                     this.listaIngresosCaja = response.data.ingresos.data;
                     this.totalIngresosCaja = response.data.totalIngresos;
                     this.paginationCaja = response.data.ingresos;
+                    return true;
                 })
                 .catch((error) => {
-                    console.error('Error al obtener los ingresos de caja:', error);
+                    console.error(error);
+                    if (this.anulando === null) Swal.fire('No se pudo cargar el historial', this.mensajeError(error), 'warning');
+                    return false;
                 })
                 .finally(() => {
                     this.preloader = false;
@@ -690,7 +665,7 @@ export default {
         },
         async getEgresosCaja(page) {
             this.preloader = true;
-            await axios.get('/historial_egresos_listado_caja', {
+            return axios.get('/historial_egresos_listado_caja', {
                 params: {
                     page: page,
                     fecha_inicio: this.filtros_egresos_caja.fecha_inicio,
@@ -703,9 +678,12 @@ export default {
                     this.listaEgresosCaja = response.data.egresos.data;
                     this.totalEgresosCaja = response.data.totalEgresos;
                     this.paginationEgresosCaja = response.data.egresos;
+                    return true;
                 })
                 .catch((error) => {
-                    console.error('Error al obtener egresos de caja:', error);
+                    console.error(error);
+                    if (this.anulando === null) Swal.fire('No se pudo cargar el historial', this.mensajeError(error), 'warning');
+                    return false;
                 })
                 .finally(() => {
                     this.preloader = false;
@@ -713,7 +691,7 @@ export default {
         },
         async getIngresos(page) {
             this.preloader = true;
-            await axios.get('/historial_ingresos_listado_general', {
+            return axios.get('/historial_ingresos_listado_general', {
                 params: {
                     page: page,
                     fecha_inicio: this.filtros.fecha_inicio,
@@ -726,9 +704,12 @@ export default {
                     this.listaIngresos = response.data.ingresos.data;
                     this.totalIngresos = response.data.totalIngresos;
                     this.pagination = response.data.ingresos;
+                    return true;
                 })
                 .catch((error) => {
-                    console.error('Error al obtener ingresos generales:', error);
+                    console.error(error);
+                    if (this.anulando === null) Swal.fire('No se pudo cargar el historial', this.mensajeError(error), 'warning');
+                    return false;
                 })
                 .finally(() => {
                     this.preloader = false;
@@ -736,7 +717,7 @@ export default {
         },
         async getGastos(page) {
             this.preloader = true;
-            await axios.get('/historial_gastos_listado_general', {
+            return axios.get('/historial_gastos_listado_general', {
                 params: {
                     page: page,
                     fecha_inicio: this.filtros_gastos.fecha_inicio,
@@ -749,121 +730,57 @@ export default {
                     this.listaGastos = response.data.gastos.data;
                     this.totalGastos = response.data.totalGastos;
                     this.paginationGastos = response.data.gastos;
+                    return true;
                 })
                 .catch((error) => {
-                    console.error('Error al obtener gastos generales:', error);
+                    console.error(error);
+                    if (this.anulando === null) Swal.fire('No se pudo cargar el historial', this.mensajeError(error), 'warning');
+                    return false;
                 })
                 .finally(() => {
                     this.preloader = false;
                 });
         },
-        anularIngreso(item) {
-            Swal.fire({
-                title: '¿Está seguro?',
-                text: "¡No podrás revertir esto!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Sí, anular',
-                cancelButtonText: 'Cancelar',
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    axios.post('/anular_ingreso_caja', { id: item.id })
-                        .then((response) => {
-                            if (response.data.respuesta == 1) {
-                                Swal.fire(
-                                    'Anulado!',
-                                    'El ingreso ha sido anulado.',
-                                    'success'
-                                );
-                                this.getIngresosCaja(this.paginationCaja.current_page);
-                                this.getIngresos(this.pagination.current_page);
-                            } else {
-                                Swal.fire(
-                                    'No se ha podido anular!',
-                                    'La caja a la que se hizo el ingreso ya cerró.',
-                                    'warning'
-                                );
-                            }
-                        })
-                        .catch((error) => {
-                            console.error('Error al anular el ingreso:', error);
-                        });
-                }
-            });
+        puedeAnularMovimiento(item) {
+            return tienePermiso('controlcaja') && tienePermiso('anular_finanzas') && Number(item.estado) === 1
+                && !item.anulado_at && Number(item.estado_caja) === 1 && Number(item.propietario_caja) === Number(sesion.id);
         },
-        anularEgresoCaja(item) {
-            Swal.fire({
-                title: '¿Está seguro?',
-                text: "¡No podrás revertir esto!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Sí, anular',
-                cancelButtonText: 'Cancelar',
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    axios.post('/anular_egreso_caja', { id: item.id })
-                        .then((response) => {
-                            if (response.data.respuesta == 1) {
-                                Swal.fire(
-                                    'Anulado!',
-                                    'El egreso ha sido anulado.',
-                                    'success'
-                                );
-                                this.getEgresosCaja(this.paginationEgresosCaja.current_page);
-                                this.getGastos(this.paginationGastos.current_page);
-                            } else {
-                                Swal.fire(
-                                    'No se ha podido anular!',
-                                    'La caja a la que se hizo el egreso ya cerró.',
-                                    'warning'
-                                );
-                            }
-                        })
-                        .catch((error) => {
-                            console.error('Error al anular el egreso:', error);
-                        });
-                }
-            });
+        verDetalleMovimiento(item) {
+            return mostrarDetalleOperacion({ ...item, monto: item.monto_ingreso ?? item.monto_gasto }, document.body);
         },
-        anularGasto(item) {
-            Swal.fire({
-                title: '¿Está seguro?',
-                text: "¡No podrás revertir esto!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Sí, anular',
-                cancelButtonText: 'Cancelar',
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    axios.post('/anular_gasto', { id: item.id })
-                        .then((response) => {
-                            if (response.data.respuesta == 1) {
-                                Swal.fire(
-                                    'Anulado!',
-                                    'El gasto ha sido anulado.',
-                                    'success'
-                                );
-                                this.getGastos(this.paginationGastos.current_page);
-                                this.getEgresosCaja(this.paginationEgresosCaja.current_page);
-                            } else {
-                                Swal.fire(
-                                    'No se ha podido anular!',
-                                    'La caja a la que se hizo el gasto ya cerró.',
-                                    'warning'
-                                );
-                            }
-                        })
-                        .catch((error) => {
-                            console.error('Error al anular el gasto:', error);
-                        });
-                }
-            });
+        mensajeError(error) {
+            if (error.response?.status === 401) return 'La sesión venció. Inicie sesión nuevamente.';
+            if (!error.response) return 'No se pudo confirmar el resultado por un error de conexión. Actualice el historial antes de reintentar.';
+            const details = Object.values(error.response.data?.errors || {}).flat().join(' ');
+            return details || error.response.data?.message || 'No se pudo completar la operación. Intente nuevamente.';
+        },
+        anularIngreso(item) { return this.anularMovimiento(item, '/anular_ingreso_caja', 'ingreso'); },
+        anularEgresoCaja(item) { return this.anularMovimiento(item, '/anular_egreso_caja', 'egreso'); },
+        anularGasto(item) { return this.anularMovimiento(item, '/anular_gasto', 'egreso'); },
+        async anularMovimiento(item, url, tipo) {
+            if (this.anulando !== null || !this.puedeAnularMovimiento(item)) return;
+            this.anulando = `${tipo}-${item.id}`;
+            try {
+                const confirmation = await Swal.fire({
+                    title: `Anular ${tipo}`, text: 'Se anulará la operación completa, incluidas todas sus formas de pago.',
+                    input: 'textarea', inputLabel: 'Motivo obligatorio', inputAttributes: { maxlength: 1000 },
+                    inputValidator: value => value.trim().length < 3 ? 'Ingrese un motivo de al menos 3 caracteres.' : undefined,
+                    showCancelButton: true, confirmButtonText: 'Anular operación', cancelButtonText: 'Cancelar', icon: 'warning',
+                });
+                if (!confirmation.isConfirmed) return;
+                const response = await axios.post(url, { id: item.id, motivo: confirmation.value.trim() });
+                if (response.data.respuesta !== 1 && !response.data.success) throw new Error('Respuesta de anulación no reconocida.');
+                const refreshed = await Promise.all([
+                    this.getIngresosCaja(this.paginationCaja.current_page), this.getEgresosCaja(this.paginationEgresosCaja.current_page),
+                    this.getIngresos(this.pagination.current_page), this.getGastos(this.paginationGastos.current_page),
+                ]);
+                await Swal.fire('Operación anulada', refreshed.every(Boolean)
+                    ? 'El historial y los totales se actualizaron.'
+                    : 'La anulación fue confirmada, pero no se pudieron actualizar todos los listados. Recargue la pantalla.',
+                    refreshed.every(Boolean) ? 'success' : 'warning');
+            } catch (error) {
+                if (!axios.isCancel(error)) await Swal.fire('No se pudo confirmar la anulación', this.mensajeError(error), 'warning');
+            } finally { this.anulando = null; }
         },
         cambiarPagina(page) {
             this.pagination.current_page = page;

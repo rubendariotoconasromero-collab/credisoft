@@ -9,6 +9,13 @@ class PlanPago extends Model
 {
     use HasFactory;
 
+    protected static function booted(): void
+    {
+        static::addGlobalScope('cartera', function ($query) {
+            if (\App\Services\CarteraAccess::restricted()) $query->whereIn('plan_pago.id_solicitud', \App\Services\CarteraAccess::solicitudes());
+        });
+    }
+
     /**
      * El nombre de la tabla asociada con el modelo.
      *

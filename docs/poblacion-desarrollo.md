@@ -1,3 +1,5 @@
+> Actualización fase 3: el seed ahora agrega un cobro mixto de Bs100 para Elena (40 efectivo, 30 depósito, 30 transferencia/QR). Son 8 pagos y 19 permisos. Los saldos vigentes del seed son: bóveda38.257, cajaA2.100, cajaB1.500; físico41.857 y total registrado41.917 Bs. Los motivos se generan activos (estado0). Esta actualización sustituye las cifras anteriores de este documento. Ver `fase-3-pruebas-manuales.md`.
+
 # Población inicial para pruebas manuales
 
 La población es ficticia, determinista y está conectada a `DatabaseSeeder`. Se reconstruye al ejecutar `php artisan migrate:fresh --seed`. No utiliza factories aleatorias ni los antiguos ClienteSeeder/CodeudorSeeder/SolicitudSeeder/SocioSeeder.

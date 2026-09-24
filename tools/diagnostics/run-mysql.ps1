@@ -1,4 +1,4 @@
-param([string]$MySqlBin = '', [switch]$SeedDevelopment)
+param([string]$MySqlBin = '', [switch]$SeedDevelopment, [switch]$FinanceValidation)
 $ErrorActionPreference = 'Stop'
 $projectRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
 if (!$MySqlBin) { $MySqlBin = Split-Path (Get-Command mysqld.exe -ErrorAction Stop).Source }
@@ -31,7 +31,10 @@ try {
     }
     if (!$ready) { throw 'Dedicated MySQL did not start in 20 seconds.' }
     # Each PHP entry point verifies @@datadir before any database write.
-    if ($SeedDevelopment) {
+    if ($FinanceValidation) {
+        & php tools/diagnostics/verify-financial-concurrency.php "--mysql-port=$port" "--mysql-datadir=$dataPath"
+        if ($LASTEXITCODE -ne 0) { throw 'Financial concurrency verification failed.' }
+    } elseif ($SeedDevelopment) {
         & php tools/diagnostics/verify-development-seed.php "--mysql-port=$port" "--mysql-datadir=$dataPath"
         if ($LASTEXITCODE -ne 0) { throw 'Development seed verification failed.' }
     } else {

@@ -38,7 +38,9 @@ class DevelopmentSeederTest extends TestCase
         $this->assertDatabaseCount('plan_pago', 11);
         $this->assertDatabaseCount('cuota', 42);
         $this->assertDatabaseCount('users', 6);
-        $this->assertDatabaseCount('permiso', 16);
+        $this->assertDatabaseCount('permiso', 19);
+        $this->assertGreaterThan(0, DB::table('motivo_ingreso')->where('estado', 0)->where('tipo', 'caja')->count());
+        $this->assertGreaterThan(0, DB::table('motivo_gasto')->where('estado', 0)->where('tipo', 'caja')->count());
         $this->assertDatabaseCount('desembolso', 10);
         $this->assertDatabaseCount('pago_administrativo', 10);
         $this->assertSame(2, DB::table('caja')->where('estado', 1)->count());
@@ -48,10 +50,11 @@ class DevelopmentSeederTest extends TestCase
             $openBalances[] = $this->calcularSaldoCaja($cash->id);
         }
         sort($openBalances);
-        $this->assertSame([1500.0, 2060.0], $openBalances);
+        $this->assertSame([1500.0, 2100.0], $openBalances);
         $physical = 50000 - DB::table('desembolso')->sum('monto') + DB::table('pago')->sum('monto_pago')
             + DB::table('pago_administrativo')->sum('monto') + DB::table('ingreso')->sum('monto') - DB::table('egreso')->sum('monto');
-        $this->assertEquals(41817, $physical);
+        $physical -= 60; // The new mixed receipt includes 60 noncash.
+        $this->assertEquals(41857, $physical);
         $this->assertEquals($physical, array_sum($openBalances) + DB::table('boveda')->value('saldo_actual'));
         $vaultLedger = DB::table('movimientos_boveda')->where('tipo_movimiento', 'ingreso')->sum('monto')
             - DB::table('movimientos_boveda')->where('tipo_movimiento', 'salida')->sum('monto');
@@ -90,7 +93,7 @@ class DevelopmentSeederTest extends TestCase
         }
         $types = DB::table('pago')->distinct()->pluck('tipo_pago')->sort()->values()->all();
         $this->assertSame(['completo', 'interes_mora', 'parcial', 'solo_interes', 'solo_mora'], $types);
-        $this->assertEquals(1557, DB::table('pago')->sum('monto_pago'));
+        $this->assertEquals(1657, DB::table('pago')->sum('monto_pago'));
         $this->assertEquals(41, DB::table('pago')->sum('monto_condonado'));
         $this->assertSame(1, DB::table('plan_pago')->where('estado', 2)->count());
         $this->assertSame(1, DB::table('plan_pago')->where('estado', 1)->whereDate('fecha_fin', '<', today())->count());
@@ -114,6 +117,7 @@ class DevelopmentSeederTest extends TestCase
     public function test_demo_is_disabled_outside_local_or_testing_even_if_flag_is_true(): void
     {
         $this->app->instance('env', 'production');
+        config(['app.bootstrap_admin_password' => 'Testing-production-credential-123']);
         $this->assertFalse(DevelopmentSeeder::enabled());
         $this->artisan('db:seed', ['--class' => DatabaseSeeder::class, '--force' => true])->assertExitCode(0);
         $this->assertDatabaseCount('cliente', 0);
@@ -127,7 +131,7 @@ class DevelopmentSeederTest extends TestCase
         $this->seed(DatabaseSeeder::class);
         $this->assertDatabaseCount('cliente', 0);
         $this->assertDatabaseCount('users', 1);
-        $this->assertDatabaseCount('permiso', 16);
+        $this->assertDatabaseCount('permiso', 19);
     }
 
     public function test_rerun_refuses_to_mix_or_overwrite_existing_operations(): void

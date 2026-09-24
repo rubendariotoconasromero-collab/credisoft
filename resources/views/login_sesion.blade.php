@@ -228,7 +228,7 @@
     <script src="assets/libs/jquery-sparkline/jquery.sparkline.min.js"></script>
 
     <!-- App js -->
-    <script src="assets/js/app.js"></script>
+    <script src="{{ asset('assets/js/app.js') }}?v={{ filemtime(public_path('assets/js/app.js')) }}"></script>
 
     <script>
         document.getElementById('togglePassword').addEventListener('click', function () {

@@ -15,17 +15,17 @@ class AdministracionController extends Controller
     }
 
     public function cantidadSolicitudes(){
-        $cantidad_solicitudes = DB::table('solicitud')->count();
+        $cantidad_solicitudes = \App\Services\CarteraAccess::query('solicitud')->count();
         return ['cantidad_solicitudes'=>$cantidad_solicitudes];
     }
 
     public function cantidadPlanes(){
-        $cantidad_planes = DB::table('plan_pago')->count();
+        $cantidad_planes = \App\Services\CarteraAccess::query('plan_pago')->count();
         return ['cantidad_planes'=>$cantidad_planes];
     }
 
     public function datosGraficoPagos(){
-        $datos_pagos=DB::table('pago')->where('estado', 1)
+        $datos_pagos=\App\Services\CarteraAccess::query('pago')->where('estado', 1)
         ->select(DB::raw('sum(monto_pago) as monto_total_pago'), 'pago.fecha_pago')
         ->groupBy('pago.fecha_pago')
         ->get();
@@ -37,6 +37,7 @@ class AdministracionController extends Controller
     public function cantidadPlanesPagoUsuarios(){
         $planes_pago = DB::table('users')
         ->join('solicitud', 'solicitud.id_usuario', '=', 'users.id')
+            ->when(\App\Services\CarteraAccess::restricted(), fn ($query) => $query->where('solicitud.id_usuario', auth()->id()))
         ->join('plan_pago', 'plan_pago.id_solicitud', '=', 'solicitud.id')
         ->select('users.personal', DB::raw('count(plan_pago.id) as cantidad_creditos'))
         ->groupBy('users.personal')
@@ -44,6 +45,7 @@ class AdministracionController extends Controller
 
         $solicitudes = DB::table('users')
         ->join('solicitud', 'solicitud.id_usuario', '=', 'users.id')
+            ->when(\App\Services\CarteraAccess::restricted(), fn ($query) => $query->where('solicitud.id_usuario', auth()->id()))
         // ->join('plan_pago', 'plan_pago.id_solicitud', '=', 'solicitud.id')
         ->select('users.personal', DB::raw('count(solicitud.id) as cantidad_solicitudes'))
         ->groupBy('users.personal')
@@ -61,13 +63,13 @@ class AdministracionController extends Controller
 
     public function getCantidadSolicitudes()
     {
-        $cantidad_solicitudes = DB::table('solicitud')->count();
+        $cantidad_solicitudes = \App\Services\CarteraAccess::query('solicitud')->count();
         return response()->json(['cantidad_solicitudes' => $cantidad_solicitudes]);
     }
 
     public function getCantidadPlanes()
     {
-        $cantidad_planes = DB::table('plan_pago')->count();
+        $cantidad_planes = \App\Services\CarteraAccess::query('plan_pago')->count();
         return response()->json(['cantidad_planes' => $cantidad_planes]);
     }
 
@@ -76,6 +78,7 @@ class AdministracionController extends Controller
         $planes_pago = DB::table('users')
             ->select('users.personal', DB::raw('COUNT(plan_pago.id) as cantidad_creditos'))
             ->leftJoin('solicitud', 'users.id', '=', 'solicitud.id_usuario')
+            ->when(\App\Services\CarteraAccess::restricted(), fn ($query) => $query->where('solicitud.id_usuario', auth()->id()))
             ->leftJoin('plan_pago', 'solicitud.id', '=', 'plan_pago.id_solicitud')
             ->groupBy('users.id', 'users.personal')
             ->get();
@@ -83,6 +86,7 @@ class AdministracionController extends Controller
         $solicitudes = DB::table('users')
             ->select('users.personal', DB::raw('COUNT(solicitud.id) as cantidad_solicitudes'))
             ->leftJoin('solicitud', 'users.id', '=', 'solicitud.id_usuario')
+            ->when(\App\Services\CarteraAccess::restricted(), fn ($query) => $query->where('solicitud.id_usuario', auth()->id()))
             ->groupBy('users.id', 'users.personal')
             ->get();
 
@@ -94,7 +98,7 @@ class AdministracionController extends Controller
 
     public function getDatosPagos()
     {
-        $pagos = DB::table('pago')
+        $pagos = \App\Services\CarteraAccess::query('pago')
             ->select(DB::raw("DATE_FORMAT(fecha_pago, '%Y-%m') as mes"), DB::raw('SUM(monto_pago) as ingresos'))
             ->where('estado', 1)
             ->groupBy('mes')
@@ -106,7 +110,7 @@ class AdministracionController extends Controller
 
     public function getEstadisticasPrestamos()
     {
-        $activos = DB::table('solicitud')
+        $activos = \App\Services\CarteraAccess::query('solicitud')
             ->join('plan_pago', 'solicitud.id', '=', 'plan_pago.id_solicitud')
             ->join('cuota', 'plan_pago.id', '=', 'cuota.id_plan_pago')
             ->where('solicitud.estado', 1)
@@ -114,13 +118,13 @@ class AdministracionController extends Controller
             ->distinct('solicitud.id')
             ->count();
 
-        $pagados = DB::table('solicitud')
+        $pagados = \App\Services\CarteraAccess::query('solicitud')
             ->join('plan_pago', 'solicitud.id', '=', 'plan_pago.id_solicitud')
             ->where('plan_pago.saldo_pendiente', 0)
             ->distinct('solicitud.id')
             ->count();
 
-        $morosos = DB::table('solicitud')
+        $morosos = \App\Services\CarteraAccess::query('solicitud')
             ->join('plan_pago', 'solicitud.id', '=', 'plan_pago.id_solicitud')
             ->join('cuota', 'plan_pago.id', '=', 'cuota.id_plan_pago')
             ->where('cuota.fecha', '<', now())
@@ -128,29 +132,29 @@ class AdministracionController extends Controller
             ->distinct('solicitud.id')
             ->count();
 
-        $monto_desembolsado = DB::table('solicitud')
+        $monto_desembolsado = \App\Services\CarteraAccess::query('solicitud')
             ->where('desembolso', 1)
             ->sum('importe_solicitud');
 
-        $saldo_pendiente = DB::table('plan_pago')
+        $saldo_pendiente = \App\Services\CarteraAccess::query('plan_pago')
             ->sum('saldo_pendiente');
 
-        $total_recaudado = DB::table('pago')
+        $total_recaudado = \App\Services\CarteraAccess::query('pago')
             ->where('estado', 1)
             ->sum('monto_pago');
 
-        $ingresos_dia = DB::table('pago')
+        $ingresos_dia = \App\Services\CarteraAccess::query('pago')
             ->where('estado', 1)
             ->whereDate('fecha_pago', now())
             ->sum('monto_pago');
 
-        $ingresos_mes = DB::table('pago')
+        $ingresos_mes = \App\Services\CarteraAccess::query('pago')
             ->where('estado', 1)
             ->whereYear('fecha_pago', now()->year)
             ->whereMonth('fecha_pago', now()->month)
             ->sum('monto_pago');
 
-        $ingresos_anio = DB::table('pago')
+        $ingresos_anio = \App\Services\CarteraAccess::query('pago')
             ->where('estado', 1)
             ->whereYear('fecha_pago', now()->year)
             ->sum('monto_pago');
@@ -173,6 +177,7 @@ class AdministracionController extends Controller
         $top_clientes = DB::table('cliente')
             ->select('cliente.id', 'cliente.nombre', DB::raw('SUM(plan_pago.saldo_pendiente) as cartera_activa'))
             ->join('solicitud', 'cliente.id', '=', 'solicitud.id_cliente')
+            ->when(\App\Services\CarteraAccess::restricted(), fn ($query) => $query->where('solicitud.id_usuario', auth()->id()))
             ->join('plan_pago', 'solicitud.id', '=', 'plan_pago.id_solicitud')
             ->where('solicitud.estado', 1)
             ->groupBy('cliente.id', 'cliente.nombre')

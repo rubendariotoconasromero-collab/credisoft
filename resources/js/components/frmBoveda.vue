@@ -17,6 +17,29 @@
 
                     <div class="card-body p-3">
 
+                        <details class="mb-3 border p-2" @toggle="cargarCierres()">
+                            <summary class="fw-bold">Cierres de caja: ingresos por forma de pago</summary>
+                            <div class="table-responsive mt-2">
+                                <table class="table table-sm table-bordered">
+                                    <thead><tr><th>Caja / usuario</th><th>Fecha</th><th>Efectivo</th><th>Depósito</th><th>Transferencia</th><th>Total ingresos</th><th>Efectivo retornado</th></tr></thead>
+                                    <tbody>
+                                        <tr v-for="cierre in cierres.data" :key="cierre.id">
+                                            <td>{{ cierre.id_caja }} / {{ cierre.usuario }}</td><td>{{ cierre.created_at }}</td>
+                                            <td>{{ formatNumero(cierre.resumen.formas_pago.efectivo.ingresos) }}</td>
+                                            <td>{{ formatNumero(cierre.resumen.formas_pago.deposito.ingresos) }}</td>
+                                            <td>{{ formatNumero(cierre.resumen.formas_pago.transferencia.ingresos) }}</td>
+                                            <td>{{ formatNumero(cierre.resumen.total_ingresos) }}</td>
+                                            <td>{{ formatNumero(cierre.efectivo_retornado) }}</td>
+                                        </tr>
+                                        <tr v-if="!cierres.data.length"><td colspan="7">Sin cierres registrados con el nuevo resumen.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <button class="btn btn-sm btn-outline-secondary" :disabled="cierres.current_page <= 1" @click="cargarCierres(cierres.current_page - 1)">Anterior</button>
+                            <button class="btn btn-sm btn-outline-secondary ms-2" :disabled="cierres.current_page >= cierres.last_page" @click="cargarCierres(cierres.current_page + 1)">Siguiente</button>
+                            <p v-if="errorCierres" class="text-danger">{{ errorCierres }}</p>
+                        </details>
+
                         <!-- ── PANEL SUPERIOR: saldo + acciones ───────────── -->
                         <div class="row g-2 mb-3">
 
@@ -471,6 +494,8 @@ export default {
 
             // ── Movimientos ───────────────────────────────────────────────────
             movimientosBoveda: [],
+            cierres: { data: [], current_page: 1, last_page: 1 },
+            errorCierres: '',
             totalIngresosBoveda: 0,
             totalSalidasBoveda: 0,
             pagination: { total: 0, current_page: 1, last_page: 0, from: 0, to: 0 },
@@ -576,6 +601,15 @@ export default {
                 this.boveda.usuario_apertura = data.usuario_apertura;
             } catch (e) {
                 console.error('Error al obtener bóveda:', e);
+            }
+        },
+
+        async cargarCierres(page = 1) {
+            try {
+                this.cierres = (await axios.get('/boveda/cierres-caja', { params: { page } })).data;
+                this.errorCierres = '';
+            } catch (e) {
+                this.errorCierres = 'No se pudieron consultar los cierres de caja.';
             }
         },
 

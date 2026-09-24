@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use DB;
-use PDF;
+use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use Mpdf\Mpdf;
@@ -346,63 +346,16 @@ class CodeudorController extends Controller
         //echo $output;
     }
 
-    public function fotoCodeudor(Request $request){
-        DB::beginTransaction();
-        try {
-            $codeudor = DB::table('codeudor')
-                ->select('imagen')
-                ->where('id', $request->id_codeudor)
-                ->first();
-
-            // Eliminar la imagen anterior si existe
-            if ($codeudor->imagen && $codeudor->imagen !== 'default.png') {
-                $rutaImagenAnterior = public_path('img/codeudor/' . $codeudor->imagen);
-                if (file_exists($rutaImagenAnterior)) {
-                    unlink($rutaImagenAnterior);
-                }
-            }
-
-            // Procesar la nueva imagen
-            $imagen = $request->file('imagen');
-            $extension = $imagen->getClientOriginalExtension();
-            $nombreArchivo = 'cliente_' . $request->id_codeudor . '_' . time() . '.' . $extension;
-
-            // Mover la imagen al directorio público
-            $imagen->move(public_path('img/codeudor'), $nombreArchivo);
-
-            // Actualizar la base de datos
-            DB::table('codeudor')
-                ->where('id', $request->id_codeudor)
-                ->update(['imagen' => $nombreArchivo]);
-
-            DB::commit();
-            
-            return response()->json([
-                'success' => true,
-                'imagen' => $nombreArchivo,
-                'message' => 'Foto actualizada correctamente'
-            ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            DB::rollback();
-            return response()->json([
-                'success' => false,
-                'error' => 'Error de validación',
-                'messages' => $e->validator->getMessageBag()
-            ], 422);
-        } catch (\Exception $e) {
-            DB::rollback();
-            return response()->json([
-                'success' => false,
-                'error' => 'Error al actualizar la foto',
-                'message' => $e->getMessage()
-            ], 500);
-        }
+    public function fotoCodeudor(Request $request)
+    {
+        return response()->json(app(\App\Services\RecordPhoto::class)->replace($request, 'codeudor', 'id_codeudor'));
     }
 
     public function getCodeudorSolicitud(Request $request){
         return DB::table('codeudor')
         ->join('solicitud_codeudor', 'solicitud_codeudor.id_codeudor', '=', 'codeudor.id')
         ->join('solicitud', 'solicitud_codeudor.id_solicitud', '=', 'solicitud.id')
+            ->when(\App\Services\CarteraAccess::restricted(), fn ($query) => $query->where('solicitud.id_usuario', auth()->id()))
         ->select('codeudor.*', 'codeudor.id as id_codeudor')
         ->where('solicitud.id', $request->id_solicitud)
         ->get();
@@ -413,6 +366,7 @@ class CodeudorController extends Controller
         return DB::table('codeudor')
         ->leftJoin('solicitud_codeudor', 'solicitud_codeudor.id_codeudor', '=', 'codeudor.id')
         ->leftJoin('solicitud', 'solicitud_codeudor.id_solicitud', '=', 'solicitud.id')
+            ->when(\App\Services\CarteraAccess::restricted(), fn ($query) => $query->where('solicitud.id_usuario', auth()->id()))
         ->select('codeudor.*', 'codeudor.id as id_codeudor', 'solicitud.id as id_solicitud')
         ->get();
     }
@@ -450,7 +404,7 @@ class CodeudorController extends Controller
             $mpdf->WriteHTML($html);
 
             // Output the PDF
-            return response($mpdf->Output($filename, 'I'))
+            return response($mpdf->Output($filename, 'S'))
                 ->header('Content-Type', 'application/pdf')
                 ->header('Content-Disposition', "inline; filename=\"$filename\"");
         } catch (\Exception $e) {

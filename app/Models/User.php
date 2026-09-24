@@ -65,15 +65,25 @@ class User extends Authenticatable
      */
     public function tienePermiso($nombre): bool
     {
-        if (empty($this->id_rol)) {
-            return false;
-        }
+        return $this->permisosActivos()->contains($nombre);
+    }
 
-        return DB::table('permiso_rol')
+    public function accesoActivo(): bool
+    {
+        return DB::table('users')->join('rol', 'rol.id', '=', 'users.id_rol')
+            ->where('users.id', $this->id)->where('users.estado', 1)
+            ->where('rol.estado', 1)->exists();
+    }
+
+    public function permisosActivos(): \Illuminate\Support\Collection
+    {
+        return DB::table('users')
+            ->join('rol', 'rol.id', '=', 'users.id_rol')
+            ->join('permiso_rol', 'permiso_rol.id_rol', '=', 'rol.id')
             ->join('permiso', 'permiso.id', '=', 'permiso_rol.id_permiso')
-            ->where('permiso_rol.id_rol', $this->id_rol)
-            ->where('permiso.nombre', $nombre)
-            ->exists();
+            ->where('users.id', $this->id)->where('users.estado', 1)
+            ->where('rol.estado', 1)->where('permiso.estado', 1)
+            ->distinct()->pluck('permiso.nombre');
     }
 
     /**

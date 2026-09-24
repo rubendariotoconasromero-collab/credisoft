@@ -178,7 +178,7 @@
                                         <div class="card-body py-2 px-4 d-flex justify-content-between align-items-center gap-4">
                                             <div>
                                                 <div class="fw-bold text-uppercase text-white-50" style="font-size:0.7rem; letter-spacing:1px;">
-                                                    <i class="fas fa-coins me-1"></i> Capital Total (Bóveda + Caja)
+                                                    <i class="fas fa-coins me-1"></i> Saldo total registrado
                                                 </div>
                                                 <div class="text-white-50" style="font-size:0.65rem;">
                                                     al {{ filtrosCaja.fecha_final }}
@@ -320,7 +320,7 @@
                                         <div class="card-body py-2 px-4 d-flex justify-content-between align-items-center gap-4">
                                             <div>
                                                 <div class="fw-bold text-uppercase text-white-50" style="font-size:0.7rem; letter-spacing:1px;">
-                                                    <i class="fas fa-coins me-1"></i> Capital Total (Bóveda + Caja)
+                                                    <i class="fas fa-coins me-1"></i> Saldo total registrado
                                                 </div>
                                                 <div class="text-white-50" style="font-size:0.65rem;">
                                                     al {{ filtrosDiario.fecha_final }}

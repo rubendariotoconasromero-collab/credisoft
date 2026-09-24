@@ -19,11 +19,7 @@ class SesionController extends Controller
     {
         $user = Auth::user();
 
-        $permisos = DB::table('permiso_rol')
-            ->join('permiso', 'permiso.id', '=', 'permiso_rol.id_permiso')
-            ->where('permiso_rol.id_rol', $user->id_rol)
-            ->where('permiso.estado', 1)
-            ->pluck('permiso.nombre');
+        $permisos = $user->permisosActivos();
 
         return response()->json([
             'id' => $user->id,

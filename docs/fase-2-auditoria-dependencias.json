@@ -1,0 +1,57 @@
+{
+  "date": "2026-09-24",
+  "php": {
+    "before": {
+      "packages": 20,
+      "advisories": 89
+    },
+    "after": {
+      "packages": 0,
+      "advisories": 0
+    },
+    "pending": [],
+    "previous_compatible_update": {
+      "packages": 2,
+      "advisories": 9
+    },
+    "versions": {
+      "laravel/framework": "12.69.2",
+      "dompdf/dompdf": "3.1.6",
+      "barryvdh/laravel-dompdf": "3.1.2",
+      "laravel/sanctum": "4.3.3",
+      "nesbot/carbon": "3.14.0",
+      "mpdf/mpdf": "8.3.1"
+    }
+  },
+  "npm": {
+    "after": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    },
+    "pending": [],
+    "previous_compatible_update": {
+      "info": 0,
+      "low": 3,
+      "moderate": 1,
+      "high": 1,
+      "critical": 0,
+      "total": 5
+    },
+    "versions": {
+      "vite": "8.3.1",
+      "@vitejs/plugin-vue": "6.0.9",
+      "laravel-vite-plugin": "3.2.0"
+    }
+  },
+  "verification": {
+    "tests": 32,
+    "assertions": 675,
+    "build": "passed",
+    "mysql_isolated": "two seed runs passed",
+    "browser": "login, clients, guarantors, cash, no console errors"
+  }
+}

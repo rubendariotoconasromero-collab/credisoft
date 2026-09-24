@@ -1,10 +1,14 @@
 # Credisoft
 
-Sistema de microcrédito con Laravel 10, Vue 3, Vue Router 4, Vite y MySQL. Consultar [AGENTS.md](AGENTS.md) para las reglas de caja, bóveda y cobros.
+Sistema de microcrédito con Laravel 12, Vue 3, Vue Router 4, Vite y MySQL. Consultar [AGENTS.md](AGENTS.md) para las reglas de caja, bóveda y cobros.
 
 El [diagnóstico de etapa 1](docs/diagnostico-etapa-1/README.md) contiene el inventario funcional, incidencias reproducidas, reglas confirmadas y backlog de correcciones. Los requisitos del [entorno aislado](docs/diagnostico-etapa-1/entorno.md) permiten repetir el diagnóstico con datos ficticios.
 
 Para reiniciar una base de desarrollo con escenarios coherentes, consulta la [población para pruebas manuales](docs/poblacion-desarrollo.md): accesos, importes esperados y uso de `php artisan migrate:fresh --seed` (elimina los datos de la base seleccionada).
+
+La [implementación de fase 2](docs/fase-2-seguridad.md) documenta permisos, caja propia, cartera asignada, protección de imágenes, pruebas, actualización de dependencias y comprobación previa al despliegue.
+
+El [plan de desarrollo de fase 3](docs/fase-3-plan-desarrollo.md) define las etapas para corregir la integridad financiera, integrar el control por forma de pago en caja, bóveda y arqueo, asegurar cobros/anulaciones y conciliar los reportes, con decisiones operativas y criterios de aceptación.
 
 ```powershell
 php artisan test

@@ -18,3 +18,15 @@ yarn-error.log
 /.idea
 /.vscode
 /storage/app/diagnostics/
+/public/img/cliente/*
+!/public/img/cliente/default.png
+/public/img/codeudor/*
+!/public/img/codeudor/default.png
+/public/img/pago/*
+!/public/img/pago/default.png
+/public/img/garantia/*
+!/public/img/garantia/default.png
+/public/img/garantias/*
+!/public/img/garantias/default.png
+/public/img/respaldos/*
+!/public/img/respaldos/default.png

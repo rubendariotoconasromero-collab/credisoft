@@ -30,7 +30,7 @@ const routes = [
     // ------------------------------------------------------------------
     // Caja                            [permiso: controlcaja]
     // ------------------------------------------------------------------
-    { path: '/caja', name: 'caja', component: () => import('../components/frmCaja.vue'), meta: { permiso: 'controlcaja', titulo: 'Control de Caja' } },
+    { path: '/caja', name: 'caja', component: () => import('../components/frmCaja.vue'), meta: { permiso: ['controlcaja', 'consultasfinancieras'], titulo: 'Control de Caja' } },
     { path: '/historial_desembolsos_pagos', name: 'historial-desembolsos-pagos', component: () => import('../components/frmHistorialDesPagos.vue'), meta: { permiso: 'controlcaja', titulo: 'Historial Desembolsos y Pagos Adm.' } },
     { path: '/historial_gastos', name: 'historial-gastos', component: () => import('../components/frmHistorialGastos.vue'), meta: { permiso: 'controlcaja', titulo: 'Historial Ingresos y Gastos Corrientes' } },
     { path: '/historial_pagos', name: 'historial-pagos', component: () => import('../components/frmHistorialPagos.vue'), meta: { permiso: 'controlcaja', titulo: 'Historial Pagos de Cuotas' } },

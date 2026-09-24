@@ -833,6 +833,7 @@ export default {
                 fecha: moment().format('YYYY-MM-DD HH:mm:ss'),
             },
             usuario_actual: 0,
+            idCajaPropia: null,
             item_pago_desembolso: null,
 
             fecha_inicio_desembolso: moment().format('YYYY-MM-DD HH:mm:ss'),
@@ -1028,6 +1029,7 @@ export default {
                 const response = await axios.get('/verificar-boveda');
                 this.aperturada = response.data.aperturada;
             } catch (error) {
+                if (axios.isCancel(error)) return;
                 console.error("Error al verificar boveda:", error);
             }
         },
@@ -1078,6 +1080,7 @@ export default {
                 Swal.fire('¡Cobrado!', 'El pago se registró correctamente.', 'success');
                 this.cargarOrdenesReprogramacion(); // Recargar tabla
             } catch (error) {
+                if (axios.isCancel(error)) return;
                 Swal.fire('Error', 'No se pudo procesar el pago.', 'error');
             } finally {
                 this.preloader = false;
@@ -1182,6 +1185,7 @@ export default {
                 });
                 this.cerrarModalMotivoIngreso();
             } catch (error) {
+                if (axios.isCancel(error)) return;
                 console.error('Error: ', error.message);
                 Swal.fire({
                     title: 'Error',
@@ -1207,6 +1211,7 @@ export default {
                 });
                 this.cerrarModalMotivoGasto();
             } catch (error) {
+                if (axios.isCancel(error)) return;
                 console.error('Error: ', error.message);
                 Swal.fire({
                     title: 'Error',
@@ -1293,6 +1298,7 @@ export default {
 
 
             } catch (error) {
+                if (axios.isCancel(error)) return;
                 console.error('Error al obtener movimientos de caja:', error);
             }
         },
@@ -1358,6 +1364,7 @@ export default {
                 this.totalPagosAdm = isNaN(parseFloat(response.data.totalPagosAdm).toFixed(2)) ? 0 : parseFloat(response.data.totalPagosAdm).toFixed(2);
             })
                 .catch((error) => {
+                    if (axios.isCancel(error)) return;
                     console.log(error.message);
                 })
                 .finally(() => {
@@ -1395,8 +1402,7 @@ export default {
             // y el desembolso fallar, dejando el plan en estado inconsistente
             // (no aparece en la lista porque el JOIN requiere ambos registros).
             const montoDesembolso = parseFloat(this.pago_administrativo.monto_solicitud);
-            const saldoOk = await this.validarSaldoCajaParaEgreso(montoDesembolso);
-            if (!saldoOk) return;
+            // La validación de saldo se realiza en servidor sobre el componente de efectivo.
             // ──────────────────────────────────────────────────────────────────
 
             try {
@@ -1435,6 +1441,7 @@ export default {
                 });
 
             } catch (error) {
+                if (axios.isCancel(error)) return;
                 await Swal.fire({
                     title: 'Error',
                     text: 'Hubo un problema al procesar la operación: ' + (error.message ?? 'error desconocido'),
@@ -1449,6 +1456,7 @@ export default {
         },
 
         async guardarPagoAdmPrivado() {
+            this.pago_administrativo.id_caja = this.idCajaPropia;
             // Lanza el error hacia arriba para que guardarPagoAdm() lo capture
             await axios.post('/guardar_pago_adm', this.pago_administrativo);
         },
@@ -1456,10 +1464,10 @@ export default {
         registrarPagoAdm(item) {
             this.abrirModalCobrarPagoAdm();
             this.pago_administrativo.id_plan_pago = item.id;
-            this.pago_administrativo.id_caja = this.lista_caja[0].id;
+            this.pago_administrativo.id_caja = this.idCajaPropia;
             this.pago_administrativo.cliente = item.cliente;
             this.pago_administrativo.asesor = item.asesor;
-            this.pago_administrativo.monto =  item.tipo_solicitud=='Refinanciamiento'? parseFloat(parseFloat(item.monto_refinanciamiento) * 0.01).toFixed(2): parseFloat(parseFloat(item.total_pagar_plan) * 0.01).toFixed(2);
+            this.pago_administrativo.monto =  Number(item.monto_pago_adm).toFixed(2);
             this.pago_administrativo.monto_solicitud = item.tipo_solicitud=='Refinanciamiento'? item.monto_refinanciamiento: item.total_pagar_plan;
             this.item_pago_desembolso = item;
 
@@ -1482,6 +1490,7 @@ export default {
                 this.lista_pagos_adm_filtrada = [...this.lista_pagos_adm];
                 console.log(response.data);
             }).catch((error) => {
+                    if (axios.isCancel(error)) return;
                 console.log(error.message);
             })
         },
@@ -1499,13 +1508,10 @@ export default {
             this.view = 0;
         },
         async actualizarDesembolso(item) {
-            const monto = item.tipo_solicitud === 'Refinanciamiento'
-                ? parseFloat(item.monto_refinanciamiento)
-                : parseFloat(item.total_pagar_plan);
+            const monto = Number(item.importe_solicitud);
 
             // ── Validar saldo de caja antes de confirmar ─────────────────
-            const saldoOk = await this.validarSaldoCajaParaEgreso(monto);
-            if (!saldoOk) return;
+            // La validación de saldo se realiza en servidor sobre el componente de efectivo.
             // ─────────────────────────────────────────────────────────────
 
             const result = await Swal.fire({
@@ -1524,7 +1530,7 @@ export default {
             try {
                 await axios.post('/actualizar_desembolso', {
                     id_plan_pago: item.id,
-                    id_caja:      this.lista_caja[0].id,
+                    id_caja:      this.idCajaPropia,
                     monto,
                 });
                 this.getPlanesPago();
@@ -1532,28 +1538,27 @@ export default {
                 Swal.fire({ title: 'Desembolso realizado', icon: 'success', timer: 1500, showConfirmButton: false });
                 this.getCajas(1);
             } catch (error) {
+                if (axios.isCancel(error)) return;
                 this.manejarErrorSaldoCaja(error, monto);
             }
         },
 
         async guardarDesembolso(item) {
-            const monto = item.tipo_solicitud === 'Refinanciamiento'
-                ? parseFloat(item.monto_refinanciamiento)
-                : parseFloat(item.total_pagar_plan);
+            const monto = Number(item.importe_solicitud);
 
             // Validar saldo (para llamadas directas, ej. desde el panel de desembolsos)
-            const saldoOk = await this.validarSaldoCajaParaEgreso(monto);
-            if (!saldoOk) return false;
+            // La validación de saldo se realiza en servidor sobre el componente de efectivo.
 
             try {
                 await axios.post('/actualizar_desembolso', {
                     id_plan_pago: item.id,
-                    id_caja:      this.lista_caja[0].id,
+                    id_caja:      this.idCajaPropia,
                     monto,
                 });
                 this.getCajas(1);
                 return true;
             } catch (error) {
+                if (axios.isCancel(error)) return;
                 this.manejarErrorSaldoCaja(error, monto);
                 return false;
             }
@@ -1566,6 +1571,7 @@ export default {
         async validarSaldoCajaParaEgreso(montoRequerido) {
             try {
                 const { data } = await axios.get('/caja/saldo-actual');
+                this.idCajaPropia = data.id_caja;
 
                 if (!data.caja_abierta) {
                     Swal.fire('Sin caja abierta', 'No hay una caja abierta para realizar este egreso.', 'warning');
@@ -1614,6 +1620,7 @@ export default {
          * Muestra el error de saldo insuficiente que devuelve el backend (422).
          */
         manejarErrorSaldoCaja(error, montoRequerido) {
+            if (axios.isCancel(error)) return;
             if (error.response?.status === 422) {
                 const data = error.response.data;
                 const faltante = data.faltante ?? (montoRequerido - (data.saldo_disponible ?? 0)).toFixed(2);
@@ -1650,6 +1657,7 @@ export default {
                 this.lista_planes_pago = response.data;
                 console.log(response.data);
             }).catch((error) => {
+                    if (axios.isCancel(error)) return;
                 console.log(error.message);
             })
         },
@@ -1738,6 +1746,7 @@ export default {
                 this.totalPagos = isNaN(parseFloat(response.data.totalPagos).toFixed(2)) ? 0 : parseFloat(response.data.totalPagos).toFixed(2);
             })
                 .catch((error) => {
+                    if (axios.isCancel(error)) return;
                     console.log(error.message);
                 })
                 .finally(() => {
@@ -1759,6 +1768,7 @@ export default {
                 this.totalPagosAmortizaciones = isNaN(parseFloat(response.data.totalPagosAmortizacion).toFixed(2)) ? 0 : parseFloat(response.data.totalPagosAmortizacion).toFixed(2);
             })
                 .catch((error) => {
+                    if (axios.isCancel(error)) return;
                     console.log(error.message);
                 })
                 .finally(() => {
@@ -1785,6 +1795,7 @@ export default {
                 this.totalIngresosCorrientes = isNaN(parseFloat(response.data.totalIngresos).toFixed(2)) ? 0 : parseFloat(response.data.totalIngresos).toFixed(2);
             })
                 .catch((error) => {
+                    if (axios.isCancel(error)) return;
                     console.log(error.message);
                 })
                 .finally(() => {
@@ -1808,6 +1819,7 @@ export default {
                 this.totalGastosCorrientes = isNaN(parseFloat(response.data.totalGastos).toFixed(2)) ? 0 : parseFloat(response.data.totalGastos).toFixed(2);
             })
                 .catch((error) => {
+                    if (axios.isCancel(error)) return;
                     console.log(error.message);
                 })
                 .finally(() => {
@@ -1848,6 +1860,7 @@ export default {
                 }
             })
                 .catch((error) => {
+                    if (axios.isCancel(error)) return;
                     console.log(error.message);
                 })
 
@@ -1912,6 +1925,7 @@ export default {
                 }
             })
                 .catch((error) => {
+                    if (axios.isCancel(error)) return;
                     console.log(error.message);
                 })
         },
@@ -1929,6 +1943,7 @@ export default {
                 }
             })
                 .catch((error) => {
+                    if (axios.isCancel(error)) return;
                     console.log(error.message);
                 })
         },
@@ -1966,6 +1981,7 @@ export default {
                 }
             })
                 .catch((error) => {
+                    if (axios.isCancel(error)) return;
                     console.log(error.message);
                 })
 

@@ -9,6 +9,13 @@ class Solicitud extends Model
 {
     use HasFactory;
 
+    protected static function booted(): void
+    {
+        static::addGlobalScope('cartera', function ($query) {
+            if (\App\Services\CarteraAccess::restricted()) $query->where('solicitud.id_usuario', auth()->id());
+        });
+    }
+
     /**
      * El nombre de la tabla asociada con el modelo.
      *

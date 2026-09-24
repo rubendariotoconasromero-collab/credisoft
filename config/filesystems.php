@@ -30,6 +30,13 @@ return [
 
     'disks' => [
 
+        'expedientes' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/expedientes'),
+            'visibility' => 'private',
+            'throw' => true,
+        ],
+
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app'),

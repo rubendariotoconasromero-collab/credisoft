@@ -20,7 +20,12 @@ class UserSeeder extends Seeder
                 ['encargado_user', 'Encargado de Agencia', 'Encargado DEMO'],
             ]);
         }
-        $password = Hash::make('admin123'); // Existing bootstrap credential, documented for development.
+        $plainPassword = app()->environment(['local', 'testing']) ? 'admin123' : config('app.bootstrap_admin_password');
+        if (!app()->environment(['local', 'testing']) && !DB::table('users')->where('name', 'administrador')->exists()
+            && (!is_string($plainPassword) || strlen($plainPassword) < 12)) {
+            throw new \LogicException('Configure BOOTSTRAP_ADMIN_PASSWORD con al menos 12 caracteres fuera de desarrollo.');
+        }
+        $password = Hash::make($plainPassword ?? \Illuminate\Support\Str::random(48));
         foreach ($accounts as $index => [$login, $role, $name]) {
             // Do not reset an existing user's password on db:seed.
             if (DB::table('users')->where('name', $login)->exists()) continue;

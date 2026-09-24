@@ -1,0 +1,82 @@
+{
+    "solo_lectura": true,
+    "diferencias_operaciones": [],
+    "cajas_abiertas_duplicadas": [],
+    "bovedas": [
+        {
+            "id": 1,
+            "saldo_actual": "38257.00"
+        }
+    ],
+    "desembolsos_activos_duplicados": [],
+    "formas_pago_historicas": [
+        {
+            "forma_pago": "efectivo",
+            "cantidad": 7,
+            "clasificacion": "efectivo"
+        }
+    ],
+    "cajas_abiertas": [
+        {
+            "id_caja": 10,
+            "monto_inicial": "2000.00",
+            "efectivo_esperado": "2060.00",
+            "total_ingresos": "100.00",
+            "total_egresos": "40.00",
+            "formas_pago": {
+                "efectivo": {
+                    "ingresos": "100.00",
+                    "egresos": "40.00"
+                },
+                "deposito": {
+                    "ingresos": "0.00",
+                    "egresos": "0.00"
+                },
+                "transferencia": {
+                    "ingresos": "0.00",
+                    "egresos": "0.00"
+                },
+                "sin_clasificar": {
+                    "ingresos": "0.00",
+                    "egresos": "0.00"
+                }
+            },
+            "transferencias_internas": {
+                "ingresos": "0.00",
+                "egresos": "0.00"
+            },
+            "requiere_revision": false
+        },
+        {
+            "id_caja": 11,
+            "monto_inicial": "1500.00",
+            "efectivo_esperado": "1500.00",
+            "total_ingresos": "0.00",
+            "total_egresos": "0.00",
+            "formas_pago": {
+                "efectivo": {
+                    "ingresos": "0.00",
+                    "egresos": "0.00"
+                },
+                "deposito": {
+                    "ingresos": "0.00",
+                    "egresos": "0.00"
+                },
+                "transferencia": {
+                    "ingresos": "0.00",
+                    "egresos": "0.00"
+                },
+                "sin_clasificar": {
+                    "ingresos": "0.00",
+                    "egresos": "0.00"
+                }
+            },
+            "transferencias_internas": {
+                "ingresos": "0.00",
+                "egresos": "0.00"
+            },
+            "requiere_revision": false
+        }
+    ],
+    "amortizaciones_legadas_por_revisar": 0
+}

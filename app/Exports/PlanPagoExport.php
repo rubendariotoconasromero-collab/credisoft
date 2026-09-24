@@ -87,7 +87,7 @@ class PlanPagoExport implements FromQuery, WithHeadings, WithMapping, WithStyles
             // Obtenemos la cuota más antigua sin pagar
             $primeraVencida = $cuotasMora->sortBy('fecha')->first();
             $fechaVencimiento = Carbon::parse($primeraVencida->fecha);
-            $diasMora = $fechaVencimiento->diffInDays($fechaActual);
+            $diasMora = (int) $fechaVencimiento->diffInDays($fechaActual, true);
         }
 
         // Cálculo Multa (DiasMora x 0.01 segun tu requerimiento)

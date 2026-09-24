@@ -9,7 +9,22 @@
                 <div class="modal-body">
                     <div class="row">
                         <div class="col-md-5">
-                            <h6 class="fw-bold text-dark">Resumén Movimientos</h6>
+                            <h6 class="fw-bold text-dark">Resumen de movimientos</h6>
+                            <table v-if="resumen" class="table table-sm table-bordered">
+                                <thead><tr><th>Forma de pago</th><th>Ingresos (Bs)</th><th>Egresos (Bs)</th></tr></thead>
+                                <tbody>
+                                    <tr v-for="(totales, forma) in formasPagoVisibles" :key="forma">
+                                        <td>{{ { efectivo: 'Efectivo', deposito: 'Depósito', transferencia: 'Transferencia', sin_clasificar: 'Por revisar' }[forma] }}</td>
+                                        <td>{{ format(totales.ingresos) }}</td><td>{{ format(totales.egresos) }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p v-if="resumen?.requiere_revision" class="text-danger">Hay operaciones históricas que requieren revisión antes del cierre.</p>
+                            <div v-if="caja.estado == 1 && puedeCerrar" class="mb-3">
+                                <label class="form-label">Efectivo contado (Bs)</label>
+                                <input v-model="efectivoContado" type="number" min="0" step="0.01" class="form-control">
+                                <p v-if="efectivoContado !== ''" class="small mt-1">Diferencia: {{ format(Number(efectivoContado) - saldoFinal) }} Bs</p>
+                            </div>
                             <table class="table table-sm table-bordered table-striped" style="font-size:12px">
                                 <thead class="table-dark text-white">
                                     <tr>
@@ -108,6 +123,7 @@
                                             <th>Desc.</th>
                                             <th>Hora</th>
                                             <th class="text-end">Monto</th>
+                                            <th>Acciones</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -117,9 +133,17 @@
                                                     {{ mov.tipo_movimiento }}
                                                 </span>
                                             </td>
-                                            <td class="text-uppercase">{{ mov.descripcion }}</td>
+                                            <td class="text-uppercase">{{ mov.descripcion }}
+                                                <span v-if="mov.anulado_at" class="badge bg-secondary d-block">Anulado</span>
+                                            </td>
                                             <td>{{ formatHora(mov.fecha) }}</td>
                                             <td class="text-end fw-bold">{{ mov.monto }}</td>
+                                            <td>
+                                                <div class="d-flex flex-wrap gap-1">
+                                                    <button class="btn btn-sm btn-outline-primary" @click="verOperacion(mov)">Ver detalle</button>
+                                                    <button v-if="mov.codigo_operacion && ['cobro','ingreso','egreso','administrativo','desembolso','transferencia_caja'].includes(mov.tipo_operacion) && !mov.anulado_at && caja.estado == 1 && puedeCerrar && puedeAnular" class="btn btn-sm btn-outline-danger" @click="anularOperacion(mov.codigo_operacion)">Anular</button>
+                                                </div>
+                                            </td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -128,10 +152,10 @@
                     </div>
                 </div>
                 <div class="modal-footer justify-content-center">
-                    <button v-if="caja.estado == 1" @click="cerrarCaja" class="btn btn-danger shadow">
+                    <button v-if="caja.estado == 1 && puedeCerrar" @click="cerrarCaja" class="btn btn-danger shadow">
                         <i class="fas fa-lock me-2"></i> CERRAR CAJA DEFINITIVAMENTE
                     </button>
-                    <button v-else class="btn btn-secondary" disabled>Caja Cerrada</button>
+                    <button v-else class="btn btn-secondary" disabled>{{ caja.estado == 1 ? 'Solo consulta: caja de otro usuario' : 'Caja Cerrada' }}</button>
                 </div>
             </div>
         </div>
@@ -142,36 +166,61 @@
 
 <script>
 import ModalListaMovimientos from './ModalListaMovimientos.vue';
+import { mostrarDetalleOperacion } from '../../financialOperationDetail';
 import axios from 'axios';
 import moment from 'moment';
 import Swal from 'sweetalert2';
+import { sesion, tienePermiso } from '../../router/session';
 
 export default {
     components: { ModalListaMovimientos },
     data() {
         return {
             caja: {},
+            resumen: null,
+            efectivoContado: '',
             movimientos: [],
             loading: false
         }
     },
     computed: {
+        formasPagoVisibles() {
+            return Object.fromEntries(
+                Object.entries(this.resumen?.formas_pago || {}).filter(([forma, totales]) =>
+                    forma !== 'sin_clasificar' || Number(totales.ingresos) !== 0 || Number(totales.egresos) !== 0
+                )
+            );
+        },
+        puedeAnular() { return tienePermiso('anular_finanzas'); },
+        puedeCerrar() { return tienePermiso('controlcaja') && this.caja.usuario === sesion.name; },
         totalIngresos() {
+            if (this.resumen) return Number(this.resumen.total_ingresos);
             return parseFloat(this.caja.ingreso_total || 0) + 
                    parseFloat(this.caja.ingreso_total_ingreso || 0) + 
                    parseFloat(this.caja.pago_administrativo_total || 0) +
                    parseFloat(this.caja.ingreso_total_amortizacion || 0);
         },
         totalEgresos() {
+            if (this.resumen) return Number(this.resumen.total_egresos);
             return parseFloat(this.caja.egreso_total || 0) + 
                    parseFloat(this.caja.desembolso_total || 0); // Asumiendo que desembolso está separado o incluido según tu backend
         },
         saldoFinal() {
+            if (this.resumen) return Number(this.resumen.efectivo_esperado);
             return (parseFloat(this.caja.monto_inicial || 0) + this.totalIngresos) - this.totalEgresos;
         }
     },
     methods: {
+        async anularOperacion(codigo) {
+            try { await axios.post('/pagos/anular-transaccion', { codigo }); await this.cargarDetallesFrescos(this.caja.id); }
+            catch (e) { if (!axios.isCancel(e)) Swal.fire('No se pudo anular', e.response?.data?.message || e.message, 'error'); }
+        },
+        async verOperacion(movimiento) {
+            await mostrarDetalleOperacion(movimiento, this.$el);
+        },
         async abrir(itemCaja) {
+            this.resumen = null;
+            this.efectivoContado = '';
             this.caja = { ...itemCaja }; // Copia básica
             $('#modalDetalleCaja').modal('show');
             await this.cargarDetallesFrescos(itemCaja.id);
@@ -187,7 +236,11 @@ export default {
 
         async cargarDetallesFrescos(id) {
             try {
-                const res = await axios.get('/movimientos_caja', { params: { id_caja: id, per_page: 50 } });
+                const [res, summary] = await Promise.all([
+                    axios.get('/movimientos_caja', { params: { id_caja: id, per_page: 50 } }),
+                    axios.get('/caja/resumen-financiero', { params: { id_caja: id } })
+                ]);
+                this.resumen = summary.data;
                 this.movimientos = res.data.movimientos.data;
                 // Si necesitas refrescar los totales de la caja (porque el item de la lista puede estar viejo),
                 // deberías llamar a un endpoint get_caja_detalle específico aquí.
@@ -197,6 +250,7 @@ export default {
         },
         async cerrarCaja() {
             try {
+                this.resumen = (await axios.get('/caja/resumen-financiero', { params: { id_caja: this.caja.id } })).data;
                 const check = await axios.get('/caja_abierta');
                 if (check.data.usuario_actual != 1) { 
                     Swal.fire('Error', 'Solo el usuario que abrió la caja puede cerrarla.', 'error');
@@ -212,21 +266,7 @@ export default {
                 }).then(async (res) => {
                     if (res.isConfirmed) {
                         try {
-                            const payload = {
-                                id_caja:            this.caja.id,
-                                fechahora_apertura: this.caja.fechahora_apertura,
-                                monto_inicial:      this.caja.monto_inicial,
-                                monto_final:        this.saldoFinal,
-                                efectivo_total:     this.caja.efectivo_total || 0,
-                                deposito_total:     this.caja.deposito_total || 0,
-                                efectivo_venta:     this.caja.efectivo_venta || 0,
-                                deposito_venta:     this.caja.deposito_venta || 0,
-                                efectivo_gasto:     this.caja.efectivo_gasto || 0,
-                                deposito_gasto:     this.caja.deposito_gasto || 0,
-                                total_ingreso:      this.caja.total_ingreso || 0,
-                                total_egreso:       this.caja.total_egreso || 0,
-                                diferencia:         this.caja.diferencia || 0
-                            };
+                            const payload = { id_caja: this.caja.id, efectivo_contado: this.efectivoContado };
                             await axios.post('/close_caja', payload);
                             Swal.fire('Cerrada', 'La caja se ha cerrado correctamente.', 'success');
                             this.cerrar();
@@ -234,7 +274,7 @@ export default {
                             
                         } catch (e) {
                             console.error("Error al cerrar caja:", e);
-                            Swal.fire('Error', 'No se pudo cerrar la caja.', 'error');
+                            Swal.fire('Error', e.response?.data?.message || 'No se pudo cerrar la caja.', 'error');
                         }
                     }
                 });

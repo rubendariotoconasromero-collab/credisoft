@@ -8,7 +8,7 @@ use App\Traits\CalculaSaldoCaja;
 use DB;
 use Dompdf\Dompdf;
 use Dompdf\Options;
-use PDF;
+use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Mpdf\Mpdf;
 use Carbon\Carbon;
 use App\Models\OrdenPagoReprogramacion;
@@ -44,10 +44,10 @@ class CajaController extends Controller
         )
         ->addSelect(DB::raw('(SELECT SUM(monto_pago) FROM pago WHERE pago.id_caja = caja.id and estado=1) as ingreso_total'))
         // ->addSelect(DB::raw('(SELECT SUM(monto_pago) FROM pago_amortizacion WHERE pago_amortizacion.id_caja = caja.id) as ingreso_total_amortizacion'))
-        ->addSelect(DB::raw('(SELECT SUM(egreso.monto) FROM egreso WHERE egreso.id_caja = caja.id) as egreso_total'))
-        ->addSelect(DB::raw('(SELECT SUM(ingreso.monto) FROM ingreso WHERE ingreso.id_caja = caja.id) as ingreso_total_ingreso'))
-        ->addSelect(DB::raw('(SELECT SUM(pago_administrativo.monto) FROM pago_administrativo WHERE pago_administrativo.id_caja = caja.id) as pago_administrativo_total'))
-        ->addSelect(DB::raw('(SELECT SUM(desembolso.monto) FROM desembolso WHERE desembolso.id_caja = caja.id) as desembolso_total'))
+        ->addSelect(DB::raw('(SELECT SUM(egreso.monto) FROM egreso WHERE egreso.id_caja = caja.id AND egreso.estado = 1) as egreso_total'))
+        ->addSelect(DB::raw('(SELECT SUM(ingreso.monto) FROM ingreso WHERE ingreso.id_caja = caja.id AND ingreso.estado = 1) as ingreso_total_ingreso'))
+        ->addSelect(DB::raw('(SELECT SUM(pago_administrativo.monto) FROM pago_administrativo WHERE pago_administrativo.id_caja = caja.id AND pago_administrativo.estado = 0) as pago_administrativo_total'))
+        ->addSelect(DB::raw('(SELECT SUM(desembolso.monto) FROM desembolso WHERE desembolso.id_caja = caja.id AND desembolso.estado = 0) as desembolso_total'))
 
         ->groupBy('caja.id', 'caja.fechahora_apertura', 'caja.fechahora_cierre', 'users.name', 
         'caja.monto_inicial', 'caja.monto_final', 'caja.efectivo_total', 'caja.deposito_total', 
@@ -56,6 +56,10 @@ class CajaController extends Controller
         ->orderBy('caja.id', 'desc')
         ->where($request->criterio, 'LIKE', '%'.$request->buscar.'%')
         ->paginate(15);
+        $caja->getCollection()->transform(function ($row) {
+            $row->resumen_financiero = app(\App\Services\Finance\CashSummary::class)->forCash($row->id);
+            return $row;
+        });
         return $caja;
     }
 
@@ -71,12 +75,12 @@ class CajaController extends Controller
         'caja.monto_inicial', 'caja.monto_final', 'caja.efectivo_total', 'caja.deposito_total', 
         'caja.efectivo_venta', 'caja.deposito_venta', 'caja.efectivo_gasto', 'caja.deposito_gasto', 
         'caja.total_ingreso', 'caja.total_egreso', 'caja.diferencia')
-        ->addSelect(DB::raw('(SELECT SUM(monto_pago) FROM pago WHERE pago.id_caja = caja.id) as ingreso_total'))
+        ->addSelect(DB::raw('(SELECT SUM(monto_pago) FROM pago WHERE pago.id_caja = caja.id AND pago.estado = 1) as ingreso_total'))
         ->addSelect(DB::raw('(SELECT SUM(monto_pago) FROM pago_amortizacion WHERE pago_amortizacion.id_caja = caja.id) as ingreso_total_amortizacion'))
-        ->addSelect(DB::raw('(SELECT SUM(egreso.monto) FROM egreso WHERE egreso.id_caja = caja.id) as egreso_total'))
-        ->addSelect(DB::raw('(SELECT SUM(ingreso.monto) FROM ingreso WHERE ingreso.id_caja = caja.id) as ingreso_total_ingreso'))
-        ->addSelect(DB::raw('(SELECT SUM(pago_administrativo.monto) FROM pago_administrativo WHERE pago_administrativo.id_caja = caja.id) as pago_administrativo_total'))
-        ->addSelect(DB::raw('(SELECT SUM(desembolso.monto) FROM desembolso WHERE desembolso.id_caja = caja.id) as desembolso_total'))
+        ->addSelect(DB::raw('(SELECT SUM(egreso.monto) FROM egreso WHERE egreso.id_caja = caja.id AND egreso.estado = 1) as egreso_total'))
+        ->addSelect(DB::raw('(SELECT SUM(ingreso.monto) FROM ingreso WHERE ingreso.id_caja = caja.id AND ingreso.estado = 1) as ingreso_total_ingreso'))
+        ->addSelect(DB::raw('(SELECT SUM(pago_administrativo.monto) FROM pago_administrativo WHERE pago_administrativo.id_caja = caja.id AND pago_administrativo.estado = 0) as pago_administrativo_total'))
+        ->addSelect(DB::raw('(SELECT SUM(desembolso.monto) FROM desembolso WHERE desembolso.id_caja = caja.id AND desembolso.estado = 0) as desembolso_total'))
 
 
         ->groupBy('caja.id', 'caja.fechahora_apertura', 'caja.fechahora_cierre', 'users.name', 
@@ -88,122 +92,27 @@ class CajaController extends Controller
         ->whereDate('caja.fechahora_apertura', '>=', $request->fecha_inicio)
         ->whereDate('caja.fechahora_apertura', '<=', $request->fecha_final)
         ->paginate(15);
+        $caja->getCollection()->transform(function ($row) {
+            $row->resumen_financiero = app(\App\Services\Finance\CashSummary::class)->forCash($row->id);
+            return $row;
+        });
         return $caja;
     }
 
-    public function save(Request $request) 
+    public function save(Request $request)
     {
-        $request->validate([
-            'monto_inicial' => 'required|numeric|min:0',
-        ]);
-
-        // 1. Verificar si existe una bóveda y si tiene saldo suficiente
-        $boveda = DB::table('boveda')->first();
-        
-        if (!$boveda) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No se puede abrir la caja: Aún no existe una Bóveda aperturada en el sistema.'
-            ], 422);
-        }
-
-        if ($boveda->saldo_actual < $request->monto_inicial) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No se puede abrir la caja: Saldo insuficiente en Bóveda. Disponible: ' . number_format($boveda->saldo_actual, 2) . ' Bs.'
-            ], 422);
-        }
-
-        // 2. Verificar si el usuario ya tiene una caja abierta
-        $cajaAbierta = DB::table('caja')
-            ->where('id_usuario', Auth::id())
-            ->whereNull('fechahora_cierre')
-            ->exists();
-            
-        if ($cajaAbierta) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Ya tienes una caja abierta actualmente.'
-            ], 422);
-        }
-
-        DB::beginTransaction();
-
-        try {
-            // 3. Insertar la nueva caja
-            $idCaja = DB::table('caja')->insertGetId([
-                'fechahora_apertura' => Carbon::now(),
-                'monto_inicial'      => $request->monto_inicial,
-                'monto_final'        => 0,
-                'efectivo_total'     => 0,
-                'deposito_total'     => 0,
-                'efectivo_venta'     => 0,
-                'deposito_venta'     => 0,
-                'efectivo_gasto'     => 0,
-                'deposito_gasto'     => 0,
-                'total_ingreso'      => 0,
-                'total_egreso'       => 0,
-                'diferencia'         => 0,
-                'id_usuario'         => Auth::id(),
-                'estado'             => 1,
-                'created_at'         => Carbon::now(),
-                'updated_at'         => Carbon::now()
-            ]);
-
-            if ($request->monto_inicial > 0) {
-                // El efectivo de apertura sale físicamente de la bóveda hacia el cajón de caja.
-                DB::table('boveda')->where('id', $boveda->id)->update([
-                    'saldo_actual' => DB::raw('saldo_actual - ' . $request->monto_inicial),
-                ]);
-
-                // Registro de trazabilidad en bóveda (para TRANSFER_INTERNO en el flujo)
-                DB::table('movimientos_boveda')->insert([
-                    'tipo_movimiento' => 'salida',
-                    'monto'           => $request->monto_inicial,
-                    'descripcion'     => 'Apertura de caja (Transferencia a Caja)',
-                    'fecha'           => Carbon::now(),
-                    'id_boveda'       => $boveda->id,
-                    'id_usuario'      => Auth::id(),
-                    'created_at'      => Carbon::now(),
-                    'updated_at'      => Carbon::now()
-                ]);
-
-                // Registro de trazabilidad en caja
-                DB::table('movimientos_caja')->insert([
-                    'tipo_movimiento' => 'ingreso',
-                    'descripcion'     => 'Apertura de caja (Ingreso Inicial)',
-                    'monto'           => $request->monto_inicial,
-                    'fecha'           => Carbon::now(),
-                    'id_caja'         => $idCaja,
-                    'id_usuario'      => Auth::id(),
-                    'created_at'      => Carbon::now(),
-                    'updated_at'      => Carbon::now()
-                ]);
-            }
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Caja aperturada correctamente'
-            ], 200);
-
-        } catch (\Throwable $th) {
-            DB::rollback();
-            
-            \Log::error('Error al abrir caja: ' . $th->getMessage());
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Error interno al intentar abrir la caja.'
-            ], 500);
-        }
+        $request->validate(['monto_inicial' => 'required|numeric|min:0']);
+        return app(\App\Services\Finance\Operations::class)->run($request, 'apertura', function ($op) use ($request) {
+            $id = app(\App\Services\Finance\CashSessions::class)->open((int) Auth::id(), $request->monto_inicial);
+            DB::table('operaciones_financieras')->where('id', $op)->update(['id_caja' => $id, 'interno' => true]);
+            return ['success' => true, 'id_caja' => $id, 'message' => 'Caja aperturada correctamente'];
+        });
     }
-
     public function cajaAbierta(Request $request){
         $caja=DB::table('caja')
         ->join('users', 'users.id', '=', 'caja.id_usuario')
         ->select('users.name', 'users.id as id_usuario')
+        ->where('caja.id_usuario', Auth::id())
         ->where('caja.estado', 1)
         ->get();
         
@@ -238,48 +147,22 @@ class CajaController extends Controller
         return ['monto_total_pagos'=>$monto_total_pagos];
     }
 
-    public function closeCaja(Request $request){
+    public function closeCaja(Request $request)
+    {
+        $request->validate(['id_caja' => 'required|integer', 'efectivo_contado' => 'required|numeric|min:0']);
+        return app(\App\Services\Finance\Operations::class)->run($request, 'cierre', function ($op) use ($request) {
+            $summary = app(\App\Services\Finance\CashSessions::class)->close((int) Auth::id(), (int) $request->id_caja, $request->efectivo_contado);
+            DB::table('operaciones_financieras')->where('id', $op)->update(['id_caja' => $request->id_caja, 'interno' => true]);
+            return ['success' => true, 'resumen' => $summary];
+        });
+    }
 
-        // Calcular saldo restante ANTES de cerrar (caja todavía abierta)
-        $saldoRestante = $this->calcularSaldoCaja((int) $request->id_caja);
-
-        DB::table('caja')->where('id', $request->id_caja)->update([
-            'fechahora_apertura'=>$request->fechahora_apertura,
-            'fechahora_cierre'=>Carbon::now(),
-            'monto_inicial'=>$request->monto_inicial,
-            'monto_final'=>$request->monto_final,
-            'efectivo_total'=>$request->efectivo_total,
-            'deposito_total'=>$request->deposito_total,
-            'efectivo_venta'=>$request->efectivo_venta,
-            'deposito_venta'=>$request->deposito_venta,
-            'efectivo_gasto'=>$request->efectivo_gasto,
-            'deposito_gasto'=>$request->deposito_gasto,
-            'total_ingreso'=>$request->total_ingreso,
-            'total_egreso'=>$request->total_egreso,
-            'diferencia'=>$request->diferencia,
-            'id_usuario'=>Auth::id(),
-            'estado'=>0,
-        ]);
-
-        // El efectivo físico restante regresa a la bóveda al cerrar caja
-        if ($saldoRestante > 0) {
-            $id_boveda = DB::table('boveda')->orderBy('id', 'desc')->value('id');
-            if ($id_boveda) {
-                DB::table('movimientos_boveda')->insert([
-                    'tipo_movimiento' => 'ingreso',
-                    'monto'           => $saldoRestante,
-                    'descripcion'     => 'Retorno de Caja al Cierre',
-                    'fecha'           => Carbon::now(),
-                    'id_boveda'       => $id_boveda,
-                    'id_usuario'      => Auth::id(),
-                    'created_at'      => Carbon::now(),
-                    'updated_at'      => Carbon::now(),
-                ]);
-                DB::table('boveda')->where('id', $id_boveda)->update([
-                    'saldo_actual' => DB::raw('saldo_actual + ' . $saldoRestante),
-                ]);
-            }
-        }
+    public function resumenFinanciero(Request $request)
+    {
+        $request->validate(['id_caja' => 'required|integer|exists:caja,id']);
+        $closing = DB::table('caja_cierres')->where('id_caja', $request->id_caja)->first();
+        return $closing ? json_decode($closing->resumen, true, 512, JSON_THROW_ON_ERROR)
+            : app(\App\Services\Finance\CashSummary::class)->forCash((int) $request->id_caja);
     }
 
     public function getPagos(Request $request){
@@ -378,9 +261,9 @@ class CajaController extends Controller
         $dompdf = new Dompdf();
         $detalles=json_decode($request->lista_pagos, true);
         // Opciones de configuración de Dompdf
-        $options = new Options();
+        $options = new Options(config('dompdf.options', []));
         $options->set('isHtml5ParserEnabled', true); // Habilita el parser HTML5
-        $options->set('isPhpEnabled', true); // Habilita la ejecución de código PHP en la vista (si es necesario)
+        $options->set('isPhpEnabled', false);
         $dompdf->setOptions($options);
 
         // Carga la vista HTML para el reporte
@@ -393,7 +276,7 @@ class CajaController extends Controller
             'fecha_inicio' => $request->fecha_inicio,
             'fecha_final' => $request->fecha_final,
         ];
-        $this->generatePDF($html, 'reporte.reporte_pagos_caja', 'reporte_pagos_caja');
+        return $this->generatePDF($html, 'reporte.reporte_pagos_caja', 'reporte_pagos_caja');
     }
     
     public function exportarPagosCajaAmortizacion(Request $request){
@@ -402,9 +285,9 @@ class CajaController extends Controller
         $dompdf = new Dompdf();
         $detalles=json_decode($request->lista_pagos, true);
         // Opciones de configuración de Dompdf
-        $options = new Options();
+        $options = new Options(config('dompdf.options', []));
         $options->set('isHtml5ParserEnabled', true); // Habilita el parser HTML5
-        $options->set('isPhpEnabled', true); // Habilita la ejecución de código PHP en la vista (si es necesario)
+        $options->set('isPhpEnabled', false);
         $dompdf->setOptions($options);
 
         // Carga la vista HTML para el reporte
@@ -469,7 +352,7 @@ class CajaController extends Controller
             'fecha_final' => $request->fecha_final,
         ];
 
-        $this->generatePDF($html, 'reporte.reporte_ingresos_corrientes', 'reporte_ingresos_corrientes');
+        return $this->generatePDF($html, 'reporte.reporte_ingresos_corrientes', 'reporte_ingresos_corrientes');
 
 
     }
@@ -502,7 +385,7 @@ class CajaController extends Controller
 
         
 
-        $this->generatePDF($html, 'reporte.reporte_gastos_corrientes', 'reporte_gastos_corrientes');
+        return $this->generatePDF($html, 'reporte.reporte_gastos_corrientes', 'reporte_gastos_corrientes');
 
     }
 
@@ -542,39 +425,9 @@ class CajaController extends Controller
         return $planes_pago;
     }
 
-    public function guardarPagoAdministrativo(Request $request){
-        DB::beginTransaction();
-        try{
-            DB::table('plan_pago')->where('id', $request->id_plan_pago)->update([
-                'pago_administrativo'=>0,// pagado
-            ]);
-    
-            // Registrando pagos adm
-            DB::table('pago_administrativo')->insert([
-                'monto'=>$request->monto,
-                'fecha'=>now(),
-                'descripcion'=>empty($request->descripcion)?'sin descripcion':$request->descripcion,
-                'id_plan_pago'=>$request->id_plan_pago,
-                'id_caja'=>$request->id_caja,
-                'id_usuario'=>Auth::id(),
-            ]);
-
-
-            // Reg. en mov. caja
-            DB::table('movimientos_caja')
-            ->insertGetId([
-                'tipo_movimiento'=>'ingreso',
-                'monto'=>$request->monto,
-                'descripcion'=>'Cobro gasto administrativo',
-                'fecha'=>now(),
-                'id_caja'=>$request->id_caja,
-                'id_usuario'=>Auth::user()->id,
-            ]);
-
-            DB::commit();
-        }catch(Exception $e){
-            DB::rollback();
-        }
+    public function guardarPagoAdministrativo(Request $request)
+    {
+        return app(\App\Services\Finance\CashMovements::class)->save($request, 'administrativo');
     }
 
     public function reporteCajasFecha(Request $request){
@@ -583,9 +436,9 @@ class CajaController extends Controller
         $dompdf = new Dompdf();
         $detalles=json_decode($request->lista_caja, true);
         // Opciones de configuración de Dompdf
-        $options = new Options();
+        $options = new Options(config('dompdf.options', []));
         $options->set('isHtml5ParserEnabled', true); // Habilita el parser HTML5
-        $options->set('isPhpEnabled', true); // Habilita la ejecución de código PHP en la vista (si es necesario)
+        $options->set('isPhpEnabled', false);
         $dompdf->setOptions($options);
 
         // Carga la vista HTML para el reporte
@@ -704,7 +557,7 @@ class CajaController extends Controller
             'fecha_reporte' => now()->format('d/m/Y'),
         ];
 
-        $this->generatePDF($data, 'reporte.reporte_desembolso', 'reporte_desembolso');
+        return $this->generatePDF($data, 'reporte.reporte_desembolso', 'reporte_desembolso');
     }
 
     public function historialDesembolsosPagos()
@@ -773,47 +626,17 @@ class CajaController extends Controller
         ];
     }
 
-    public function anularDesembolso(Request $request){
-        DB::beginTransaction();
-        try{
-            $id_plan_pago=DB::table('plan_pago')
-            ->join('desembolso', 'desembolso.id_plan_pago', '=', 'plan_pago.id')
-            ->where('desembolso.id', $request->id)
-            ->select('plan_pago.id as id_plan_pago')
-            ->first();
-
-            $id_pago_adm=DB::table('plan_pago')
-            ->join('pago_administrativo', 'pago_administrativo.id_plan_pago', '=', 'plan_pago.id')
-            ->where('plan_pago.id', $id_plan_pago->id_plan_pago)
-            ->select('pago_administrativo.id as id_pago_adm')
-            ->first();
-
-            DB::table('plan_pago')->where('id', $id_plan_pago->id_plan_pago)->update([
-                'desembolso'=>1,
-                'pago_administrativo'=>1,
-            ]);
-    
-            DB::table('desembolso')->where('id', $request->id)->update([
-                'estado'=>1,
-            ]);
-
-            DB::table('pago_administrativo')->where('id', $id_pago_adm->id_pago_adm)->update([
-                'estado'=>1,
-            ]);
-
-            DB::commit();
-
-        }catch(Exception $e){
-            DB::rollback();
-        }
-        
+    public function anularDesembolso(Request $request)
+    {
+        return app(\App\Services\Finance\Reversals::class)->reverseSource($request, 'desembolso', (int) $request->id);
     }
 
     public function getMovimientosCaja(Request $request){
         $query = DB::table('movimientos_caja')
             ->join('users', 'users.id', '=', 'movimientos_caja.id_usuario')
-            ->select('movimientos_caja.*', 'users.personal')
-            ->where('id_caja', $request->id_caja);
+            ->leftJoin('operaciones_financieras as op', 'op.id', '=', 'movimientos_caja.id_operacion')
+            ->select('movimientos_caja.*', 'users.personal', 'op.codigo as codigo_operacion', 'op.tipo as tipo_operacion', 'op.anulado_at')
+            ->where('movimientos_caja.id_caja', $request->id_caja);
         if ($request->has('tipo') && $request->tipo != 'todos') {
             $query->where('movimientos_caja.tipo_movimiento', $request->tipo);
         }
@@ -826,8 +649,8 @@ class CajaController extends Controller
         $queryTotalesIngreso = clone $query;
         $queryTotalesSalida = clone $query;
 
-        $salidas = $queryTotalesSalida->where('movimientos_caja.tipo_movimiento', 'salida')->sum('monto');
-        $ingresos = $queryTotalesIngreso->where('movimientos_caja.tipo_movimiento', 'ingreso')->sum('monto');
+        $salidas = $queryTotalesSalida->where('movimientos_caja.tipo_movimiento', 'salida')->sum('movimientos_caja.monto');
+        $ingresos = $queryTotalesIngreso->where('movimientos_caja.tipo_movimiento', 'ingreso')->sum('movimientos_caja.monto');
 
         $registros = $query->orderBy('movimientos_caja.id', 'desc')->paginate(30);
 
@@ -1085,7 +908,9 @@ class CajaController extends Controller
             $mpdf->WriteHTML($html);
 
             // Output PDF to browser
-            $mpdf->Output($nombre_reporte . '.pdf', 'I');
+            return response($mpdf->Output($nombre_reporte . '.pdf', 'S'))
+                ->header('Content-Type', 'application/pdf')
+                ->header('Content-Disposition', 'inline; filename="'.$nombre_reporte . '.pdf'.'"');
 
         } catch (\Exception $e) {
             \Log::error('Error generating PDF: ' . $e->getMessage());
@@ -1120,7 +945,9 @@ class CajaController extends Controller
             $mpdf->WriteHTML($html);
 
             // Output PDF to browser
-            $mpdf->Output($nombre_reporte . '.pdf', 'I');
+            return response($mpdf->Output($nombre_reporte . '.pdf', 'S'))
+                ->header('Content-Type', 'application/pdf')
+                ->header('Content-Disposition', 'inline; filename="'.$nombre_reporte . '.pdf'.'"');
 
         } catch (\Exception $e) {
             \Log::error('Error generating PDF: ' . $e->getMessage());
@@ -1152,7 +979,7 @@ class CajaController extends Controller
         ];
 
 
-        $this->generatePDF($html, 'reporte.reporte_cuotas_plan_caja', 'plan_de_pagos');
+        return $this->generatePDF($html, 'reporte.reporte_cuotas_plan_caja', 'plan_de_pagos');
 
     }
 
@@ -1227,7 +1054,7 @@ class CajaController extends Controller
      */
     public function getSaldoCajaActual()
     {
-        $caja = DB::table('caja')->where('estado', 1)->first();
+        $caja = DB::table('caja')->where('id_usuario', Auth::id())->where('estado', 1)->first();
 
         if (!$caja) {
             return response()->json([
@@ -1249,49 +1076,7 @@ class CajaController extends Controller
      */
     public function actualizarDesembolso(Request $request)
     {
-        $boveda_abierta = DB::table('boveda')->count();
-        $plan_pago      = DB::table('plan_pago')->where('id', $request->id_plan_pago)->first();
-
-        if ($boveda_abierta <= 0) {
-            return response()->json(['message' => 'No existe bóveda aperturada.'], 422);
-        }
-
-        // ── Validar saldo disponible en caja ──────────────────────────────
-        $monto         = (float) $request->monto;
-        $saldoCaja     = $this->calcularSaldoCaja((int) $request->id_caja);
-
-        if ($saldoCaja < $monto) {
-            return response()->json([
-                'message'           => 'Saldo insuficiente en caja para realizar el desembolso.',
-                'saldo_disponible'  => round($saldoCaja, 2),
-                'monto_requerido'   => $monto,
-                'faltante'          => round($monto - $saldoCaja, 2),
-            ], 422);
-        }
-        // ─────────────────────────────────────────────────────────────────
-
-        DB::beginTransaction();
-        try {
-            DB::table('plan_pago')->where('id', $request->id_plan_pago)->update([
-                'desembolso' => 0,
-            ]);
-
-            DB::table('solicitud')->where('id', $plan_pago->id_solicitud)->update([
-                'desembolso' => 1,
-            ]);
-
-            DB::table('desembolso')->insert([
-                'monto'        => $monto,
-                'fecha'        => Carbon::now(),
-                'id_plan_pago' => $request->id_plan_pago,
-                'id_caja'      => $request->id_caja,
-                'id_usuario'   => Auth::id(),
-            ]);
-
-            DB::commit();
-        } catch (\Exception $e) {
-            DB::rollback();
-            return response()->json(['message' => 'Error al registrar el desembolso.'], 500);
-        }
+        return app(\App\Services\Finance\CashMovements::class)->save($request, 'desembolso');
     }
+
 }

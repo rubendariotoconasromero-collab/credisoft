@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 use DB;
-use PDF;
+use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use Illuminate\Http\Request;
@@ -54,7 +54,7 @@ class ReporteController extends Controller
         ];
 
         // Generamos el PDF
-        $this->generatePDF($data, 'reporte.reporte_general_cliente', 'reporte_general_cliente.pdf');
+        return $this->generatePDF($data, 'reporte.reporte_general_cliente', 'reporte_general_cliente.pdf');
     }
 
 
@@ -227,7 +227,7 @@ class ReporteController extends Controller
         ];
 
         // Generate the PDF
-        $this->generatePDF($html, 'reporte.reporte_cuotas_planpago', 'reporte_plan_pago_cliente');
+        return $this->generatePDF($html, 'reporte.reporte_cuotas_planpago', 'reporte_plan_pago_cliente');
     }
 
     public function reporteGeneralSolicitudes(Request $request){
@@ -260,7 +260,7 @@ class ReporteController extends Controller
             // 'direcciones' => $direcciones, // Pasa los datos de direcciones a la vista
         ];
 
-        $this->generatePDF($html, 'reporte.reporte_general_solicitudes', 'reporte_general_solicitudes');
+        return $this->generatePDF($html, 'reporte.reporte_general_solicitudes', 'reporte_general_solicitudes');
 
 
     }
@@ -281,9 +281,9 @@ class ReporteController extends Controller
         $dompdf = new Dompdf();
 
         // Opciones de configuración de Dompdf
-        $options = new Options();
+        $options = new Options(config('dompdf.options', []));
         $options->set('isHtml5ParserEnabled', true); // Habilita el parser HTML5
-        $options->set('isPhpEnabled', true); // Habilita la ejecución de código PHP en la vista (si es necesario)
+        $options->set('isPhpEnabled', false);
         $dompdf->setOptions($options);
 
         // Carga la vista HTML para el reporte
@@ -327,9 +327,9 @@ class ReporteController extends Controller
         $dompdf = new Dompdf();
 
         // Opciones de configuración de Dompdf
-        $options = new Options();
+        $options = new Options(config('dompdf.options', []));
         $options->set('isHtml5ParserEnabled', true); // Habilita el parser HTML5
-        $options->set('isPhpEnabled', true); // Habilita la ejecución de código PHP en la vista (si es necesario)
+        $options->set('isPhpEnabled', false);
         $dompdf->setOptions($options);
 
         // Carga la vista HTML para el reporte
@@ -371,9 +371,9 @@ class ReporteController extends Controller
         $dompdf = new Dompdf();
 
         // Opciones de configuración de Dompdf
-        $options = new Options();
+        $options = new Options(config('dompdf.options', []));
         $options->set('isHtml5ParserEnabled', true); // Habilita el parser HTML5
-        $options->set('isPhpEnabled', true); // Habilita la ejecución de código PHP en la vista (si es necesario)
+        $options->set('isPhpEnabled', false);
         $dompdf->setOptions($options);
 
         // Carga la vista HTML para el reporte
@@ -418,9 +418,9 @@ class ReporteController extends Controller
         $dompdf = new Dompdf();
 
         // Opciones de configuración de Dompdf
-        $options = new Options();
+        $options = new Options(config('dompdf.options', []));
         $options->set('isHtml5ParserEnabled', true); // Habilita el parser HTML5
-        $options->set('isPhpEnabled', true); // Habilita la ejecución de código PHP en la vista (si es necesario)
+        $options->set('isPhpEnabled', false);
         $dompdf->setOptions($options);
 
         // Carga la vista HTML para el reporte
@@ -468,9 +468,9 @@ class ReporteController extends Controller
         $dompdf = new Dompdf();
 
         // Opciones de configuración de Dompdf
-        $options = new Options();
+        $options = new Options(config('dompdf.options', []));
         $options->set('isHtml5ParserEnabled', true); // Habilita el parser HTML5
-        $options->set('isPhpEnabled', true); // Habilita la ejecución de código PHP en la vista (si es necesario)
+        $options->set('isPhpEnabled', false);
         $dompdf->setOptions($options);
 
         // Carga la vista HTML para el reporte
@@ -528,7 +528,7 @@ class ReporteController extends Controller
 
         ];
 
-        $this->generatePDF($html, 'reporte.reporte_general_planes_pago', 'reporte_general_planes_pago');
+        return $this->generatePDF($html, 'reporte.reporte_general_planes_pago', 'reporte_general_planes_pago');
 
 
     }
@@ -551,9 +551,9 @@ class ReporteController extends Controller
         $dompdf = new Dompdf();
 
         // Opciones de configuración de Dompdf
-        $options = new Options();
+        $options = new Options(config('dompdf.options', []));
         $options->set('isHtml5ParserEnabled', true); // Habilita el parser HTML5
-        $options->set('isPhpEnabled', true); // Habilita la ejecución de código PHP en la vista (si es necesario)
+        $options->set('isPhpEnabled', false);
         $dompdf->setOptions($options);
 
         // Carga la vista HTML para el reporte
@@ -598,9 +598,9 @@ class ReporteController extends Controller
         $dompdf = new Dompdf();
 
         // Opciones de configuración de Dompdf
-        $options = new Options();
+        $options = new Options(config('dompdf.options', []));
         $options->set('isHtml5ParserEnabled', true); // Habilita el parser HTML5
-        $options->set('isPhpEnabled', true); // Habilita la ejecución de código PHP en la vista (si es necesario)
+        $options->set('isPhpEnabled', false);
         $dompdf->setOptions($options);
 
         // Carga la vista HTML para el reporte
@@ -656,7 +656,9 @@ class ReporteController extends Controller
             $mpdf->WriteHTML($html);
 
             // Generar el PDF
-            $mpdf->Output($nombre_reporte . '.pdf', 'I'); // 'I' para abrir en el navegador, 'D' para descargar
+            return response($mpdf->Output($nombre_reporte . '.pdf', 'S'))
+                ->header('Content-Type', 'application/pdf')
+                ->header('Content-Disposition', 'inline; filename="'.$nombre_reporte . '.pdf'.'"');
 
         } catch (\Exception $e) {
             // Manejo de errores

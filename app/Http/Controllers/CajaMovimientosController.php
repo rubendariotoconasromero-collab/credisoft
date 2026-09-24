@@ -158,7 +158,9 @@ class CajaMovimientosController extends Controller
 
             $html = view($url_vista, $data)->render();
             $mpdf->WriteHTML($html);
-            $mpdf->Output($nombre_reporte . '.pdf', 'I');
+            return response($mpdf->Output($nombre_reporte . '.pdf', 'S'))
+                ->header('Content-Type', 'application/pdf')
+                ->header('Content-Disposition', 'inline; filename="'.$nombre_reporte . '.pdf'.'"');
 
         } catch (\Exception $e) {
             \Log::error('Error generating PDF: ' . $e->getMessage());

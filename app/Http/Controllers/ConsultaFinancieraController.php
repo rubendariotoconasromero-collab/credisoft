@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Services\Finance\Money;
 
 class ConsultaFinancieraController extends Controller
 {
@@ -30,9 +31,9 @@ class ConsultaFinancieraController extends Controller
             : $this->obtenerConsultaSQLBase($fecha_final, 'GENERAL');
         $capital_total_real = 0;
         foreach ($movGeneral as $m) {
-            $capital_total_real += ($m->debe - $m->haber);
+            $capital_total_real += Money::cents($m->debe) - Money::cents($m->haber);
         }
-        $capital_total_real = round($capital_total_real, 2);
+        $capital_total_real = Money::decimal($capital_total_real);
 
         // Paginación Manual del Arreglo (solo para tabla General)
         $page = (int)$request->input('page', 1);
@@ -263,7 +264,7 @@ class ConsultaFinancieraController extends Controller
         $q_ingreso = DB::table('ingreso')
             ->where('estado', 1)
             ->whereDate('fecha', '<=', $fecha_final)
-            ->where('descripcion', 'not like', '%Transferencia desde Bóveda%')
+            ->where(function ($q) { $q->where(function ($legacy) { $legacy->whereNull('id_operacion')->where('descripcion', 'not like', '%Transferencia desde Bóveda%')->where('descripcion', 'not like', '%Transferencia desde Boveda%'); })->orWhereIn('id_operacion', DB::table('operaciones_financieras')->where('interno', false)->select('id')); })
             ->select('fecha', DB::raw("'INGRESO_CAJA' as tipo"), 'descripcion', 'monto as debe', DB::raw('0 as haber'), 'created_at', DB::raw('NULL as id_plan_pago'));
 
         // "Transferencia a Bóveda" se excluye de EGRESO_CAJA porque
@@ -271,8 +272,7 @@ class ConsultaFinancieraController extends Controller
         $q_gasto = DB::table('egreso')
             ->where('estado', 1)
             ->whereDate('fecha', '<=', $fecha_final)
-            ->where('descripcion', 'not like', '%Transferencia a Bóveda%')
-            ->where('descripcion', 'not like', '%Transferencia a Boveda%')
+            ->where(function ($q) { $q->where(function ($legacy) { $legacy->whereNull('id_operacion')->where('descripcion', 'not like', '%Transferencia a Bóveda%')->where('descripcion', 'not like', '%Transferencia a Boveda%'); })->orWhereIn('id_operacion', DB::table('operaciones_financieras')->where('interno', false)->select('id')); })
             ->select('fecha', DB::raw("'EGRESO_CAJA' as tipo"), 'descripcion', DB::raw('0 as debe'), 'monto as haber', 'created_at', DB::raw('NULL as id_plan_pago'));
 
         $query = $q_interes->unionAll($q_mora)->unionAll($q_gastosadm)->unionAll($q_ingreso)->unionAll($q_gasto);
@@ -291,15 +291,14 @@ class ConsultaFinancieraController extends Controller
             // Ingresos REALES a bóveda (excluye "Transferencia desde Caja" — es transferencia interna)
             $q_boveda_in = DB::table('movimientos_boveda')
                 ->where('tipo_movimiento', 'ingreso')
-                ->where('descripcion', 'not like', '%Transferencia desde Caja%')
+                ->where(function ($q) { $q->where(function ($legacy) { $legacy->whereNull('id_operacion')->where('descripcion', 'not like', '%Transferencia desde Caja%')->where('descripcion', 'not like', '%Retorno de Caja al Cierre%'); })->orWhereIn('id_operacion', DB::table('operaciones_financieras')->where('interno', false)->select('id')); })
                 ->whereDate('fecha', '<=', $fecha_final)
                 ->select('fecha', DB::raw("'BOVEDA_INGRESO' as tipo"), 'descripcion', 'monto as debe', DB::raw('0 as haber'), 'created_at', DB::raw('NULL as id_plan_pago'));
 
             // Egresos REALES de bóveda (excluye otorgamiento de préstamos y "Transferencia a Caja" — es interna)
             $q_boveda_out = DB::table('movimientos_boveda')
                 ->where('tipo_movimiento', 'salida')
-                ->where('descripcion', '!=', 'Otorgamiento de préstamo')
-                ->where('descripcion', 'not like', '%Transferencia a Caja%')
+                ->where(function ($q) { $q->where(function ($legacy) { $legacy->whereNull('id_operacion')->where('descripcion', '!=', 'Otorgamiento de préstamo')->where('descripcion', 'not like', '%Transferencia a Caja%'); })->orWhereIn('id_operacion', DB::table('operaciones_financieras')->where('interno', false)->select('id')); })
                 ->whereDate('fecha', '<=', $fecha_final)
                 ->select('fecha', DB::raw("'BOVEDA_EGRESO' as tipo"), 'descripcion', DB::raw('0 as debe'), 'monto as haber', 'created_at', DB::raw('NULL as id_plan_pago'));
 
@@ -308,14 +307,14 @@ class ConsultaFinancieraController extends Controller
             $q_transfer_interno = DB::table('movimientos_boveda')
                 ->whereDate('fecha', '<=', $fecha_final)
                 ->where(function ($q) {
-                    $q->where(function ($q2) {
-                        $q2->where('tipo_movimiento', 'salida')
+                    $q->whereIn('id_operacion', DB::table('operaciones_financieras')->where('interno', true)->select('id'))->orWhere(function ($q2) {
+                        $q2->whereNull('id_operacion')->where('tipo_movimiento', 'salida')
                            ->where('descripcion', 'like', '%Transferencia a Caja%');
                     })->orWhere(function ($q2) {
-                        $q2->where('tipo_movimiento', 'ingreso')
+                        $q2->whereNull('id_operacion')->where('tipo_movimiento', 'ingreso')
                            ->where('descripcion', 'like', '%Transferencia desde Caja%');
                     })->orWhere(function ($q2) {
-                        $q2->where('tipo_movimiento', 'ingreso')
+                        $q2->whereNull('id_operacion')->where('tipo_movimiento', 'ingreso')
                            ->where('descripcion', 'like', '%Retorno de Caja al Cierre%');
                     });
                 })
@@ -353,8 +352,8 @@ class ConsultaFinancieraController extends Controller
             if ($buscar_filtro !== '' && !str_contains(strtolower($mov->descripcion), $buscar_filtro)) continue;
 
             // Saldo corrido sobre las filas que pasaron los filtros
-            $saldo_acumulado += $mov->debe;
-            $saldo_acumulado -= $mov->haber;
+            $saldo_acumulado += Money::cents($mov->debe);
+            $saldo_acumulado -= Money::cents($mov->haber);
 
             $fecha_mov = date('Y-m-d', strtotime($mov->fecha));
 
@@ -366,8 +365,8 @@ class ConsultaFinancieraController extends Controller
 
             // Las transferencias internas son neto cero — no deben inflar los totales
             if ($mov->tipo !== 'TRANSFER_INTERNO') {
-                $suma_ingresos += $mov->debe;
-                $suma_egresos  += $mov->haber;
+                $suma_ingresos += Money::cents($mov->debe);
+                $suma_egresos  += Money::cents($mov->haber);
             }
 
             $lista_final[] = (object)[
@@ -378,17 +377,17 @@ class ConsultaFinancieraController extends Controller
                 'debe' => (float)$mov->debe,
                 'haber' => (float)$mov->haber,
                 'monto' => $mov->debe > 0 ? (float)$mov->debe : (float)$mov->haber,
-                'saldo' => round($saldo_acumulado, 2),
+                'saldo' => Money::decimal($saldo_acumulado),
                 'id_plan_pago' => $mov->id_plan_pago ?? null,
             ];
         }
 
         return [
             'lista'          => $lista_final,
-            'ingresos'       => $suma_ingresos,
-            'egresos'        => $suma_egresos,
-            'saldo_boveda'   => round($saldo_acumulado, 2),
-            'saldo_anterior' => round($saldo_anterior, 2),
+            'ingresos'       => Money::decimal($suma_ingresos),
+            'egresos'        => Money::decimal($suma_egresos),
+            'saldo_boveda'   => Money::decimal($saldo_acumulado),
+            'saldo_anterior' => Money::decimal($saldo_anterior),
         ];
     }
 
@@ -416,7 +415,9 @@ class ConsultaFinancieraController extends Controller
             $mpdf->SetHTMLFooter('<div style="text-align: center; font-size: 10px;">Página {PAGENO} de {nbpg}</div>');
             $html = view($url_vista, $data)->render();
             $mpdf->WriteHTML($html);
-            $mpdf->Output($nombre_reporte . '.pdf', 'I');
+            return response($mpdf->Output($nombre_reporte . '.pdf', 'S'))
+                ->header('Content-Type', 'application/pdf')
+                ->header('Content-Disposition', 'inline; filename="'.$nombre_reporte . '.pdf'.'"');
         } catch (\Exception $e) {
             \Log::error('Error al generar el PDF: ' . $e->getMessage());
             return response()->json(['error' => 'No se pudo generar el PDF.'], 500);

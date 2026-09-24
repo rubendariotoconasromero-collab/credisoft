@@ -24,7 +24,7 @@ class UsuarioController extends Controller
 
     public function getUsuarios(Request $request){
         $usuarios = DB::table('users')->join('rol', 'users.id_rol', '=', 'rol.id')
-        ->select('users.*', 'rol.nombre as rol')
+        ->select('users.id', 'users.name', 'users.personal', 'users.email', 'users.ci', 'users.telefono', 'users.estado', 'users.id_rol', 'users.dias_vigencia', 'users.fecha_cambio_password', 'rol.nombre as rol')
         ->where($request->criterio, 'like', '%'.$request->buscar.'%')
         ->orderBy('users.id', 'desc')
         ->paginate(20);
@@ -34,7 +34,7 @@ class UsuarioController extends Controller
             if ($user->fecha_cambio_password && $user->dias_vigencia) {
                 $fechaCambio = Carbon::parse($user->fecha_cambio_password);
                 $fechaVencimiento = $fechaCambio->addDays($user->dias_vigencia);
-                $diasRestantes = Carbon::now()->diffInDays($fechaVencimiento, false); // false para permitir negativos
+                $diasRestantes = (int) Carbon::now()->diffInDays($fechaVencimiento, false); // false para permitir negativos
 
                 $user->dias_restantes = (int)$diasRestantes;
                 $user->estado_password = $diasRestantes < 0 ? 'Vencida' : ($diasRestantes <= 7 ? 'Por vencer' : 'Vigente');
@@ -118,6 +118,6 @@ class UsuarioController extends Controller
 
     public function getUsuariosSin(){
         return DB::table('users')->join('rol', 'users.id_rol', '=', 'rol.id')
-        ->select('users.*', 'rol.nombre as rol')->get();
+        ->select('users.id', 'users.name', 'users.personal', 'users.estado', 'rol.nombre as rol')->get();
     }
 }

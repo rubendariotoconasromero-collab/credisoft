@@ -230,7 +230,7 @@
     <!-- Client Image -->
     <div class="client-image-container">
         @if ($codeudor->imagen)
-            <img class="client-image" src="{{ public_path('img/codeudor/' . $codeudor->imagen) }}" alt="Foto del codeudor">
+            <img class="client-image" src="{{ \App\Services\PrivateImages::path('codeudor', $codeudor->imagen) }}" alt="Foto del codeudor">
         @else
             <img class="client-image" src="{{ public_path('img/codeudor/default.png') }}" alt="Foto por defecto">
         @endif

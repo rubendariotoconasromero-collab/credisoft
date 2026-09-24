@@ -170,7 +170,7 @@ class VistasReporteController extends Controller
             'usuario'        => auth()->user()->name,
             'fecha_reporte'  => now()->format('d/m/Y'),
         ];
-        $this->generatePDF($data, 'vistasReportes.pdf_creditos_mora', 'Creditos_Mora_' . date('Y-m-d'), 'L');
+        return $this->generatePDF($data, 'vistasReportes.pdf_creditos_mora', 'Creditos_Mora_' . date('Y-m-d'), 'L');
     }
 
     public function exportarCreditosMoraExcel(Request $request)
@@ -339,7 +339,7 @@ class VistasReporteController extends Controller
              
          ];
 
-         $this->generatePDF($data, 'reporte_vistas.reporte_extracto_credito', 'reporte_extrato_credito');
+         return $this->generatePDF($data, 'reporte_vistas.reporte_extracto_credito', 'reporte_extrato_credito');
     }
 
     public function indexHistCreditoMora(){
@@ -377,7 +377,7 @@ class VistasReporteController extends Controller
             
         ];
 
-        $this->generatePDF($data, 'reporte_vistas.reporte_creditos_mora', 'reporte_creditos_mora');
+        return $this->generatePDF($data, 'reporte_vistas.reporte_creditos_mora', 'reporte_creditos_mora');
 
     }
 
@@ -416,7 +416,7 @@ class VistasReporteController extends Controller
             
         ];
 
-        $this->generatePDF($data, 'reporte_vistas.reporte_clientes_mora', 'reporte_clientes_mora');
+        return $this->generatePDF($data, 'reporte_vistas.reporte_clientes_mora', 'reporte_clientes_mora');
     }
 
     public function indexPagosRealizados(Request $request){
@@ -467,7 +467,7 @@ class VistasReporteController extends Controller
             
         ];
 
-        $this->generatePDF($data, 'reporte_vistas.reporte_pagos_realizados', 'reporte_pagos_realizados');
+        return $this->generatePDF($data, 'reporte_vistas.reporte_pagos_realizados', 'reporte_pagos_realizados');
 
 
     }
@@ -492,7 +492,7 @@ class VistasReporteController extends Controller
             'fecha_reporte' => now()->format('d/m/Y'),
             'filtros'       => $request->all(),
         ];
-        $this->generatePDF($data, 'vistasReportes.pdf_pagos_programados', 'Pagos_Programados_' . date('Y-m-d'));
+        return $this->generatePDF($data, 'vistasReportes.pdf_pagos_programados', 'Pagos_Programados_' . date('Y-m-d'));
     }
 
     public function exportarPagosProgramadosExcel(Request $request)
@@ -644,7 +644,7 @@ class VistasReporteController extends Controller
                 
             ];
 
-            $this->generatePDF($data, 'reporte_vistas.reporte_pagos_programados', 'reporte_pagos_programados');
+            return $this->generatePDF($data, 'reporte_vistas.reporte_pagos_programados', 'reporte_pagos_programados');
 
 
     }
@@ -736,7 +736,7 @@ class VistasReporteController extends Controller
             'hora_reporte' => now()->format('H:i:s'),
         ];
 
-        $this->generatePDF($data, 'reporte_vistas.reporte_movimientos_credito', 'reporte_movimientos_credito');
+        return $this->generatePDF($data, 'reporte_vistas.reporte_movimientos_credito', 'reporte_movimientos_credito');
 
 
     }
@@ -765,7 +765,7 @@ class VistasReporteController extends Controller
             'fecha_reporte' => now()->format('d/m/Y'),
             'filtros'       => $request->all(),
         ];
-        $this->generatePDF($data, 'vistasReportes.pdf_avance_creditos', 'Avance_Creditos_' . date('Y-m-d'));
+        return $this->generatePDF($data, 'vistasReportes.pdf_avance_creditos', 'Avance_Creditos_' . date('Y-m-d'));
     }
 
     public function exportarAvanceCreditosExcel(Request $request)
@@ -875,7 +875,11 @@ class VistasReporteController extends Controller
             error_reporting($prev_reporting);
         }
 
-        $mpdf->Output($nombre_reporte, 'I');
+        return response($mpdf->Output($nombre_reporte, 'S'))
+
+            ->header('Content-Type', 'application/pdf')
+
+            ->header('Content-Disposition', 'inline; filename="'.$nombre_reporte.'"');
     }
 
     public function reportePorcentajesCreditos(Request $request){
@@ -947,7 +951,7 @@ class VistasReporteController extends Controller
             'hora_reporte' => now()->format('H:i:s'),
         ];
 
-        $this->generatePDF($data, 'reporte_vistas.reporte_porcentajes_creditos', 'reporte_porcentajes_creditos');
+        return $this->generatePDF($data, 'reporte_vistas.reporte_porcentajes_creditos', 'reporte_porcentajes_creditos');
     }
 
 
@@ -975,7 +979,7 @@ class VistasReporteController extends Controller
             'fecha_reporte'    => now()->format('d/m/Y'),
             'filtros'          => $request->all(),
         ];
-        $this->generatePDF($data, 'vistasReportes.pdf_desembolsos', 'Desembolsos_' . date('Y-m-d'));
+        return $this->generatePDF($data, 'vistasReportes.pdf_desembolsos', 'Desembolsos_' . date('Y-m-d'));
     }
 
     public function exportarDesembolsosExcel(Request $request)
@@ -1075,7 +1079,7 @@ class VistasReporteController extends Controller
             'hora_reporte' => now()->format('H:i:s'),
         ];
 
-        $this->generatePDF($data, 'reporte_vistas.reporte_desembolsos', 'reporte_desembolsos');
+        return $this->generatePDF($data, 'reporte_vistas.reporte_desembolsos', 'reporte_desembolsos');
 
     }
 
@@ -1127,7 +1131,7 @@ class VistasReporteController extends Controller
             // 'lugar_expedicion'=>$asesor->lugar_expedicion,
         ];
 
-        $this->generatePDF($data, 'reporte_vistas.reporte_desembolsos_oficial', 'reporte_desembolsos_oficial');
+        return $this->generatePDF($data, 'reporte_vistas.reporte_desembolsos_oficial', 'reporte_desembolsos_oficial');
     }
 
 
@@ -1177,7 +1181,7 @@ class VistasReporteController extends Controller
             // 'lugar_expedicion'=>$asesor->lugar_expedicion,
         ];
 
-        $this->generatePDF($data, 'reporte_vistas.reporte_desembolsos_pendientes', 'reporte_desembolsos_pendientes');
+        return $this->generatePDF($data, 'reporte_vistas.reporte_desembolsos_pendientes', 'reporte_desembolsos_pendientes');
     }
 
 

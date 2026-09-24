@@ -20,6 +20,8 @@ class PermisoSeeder extends Seeder
             'boveda' => 'Bóveda física', 'codeudores' => 'Gestión de codeudores',
             'consultasfinancieras' => 'Consultas financieras', 'socios' => 'Socios',
             'historial_clientes_creditos' => 'Historial de créditos', 'configuracion' => 'Motivos de movimientos',
+            'condonar' => 'Condonar interés y multa', 'anular_finanzas' => 'Anular operaciones financieras propias',
+            'pagos_retroactivos' => 'Registrar pagos con fecha efectiva anterior',
         ] as $name => $description) {
             DB::table('permiso')->updateOrInsert(['nombre' => $name], [
                 'descripcion' => $description, 'estado' => 1, 'created_at' => now(), 'updated_at' => now(),

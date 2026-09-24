@@ -55,6 +55,7 @@ function cargarSesion() {
 /** Un permiso vacío/null significa "cualquier usuario autenticado". */
 function tienePermiso(nombrePermiso) {
     if (!nombrePermiso) return true;
+    if (Array.isArray(nombrePermiso)) return nombrePermiso.some(nombre => state.permisos.includes(nombre));
     return state.permisos.includes(nombrePermiso);
 }
 

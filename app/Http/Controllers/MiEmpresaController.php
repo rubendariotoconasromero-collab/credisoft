@@ -18,13 +18,13 @@ class MiEmpresaController extends Controller
     {
         // Validar los datos básicos
         $validatedData = $request->validate([
-            'id_mi_empresa' => 'required|integer',
+            'id_mi_empresa' => 'required|integer|exists:mi_empresa,id',
             'nombre' => 'required|string',
             'nit' => 'required|string',
             'direccion' => 'required|string',
             'email' => 'required|email',
             'telefono' => 'required|string',
-            'imagen' => 'nullable|max:2048',
+            'imagen' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
         ]);
 
         // Obtener la empresa actual
@@ -41,18 +41,11 @@ class MiEmpresaController extends Controller
             if ($request->hasFile('imagen') && $request->file('imagen')->isValid()) {
                 $imagen = $request->file('imagen');
                 
-                // Eliminar la imagen anterior si existe
-                if ($empresa->logo) {
-                    $rutaImagenAnterior = public_path('img/' . $empresa->logo);
-                    if (file_exists($rutaImagenAnterior)) {
-                        unlink($rutaImagenAnterior);
-                    }
-                }
                 
                 // Generar nombre único y guardar la nueva imagen
-                $extension = $imagen->getClientOriginalExtension();
-                $nombreArchivo = 'empresa/' . uniqid() . '.' . $extension;
-                $imagen->move(public_path('img/empresa'), $nombreArchivo);
+                $extension = $imagen->extension();
+                $nombreArchivo = 'empresa/' . (string) \Illuminate\Support\Str::uuid() . '.' . $extension;
+                $imagen->move(public_path('img/empresa'), basename($nombreArchivo));
             }
         }
 
@@ -77,6 +70,11 @@ class MiEmpresaController extends Controller
             DB::table('mi_empresa')
                 ->where('id', $request->id_mi_empresa)
                 ->update($dataToUpdate);
+            if ($nombreArchivo && $empresa->logo && str_starts_with($empresa->logo, 'empresa/')
+                && dirname($empresa->logo) === 'empresa') {
+                $previous = public_path('img/'.$empresa->logo);
+                if (is_file($previous) && !is_link($previous)) @unlink($previous);
+            }
                 
             return back()->with('success', 'Empresa actualizada correctamente');
         } catch (\Exception $e) {

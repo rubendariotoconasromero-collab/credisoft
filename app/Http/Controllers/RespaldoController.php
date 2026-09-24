@@ -13,16 +13,24 @@ class RespaldoController extends Controller
 
     public function guardarRespaldo(Request $request)
     {
-        
+        $request->validate([
+            'imagen' => 'required|image|mimes:jpg,jpeg,png,gif|max:2048',
+            'id_solicitud' => 'required|integer|exists:solicitud,id',
+            'id_respaldo' => 'nullable|integer|exists:respaldo,id',
+            'descripcion' => 'required|string|max:2000',
+        ]);
+        if ($request->filled('id_respaldo')) {
+            abort_unless(DB::table('respaldo')->where('id', $request->id_respaldo)->where('id_solicitud', $request->id_solicitud)->exists(), 422, 'El respaldo no pertenece a la solicitud.');
+        }
 
         DB::beginTransaction();
         
         try {
             $imagen = $request->imagen;
-            $nombreArchivo = 'respaldos/' . uniqid() . '.' . $imagen->getClientOriginalExtension();
+            $nombreArchivo = 'respaldos/' . (string) \Illuminate\Support\Str::uuid() . '.' . $imagen->extension();
             //dd($imagen);
             // Mover la imagen al directorio correspondiente
-            $imagen->move(public_path('img/respaldos'), $nombreArchivo);
+            $imagen->move(\App\Services\PrivateImages::directory('respaldos'), basename($nombreArchivo));
 
             // Datos comunes para insertar/actualizar
             $respaldoData = [
@@ -34,20 +42,22 @@ class RespaldoController extends Controller
             // Si es una actualización
             if ($request->filled('id_respaldo')) {
                 // Obtener el respaldo actual para eliminar su imagen anterior
-                $respaldoActual = DB::table('respaldo')
+                $respaldoActual = \App\Services\CarteraAccess::query('respaldo')
                                     ->where('id', $request->id_respaldo)
                                     ->first();
                 
                 // Eliminar la imagen anterior si existe
-                if ($respaldoActual && $respaldoActual->imagen) {
-                    $rutaImagenAnterior = public_path('img/' . $respaldoActual->imagen);
+                if ($respaldoActual && $respaldoActual->imagen && dirname($respaldoActual->imagen) === 'respaldos') {
+                    $rutaImagenAnterior = \App\Services\PrivateImages::path('respaldos', $respaldoActual->imagen);
                     if (file_exists($rutaImagenAnterior)) {
-                        unlink($rutaImagenAnterior);
+                        DB::afterCommit(function () use ($rutaImagenAnterior) {
+                            if (is_file($rutaImagenAnterior) && !is_link($rutaImagenAnterior)) @unlink($rutaImagenAnterior);
+                        });
                     }
                 }
 
                 // Actualizar el respaldo existente
-                DB::table('respaldo')
+                \App\Services\CarteraAccess::query('respaldo')
                     ->where('id', $request->id_respaldo)
                     ->update($respaldoData);
 
@@ -57,12 +67,12 @@ class RespaldoController extends Controller
                 $respaldoData['id_solicitud'] = $request->id_solicitud;
                 $respaldoData['created_at'] = now();
                 
-                $respaldoId = DB::table('respaldo')
+                $respaldoId = \App\Services\CarteraAccess::query('respaldo')
                                 ->insertGetId($respaldoData);
             }
 
             // Obtener los datos completos del respaldo
-            $respaldo = DB::table('respaldo')
+            $respaldo = \App\Services\CarteraAccess::query('respaldo')
                         ->where('id', $respaldoId)
                         ->first();
 
@@ -82,8 +92,8 @@ class RespaldoController extends Controller
             DB::rollback();
             
             // Eliminar la imagen recién subida si hubo error
-            if (isset($nombreArchivo) && file_exists(public_path('img/' . $nombreArchivo))) {
-                unlink(public_path('img/' . $nombreArchivo));
+            if (isset($nombreArchivo) && file_exists(\App\Services\PrivateImages::path('respaldos', $nombreArchivo))) {
+                unlink(\App\Services\PrivateImages::path('respaldos', $nombreArchivo));
             }
 
             return response()->json([
@@ -95,13 +105,13 @@ class RespaldoController extends Controller
 
     public function getRespaldos(Request $request)
     {
-        $respaldos = DB::table('respaldo')
+        $respaldos = \App\Services\CarteraAccess::query('respaldo')
             ->select('id', 'id_solicitud', 'descripcion')
             ->where('id_solicitud', $request->id_solicitud)
             ->get();
 
         $respaldosWithImages = $respaldos->map(function ($respaldo) {
-            $imagenes = DB::table('imagenes_respaldo')
+            $imagenes = \App\Services\CarteraAccess::query('imagenes_respaldo')
                 ->select('id', 'id_respaldo', 'imagen')
                 ->where('id_respaldo', $respaldo->id)
                 ->get();
@@ -127,12 +137,13 @@ class RespaldoController extends Controller
     }
 
     public function deleteRespaldo(Request $request){
-        DB::table('respaldo')->where('id', $request->id_respaldo)
+        \App\Services\CarteraAccess::query('respaldo')->where('id', $request->id_respaldo)
         ->delete();
     }
 
     public function guardarRespaldosImagenes(Request $request)
     {
+        $createdFiles = [];
         try {
             // Basic input checks
             $respaldosJson = $request->input('respaldos');
@@ -154,29 +165,21 @@ class RespaldoController extends Controller
 
             // Handle deleted respaldos
             if (!empty($deletedRespaldos)) {
-                $imagesToDelete = DB::table('imagenes_respaldo')->whereIn('id_respaldo', $deletedRespaldos)->get();
+                $imagesToDelete = \App\Services\CarteraAccess::query('imagenes_respaldo')->whereIn('id_respaldo', $deletedRespaldos)->get();
                 foreach ($imagesToDelete as $image) {
-                    $filePath = 'public/img/respaldos/' . $image->imagen;
-                    if ($image->imagen !== 'default.png' && Storage::exists($filePath)) {
-                        Storage::delete($filePath);
-                        \Log::info("Deleted image file: {$filePath}");
-                    }
+                    \App\Services\PrivateImages::deleteAfterCommit('respaldos', $image->imagen);
                 }
-                DB::table('imagenes_respaldo')->whereIn('id_respaldo', $deletedRespaldos)->delete();
-                DB::table('respaldo')->whereIn('id', $deletedRespaldos)->delete();
+                \App\Services\CarteraAccess::query('imagenes_respaldo')->whereIn('id_respaldo', $deletedRespaldos)->delete();
+                \App\Services\CarteraAccess::query('respaldo')->whereIn('id', $deletedRespaldos)->delete();
                 \Log::info('Deleted respaldos: ' . implode(', ', $deletedRespaldos));
             }
 
             // Handle deleted images
             if (!empty($deletedImages)) {
-                $imagesToDelete = DB::table('imagenes_respaldo')->whereIn('id', $deletedImages)->get();
+                $imagesToDelete = \App\Services\CarteraAccess::query('imagenes_respaldo')->whereIn('id', $deletedImages)->get();
                 foreach ($imagesToDelete as $image) {
-                    $filePath = 'public/img/respaldos/' . $image->imagen;
-                    if ($image->imagen !== 'default.png' && Storage::exists($filePath)) {
-                        Storage::delete($filePath);
-                        \Log::info("Deleted image file: {$filePath}");
-                    }
-                    DB::table('imagenes_respaldo')->where('id', $image->id)->delete();
+                    \App\Services\PrivateImages::deleteAfterCommit('respaldos', $image->imagen);
+                    \App\Services\CarteraAccess::query('imagenes_respaldo')->where('id', $image->id)->delete();
                 }
                 \Log::info('Deleted images: ' . implode(', ', $deletedImages));
             }
@@ -192,20 +195,20 @@ class RespaldoController extends Controller
                     throw new Exception("Invalid respaldo data at index {$index}");
                 }
 
-                if (!DB::table('solicitud')->where('id', $respaldoData['id_solicitud'])->exists()) {
+                if (!\App\Services\CarteraAccess::query('solicitud')->where('id', $respaldoData['id_solicitud'])->exists()) {
                     throw new Exception("Invalid id_solicitud at index {$index}");
                 }
 
                 $respaldoId = $respaldoData['id'];
-                if ($respaldoId && DB::table('respaldo')->where('id', $respaldoId)->exists()) {
-                    DB::table('respaldo')->where('id', $respaldoId)->update([
+                if ($respaldoId && \App\Services\CarteraAccess::query('respaldo')->where('id', $respaldoId)->exists()) {
+                    \App\Services\CarteraAccess::query('respaldo')->where('id', $respaldoId)->update([
                         'id_solicitud' => $respaldoData['id_solicitud'],
                         'descripcion' => $respaldoData['descripcion'],
                         'updated_at' => now()
                     ]);
                     \Log::info("Updated respaldo ID: {$respaldoId}");
                 } else {
-                    $respaldoId = DB::table('respaldo')->insertGetId([
+                    $respaldoId = \App\Services\CarteraAccess::query('respaldo')->insertGetId([
                         'id_solicitud' => $respaldoData['id_solicitud'],
                         'descripcion' => $respaldoData['descripcion'],
                         'created_at' => now(),
@@ -223,37 +226,38 @@ class RespaldoController extends Controller
                     if (isset($imagenData['file_key']) && $request->hasFile($imagenData['file_key'])) {
                         $file = $request->file($imagenData['file_key']);
                         $mimeType = $file->getMimeType();
-                        $allowedMimes = ['image/jpeg', 'image/png', 'image/jpg'];
+                        $allowedMimes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
 
                         if (!in_array($mimeType, $allowedMimes) || $file->getSize() > 2048 * 1024) {
                             \Log::warning("Invalid image at respaldo {$index}, image {$imgIndex}: MIME={$mimeType}, Size={$file->getSize()}");
                             continue;
                         }
 
-                        $fileName = time() . "_{$index}_{$imgIndex}." . $file->getClientOriginalExtension();
-                        $destinationPath = public_path('img/respaldos');
+                        $fileName = (string) \Illuminate\Support\Str::uuid() . "." . $file->extension();
+                        $destinationPath = \App\Services\PrivateImages::directory('respaldos');
                         if (!file_exists($destinationPath)) {
                             mkdir($destinationPath, 0755, true);
                         }
                         $file->move($destinationPath, $fileName);
+                        $createdFiles[] = $destinationPath.DIRECTORY_SEPARATOR.$fileName;
                         $fullFilePath = 'img/respaldos/' . $fileName;
                         \Log::info("Stored image: {$fullFilePath}");
-                    } else if ($imageId && ($existingImage = DB::table('imagenes_respaldo')->where('id', $imageId)->first())) {
+                    } else if ($imageId && ($existingImage = \App\Services\CarteraAccess::query('imagenes_respaldo')->where('id', $imageId)->first())) {
                         $fileName = $existingImage->imagen;
                         $imagenes[] = $existingImage;
                         \Log::info("Kept existing image ID: {$existingImage->id}");
                         continue;
                     }
 
-                    if ($imageId && DB::table('imagenes_respaldo')->where('id', $imageId)->exists()) {
-                        DB::table('imagenes_respaldo')->where('id', $imageId)->update([
+                    if ($imageId && \App\Services\CarteraAccess::query('imagenes_respaldo')->where('id', $imageId)->exists()) {
+                        \App\Services\CarteraAccess::query('imagenes_respaldo')->where('id', $imageId)->update([
                             'id_respaldo' => $respaldoId,
                             'imagen' => $fileName,
                             'updated_at' => now()
                         ]);
                         \Log::info("Updated image ID: {$imageId}");
                     } else {
-                        $imageId = DB::table('imagenes_respaldo')->insertGetId([
+                        $imageId = \App\Services\CarteraAccess::query('imagenes_respaldo')->insertGetId([
                             'id_respaldo' => $respaldoId,
                             'imagen' => $fileName,
                             'created_at' => now(),
@@ -303,6 +307,7 @@ class RespaldoController extends Controller
             ]);
         } catch (Exception $e) {
             DB::rollBack();
+            foreach ($createdFiles as $path) { if (is_file($path)) @unlink($path); }
             \Log::error('Error saving respaldos: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
 
             return response()->json([

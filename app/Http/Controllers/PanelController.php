@@ -59,11 +59,11 @@ class PanelController extends Controller
             $data['fecha_apertura'] = $cajaAbierta->fechahora_apertura;
             $data['saldo_actual'] = round($this->calcularSaldoCaja($idCaja), 2);
 
-            $data['cobros_hoy_cantidad'] = (int) DB::table('pago')
+            $data['cobros_hoy_cantidad'] = (int) \App\Services\CarteraAccess::query('pago')
                 ->where('id_caja', $idCaja)->where('estado', 1)
                 ->whereDate('fecha_pago', $hoy)->count();
 
-            $data['cobros_hoy_monto'] = round((float) (DB::table('pago')
+            $data['cobros_hoy_monto'] = round((float) (\App\Services\CarteraAccess::query('pago')
                 ->where('id_caja', $idCaja)->where('estado', 1)
                 ->whereDate('fecha_pago', $hoy)->sum('monto_pago') ?? 0), 2);
 
@@ -85,7 +85,7 @@ class PanelController extends Controller
         }
 
         // Informativo, independiente de si hay caja abierta: volumen de trabajo del día.
-        $data['cuotas_vencen_hoy'] = (int) DB::table('cuota')
+        $data['cuotas_vencen_hoy'] = (int) \App\Services\CarteraAccess::query('cuota')
             ->whereIn('estado', [1, 3])
             ->whereDate('fecha', $hoy)
             ->count();
@@ -104,25 +104,25 @@ class PanelController extends Controller
         $hoy = now()->startOfDay();
         $limiteProximos = now()->addDays(7)->endOfDay();
 
-        $misClientes = (int) DB::table('solicitud')
+        $misClientes = (int) \App\Services\CarteraAccess::query('solicitud')
             ->where('id_usuario', $idUsuario)
             ->distinct()
             ->count('id_cliente');
 
-        $creditosActivos = (int) DB::table('solicitud')
+        $creditosActivos = (int) \App\Services\CarteraAccess::query('solicitud')
             ->join('plan_pago', 'plan_pago.id_solicitud', '=', 'solicitud.id')
             ->where('solicitud.id_usuario', $idUsuario)
             ->where('plan_pago.estado', 1)
             ->count();
 
-        $saldoCarteraPendiente = round((float) (DB::table('solicitud')
+        $saldoCarteraPendiente = round((float) (\App\Services\CarteraAccess::query('solicitud')
             ->join('plan_pago', 'plan_pago.id_solicitud', '=', 'solicitud.id')
             ->where('solicitud.id_usuario', $idUsuario)
             ->where('plan_pago.estado', 1)
             ->sum('plan_pago.saldo_pendiente') ?? 0), 2);
 
         // Solicitudes activas del oficial que todavía no generaron un plan de pago.
-        $solicitudesPendientes = (int) DB::table('solicitud')
+        $solicitudesPendientes = (int) \App\Services\CarteraAccess::query('solicitud')
             ->where('id_usuario', $idUsuario)
             ->where('estado', 1)
             ->whereNotExists(function ($q) {
@@ -132,7 +132,7 @@ class PanelController extends Controller
             })
             ->count();
 
-        $creditosEnMora = (int) DB::table('solicitud')
+        $creditosEnMora = (int) \App\Services\CarteraAccess::query('solicitud')
             ->join('plan_pago', 'plan_pago.id_solicitud', '=', 'solicitud.id')
             ->join('cuota', 'cuota.id_plan_pago', '=', 'plan_pago.id')
             ->where('solicitud.id_usuario', $idUsuario)
@@ -141,7 +141,7 @@ class PanelController extends Controller
             ->distinct()
             ->count('solicitud.id');
 
-        $montoEnMora = round((float) (DB::table('solicitud')
+        $montoEnMora = round((float) (\App\Services\CarteraAccess::query('solicitud')
             ->join('plan_pago', 'plan_pago.id_solicitud', '=', 'solicitud.id')
             ->join('cuota', 'cuota.id_plan_pago', '=', 'plan_pago.id')
             ->where('solicitud.id_usuario', $idUsuario)
@@ -149,7 +149,7 @@ class PanelController extends Controller
             ->whereDate('cuota.fecha', '<', $hoy)
             ->sum(DB::raw('cuota.total - (cuota.capital_pagado + cuota.interes_pagado)')) ?? 0), 2);
 
-        $proximosVencimientos = (int) DB::table('solicitud')
+        $proximosVencimientos = (int) \App\Services\CarteraAccess::query('solicitud')
             ->join('plan_pago', 'plan_pago.id_solicitud', '=', 'solicitud.id')
             ->join('cuota', 'cuota.id_plan_pago', '=', 'plan_pago.id')
             ->where('solicitud.id_usuario', $idUsuario)
@@ -157,7 +157,7 @@ class PanelController extends Controller
             ->whereBetween('cuota.fecha', [$hoy, $limiteProximos])
             ->count();
 
-        $ultimasSolicitudes = DB::table('solicitud')
+        $ultimasSolicitudes = \App\Services\CarteraAccess::query('solicitud')
             ->join('cliente', 'cliente.id', '=', 'solicitud.id_cliente')
             ->where('solicitud.id_usuario', $idUsuario)
             ->orderBy('solicitud.created_at', 'desc')

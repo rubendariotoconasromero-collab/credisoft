@@ -36,9 +36,8 @@ use App\Http\Controllers\PanelController;
 | - Las ACCIONES DE ESCRITURA (crear/editar/anular/activar/desactivar) siguen
 |   protegidas server-side con 'permiso:<nombre>' — esa es la seguridad real,
 |   independiente de lo que decida mostrar el router en el cliente.
-| - Los endpoints de LECTURA (get_x, listados, reportes) quedan bajo 'auth'
-|   (nadie sin sesión los consume). Muchos son compartidos entre módulos, por
-|   eso no se restringen individualmente por permiso.
+| - Las lecturas y exportaciones también exigen permiso en el servidor.
+|   Los catálogos compartidos declaran explícitamente permisos alternativos.
 | - Las acciones que cambian estado usan POST (no GET).
 |
 */
@@ -47,13 +46,13 @@ use App\Http\Controllers\PanelController;
 //  RUTAS PÚBLICAS (sin sesión)
 // ==========================================================================
 Route::get('/', 'App\Http\Controllers\LoginController@irLogin')->name('ir_login');
-Route::post('/login_process', 'App\Http\Controllers\LoginController@loginProcess');
+Route::post('/login_process', 'App\Http\Controllers\LoginController@loginProcess')->middleware('throttle:login');
 
 
 // ==========================================================================
 //  RUTAS AUTENTICADAS (requieren sesión)
 // ==========================================================================
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'auth.session', \App\Http\Middleware\OwnCashBox::class, \App\Http\Middleware\AssignedPortfolio::class, \App\Http\Middleware\ValidateImageUploads::class, \App\Http\Middleware\AttachmentOwnership::class])->group(function () {
 
     // /administracion es el destino post-login (redirect()->intended) y
     // sirve el shell SPA. Accesible a cualquier usuario autenticado (el
@@ -65,22 +64,24 @@ Route::middleware('auth')->group(function () {
     // Bootstrap de sesión para el cliente SPA (Vue Router): datos del
     // usuario + permisos de su rol, para armar el menú y los guards.
     Route::get('/me', [SesionController::class, 'me']);
+    Route::get('/img/{category}/{filename}', [\App\Http\Controllers\PrivateImageController::class, 'show'])
+        ->where('category', 'cliente|codeudor|pago|garantia|garantias|respaldos');
 
     // permisos (lectura, usados por el módulo de roles)
-    Route::get('/get_permisos', 'App\Http\Controllers\PermisoController@getPermisos');
-    Route::get('/get_permisos_rol', 'App\Http\Controllers\PermisoController@getPermisoRol');
+    Route::get('/get_permisos', 'App\Http\Controllers\PermisoController@getPermisos')->middleware('permiso:roles');
+    Route::get('/get_permisos_rol', 'App\Http\Controllers\PermisoController@getPermisoRol')->middleware('permiso:roles');
 
     // ==================== ROLES  [permiso: roles] ====================
-    Route::get('/get_roles', 'App\Http\Controllers\RolController@getRoles');
-    Route::get('/get_roles_usuarios', 'App\Http\Controllers\RolController@getRolesUsuarios');
+    Route::get('/get_roles', 'App\Http\Controllers\RolController@getRoles')->middleware('permiso:roles');
+    Route::get('/get_roles_usuarios', 'App\Http\Controllers\RolController@getRolesUsuarios')->middleware('permiso:usuarios');
     Route::post('/activar_rol', 'App\Http\Controllers\RolController@activar')->middleware('permiso:roles');
     Route::post('/desactivar_rol', 'App\Http\Controllers\RolController@desactivar')->middleware('permiso:roles');
     Route::post('/save_rol', 'App\Http\Controllers\RolController@save')->middleware('permiso:roles');
     Route::post('/modify_rol', 'App\Http\Controllers\RolController@modify')->middleware('permiso:roles');
 
     // ==================== USUARIOS  [permiso: usuarios] ====================
-    Route::get('/get_usuarios', 'App\Http\Controllers\UsuarioController@getUsuarios');
-    Route::get('/get_usuarios_sin', 'App\Http\Controllers\UsuarioController@getUsuariosSin');
+    Route::get('/get_usuarios', 'App\Http\Controllers\UsuarioController@getUsuarios')->middleware('permiso:usuarios');
+    Route::get('/get_usuarios_sin', 'App\Http\Controllers\UsuarioController@getUsuariosSin')->middleware('permiso:usuarios,solicitudprestamos,planpagos,reportes');
     Route::post('/activar_usuario', 'App\Http\Controllers\UsuarioController@activar')->middleware('permiso:usuarios');
     Route::post('/desactivar_usuario', 'App\Http\Controllers\UsuarioController@desactivar')->middleware('permiso:usuarios');
     Route::post('/save_usuario', 'App\Http\Controllers\UsuarioController@save')->middleware('permiso:usuarios');
@@ -91,266 +92,278 @@ Route::middleware('auth')->group(function () {
     Route::get('/get_mi_empresa', 'App\Http\Controllers\MiEmpresaController@getMiEmpresa');
 
     // ==================== CLIENTE  [permiso: cliente] ====================
-    Route::get('/get_clientes', 'App\Http\Controllers\ClienteController@getClientes');
-    Route::get('/get_clientes_paginate', 'App\Http\Controllers\ClienteController@getClientesPaginate');
-    Route::get('/get_clientes_sin', 'App\Http\Controllers\ClienteController@getClientesSin');
-    Route::get('/get_direcciones_telefono', 'App\Http\Controllers\ClienteController@getDireccionesTelefonos');
+    Route::get('/get_clientes', 'App\Http\Controllers\ClienteController@getClientes')->middleware('permiso:cliente');
+    Route::get('/get_clientes_paginate', 'App\Http\Controllers\ClienteController@getClientesPaginate')->middleware('permiso:cliente');
+    Route::get('/get_clientes_sin', 'App\Http\Controllers\ClienteController@getClientesSin')->middleware('permiso:cliente,solicitudprestamos,planpagos,reportes');
+    Route::get('/get_direcciones_telefono', 'App\Http\Controllers\ClienteController@getDireccionesTelefonos')->middleware('permiso:cliente');
     Route::post('/activar_cliente', 'App\Http\Controllers\ClienteController@activar')->middleware('permiso:cliente');
     Route::post('/desactivar_cliente', 'App\Http\Controllers\ClienteController@desactivar')->middleware('permiso:cliente');
     Route::post('/save_cliente', 'App\Http\Controllers\ClienteController@save')->middleware('permiso:cliente');
     Route::post('/modify_cliente', 'App\Http\Controllers\ClienteController@modify')->middleware('permiso:cliente');
-    Route::get('/clientes_pdf', 'App\Http\Controllers\ClienteController@clientesPdf2');
+    Route::get('/clientes_pdf', 'App\Http\Controllers\ClienteController@clientesPdf2')->middleware('permiso:cliente');
     Route::post('/fotoCliente', 'App\Http\Controllers\ClienteController@fotoCliente')->middleware('permiso:cliente');
-    Route::get('/get_creditos_cliente', 'App\Http\Controllers\ClienteController@getCreditosCliente');
-    Route::get('/get_cuotas_planes', 'App\Http\Controllers\ClienteController@getCuotasPlanes');
-    Route::get('/get_asesores', 'App\Http\Controllers\ClienteController@getAsesores');
-    Route::get('/get_cantidad_clientes', 'App\Http\Controllers\ClienteController@getCantidadClientes');
-    Route::get('/cantidades_clientes', 'App\Http\Controllers\ClienteController@cantidadesClientes');
-    Route::get('/cliente/ficha-completa/{id}', [ClienteController::class, 'getFichaCompleta']);
-    Route::get('/cliente/reporte', [ClienteController::class, 'imprimirReporteClientes']);
-    Route::get('/get_cliente_info', [ClienteController::class, 'getClienteInfo']);
+    Route::get('/get_creditos_cliente', 'App\Http\Controllers\ClienteController@getCreditosCliente')->middleware('permiso:cliente');
+    Route::get('/get_cuotas_planes', 'App\Http\Controllers\ClienteController@getCuotasPlanes')->middleware('permiso:cliente');
+    Route::get('/get_asesores', 'App\Http\Controllers\ClienteController@getAsesores')->middleware('permiso:cliente,codeudores,solicitudprestamos,planpagos,reportes,controlcaja');
+    Route::get('/get_cantidad_clientes', 'App\Http\Controllers\ClienteController@getCantidadClientes')->middleware('permiso:cliente,paneladministracion');
+    Route::get('/cantidades_clientes', 'App\Http\Controllers\ClienteController@cantidadesClientes')->middleware('permiso:cliente,paneladministracion');
+    Route::get('/cliente/ficha-completa/{id}', [ClienteController::class, 'getFichaCompleta'])->middleware('permiso:cliente');
+    Route::get('/cliente/reporte', [ClienteController::class, 'imprimirReporteClientes'])->middleware('permiso:cliente');
+    Route::get('/get_cliente_info', [ClienteController::class, 'getClienteInfo'])->middleware('permiso:cliente,solicitudprestamos,planpagos,controlcaja');
 
     // ==================== SOLICITUD  [permiso: solicitudprestamos] ====================
-    Route::get('/get_solicitudes', 'App\Http\Controllers\SolicitudController@getSolicitudes');
-    Route::get('/get_garantias', 'App\Http\Controllers\SolicitudController@getGarantias');
+    Route::get('/get_solicitudes', 'App\Http\Controllers\SolicitudController@getSolicitudes')->middleware('permiso:solicitudprestamos');
+    Route::get('/get_garantias', 'App\Http\Controllers\SolicitudController@getGarantias')->middleware('permiso:solicitudprestamos');
     Route::post('/activar_solicitud', 'App\Http\Controllers\SolicitudController@activarSolicitud')->middleware('permiso:solicitudprestamos');
     Route::post('/desactivar_solicitud', 'App\Http\Controllers\SolicitudController@desactivarSolicitud')->middleware('permiso:solicitudprestamos');
     Route::post('/guardar_observacion', 'App\Http\Controllers\SolicitudController@guardarObservacion')->middleware('permiso:solicitudprestamos');
     Route::post('/save_solicitud', 'App\Http\Controllers\SolicitudController@save')->middleware('permiso:solicitudprestamos');
-    Route::get('/get_solicitud_respaldo', 'App\Http\Controllers\SolicitudController@getSolicitudRespaldo');
+    Route::get('/get_solicitud_respaldo', 'App\Http\Controllers\SolicitudController@getSolicitudRespaldo')->middleware('permiso:solicitudprestamos');
     Route::post('/modify_solicitud', 'App\Http\Controllers\SolicitudController@modify')->middleware('permiso:solicitudprestamos');
     Route::post('/solicitud_garantia_imagenes', 'App\Http\Controllers\SolicitudController@guardarImagenes')->middleware('permiso:solicitudprestamos');
     Route::post('/guardar_imagen', 'App\Http\Controllers\SolicitudController@guardarImagenIndividual')->middleware('permiso:solicitudprestamos');
-    Route::get('/get_imagenes_garantia', 'App\Http\Controllers\SolicitudController@getImagenesGarantia');
+    Route::get('/get_imagenes_garantia', 'App\Http\Controllers\SolicitudController@getImagenesGarantia')->middleware('permiso:solicitudprestamos');
     Route::post('/eliminar_imagen', 'App\Http\Controllers\SolicitudController@eliminarImagen')->middleware('permiso:solicitudprestamos');
-    Route::get('/lista_cuotas_pdf', 'App\Http\Controllers\SolicitudController@ListaCuotasPdf');
+    Route::get('/lista_cuotas_pdf', 'App\Http\Controllers\SolicitudController@ListaCuotasPdf')->middleware('permiso:solicitudprestamos');
     Route::post('/save_planpagos_cuotas', 'App\Http\Controllers\SolicitudController@savePlanPagosCuotas')->middleware('permiso:solicitudprestamos');
-    Route::get('/imprimir_cuotas_simulacion', 'App\Http\Controllers\SolicitudController@imprimirCuotasSimulacion');
-    Route::get('/reporte_hoja_aprobacion', 'App\Http\Controllers\SolicitudController@reporteHojaAprobacion');
-    Route::get('/reporte_hoja_solicitud', 'App\Http\Controllers\SolicitudController@reporteHojaSolicitud');
+    Route::get('/imprimir_cuotas_simulacion', 'App\Http\Controllers\SolicitudController@imprimirCuotasSimulacion')->middleware('permiso:solicitudprestamos');
+    Route::get('/reporte_hoja_aprobacion', 'App\Http\Controllers\SolicitudController@reporteHojaAprobacion')->middleware('permiso:solicitudprestamos');
+    Route::get('/reporte_hoja_solicitud', 'App\Http\Controllers\SolicitudController@reporteHojaSolicitud')->middleware('permiso:solicitudprestamos');
     Route::post('/guardar_garantias_imagenes', 'App\Http\Controllers\SolicitudController@guardarGarantiasImagenes')->middleware('permiso:solicitudprestamos');
     Route::post('/solicitud/registrar-especial', [SolicitudController::class, 'registrarSolicitudEspecial'])->middleware('permiso:solicitudprestamos');
     Route::post('/solicitud/aprobar-reprogramacion-final', [SolicitudController::class, 'aprobarReprogramacionFinal'])->middleware('permiso:solicitudprestamos');
-    Route::get('/reprogramacion/calcular/{id_plan_pago}', [SolicitudController::class, 'calcularMonto']);
-    Route::get('/solicitud/datos-originales/{id_reprogramacion}', [SolicitudController::class, 'obtenerDatosOriginales']);
-    Route::get('/solicitud/detalle-completo/{id_solicitud}', [SolicitudController::class, 'getDetalleCompletoSolicitud']);
-    Route::get('/get_orden_pago_reprogramacion', [SolicitudController::class, 'getOrdenPagoReprogramacion']);
-    Route::get('/listar_cuotas_plan_reprogramacion', 'App\Http\Controllers\SolicitudController@listarCuotasPlanReprogramacion');
+    Route::get('/reprogramacion/calcular/{id_plan_pago}', [SolicitudController::class, 'calcularMonto'])->middleware('permiso:solicitudprestamos');
+    Route::get('/solicitud/datos-originales/{id_reprogramacion}', [SolicitudController::class, 'obtenerDatosOriginales'])->middleware('permiso:solicitudprestamos');
+    Route::get('/solicitud/detalle-completo/{id_solicitud}', [SolicitudController::class, 'getDetalleCompletoSolicitud'])->middleware('permiso:solicitudprestamos');
+    Route::get('/get_orden_pago_reprogramacion', [SolicitudController::class, 'getOrdenPagoReprogramacion'])->middleware('permiso:solicitudprestamos,controlcaja');
+    Route::get('/listar_cuotas_plan_reprogramacion', 'App\Http\Controllers\SolicitudController@listarCuotasPlanReprogramacion')->middleware('permiso:solicitudprestamos,controlcaja');
 
     // ==================== PLAN DE PAGOS  [permiso: planpagos] ====================
-    Route::get('/get_planespago', 'App\Http\Controllers\PlanPagoController@getPlanesPago');
-    Route::get('/get_planespago_caja', 'App\Http\Controllers\PlanPagoController@getPlanesPagoCaja');
-    Route::get('/get_cuotas_plan', 'App\Http\Controllers\PlanPagoController@getCuotasPlan');
+    Route::get('/get_planespago', 'App\Http\Controllers\PlanPagoController@getPlanesPago')->middleware('permiso:planpagos');
+    Route::get('/get_planespago_caja', 'App\Http\Controllers\PlanPagoController@getPlanesPagoCaja')->middleware('permiso:controlcaja');
+    Route::get('/get_cuotas_plan', 'App\Http\Controllers\PlanPagoController@getCuotasPlan')->middleware('permiso:planpagos,controlcaja');
     Route::post('/anular_planpago', 'App\Http\Controllers\PlanPagoController@anularPlanPago')->middleware('permiso:planpagos');
     Route::post('/activar_planpago', 'App\Http\Controllers\PlanPagoController@activarPlanPago')->middleware('permiso:planpagos');
-    Route::get('/consulta_plan_pago_vigente', 'App\Http\Controllers\PlanPagoController@consultarPlanPagoCuotasCanceladas');
-    Route::get('/lista_cuotas_planpago_pdf', 'App\Http\Controllers\PlanPagoController@ListaCuotasPlanPagoPdf');
+    Route::get('/consulta_plan_pago_vigente', 'App\Http\Controllers\PlanPagoController@consultarPlanPagoCuotasCanceladas')->middleware('permiso:planpagos');
+    Route::get('/lista_cuotas_planpago_pdf', 'App\Http\Controllers\PlanPagoController@ListaCuotasPlanPagoPdf')->middleware('permiso:planpagos');
     Route::post('/save_amortizacion', 'App\Http\Controllers\PlanPagoController@saveAmortizacion')->middleware('permiso:planpagos');
     Route::post('/save_amortizacion_nuevo', 'App\Http\Controllers\PlanPagoController@saveAmortizacionNuevo')->middleware('permiso:planpagos');
     Route::post('/liquidar_deuda', 'App\Http\Controllers\PlanPagoController@liquidarDeuda')->middleware('permiso:planpagos');
-    Route::get('/generar_contrato', 'App\Http\Controllers\PlanPagoController@generarContrato');
-    Route::get('/get_cantidad_creditos', 'App\Http\Controllers\PlanPagoController@getCantidadCreditos');
-    Route::get('/get_planes_pago_ligados', 'App\Http\Controllers\PlanPagoController@getPlanesPagoLigados');
-    Route::get('/get_amortizaciones_plan', 'App\Http\Controllers\PlanPagoController@getAmortizacionesPlan');
-    Route::get('/get_amortizaciones', 'App\Http\Controllers\PlanPagoController@getAmortizaciones');
-    Route::get('/listar_amortizaciones_cuotas', 'App\Http\Controllers\PlanPagoController@listarAmortizaciones');
-    Route::get('/listar_amortizaciones_cuotas_planpago', 'App\Http\Controllers\PlanPagoController@listarAmortizacionesPlanPago');
-    Route::get('/get_pagos_cuota', [PlanPagoController::class, 'getPagosPorCuota']);
+    Route::get('/generar_contrato', 'App\Http\Controllers\PlanPagoController@generarContrato')->middleware('permiso:planpagos');
+    Route::get('/get_cantidad_creditos', 'App\Http\Controllers\PlanPagoController@getCantidadCreditos')->middleware('permiso:planpagos,paneladministracion');
+    Route::get('/get_planes_pago_ligados', 'App\Http\Controllers\PlanPagoController@getPlanesPagoLigados')->middleware('permiso:planpagos');
+    Route::get('/get_amortizaciones_plan', 'App\Http\Controllers\PlanPagoController@getAmortizacionesPlan')->middleware('permiso:planpagos');
+    Route::get('/get_amortizaciones', 'App\Http\Controllers\PlanPagoController@getAmortizaciones')->middleware('permiso:planpagos');
+    Route::get('/listar_amortizaciones_cuotas', 'App\Http\Controllers\PlanPagoController@listarAmortizaciones')->middleware('permiso:planpagos,controlcaja');
+    Route::get('/listar_amortizaciones_cuotas_planpago', 'App\Http\Controllers\PlanPagoController@listarAmortizacionesPlanPago')->middleware('permiso:planpagos,controlcaja');
+    Route::get('/get_pagos_cuota', [PlanPagoController::class, 'getPagosPorCuota'])->middleware('permiso:planpagos,controlcaja');
 
     // ==================== PAGOS (cobros en caja)  [permiso: controlcaja] ====================
     Route::post('/save_pago', 'App\Http\Controllers\PagoController@save')->middleware('permiso:controlcaja');
     Route::post('/pagar_cuotas', 'App\Http\Controllers\PagoController@pagarCuotas')->middleware('permiso:controlcaja');
-    Route::get('/get_pago', 'App\Http\Controllers\PagoController@getPago');
+    Route::get('/get_pago', 'App\Http\Controllers\PagoController@getPago')->middleware('permiso:listadopagos,controlcaja');
     Route::post('/anular_pago', 'App\Http\Controllers\PagoController@anularPago')->middleware('permiso:controlcaja');
-    Route::get('/get_pagos', 'App\Http\Controllers\PagoController@getPagos');
-    Route::get('/get_pagos_lista_cuotas', 'App\Http\Controllers\PagoController@getPagosListaCuotas');
-    Route::get('/get_pagos_lista_anulados', 'App\Http\Controllers\PagoController@getPagosListaAnulados');
-    Route::get('/get_pagos_lista_cuotas_total', 'App\Http\Controllers\PagoController@getPagosListaCuotasTotal');
+    Route::get('/get_pagos', 'App\Http\Controllers\PagoController@getPagos')->middleware('permiso:listadopagos,controlcaja');
+    Route::get('/get_pagos_lista_cuotas', 'App\Http\Controllers\PagoController@getPagosListaCuotas')->middleware('permiso:listadopagos,controlcaja');
+    Route::get('/get_pagos_lista_anulados', 'App\Http\Controllers\PagoController@getPagosListaAnulados')->middleware('permiso:listadopagos,controlcaja');
+    Route::get('/get_pagos_lista_cuotas_total', 'App\Http\Controllers\PagoController@getPagosListaCuotasTotal')->middleware('permiso:listadopagos,controlcaja');
     Route::post('/fotoRespaldoPago', 'App\Http\Controllers\PagoController@imagenRespaldo')->middleware('permiso:controlcaja');
-    Route::get('/get_pagos_fecha', 'App\Http\Controllers\PagoController@getPagosFecha');
-    Route::get('/get_pagos_lista_cuotas_fecha', 'App\Http\Controllers\PagoController@getPagosListaCuotasFecha');
-    Route::get('/get_pagos_lista_anulados_fecha', 'App\Http\Controllers\PagoController@getPagosListaAnuladosFecha');
-    Route::get('/get_pagos_lista_cuotas_total_fecha', 'App\Http\Controllers\PagoController@getPagosListaCuotasTotalFecha');
-    Route::get('/imprimir/recibo/{codigo_transaccion}', 'App\Http\Controllers\PagoController@generarTicketPago');
+    Route::get('/get_pagos_fecha', 'App\Http\Controllers\PagoController@getPagosFecha')->middleware('permiso:listadopagos,controlcaja');
+    Route::get('/get_pagos_lista_cuotas_fecha', 'App\Http\Controllers\PagoController@getPagosListaCuotasFecha')->middleware('permiso:listadopagos,controlcaja');
+    Route::get('/get_pagos_lista_anulados_fecha', 'App\Http\Controllers\PagoController@getPagosListaAnuladosFecha')->middleware('permiso:listadopagos,controlcaja');
+    Route::get('/get_pagos_lista_cuotas_total_fecha', 'App\Http\Controllers\PagoController@getPagosListaCuotasTotalFecha')->middleware('permiso:listadopagos,controlcaja');
+    Route::get('/imprimir/recibo/{codigo_transaccion}', 'App\Http\Controllers\PagoController@generarTicketPago')->middleware('permiso:listadopagos,controlcaja');
 
     // ==================== DASHBOARD  [permiso: paneladministracion] ====================
     // Nota: se retiró '/dashboard' (AdministracionController@index) — el método
     // 'index' no existe en ese controlador; era una ruta rota y sin uso.
-    Route::get('/cantidad_clientes', [AdministracionController::class, 'getCantidadClientes']);
-    Route::get('/cantidad_solicitudes', [AdministracionController::class, 'getCantidadSolicitudes']);
-    Route::get('/cantidad_planes', [AdministracionController::class, 'getCantidadPlanes']);
-    Route::get('/cantidad_creditos_x_usuario', [AdministracionController::class, 'getCreditosPorUsuario']);
-    Route::get('/datos_pagos_grafico', [AdministracionController::class, 'getDatosPagos']);
-    Route::get('/estadisticas_prestamos', [AdministracionController::class, 'getEstadisticasPrestamos']);
-    Route::get('/top_clientes', [AdministracionController::class, 'getTopClientes']);
+    Route::get('/cantidad_clientes', [AdministracionController::class, 'getCantidadClientes'])->middleware('permiso:paneladministracion');
+    Route::get('/cantidad_solicitudes', [AdministracionController::class, 'getCantidadSolicitudes'])->middleware('permiso:paneladministracion');
+    Route::get('/cantidad_planes', [AdministracionController::class, 'getCantidadPlanes'])->middleware('permiso:paneladministracion');
+    Route::get('/cantidad_creditos_x_usuario', [AdministracionController::class, 'getCreditosPorUsuario'])->middleware('permiso:paneladministracion');
+    Route::get('/datos_pagos_grafico', [AdministracionController::class, 'getDatosPagos'])->middleware('permiso:paneladministracion');
+    Route::get('/estadisticas_prestamos', [AdministracionController::class, 'getEstadisticasPrestamos'])->middleware('permiso:paneladministracion');
+    Route::get('/top_clientes', [AdministracionController::class, 'getTopClientes'])->middleware('permiso:paneladministracion');
 
     // Paneles de inicio por rol operativo (Cajero / Oficial de Crédito).
     // Accesibles a cualquier autenticado, igual que el resto de este panel.
-    Route::get('/panel/cajero', [PanelController::class, 'getPanelCajero']);
-    Route::get('/panel/oficial', [PanelController::class, 'getPanelOficial']);
+    Route::get('/panel/cajero', [PanelController::class, 'getPanelCajero'])->middleware('permiso:paneladministracion');
+    Route::get('/panel/oficial', [PanelController::class, 'getPanelOficial'])->middleware('permiso:paneladministracion');
 
     // ==================== RESPALDOS (solicitud)  [permiso: solicitudprestamos] ====================
     Route::post('/imagenRespaldo', 'App\Http\Controllers\RespaldoController@guardarRespaldo')->middleware('permiso:solicitudprestamos');
     Route::post('/guardar_respaldos_imagenes', 'App\Http\Controllers\RespaldoController@guardarRespaldosImagenes')->middleware('permiso:solicitudprestamos');
-    Route::get('/get_respaldos', 'App\Http\Controllers\RespaldoController@getRespaldos');
+    Route::get('/get_respaldos', 'App\Http\Controllers\RespaldoController@getRespaldos')->middleware('permiso:solicitudprestamos');
     Route::post('/delete_respaldo', 'App\Http\Controllers\RespaldoController@deleteRespaldo')->middleware('permiso:solicitudprestamos');
 
     // ==================== REPORTES  [permiso: reportes] ====================
-    Route::get('/reporte_listado_clientes', 'App\Http\Controllers\ReporteController@listadoClientes');
-    Route::get('/get_planes_pago_cliente', 'App\Http\Controllers\ReporteController@getPlanesPagoCliente');
-    Route::get('/reporte_planes_pago_cuotas_cliente', 'App\Http\Controllers\ReporteController@reportePlanesCuotasCliente');
-    Route::get('/reporte_general_solicitudes', 'App\Http\Controllers\ReporteController@reporteGeneralSolicitudes');
-    Route::get('/reporte_solicitudes_aprobadas', 'App\Http\Controllers\ReporteController@reporteSolicitudesAprobadas');
-    Route::get('/reporte_solicitudes_por_aprobar', 'App\Http\Controllers\ReporteController@reporteSolicitudesPorAprobar');
-    Route::get('/reporte_solicitudes_anuladas', 'App\Http\Controllers\ReporteController@reporteSolicitudesAnuladas');
-    Route::get('/reporte_solicitudes_por_usuario', 'App\Http\Controllers\ReporteController@reporteSolicitudesPorUsuario');
-    Route::get('/reporte_solicitudes_por_rango', 'App\Http\Controllers\ReporteController@reporteSolicitudesPorRango');
-    Route::get('/reporte_general_planes_pago', 'App\Http\Controllers\ReporteController@reporteGeneralPlanesPago');
-    Route::get('/reporte_planes_pago_en_proceso', 'App\Http\Controllers\ReporteController@reportePlanesPagoEnProceso');
-    Route::get('/reporte_planes_pago_cancelados', 'App\Http\Controllers\ReporteController@reportePlanesPagoCancelados');
-    Route::get('/get_planes_pago_general', 'App\Http\Controllers\ReporteController@getPlanesPagoGeneral');
-    Route::get('/get_planes_pago_general_pdf', 'App\Http\Controllers\ReporteController@getPlanesPagoGeneralPdf');
-    Route::get('/get_solicitudes_general', 'App\Http\Controllers\ReporteController@getSolicitudesGeneral');
-    Route::get('/get_solicitudes_general_pdf', 'App\Http\Controllers\ReporteController@getSolicitudesGeneralPdf');
-    Route::post('/reportes/plan-pago-reprogramado-pdf', [ReporteController::class, 'generarPlanReprogramadoPDF']);
+    Route::get('/reporte_listado_clientes', 'App\Http\Controllers\ReporteController@listadoClientes')->middleware('permiso:reportes');
+    Route::get('/get_planes_pago_cliente', 'App\Http\Controllers\ReporteController@getPlanesPagoCliente')->middleware('permiso:reportes');
+    Route::get('/reporte_planes_pago_cuotas_cliente', 'App\Http\Controllers\ReporteController@reportePlanesCuotasCliente')->middleware('permiso:reportes');
+    Route::get('/reporte_general_solicitudes', 'App\Http\Controllers\ReporteController@reporteGeneralSolicitudes')->middleware('permiso:reportes');
+    Route::get('/reporte_solicitudes_aprobadas', 'App\Http\Controllers\ReporteController@reporteSolicitudesAprobadas')->middleware('permiso:reportes');
+    Route::get('/reporte_solicitudes_por_aprobar', 'App\Http\Controllers\ReporteController@reporteSolicitudesPorAprobar')->middleware('permiso:reportes');
+    Route::get('/reporte_solicitudes_anuladas', 'App\Http\Controllers\ReporteController@reporteSolicitudesAnuladas')->middleware('permiso:reportes');
+    Route::get('/reporte_solicitudes_por_usuario', 'App\Http\Controllers\ReporteController@reporteSolicitudesPorUsuario')->middleware('permiso:reportes');
+    Route::get('/reporte_solicitudes_por_rango', 'App\Http\Controllers\ReporteController@reporteSolicitudesPorRango')->middleware('permiso:reportes');
+    Route::get('/reporte_general_planes_pago', 'App\Http\Controllers\ReporteController@reporteGeneralPlanesPago')->middleware('permiso:reportes');
+    Route::get('/reporte_planes_pago_en_proceso', 'App\Http\Controllers\ReporteController@reportePlanesPagoEnProceso')->middleware('permiso:reportes');
+    Route::get('/reporte_planes_pago_cancelados', 'App\Http\Controllers\ReporteController@reportePlanesPagoCancelados')->middleware('permiso:reportes');
+    Route::get('/get_planes_pago_general', 'App\Http\Controllers\ReporteController@getPlanesPagoGeneral')->middleware('permiso:reportes');
+    Route::get('/get_planes_pago_general_pdf', 'App\Http\Controllers\ReporteController@getPlanesPagoGeneralPdf')->middleware('permiso:reportes');
+    Route::get('/get_solicitudes_general', 'App\Http\Controllers\ReporteController@getSolicitudesGeneral')->middleware('permiso:reportes');
+    Route::get('/get_solicitudes_general_pdf', 'App\Http\Controllers\ReporteController@getSolicitudesGeneralPdf')->middleware('permiso:reportes');
+    Route::post('/reportes/plan-pago-reprogramado-pdf', [ReporteController::class, 'generarPlanReprogramadoPDF'])->middleware('permiso:reportes,planpagos');
 
     // ==================== CAJA  [permiso: controlcaja] ====================
-    Route::get('/get_caja', 'App\Http\Controllers\CajaController@getCaja');
-    Route::get('/get_caja_fecha', 'App\Http\Controllers\CajaController@getCajaFecha');
+    Route::get('/get_caja', 'App\Http\Controllers\CajaController@getCaja')->middleware('permiso:controlcaja,consultasfinancieras');
+    Route::get('/get_caja_fecha', 'App\Http\Controllers\CajaController@getCajaFecha')->middleware('permiso:controlcaja,consultasfinancieras');
     Route::post('/caja/aperturar', 'App\Http\Controllers\CajaController@save')->middleware('permiso:controlcaja');
     Route::post('/close_caja', 'App\Http\Controllers\CajaController@closeCaja')->middleware('permiso:controlcaja');
-    Route::get('/caja_abierta', 'App\Http\Controllers\CajaController@cajaAbierta');
-    Route::get('/get_pagos_caja', 'App\Http\Controllers\CajaController@getPagos');
-    Route::get('/get_pagos_caja_amortizaciones', 'App\Http\Controllers\CajaController@getPagosAmortizaciones');
-    Route::get('/exportar_pagos_pdf', 'App\Http\Controllers\CajaController@exportarPagosCaja');
-    Route::get('/exportar_pagos_amortizacion_pdf', 'App\Http\Controllers\CajaController@exportarPagosCajaAmortizacion');
-    Route::get('/exportar_ingresos_corrientes_pdf', 'App\Http\Controllers\CajaController@exportarIngresosCorrientesCaja');
-    Route::get('/exportar_gastos_corrientes_pdf', 'App\Http\Controllers\CajaController@exportarGastosCorrientesCaja');
-    Route::get('/get_planes_pago_sin_desembolso', 'App\Http\Controllers\CajaController@getPlanesPagoSinDesembolsar');
-    Route::get('/get_planes_pago_sin_pago_adm', 'App\Http\Controllers\CajaController@getPlanesPagoSinPagoAdm');
+    Route::get('/caja/resumen-financiero', 'App\Http\Controllers\CajaController@resumenFinanciero')->middleware('permiso:controlcaja,boveda');
+    Route::get('/caja_abierta', 'App\Http\Controllers\CajaController@cajaAbierta')->middleware('permiso:controlcaja,consultasfinancieras');
+    Route::get('/get_pagos_caja', 'App\Http\Controllers\CajaController@getPagos')->middleware('permiso:controlcaja,consultasfinancieras');
+    Route::get('/get_pagos_caja_amortizaciones', 'App\Http\Controllers\CajaController@getPagosAmortizaciones')->middleware('permiso:controlcaja,consultasfinancieras');
+    Route::get('/exportar_pagos_pdf', 'App\Http\Controllers\CajaController@exportarPagosCaja')->middleware('permiso:controlcaja,consultasfinancieras');
+    Route::get('/exportar_pagos_amortizacion_pdf', 'App\Http\Controllers\CajaController@exportarPagosCajaAmortizacion')->middleware('permiso:controlcaja,consultasfinancieras');
+    Route::get('/exportar_ingresos_corrientes_pdf', 'App\Http\Controllers\CajaController@exportarIngresosCorrientesCaja')->middleware('permiso:controlcaja,consultasfinancieras');
+    Route::get('/exportar_gastos_corrientes_pdf', 'App\Http\Controllers\CajaController@exportarGastosCorrientesCaja')->middleware('permiso:controlcaja,consultasfinancieras');
+    Route::get('/get_planes_pago_sin_desembolso', 'App\Http\Controllers\CajaController@getPlanesPagoSinDesembolsar')->middleware('permiso:controlcaja,consultasfinancieras');
+    Route::get('/get_planes_pago_sin_pago_adm', 'App\Http\Controllers\CajaController@getPlanesPagoSinPagoAdm')->middleware('permiso:controlcaja,consultasfinancieras');
     Route::post('/actualizar_desembolso', 'App\Http\Controllers\CajaController@actualizarDesembolso')->middleware('permiso:controlcaja');
     Route::post('/guardar_pago_adm', 'App\Http\Controllers\CajaController@guardarPagoAdministrativo')->middleware('permiso:controlcaja');
-    Route::get('/reporte_cajas_fecha', 'App\Http\Controllers\CajaController@reporteCajasFecha');
-    Route::get('/get_desembolsos', 'App\Http\Controllers\CajaController@getDesembolsos');
-    Route::get('/exportar_desembolsos_caja_pdf', 'App\Http\Controllers\CajaController@exportarDesembolsosCaja');
-    Route::get('/generar_comprobante_cliente', 'App\Http\Controllers\CajaController@generarComprobanteCliente');
-    Route::get('/get_comprobante_cliente_data', 'App\Http\Controllers\CajaController@getComprobanteClienteData');
-    Route::get('/lista_cuotas_pdf_caja', 'App\Http\Controllers\CajaController@ListaCuotasPdfCaja');
-    Route::get('/caja/get-ordenes-reprogramacion', [CajaController::class, 'getOrdenesReprogramacion']);
-    Route::get('/verificar-boveda', [CajaController::class, 'verificarBoveda']);
-    Route::get('/caja/saldo-actual', [CajaController::class, 'getSaldoCajaActual']);
-    Route::get('/caja/movimientos/listado', [CajaMovimientosController::class, 'getListado']);
-    Route::get('/caja/movimientos/reporte-pdf', [CajaMovimientosController::class, 'generarReporteLista']);
+    Route::get('/reporte_cajas_fecha', 'App\Http\Controllers\CajaController@reporteCajasFecha')->middleware('permiso:controlcaja,consultasfinancieras');
+    Route::get('/get_desembolsos', 'App\Http\Controllers\CajaController@getDesembolsos')->middleware('permiso:controlcaja,consultasfinancieras');
+    Route::get('/exportar_desembolsos_caja_pdf', 'App\Http\Controllers\CajaController@exportarDesembolsosCaja')->middleware('permiso:controlcaja,consultasfinancieras');
+    Route::get('/generar_comprobante_cliente', 'App\Http\Controllers\CajaController@generarComprobanteCliente')->middleware('permiso:controlcaja,consultasfinancieras');
+    Route::get('/get_comprobante_cliente_data', 'App\Http\Controllers\CajaController@getComprobanteClienteData')->middleware('permiso:controlcaja,consultasfinancieras');
+    Route::get('/lista_cuotas_pdf_caja', 'App\Http\Controllers\CajaController@ListaCuotasPdfCaja')->middleware('permiso:controlcaja,consultasfinancieras');
+    Route::get('/caja/get-ordenes-reprogramacion', [CajaController::class, 'getOrdenesReprogramacion'])->middleware('permiso:controlcaja,consultasfinancieras');
+    Route::get('/verificar-boveda', [CajaController::class, 'verificarBoveda'])->middleware('permiso:controlcaja,consultasfinancieras');
+    Route::get('/caja/saldo-actual', [CajaController::class, 'getSaldoCajaActual'])->middleware('permiso:controlcaja,consultasfinancieras');
+    Route::get('/caja/movimientos/listado', [CajaMovimientosController::class, 'getListado'])->middleware('permiso:controlcaja,consultasfinancieras');
+    Route::get('/caja/movimientos/reporte-pdf', [CajaMovimientosController::class, 'generarReporteLista'])->middleware('permiso:controlcaja,consultasfinancieras');
 
     // caja - submenús de historial  [permiso: controlcaja]
-    Route::get('/historial_desembolsos_pagos_listado', 'App\Http\Controllers\CajaController@historialDesembolsosPagosListado');
+    Route::get('/historial_desembolsos_pagos_listado', 'App\Http\Controllers\CajaController@historialDesembolsosPagosListado')->middleware('permiso:controlcaja,consultasfinancieras');
     Route::post('/anular_desembolso', 'App\Http\Controllers\CajaController@anularDesembolso')->middleware('permiso:controlcaja');
-    Route::get('/historial_ingresos_listado', 'App\Http\Controllers\IngresoController@historialIngresosListado');
-    Route::get('/historial_ingresos_listado_caja', 'App\Http\Controllers\IngresoController@historialIngresosListadoCaja');
+    Route::get('/historial_ingresos_listado', 'App\Http\Controllers\IngresoController@historialIngresosListado')->middleware('permiso:controlcaja,consultasfinancieras');
+    Route::get('/historial_ingresos_listado_caja', 'App\Http\Controllers\IngresoController@historialIngresosListadoCaja')->middleware('permiso:controlcaja,consultasfinancieras');
     Route::post('/anular_ingreso', 'App\Http\Controllers\IngresoController@anularIngreso')->middleware('permiso:controlcaja');
-    Route::get('/historial_gastos_listado', 'App\Http\Controllers\GastoController@historialGastosListado');
-    Route::get('/historial_egresos_listado_caja', 'App\Http\Controllers\GastoController@historialEgresosListadoCaja');
+    Route::get('/historial_gastos_listado', 'App\Http\Controllers\GastoController@historialGastosListado')->middleware('permiso:controlcaja,consultasfinancieras');
+    Route::get('/historial_egresos_listado_caja', 'App\Http\Controllers\GastoController@historialEgresosListadoCaja')->middleware('permiso:controlcaja,consultasfinancieras');
     Route::post('/anular_gasto', 'App\Http\Controllers\GastoController@anularGasto')->middleware('permiso:controlcaja');
-    Route::get('/movimientos_caja', 'App\Http\Controllers\CajaController@getMovimientosCaja');
+    Route::get('/movimientos_caja', 'App\Http\Controllers\CajaController@getMovimientosCaja')->middleware('permiso:controlcaja,consultasfinancieras');
 
     // gasto / ingreso corrientes  [permiso: controlcaja]
     Route::post('/save_gasto', 'App\Http\Controllers\GastoController@save')->middleware('permiso:controlcaja');
-    Route::get('/get_gastos_corrientes', 'App\Http\Controllers\GastoController@getGastosCorrientes');
+    Route::get('/get_gastos_corrientes', 'App\Http\Controllers\GastoController@getGastosCorrientes')->middleware('permiso:controlcaja,consultasfinancieras');
     Route::post('/save_ingreso', 'App\Http\Controllers\IngresoController@save')->middleware('permiso:controlcaja');
-    Route::get('/get_ingresos_corrientes', 'App\Http\Controllers\IngresoController@getIngresosCorrientes');
+    Route::get('/get_ingresos_corrientes', 'App\Http\Controllers\IngresoController@getIngresosCorrientes')->middleware('permiso:controlcaja,consultasfinancieras');
 
     // Historial de pagos (anulación)  [permiso: controlcaja]
     Route::post('/pagos/anular/{id}', [HistorialPagosController::class, 'anular'])->middleware('permiso:controlcaja');
-    Route::get('/historial-pagos/detalles/{codigo}', [HistorialPagosController::class, 'show']);
+    Route::get('/historial-pagos/detalles/{codigo}', [HistorialPagosController::class, 'show'])->middleware('permiso:listadopagos,controlcaja');
+    Route::get('/historial-pagos', [HistorialPagosController::class, 'index'])->middleware('permiso:listadopagos,controlcaja');
+    Route::post('/pagos/anular-transaccion', [\App\Http\Controllers\FinancialOperationController::class, 'reverse'])->middleware('permiso:controlcaja');
+    Route::get('/operaciones/{codigo}/detalle', [\App\Http\Controllers\FinancialOperationController::class, 'detail'])->middleware('permiso:controlcaja,boveda,listadopagos');
+    Route::get('/operaciones/{codigo}/recibo', [\App\Http\Controllers\FinancialOperationController::class, 'receipt'])->middleware('permiso:controlcaja,boveda,listadopagos');
+    Route::post('/operaciones/{codigo}/comprobante', [\App\Http\Controllers\FinancialOperationController::class, 'attach'])->middleware('permiso:controlcaja');
+    Route::get('/operaciones/{codigo}/comprobante/{indice}', [\App\Http\Controllers\FinancialOperationController::class, 'proof'])->middleware('permiso:controlcaja,boveda,listadopagos');
+    Route::get('/historial_ingresos_listado_general', 'App\Http\Controllers\IngresoController@historialIngresosListado')->middleware('permiso:controlcaja');
+    Route::get('/historial_gastos_listado_general', 'App\Http\Controllers\GastoController@historialGastosListado')->middleware('permiso:controlcaja');
+    Route::post('/anular_ingreso_caja', 'App\Http\Controllers\IngresoController@anularIngreso')->middleware('permiso:controlcaja');
+    Route::post('/anular_egreso_caja', 'App\Http\Controllers\GastoController@anularGasto')->middleware('permiso:controlcaja');
 
     // ==================== ESTADO RESULTADOS  [permiso: consultasfinancieras] ====================
-    Route::get('/get_pagos_administrativos', 'App\Http\Controllers\EstadoResultadosController@getPagosAdministrativos');
-    Route::get('/get_monto_intereses', 'App\Http\Controllers\EstadoResultadosController@getMontoIntereses');
-    Route::get('/get_monto_multas', 'App\Http\Controllers\EstadoResultadosController@getMontoMultas');
-    Route::get('/get_monto_otros_ingresos', 'App\Http\Controllers\EstadoResultadosController@getMontoOtrosIngresos');
-    Route::get('/get_monto_total_egresos', 'App\Http\Controllers\EstadoResultadosController@getMontoTotalEgresos');
+    Route::get('/get_pagos_administrativos', 'App\Http\Controllers\EstadoResultadosController@getPagosAdministrativos')->middleware('permiso:consultasfinancieras');
+    Route::get('/get_monto_intereses', 'App\Http\Controllers\EstadoResultadosController@getMontoIntereses')->middleware('permiso:consultasfinancieras');
+    Route::get('/get_monto_multas', 'App\Http\Controllers\EstadoResultadosController@getMontoMultas')->middleware('permiso:consultasfinancieras');
+    Route::get('/get_monto_otros_ingresos', 'App\Http\Controllers\EstadoResultadosController@getMontoOtrosIngresos')->middleware('permiso:consultasfinancieras');
+    Route::get('/get_monto_total_egresos', 'App\Http\Controllers\EstadoResultadosController@getMontoTotalEgresos')->middleware('permiso:consultasfinancieras');
 
     // ==================== CODEUDORES  [permiso: codeudores] ====================
     Route::post('/save_codeudor', 'App\Http\Controllers\CodeudorController@save')->middleware('permiso:codeudores');
-    Route::get('/get_codeudores', 'App\Http\Controllers\CodeudorController@getCodeudores');
-    Route::get('/get_direcciones_telefono_codeudor', 'App\Http\Controllers\CodeudorController@getDireccionesTelefonos');
+    Route::get('/get_codeudores', 'App\Http\Controllers\CodeudorController@getCodeudores')->middleware('permiso:codeudores');
+    Route::get('/get_direcciones_telefono_codeudor', 'App\Http\Controllers\CodeudorController@getDireccionesTelefonos')->middleware('permiso:codeudores');
     Route::post('/modify_codeudor', 'App\Http\Controllers\CodeudorController@modify')->middleware('permiso:codeudores');
     Route::post('/activar_codeudor', 'App\Http\Controllers\CodeudorController@activar')->middleware('permiso:codeudores');
     Route::post('/desactivar_codeudor', 'App\Http\Controllers\CodeudorController@desactivar')->middleware('permiso:codeudores');
-    Route::get('/codeudores_pdf', 'App\Http\Controllers\CodeudorController@codeudoresPdf2');
+    Route::get('/codeudores_pdf', 'App\Http\Controllers\CodeudorController@codeudoresPdf2')->middleware('permiso:codeudores');
     Route::post('/fotoCodeudor', 'App\Http\Controllers\CodeudorController@fotoCodeudor')->middleware('permiso:codeudores');
-    Route::get('/get_codeudores_sin', 'App\Http\Controllers\CodeudorController@getCodeudoresSin');
-    Route::get('/get_codeudores_solicitud', 'App\Http\Controllers\CodeudorController@getCodeudorSolicitud');
-    Route::get('/get_codeudores_solicitudes', 'App\Http\Controllers\CodeudorController@getCodeudoresSolicitudes');
-    Route::get('/get_actividades', 'App\Http\Controllers\CodeudorController@getActividades');
-    Route::get('/codeudor/reporte', [CodeudorController::class, 'imprimirReporteCodeudores']);
+    Route::get('/get_codeudores_sin', 'App\Http\Controllers\CodeudorController@getCodeudoresSin')->middleware('permiso:codeudores,solicitudprestamos');
+    Route::get('/get_codeudores_solicitud', 'App\Http\Controllers\CodeudorController@getCodeudorSolicitud')->middleware('permiso:codeudores,solicitudprestamos');
+    Route::get('/get_codeudores_solicitudes', 'App\Http\Controllers\CodeudorController@getCodeudoresSolicitudes')->middleware('permiso:codeudores,solicitudprestamos,planpagos');
+    Route::get('/get_actividades', 'App\Http\Controllers\CodeudorController@getActividades')->middleware('permiso:cliente,codeudores');
+    Route::get('/codeudor/reporte', [CodeudorController::class, 'imprimirReporteCodeudores'])->middleware('permiso:codeudores');
 
     // ==================== CONSULTAS FINANCIERAS  [permiso: consultasfinancieras] ====================
-    Route::get('/libro-mayor', [ConsultaFinancieraController::class, 'getLibroMayor']);
-    Route::get('/consulta-financiera/info-credito', [ConsultaFinancieraController::class, 'getInfoCreditoAsociado']);
-    Route::get('/reportes/libro-mayor', [ConsultaFinancieraController::class, 'imprimirLibroMayor']);
-    Route::get('/reportes/ingresos', [ConsultaFinancieraController::class, 'imprimirReporteIngresos']);
-    Route::get('/reportes/egresos', [ConsultaFinancieraController::class, 'imprimirReporteEgresos']);
-    Route::get('/reportes/libro-mayor/excel', [ConsultaFinancieraController::class, 'exportarExcelLibroMayor']);
-    Route::get('/reportes/ingresos/excel', [ConsultaFinancieraController::class, 'exportarExcelIngresos']);
-    Route::get('/reportes/egresos/excel', [ConsultaFinancieraController::class, 'exportarExcelEgresos']);
+    Route::get('/libro-mayor', [ConsultaFinancieraController::class, 'getLibroMayor'])->middleware('permiso:consultasfinancieras');
+    Route::get('/consulta-financiera/info-credito', [ConsultaFinancieraController::class, 'getInfoCreditoAsociado'])->middleware('permiso:consultasfinancieras');
+    Route::get('/reportes/libro-mayor', [ConsultaFinancieraController::class, 'imprimirLibroMayor'])->middleware('permiso:consultasfinancieras');
+    Route::get('/reportes/ingresos', [ConsultaFinancieraController::class, 'imprimirReporteIngresos'])->middleware('permiso:consultasfinancieras');
+    Route::get('/reportes/egresos', [ConsultaFinancieraController::class, 'imprimirReporteEgresos'])->middleware('permiso:consultasfinancieras');
+    Route::get('/reportes/libro-mayor/excel', [ConsultaFinancieraController::class, 'exportarExcelLibroMayor'])->middleware('permiso:consultasfinancieras');
+    Route::get('/reportes/ingresos/excel', [ConsultaFinancieraController::class, 'exportarExcelIngresos'])->middleware('permiso:consultasfinancieras');
+    Route::get('/reportes/egresos/excel', [ConsultaFinancieraController::class, 'exportarExcelEgresos'])->middleware('permiso:consultasfinancieras');
 
     // exporte excels
-    Route::get('/export-planes_pago', 'App\Http\Controllers\ExportController@exportPlanPago');
+    Route::get('/export-planes_pago', 'App\Http\Controllers\ExportController@exportPlanPago')->middleware('permiso:planpagos,reportes');
 
     // ==================== VISTAS REPORTES  [permiso: reportes] ====================
-    Route::get('/get_clientes_rep', 'App\Http\Controllers\VistasReporteController@getClientesRep');
-    Route::get('/get_creditos_rep', 'App\Http\Controllers\VistasReporteController@getCreditosRep');
-    Route::get('/get_creditos_mora_rep', 'App\Http\Controllers\VistasReporteController@getCreditosMoraRep');
-    Route::get('/rep_extracto_credito', 'App\Http\Controllers\VistasReporteController@generarReporteExtracto');
-    Route::get('/get_detalle_credito_extracto', 'App\Http\Controllers\VistasReporteController@getDetalleCreditoExtracto');
+    Route::get('/get_clientes_rep', 'App\Http\Controllers\VistasReporteController@getClientesRep')->middleware('permiso:reportes');
+    Route::get('/get_creditos_rep', 'App\Http\Controllers\VistasReporteController@getCreditosRep')->middleware('permiso:reportes');
+    Route::get('/get_creditos_mora_rep', 'App\Http\Controllers\VistasReporteController@getCreditosMoraRep')->middleware('permiso:reportes');
+    Route::get('/rep_extracto_credito', 'App\Http\Controllers\VistasReporteController@generarReporteExtracto')->middleware('permiso:reportes');
+    Route::get('/get_detalle_credito_extracto', 'App\Http\Controllers\VistasReporteController@getDetalleCreditoExtracto')->middleware('permiso:reportes');
 
-    Route::get('/exportar_creditos_mora_pdf', 'App\Http\Controllers\VistasReporteController@exportarCreditosMoraPdf');
-    Route::get('/exportar_creditos_mora_excel', 'App\Http\Controllers\VistasReporteController@exportarCreditosMoraExcel');
-    Route::get('/rep_creditos_mora', 'App\Http\Controllers\VistasReporteController@generarReporteCreditosMora');
+    Route::get('/exportar_creditos_mora_pdf', 'App\Http\Controllers\VistasReporteController@exportarCreditosMoraPdf')->middleware('permiso:reportes');
+    Route::get('/exportar_creditos_mora_excel', 'App\Http\Controllers\VistasReporteController@exportarCreditosMoraExcel')->middleware('permiso:reportes');
+    Route::get('/rep_creditos_mora', 'App\Http\Controllers\VistasReporteController@generarReporteCreditosMora')->middleware('permiso:reportes');
 
-    Route::get('/rep_clientes_mora', 'App\Http\Controllers\VistasReporteController@generarReporteClientesMora');
+    Route::get('/rep_clientes_mora', 'App\Http\Controllers\VistasReporteController@generarReporteClientesMora')->middleware('permiso:reportes');
 
-    Route::get('/generar_reporte_pagos_realizados', 'App\Http\Controllers\VistasReporteController@generarReportePagosRealizados');
+    Route::get('/generar_reporte_pagos_realizados', 'App\Http\Controllers\VistasReporteController@generarReportePagosRealizados')->middleware('permiso:reportes');
 
-    Route::get('/generar_reporte_pagos_programados', 'App\Http\Controllers\VistasReporteController@generarReportesPagosProgramados');
-    Route::get('/get_pagos_programados_rep', 'App\Http\Controllers\VistasReporteController@getPagosProgramadosRep');
-    Route::get('/exportar_pagos_programados_pdf', 'App\Http\Controllers\VistasReporteController@exportarPagosProgramadosPdf');
-    Route::get('/exportar_pagos_programados_excel', 'App\Http\Controllers\VistasReporteController@exportarPagosProgramadosExcel');
+    Route::get('/generar_reporte_pagos_programados', 'App\Http\Controllers\VistasReporteController@generarReportesPagosProgramados')->middleware('permiso:reportes');
+    Route::get('/get_pagos_programados_rep', 'App\Http\Controllers\VistasReporteController@getPagosProgramadosRep')->middleware('permiso:reportes');
+    Route::get('/exportar_pagos_programados_pdf', 'App\Http\Controllers\VistasReporteController@exportarPagosProgramadosPdf')->middleware('permiso:reportes');
+    Route::get('/exportar_pagos_programados_excel', 'App\Http\Controllers\VistasReporteController@exportarPagosProgramadosExcel')->middleware('permiso:reportes');
 
-    Route::get('/reporte_extracto_movimientos', 'App\Http\Controllers\VistasReporteController@reporteExtractoMovimientos');
+    Route::get('/reporte_extracto_movimientos', 'App\Http\Controllers\VistasReporteController@reporteExtractoMovimientos')->middleware('permiso:reportes');
 
-    Route::get('/rep_porcentajes_creditos', 'App\Http\Controllers\VistasReporteController@reportePorcentajesCreditos');
-    Route::get('/get_avance_creditos_rep', 'App\Http\Controllers\VistasReporteController@getPorcentajesCreditosRep');
-    Route::get('/exportar_avance_creditos_pdf', 'App\Http\Controllers\VistasReporteController@exportarAvanceCreditosPdf');
-    Route::get('/exportar_avance_creditos_excel', 'App\Http\Controllers\VistasReporteController@exportarAvanceCreditosExcel');
+    Route::get('/rep_porcentajes_creditos', 'App\Http\Controllers\VistasReporteController@reportePorcentajesCreditos')->middleware('permiso:reportes');
+    Route::get('/get_avance_creditos_rep', 'App\Http\Controllers\VistasReporteController@getPorcentajesCreditosRep')->middleware('permiso:reportes');
+    Route::get('/exportar_avance_creditos_pdf', 'App\Http\Controllers\VistasReporteController@exportarAvanceCreditosPdf')->middleware('permiso:reportes');
+    Route::get('/exportar_avance_creditos_excel', 'App\Http\Controllers\VistasReporteController@exportarAvanceCreditosExcel')->middleware('permiso:reportes');
 
-    Route::get('/reporte_desembolsos', 'App\Http\Controllers\VistasReporteController@reporteDesembolsos');
-    Route::get('/get_desembolsos_rep', 'App\Http\Controllers\VistasReporteController@getDesembolsosRep');
-    Route::get('/exportar_desembolsos_pdf', 'App\Http\Controllers\VistasReporteController@exportarDesembolsosPdf');
-    Route::get('/exportar_desembolsos_excel', 'App\Http\Controllers\VistasReporteController@exportarDesembolsosExcel');
+    Route::get('/reporte_desembolsos', 'App\Http\Controllers\VistasReporteController@reporteDesembolsos')->middleware('permiso:reportes');
+    Route::get('/get_desembolsos_rep', 'App\Http\Controllers\VistasReporteController@getDesembolsosRep')->middleware('permiso:reportes');
+    Route::get('/exportar_desembolsos_pdf', 'App\Http\Controllers\VistasReporteController@exportarDesembolsosPdf')->middleware('permiso:reportes');
+    Route::get('/exportar_desembolsos_excel', 'App\Http\Controllers\VistasReporteController@exportarDesembolsosExcel')->middleware('permiso:reportes');
 
-    Route::get('/reporte_desembolsos_oficial', 'App\Http\Controllers\VistasReporteController@reporteDesembolsosOficial');
+    Route::get('/reporte_desembolsos_oficial', 'App\Http\Controllers\VistasReporteController@reporteDesembolsosOficial')->middleware('permiso:reportes');
 
-    Route::get('/reporte_desembolsos_pendientes', 'App\Http\Controllers\VistasReporteController@reporteDesembolsosPendientes');
+    Route::get('/reporte_desembolsos_pendientes', 'App\Http\Controllers\VistasReporteController@reporteDesembolsosPendientes')->middleware('permiso:reportes');
 
     // ==================== CONFIGURACIÓN (Motivos)  [permiso: configuracion] ====================
-    Route::get('/get_motivos_ingresos', 'App\Http\Controllers\ConfiguracionController@getMotivosIngresos');
+    Route::get('/get_motivos_ingresos', 'App\Http\Controllers\ConfiguracionController@getMotivosIngresos')->middleware('permiso:configuracion');
     Route::post('/guardar_motivo_ingreso', 'App\Http\Controllers\ConfiguracionController@guardarMotivoIngreso')->middleware('permiso:configuracion');
     Route::post('/modificar_motivo_ingreso', 'App\Http\Controllers\ConfiguracionController@modificarMotivoIngreso')->middleware('permiso:configuracion');
     Route::post('/desactivar_motivo_ingreso', 'App\Http\Controllers\ConfiguracionController@desactivarMotivoIngreso')->middleware('permiso:configuracion');
     Route::post('/activar_motivo_ingreso', 'App\Http\Controllers\ConfiguracionController@activarMotivoIngreso')->middleware('permiso:configuracion');
-    Route::get('/get_motivos_gastos', 'App\Http\Controllers\ConfiguracionController@getMotivosGastos');
+    Route::get('/get_motivos_gastos', 'App\Http\Controllers\ConfiguracionController@getMotivosGastos')->middleware('permiso:configuracion');
     Route::post('/guardar_motivo_gasto', 'App\Http\Controllers\ConfiguracionController@guardarMotivoGasto')->middleware('permiso:configuracion');
     Route::post('/modificar_motivo_gasto', 'App\Http\Controllers\ConfiguracionController@modificarMotivoGasto')->middleware('permiso:configuracion');
     Route::post('/desactivar_motivo_gasto', 'App\Http\Controllers\ConfiguracionController@desactivarMotivoGasto')->middleware('permiso:configuracion');
     Route::post('/activar_motivo_gasto', 'App\Http\Controllers\ConfiguracionController@activarMotivoGasto')->middleware('permiso:configuracion');
-    Route::get('/get_motivos_ingresos_activos', [ConfiguracionController::class, 'getMotivosIngresoPorTipo']);
-    Route::get('/get_motivos_gastos_activos', [ConfiguracionController::class, 'getMotivosGastoPorTipo']);
+    Route::get('/get_motivos_ingresos_activos', [ConfiguracionController::class, 'getMotivosIngresoPorTipo'])->middleware('permiso:configuracion,controlcaja,boveda');
+    Route::get('/get_motivos_gastos_activos', [ConfiguracionController::class, 'getMotivosGastoPorTipo'])->middleware('permiso:configuracion,controlcaja,boveda');
 
     // ==================== BÓVEDA  [permiso: boveda] ====================
-    Route::get('/get_movimientos_boveda', 'App\Http\Controllers\BovedaController@getMovimientosBoveda');
-    Route::get('/get_boveda', 'App\Http\Controllers\BovedaController@getBoveda');
+    Route::get('/get_movimientos_boveda', 'App\Http\Controllers\BovedaController@getMovimientosBoveda')->middleware('permiso:boveda');
+    Route::get('/boveda/cierres-caja', 'App\Http\Controllers\BovedaController@cierresCaja')->middleware('permiso:boveda');
+    Route::get('/get_boveda', 'App\Http\Controllers\BovedaController@getBoveda')->middleware('permiso:boveda,controlcaja');
     Route::post('/ingresar_boveda', 'App\Http\Controllers\BovedaController@ingresarBoveda')->middleware('permiso:boveda');
     Route::post('/retirar_boveda', 'App\Http\Controllers\BovedaController@retirarBoveda')->middleware('permiso:boveda');
     Route::post('/aperturar_boveda', 'App\Http\Controllers\BovedaController@aperturarBoveda')->middleware('permiso:boveda');
@@ -364,13 +377,13 @@ Route::middleware('auth')->group(function () {
     // Las escrituras llevan permiso; las lecturas quedan disponibles porque
     // también las usa la vista de Bóveda.
     Route::prefix('socio')->group(function () {
-        Route::get('/activos', [SocioController::class, 'getSociosActivos']);
-        Route::get('/get_socios', [SocioController::class, 'index']);
+        Route::get('/activos', [SocioController::class, 'getSociosActivos'])->middleware('permiso:socios,boveda');
+        Route::get('/get_socios', [SocioController::class, 'index'])->middleware('permiso:socios');
         Route::post('/registrar', [SocioController::class, 'store'])->middleware('permiso:socios');
         Route::put('/actualizar', [SocioController::class, 'update'])->middleware('permiso:socios');
         Route::put('/desactivar', [SocioController::class, 'desactivar'])->middleware('permiso:socios');
         Route::put('/activar', [SocioController::class, 'activar'])->middleware('permiso:socios');
-        Route::get('/selectSocio', [SocioController::class, 'selectSocio']); // Útil para la vista de Bóveda
+        Route::get('/selectSocio', [SocioController::class, 'selectSocio'])->middleware('permiso:socios,boveda'); // Útil para la vista de Bóveda
     });
 
     // ==========================================================================

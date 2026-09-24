@@ -25,7 +25,7 @@ class PerfilController extends Controller
         $diasRestantes = null;
         if ($user->fecha_cambio_password && $user->dias_vigencia) {
             $fechaVencimiento = Carbon::parse($user->fecha_cambio_password)->addDays($user->dias_vigencia);
-            $diasRestantes = Carbon::now()->diffInDays($fechaVencimiento, false);
+            $diasRestantes = (int) Carbon::now()->diffInDays($fechaVencimiento, false);
         }
 
         return response()->json([

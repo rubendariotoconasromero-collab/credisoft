@@ -16,6 +16,10 @@ Estado inicial de todos los paquetes: pendiente. Tamaño orientativo S/M/L expre
 | B-10 Rendimiento/mantenimiento | PERF-01, RISK-05 | Resultados financieros estabilizados | M/L | Reducir volumen de respuesta sin perder saldos/totales; comparar mismas muestras; extraer servicios sin duplicar fórmulas |
 | B-11 Operación y entrega | Navegador, reportes visuales, respaldo real, despliegue y monitoreo | Paquetes críticos terminados | L | Aceptación del usuario, cero P0 abiertos, restauración real ensayada y reversión de despliegue documentada |
 
+## Aclaración posterior de alcance para fase 3
+
+La propuesta original de B-03 sobre cuentas bancarias queda sustituida por el [plan actualizado de fase 3](../fase-3-plan-desarrollo.md): efectivo y no efectivo permanecen en el circuito de caja/bóveda, con ingresos por forma de pago y total en el arqueo. No se incluye módulo bancario ni conciliación independiente; se preserva la distinción del efectivo físicamente disponible. La tabla anterior conserva el diagnóstico original y no prevalece sobre esta aclaración del usuario.
+
 ## Primer bloque recomendado
 
 B-01 y definición de B-02. En B-01 no es necesario resolver las políticas financieras pendientes para impedir sesiones de usuarios inactivos o archivos inválidos. Continuar después con B-04, diseñándolo para la separación bancaria de B-03.

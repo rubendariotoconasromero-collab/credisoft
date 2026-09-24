@@ -231,6 +231,16 @@
                             </div>
                         </div>
 
+                        <div v-if="detalleTransaccion.cabecera?.partes?.length" class="table-responsive mb-3">
+                            <table class="table table-bordered">
+                                <thead><tr><th>Forma de pago</th><th>Importe aplicado</th><th>Referencia</th><th>Comprobante</th></tr></thead>
+                                <tbody><tr v-for="(parte, indice) in detalleTransaccion.cabecera.partes" :key="indice">
+                                    <td>{{ parte.forma_pago === 'transferencia' ? 'Transferencia / QR' : parte.forma_pago }}</td>
+                                    <td>{{ formatMonto(parte.monto) }} Bs</td><td>{{ parte.referencia || '—' }}</td>
+                                    <td><a v-if="parte.imagen" :href="`/operaciones/${detalleTransaccion.cabecera.codigo}/comprobante/${indice}`" target="_blank" rel="noopener">Ver imagen</a></td>
+                                </tr></tbody>
+                            </table>
+                        </div>
                         <h6 class="fw-bold ms-2 text-uppercase mb-2 text-secondary">
                             <i class="fas fa-list-ul me-1"></i> Desglose de Cuotas
                         </h6>

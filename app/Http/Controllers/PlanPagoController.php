@@ -27,7 +27,7 @@ class PlanPagoController extends Controller
     {
         $fechaActual = Carbon::now()->format('Y-m-d');
 
-        $planes_pago = DB::table('plan_pago')
+        $planes_pago = \App\Services\CarteraAccess::query('plan_pago')
             ->join('solicitud', 'solicitud.id', '=', 'plan_pago.id_solicitud')
             ->join('cliente', 'cliente.id', '=', 'solicitud.id_cliente')
             ->join('users', 'users.id', '=', 'solicitud.id_usuario')
@@ -98,7 +98,7 @@ class PlanPagoController extends Controller
         }
 
         // Filtro de roles (Si no es admin, solo ve los suyos)
-        if (Auth::user()->id_rol != 1) {
+        if (\App\Services\CarteraAccess::restricted()) {
             $planes_pago->where('users.id', Auth::id());
         }
 
@@ -114,7 +114,7 @@ class PlanPagoController extends Controller
     {
         $fechaActual = Carbon::now()->format('Y-m-d');
 
-        $planes_pago = DB::table('plan_pago')
+        $planes_pago = \App\Services\CarteraAccess::query('plan_pago')
             ->join('solicitud', 'solicitud.id', '=', 'plan_pago.id_solicitud')
             ->join('cliente', 'cliente.id', '=', 'solicitud.id_cliente')
             ->join('users', 'users.id', '=', 'solicitud.id_usuario')
@@ -174,7 +174,7 @@ class PlanPagoController extends Controller
     }
 
     public function getCuotasPlan(Request $request){
-        $cuotas = DB::table('cuota')
+        $cuotas = \App\Services\CarteraAccess::query('cuota')
         ->join('plan_pago', 'cuota.id_plan_pago', '=', 'plan_pago.id')
         // ->select('cuota.*', DB::raw('DATEDIFF(NOW(), cuota.fecha) as dias_pasados'))
         ->select('cuota.*', DB::raw('CASE WHEN cuota.estado = 1 THEN DATEDIFF(NOW(), cuota.fecha) ELSE 0 END as dias_pasados'))
@@ -188,75 +188,13 @@ class PlanPagoController extends Controller
         return $cuotas;
     }
 
-    public function anularPlanPago(Request $request){
-        DB::beginTransaction();
-        try{
-            DB::commit();
-        }catch(Exception $e){
-            DB::rollback();
-        }
-
-        DB::table('plan_pago')->where('id', $request->id_planpago)
-        ->update([
-            'estado'=>0
-            //'solicitud.desembolso'=>0,/// 1->sin desembolsar; 0->desembolsado
-        ]);
-
-        // anulamos tambien la solicitud
-        DB::table('solicitud')
-        ->join('plan_pago', 'plan_pago.id_solicitud', '=', 'solicitud.id')
-        ->where('plan_pago.id', $request->id_planpago)
-        ->update([
-            'solicitud.estado'=>0,
-            //'solicitud.desembolso'=>0,/// 0->sin desembolsar; 1->desembolsado
-        ]);
-
-
-        // we are cancelling the disbursement of the request - payment plan -> Anulamos desembolso de la solicitud - Plan pago
-        DB::table('desembolso')
-        ->where('id_plan_pago', $request->id_planpago)
-        ->update([
-            'estado'=>1
-        ]);
-
-        // we record the income -> Registramos el ingreso
-        $id_caja=DB::table('caja')->where('estado', 1)->get()[0]->id;
-
-        $info_plan_pago = DB::table('plan_pago')->where('id', $request->id_planpago)->first();
-
-        DB::table('ingreso')->insert([
-            'monto'=>$info_plan_pago->total_pagar,
-            'descripcion'=>'Ingreso por concepto de anulación de plan de pago. Devolucón del monto desembolsado del plan de pago #'. $info_plan_pago->id,
-            'id_usuario'=>Auth::id(),
-            'fecha'=>now(),
-            'id_caja'=>$id_caja
-        ]);
-        
-        // Reg. en mov. caja
-        DB::table('movimientos_caja')
-        ->insertGetId([
-            'tipo_movimiento'=>'ingreso',
-            'monto'=>$info_plan_pago->total_pagar,
-            'descripcion'=>'Ingreso por concepto de anulación de plan de pago. Devolucón del monto desembolsado del plan de pago #'. $info_plan_pago->id,
-            'fecha'=>now(),
-            'id_caja'=>$id_caja,
-            'id_usuario'=>Auth::user()->id,
-        ]);
-
-
-        // anulamos las cuotas
-        DB::table('plan_pago')
-        ->join('cuota', 'plan_pago.id', '=', 'cuota.id_plan_pago')
-        ->where('cuota.id_plan_pago', $request->id_planpago)
-        ->update([
-            'cuota.estado'=>0
-            
-        ]);
-
+    public function anularPlanPago(Request $request)
+    {
+        return app(\App\Services\Finance\CancelPlan::class)->cancel($request);
     }
 
     public function consultarPlanPagoCuotasCanceladas(Request $request){
-        $existen_cuotas_canceladas = DB::table('plan_pago')
+        $existen_cuotas_canceladas = \App\Services\CarteraAccess::query('plan_pago')
         ->join('cuota', 'cuota.id_plan_pago', '=', 'plan_pago.id')
         ->where('plan_pago.id', $request->id_planpago)
         ->where('cuota.estado', 2)
@@ -272,7 +210,7 @@ class PlanPagoController extends Controller
     public function ListaCuotasPlanPagoPdf(Request $request)
     {
         // 1. Información General
-        $informacion = DB::table('solicitud')
+        $informacion = \App\Services\CarteraAccess::query('solicitud')
             ->join('cliente', 'cliente.id', '=', 'solicitud.id_cliente')
             ->join('users', 'users.id', '=', 'solicitud.id_usuario')
             ->join('plan_pago', 'plan_pago.id_solicitud', '=', 'solicitud.id')
@@ -292,7 +230,7 @@ class PlanPagoController extends Controller
 
         // 3. Extraemos el historial de pagos para cada cuota
         foreach($cuotas as $cuota) {
-            $pagos = DB::table('pago')
+            $pagos = \App\Services\CarteraAccess::query('pago')
                 ->where('id_cuota', $cuota->id)
                 ->where('estado', 1) // Solo pagos activos
                 ->orderBy('fecha_pago', 'asc')
@@ -313,416 +251,40 @@ class PlanPagoController extends Controller
         return $this->generatePDF($data, 'reporte.reporte_cuotas_planpago_nuevo', 'reporte_plan_pago');
     }
 
-    public function activarPlanPago(Request $request){
-        DB::table('plan_pago')->where('id', $request->id_planpago)
-        ->update([
-            'estado'=>1
-        ]);
-        // aprobamos tambien la solicitud
-
-        DB::table('solicitud')
-        ->join('plan_pago', 'plan_pago.id_solicitud', '=', 'solicitud.id')
-        ->where('plan_pago.id', $request->id_planpago)
-        ->update([
-            'solicitud.estado'=>2
-        ]);
-
-        // anulamos las cuotas
-
-        DB::table('plan_pago')
-        ->join('cuota', 'plan_pago.id', '=', 'cuota.id_plan_pago')
-        ->where('cuota.id_plan_pago', $request->id_planpago)
-        ->update([
-            'cuota.estado'=>1
-        ]);
+    public function activarPlanPago(Request $request)
+    {
+        return DB::transaction(function () use ($request) {
+            \App\Services\Finance\FinancialLock::acquire();
+            \App\Services\CarteraAccess::assertRecord('plan_pago', $request->id_planpago);
+            $plan = DB::table('plan_pago')->where('id', $request->id_planpago)->lockForUpdate()->first();
+            abort_unless($plan && (int) $plan->estado === 0, 422, 'Solo se puede activar un plan anulado.');
+            $quotas = DB::table('cuota')->where('id_plan_pago', $plan->id)->pluck('id');
+            abort_if(DB::table('pago')->whereIn('id_cuota', $quotas)->where('estado', 1)->exists(), 422, 'El plan conserva pagos activos y requiere revisión.');
+            abort_if(DB::table('desembolso')->where('id_plan_pago', $plan->id)->where('estado', 0)->exists(), 422, 'El plan conserva un desembolso activo.');
+            DB::table('plan_pago')->where('id', $plan->id)->update(['estado' => 1]);
+            DB::table('solicitud')->where('id', $plan->id_solicitud)->update(['estado' => 2]);
+            DB::table('cuota')->whereIn('id', $quotas)->update(['estado' => 1]);
+            return ['success' => true];
+        });
     }
 
-    public function saveAmortizacionNuevo(Request $request){
-        DB::beginTransaction();
-        //dd($request);
-        try{
-
-            $detalles = json_decode($request->detalles, true);// lista cuotas
-            $monto_multa=empty($request->monto_multa)?0:$request->monto_multa;// monto de multa total
-            $monto_interes=empty($request->monto_interes)?0:$request->monto_interes;// Monto solo interes acumulado
-            $monto_capital=empty($request->monto_capital)?0:$request->monto_capital;// monto capital, se descontara de saldo_pendiente
-            $id_plan_pago=$request->id_plan_pago;
-            $id_caja=DB::table('caja')->where('estado', 1)->get()[0]->id;
-
-            /*aqui se debera cambiar el estado de las cuotas que aun no se han pagado
-            las cuotas por pagar se ocultan*/
-            
-            $cuotas = DB::table('cuota')
-                ->where('id_plan_pago', $id_plan_pago)
-                ->where('estado', 1)
-                ->where('amortizado', 0)
-                ->get();
-
-
-            DB::table('cuota')->where('id_plan_pago', $id_plan_pago)
-                ->where('cuota.estado', 1)
-                ->update([
-                    'amortizado'=>1,
-                ]);
-
-            $id_primer_cuota_sin_pagar=0;
-
-            if ($cuotas->isEmpty()) {
-                // Manejar el caso donde no hay cuotas pendientes
-            } else {
-                $id_primer_cuota_sin_pagar = $cuotas[0]->id;
-            }
-
-            // se crean las cuotas
-            $numero_cuota_inicio=$request->numero_cuota_inicio;
-            $numero_cuota_inicio_aux=$numero_cuota_inicio;
-            $id_cuota_pago_amortizacion=0;
-
-            foreach($detalles as $detalle){
-                $id_cuota_insertada=DB::table('cuota')->insertGetId([
-                    'numero'=>$numero_cuota_inicio,
-                    'fecha'=>$detalle['fecha'],
-                    'capital'=>$detalle['capital'],
-                    'interes'=>$detalle['interes'],
-                    'saldo_capital'=>$detalle['saldo_capital'],
-                    'ahorro'=>empty($detalle['ahorro'])?0:$detalle['ahorro'],
-                    'seguro'=>empty($detalle['seguro'])?0:$detalle['seguro'],
-                    'total'=>$detalle['total_cuota'],
-                    'id_plan_pago'=>$id_plan_pago,
-
-                ]);
-
-                if($numero_cuota_inicio_aux==$numero_cuota_inicio){
-                    $id_cuota_pago_amortizacion=$id_cuota_insertada;
-                }
-                $numero_cuota_inicio=$numero_cuota_inicio+1;
-            }
-
-            // actualizando id_cuota para las amortizaciones
-            DB::table('pago_amortizacion')
-            ->where('pago_amortizacion.id_cuota', $id_primer_cuota_sin_pagar)
-            ->update(['id_cuota' => $id_cuota_pago_amortizacion]);
-
-            
-            // pago amortizacion tiene que estar ligado a la ultima cuota pagados, para que aparezca en el listado
-            DB::table('pago_amortizacion')->insert([
-                'fecha'=> now(),
-                'monto_pago'=> $monto_multa + $monto_interes + $monto_capital,
-                'capital_pagado'=>$monto_capital,
-                'interes_pagado'=>$monto_interes,
-                'multa_pagada'=>$monto_multa,
-                'saldo_pendiente'=>$request->saldo_pendiente,
-                'forma_pago'=>$request->forma_pago,
-                'id_caja'=>$id_caja,
-                'id_plan_pago'=>$id_plan_pago,// plan de pago del credito
-                'saldo_pendiente'=>$request->saldo_pendiente,
-                'id_cuota'=>$id_cuota_pago_amortizacion,
-                'total_seguro'=>$request->total_seguro,
-            ]);
-
-            DB::table('plan_pago')->where('plan_pago.id', $id_plan_pago)->update([
-                'fecha_ultima_amortizacion'=>now(),
-            ]);
-
-            DB::commit();
-       
-        }catch(Exception $e){
-            DB::rollback();
-        }
+    public function saveAmortizacionNuevo(Request $request)
+    {
+        return response()->json(['message' => 'Este flujo fue reemplazado. Registre adelantos y liquidaciones desde Caja > Cobros.', 'redirect' => '/caja'], 410);
     }
 
-    public function saveAmortizacion(Request $request){
-        DB::beginTransaction();
-        try{
-            //id_cuota
-            $detalles = json_decode($request->detalles, true);
-            $monto_multa=empty($request->monto_multa)?0:$request->monto_multa;
-            $monto_interes=empty($request->monto_interes)?0:$request->monto_interes;
-            $monto_capital=empty($request->monto_capital)?0:$request->monto_capital;
-            $id_caja=DB::table('caja')->where('estado', 1)->get()[0]->id;
-
-            // para id_plan_aux
-
-            $plan_pago_aux=DB::table('plan_pago')
-            ->where('plan_pago.id_plan_aux', $request->id_plan_pago)// tiene que ser el principal
-            ->where('plan_pago.estado', 0)
-            ->get();
-
-            $cantidad_planes_aux=$plan_pago_aux->count();
-
-            $id_plan_pago_amortizacion=($cantidad_planes_aux>0)?$plan_pago_aux[0]->id:0;
-
-            $id_plan_pago_definitivo=($cantidad_planes_aux>0)?$id_plan_pago_amortizacion:$request->id_plan_pago;// tiene que ser el principal
-
-
-
-
-
-            // cambiamos el valor de amortizado para las cuotas anteriores al plan de pago
-            // de aquellas que no han sido pagadas
-            // las cuotas deben pertenecer al nuevo plan de pago
-            DB::table('cuota')->where('id_plan_pago', $id_plan_pago_definitivo)
-            ->where('cuota.estado', 1)
-            ->update([
-                'amortizado'=>1,
-            ]);
-
-
-
-            // id_cuota ultima pagada
-            $ultima_cuota=DB::table('cuota')
-            ->select(DB::raw('max(cuota.id) as ultima_pagada'))
-            ->where('id_plan_pago', $id_plan_pago_definitivo)
-            ->where('cuota.estado', 2)
-            ->first();
-
-
-            $id_cuota_ult_pagada=($ultima_cuota && $ultima_cuota->ultima_pagada)?$ultima_cuota->ultima_pagada:0;
-           
-                // pago amortizacion tiene que estar ligado al plan de pago nuevo
-            DB::table('pago_amortizacion')->insert([
-                // 'fecha'=> Carbon::now()->toDateString(),
-                'fecha'=> now(),
-                'monto_pago'=> $monto_multa + $monto_interes + $monto_capital,
-                'capital_pagado'=>$monto_capital,
-                'interes_pagado'=>$monto_interes,
-                'multa_pagada'=>$monto_multa,
-                'saldo_pendiente'=>$request->saldo_pendiente,
-                'forma_pago'=>$request->forma_pago,
-                'id_caja'=>$id_caja,
-
-                'id_plan_pago'=>$id_plan_pago_definitivo,
-                'saldo_pendiente'=>$request->saldo_pendiente,
-                // 'id_cuota'=>$id_cuota_ult_pagada,
-                'id_cuota'=>$request->id_cuota,
-                'total_seguro'=>$request->total_seguro,
-
-
-            ]);
-
-            $numero_cuota_inicio=$request->numero_cuota_inicio;
-
-            // INFORMACION PLAN PAGO
-            $plan_pago_info=DB::table('plan_pago')
-            ->where('id', $id_plan_pago_definitivo)
-            ->first();
-
-            // INFORMACION TOTAL PAGADO | CANT CUOTAS
-            $plan_pago_info_pagado=DB::table('plan_pago')
-            ->join('cuota', 'cuota.id_plan_pago', '=', 'plan_pago.id')
-            ->where('cuota.id_plan_pago', $id_plan_pago_definitivo)
-            ->select(DB::raw('sum(cuota.total) as total_cuotas_plan'))
-            ->first();
-
-            // INFORMACION SOLICITUD LIGADA
-            $solicitud_ligada=DB::table('solicitud')
-            ->where('id', $plan_pago_info->id_solicitud)
-            ->first();
-
-            // CREAR NUEVA SOLICITUD INTERNA 
-            $id_solicitud=DB::table('solicitud')->insertGetId([
-                'importe_solicitud'=>$request->saldo_pendiente,
-                'moneda'=>$solicitud_ligada->moneda,
-                'lapso_capital'=>$request->lapso_capital,
-                'nro_cuotas'=>$request->nro_cuotas,
-                'tasa'=>$request->tasa,
-                'fecha_desembolso'=>now(),
-                'fecha'=>now(),
-                'fecha_primera_cuota'=>$request->fecha_primera_cuota,
-                'destino_prestamo'=>'Amortización del credito',
-                'monto_pago_adm'=>0,
-                'tipo_garantia'=>$solicitud_ligada->tipo_garantia,
-                'tipo_desembolso'=>$request->tipo_desembolso,
-                'id_cliente'=>$solicitud_ligada->id_cliente,
-                'id_usuario'=>Auth::id(),
-                'estado'=>10,
-
-            ]);
-
-            // CREAR PLAN PAGO INTERNO
-
-            // Obtener el último elemento del array
-            $ultimo_detalle = end($detalles);
-            // Acceder a la propiedad 'fecha' del último elemento
-            $fecha_ultima_cuota = $ultimo_detalle['fecha'];
-
-
-
-            $plan_pagoId = DB::table('plan_pago')->insertGetId([
-                //'fecha_inicio'=>$request->fecha_inicio_plan_pago,
-                'fecha_inicio'=>now(),
-                'fecha_fin'=>$fecha_ultima_cuota,
-                'total_pagar'=>$request->saldo_pendiente,
-                'id_solicitud'=>$id_solicitud,
-
-                // 'id_plan_aux'=>$request->id_plan_pago,// aqui debe estar ligado al plan de pago principal
-                'id_plan_aux'=>$request->id_plan_pago_principal,// aqui debe estar ligado al plan de pago principal
-            ]);
-
-
-
-            // CREAR CUOTAS
-            $numero_cuota_inicio=1;
-            foreach($detalles as $detalle){
-                DB::table('cuota')->insertGetId([
-                    'numero'=>$numero_cuota_inicio,
-                    'fecha'=>$detalle['fecha'],
-                    'capital'=>$detalle['capital'],
-                    'interes'=>$detalle['interes'],
-                    'saldo_capital'=>$detalle['saldo_capital'],
-                    'ahorro'=>empty($detalle['ahorro'])?0:$detalle['ahorro'],
-                    'seguro'=>empty($detalle['seguro'])?0:$detalle['seguro'],
-                    'total'=>$detalle['total_cuota'],
-                    'id_plan_pago'=>$plan_pagoId,
-
-                ]);
-                $numero_cuota_inicio=$numero_cuota_inicio+1;
-            }
-
-
-            // ACTUALIZAMOS PLAN PAGO | ESTADO | MONTO 
-
-            DB::table('plan_pago')
-            ->where('id', $id_plan_pago_definitivo)
-            ->update([
-                'estado'=>10,
-                //'total_pagar'=>$plan_pago_info_pagado->total_cuotas_plan,
-            ]);
-
-            // ACTUALIZAMOS ESTADO DE LA SOLICITUD
-
-
-
-            // DB::table('solicitud')
-            // ->where('id', $plan_pago_info->id_solicitud)
-            // ->update([
-            //     'estado'=>10,
-            // ]);
-
-        
-            // actualizamos estado de plan de pago
-            
-
-        
-            DB::commit();
-            // return [
-            //     'nro_cuotas'=> $solicitud->nro_cuotas, 
-            //     'tipo_desembolso'=>$solicitud->tipo_desembolso,
-            //     'fecha_fin'=>$plan_pago->fecha_fin, 
-            //     'fecha_inicio_plan'=>$plan_pago->fecha_inicio
-            // ];
-
-        }catch(Exception $e){
-            DB::rollback();
-        }
-
+    public function saveAmortizacion(Request $request)
+    {
+        return response()->json(['message' => 'Este flujo fue reemplazado. Registre adelantos y liquidaciones desde Caja > Cobros.', 'redirect' => '/caja'], 410);
     }
 
-    public function liquidarDeuda(Request $request){
-        DB::beginTransaction();
-        try{
-            
-            $monto_multa=empty($request->monto_multa)?0:$request->monto_multa;
-            $monto_interes=empty($request->monto_interes)?0:$request->monto_interes;
-            $monto_capital=empty($request->monto_capital)?0:$request->monto_capital;
-      
-            $id_caja=DB::table('caja')->where('estado', 1)->get()[0]->id;
-
-
-            // cambiamos el valor de amortizado para las cuotas anteriores al plan de pago
-            DB::table('cuota')->where('id_plan_pago', $request->id_plan_pago)
-            ->update([
-                'amortizado'=>1
-            ]);
-            // cambiamos estados de las cuotas posteriores al pago de la amortizacion
-
-            $cuotas = DB::table('cuota')
-            ->join('plan_pago', 'cuota.id_plan_pago','=', 'plan_pago.id')
-            ->select('cuota.*')
-            ->where('plan_pago.id', $request->id_plan_pago)
-            ->where('cuota.estado', 1)
-            ->get();
-
-            //dd($cuotas);
-            foreach($cuotas as $cuota){
-                DB::table('cuota')->where('id', $cuota->id)
-                ->update(
-                    [
-                        'estado'=>3
-                    ]
-                );
-            }
-    
-            DB::table('pago_amortizacion')->insert([
-                'fecha'=> Carbon::now()->toDateString(),
-                'monto_pago'=> $monto_multa + $monto_interes + $monto_capital,
-                'capital_pagado'=>$monto_capital,
-                'interes_pagado'=>$monto_interes,
-                'multa_pagada'=>$monto_multa,
-                'saldo_pendiente'=>$request->saldo_pendiente,
-                'forma_pago'=>$request->forma_pago,
-                'id_caja'=>$id_caja,
-                'id_plan_pago'=>$request->id_plan_pago,
-                'saldo_pendiente'=>$request->saldo_pendiente,
-                'id_cuota'=>$request->id_cuota,
-                'total_seguro'=>$request->total_seguro,
-
-            ]);
-            /*$numero_cuota_inicio=$request->numero_cuota_inicio;
-            foreach($detalles as $detalle){
-                DB::table('cuota')->insert([
-                    'numero'=>$numero_cuota_inicio,
-                    'fecha'=>$detalle['fecha'],
-                    'capital'=>$detalle['capital'],
-                    'interes'=>$detalle['interes'],
-                    'saldo_capital'=>$detalle['saldo_capital'],
-                    'ahorro'=>empty($detalle['ahorro'])?0:$detalle['ahorro'],
-                    'seguro'=>empty($detalle['seguro'])?0:$detalle['seguro'],
-                    'total'=>$detalle['total_cuota'],
-                    'id_plan_pago'=>$request->id_plan_pago,
-
-                ]);
-                $numero_cuota_inicio=$numero_cuota_inicio+1;
-            }*/
-
-            // actualizar cantidad de cuotas
-            /*DB::table('solicitud')->where('id',$request->id_solicitud)->update([
-                'nro_cuotas'=> ($request->numero_cuota_inicio-1)+($numero_cuota_inicio-$request->numero_cuota_inicio),
-                'tipo_desembolso'=> $request->tipo_desembolso,
-             
-                
-            ]);*/
-
-            DB::table('plan_pago')->where('id', $request->id_plan_pago)->update([
-                // 'fecha_fin'=>$request->fecha_fin,
-                // 'fecha_inicio'=>$request->fecha_primera_cuota,
-                'estado'=>2
-            ]);
-
-            // $solicitud=DB::table('solicitud')
-            // ->where('id',$request->id_solicitud)
-            // ->get()[0];
-
-            $plan_pago=DB::table('plan_pago')
-            ->where('id',$request->id_plan_pago)
-            ->get()[0];
-
-
-            // actualizamos estado de plan de pago
-            
-
-        
-            DB::commit();
-            return ['estado_plan'=> $plan_pago->estado];
-
-        }catch(Exception $e){
-            DB::rollback();
-        }
-
+    public function liquidarDeuda(Request $request)
+    {
+        return response()->json(['message' => 'Este flujo fue reemplazado. Registre adelantos y liquidaciones desde Caja > Cobros.', 'redirect' => '/caja'], 410);
     }
 
     public function generarContrato(Request $request){
-        // $informacion=DB::table('solicitud')
+        // $informacion=\App\Services\CarteraAccess::query('solicitud')
         // ->join('cliente', 'cliente.id', '=', 'solicitud.id_cliente')
         // ->join('users', 'users.id', '=', 'solicitud.id_usuario')
         // ->join('plan_pago', 'plan_pago.id_solicitud', '=', 'solicitud.id')
@@ -752,9 +314,9 @@ class PlanPagoController extends Controller
          $dompdf = new Dompdf();
 
          // Opciones de configuración de Dompdf
-         $options = new Options();
+         $options = new Options(config('dompdf.options', []));
          $options->set('isHtml5ParserEnabled', true); // Habilita el parser HTML5
-         $options->set('isPhpEnabled', true); // Habilita la ejecución de código PHP en la vista (si es necesario)
+         $options->set('isPhpEnabled', false);
          $dompdf->setOptions($options);
  
          // Carga la vista HTML para el reporte
@@ -788,7 +350,7 @@ class PlanPagoController extends Controller
     }
 
     public function getCantidadCreditos(Request $request){
-        $cantidad_creditos = DB::table('plan_pago')
+        $cantidad_creditos = \App\Services\CarteraAccess::query('plan_pago')
         ->join('solicitud', 'solicitud.id', '=', 'plan_pago.id_solicitud')
         ->join('cliente', 'cliente.id', '=', 'solicitud.id_cliente')
         ->join('users', 'users.id', '=', 'solicitud.id_usuario')
@@ -804,7 +366,7 @@ class PlanPagoController extends Controller
 
     public function getPlanesPagoLigados(Request $request){
 
-        $planes_pago = DB::table('plan_pago')
+        $planes_pago = \App\Services\CarteraAccess::query('plan_pago')
         ->join('solicitud', 'solicitud.id', '=', 'plan_pago.id_solicitud')
         ->join('cliente', 'cliente.id', '=', 'solicitud.id_cliente')
         ->join('users', 'users.id', '=', 'solicitud.id_usuario')
@@ -850,11 +412,13 @@ class PlanPagoController extends Controller
         $html = view($url_vista, $data)->render();
 
         $mpdf->WriteHTML($html);
-        $mpdf->Output($nombre_reporte, 'I');
+        return response($mpdf->Output($nombre_reporte, 'S'))
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'inline; filename="'.$nombre_reporte.'"');
     }
 
     public function getAmortizacionesPlan(Request $request){
-        $amortizaciones=DB::table('pago_amortizacion')
+        $amortizaciones=\App\Services\CarteraAccess::query('pago_amortizacion')
         ->join('plan_pago', 'plan_pago.id', '=', 'pago_amortizacion.id_plan_pago')
         ->select('pago_amortizacion.id', 'pago_amortizacion.monto_pago', 'pago_amortizacion.interes_pagado', 'pago_amortizacion.capital_pagado', 'pago_amortizacion.multa_pagada', 'pago_amortizacion.saldo_pendiente',
         'pago_amortizacion.total_seguro', 'pago_amortizacion.forma_pago', 'pago_amortizacion.id_caja', 'pago_amortizacion.id_plan_pago', 'pago_amortizacion.fecha')
@@ -866,7 +430,7 @@ class PlanPagoController extends Controller
 
     public function getAmortizaciones(Request $request){
         // fecha
-        $amortizaciones=DB::table('pago_amortizacion')
+        $amortizaciones=\App\Services\CarteraAccess::query('pago_amortizacion')
         ->join('plan_pago', 'plan_pago.id', '=', 'pago_amortizacion.id_plan_pago')
         ->select('pago_amortizacion.id', 'pago_amortizacion.monto_pago', 'pago_amortizacion.interes_pagado', 'pago_amortizacion.capital_pagado', 'pago_amortizacion.multa_pagada', 'pago_amortizacion.saldo_pendiente',
         'pago_amortizacion.total_seguro', 'pago_amortizacion.forma_pago', 'pago_amortizacion.id_caja', 'pago_amortizacion.id_plan_pago', 'pago_amortizacion.fecha')
@@ -890,6 +454,7 @@ class PlanPagoController extends Controller
 
     public function listarAmortizaciones(Request $request)
     {
+        $request->validate(['fecha_corte' => 'nullable|date_format:Y-m-d']);
         // Toda la matemática vive en el trait CalculaAmortizaciones para que
         // este endpoint y el reporte de créditos en mora usen la misma lógica.
         return $this->calcularAmortizacionesCuotas($request->input('id_plan_pago'));
@@ -977,7 +542,7 @@ class PlanPagoController extends Controller
     {
         $id_cuota = $request->input('id_cuota');
         
-        $pagos = DB::table('pago')
+        $pagos = \App\Services\CarteraAccess::query('pago')
             ->where('id_cuota', $id_cuota)
             ->where('estado', 1)
             ->orderBy('fecha_pago', 'desc')

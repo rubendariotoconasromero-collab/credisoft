@@ -7,7 +7,7 @@ Léelo antes de modificar cualquier archivo relacionado con caja, bóveda, pagos
 
 ## Stack tecnológico
 
-- **Backend**: Laravel 10 (PHP 8)
+- **Backend**: Laravel 12 (PHP 8.2+)
 - **Frontend**: Vue 3 + Vue Router 4 (SPA montada en `resources/js/app.js`, compilada con Vite)
 - **BD**: MySQL (via Laragon en desarrollo)
 - **PDF**: mPDF (reportes) + DomPDF (tickets de pago)
@@ -244,6 +244,21 @@ modalidad = 'interes_mora':
 ## Reglas operativas confirmadas el 2026-09-24
 
 - Se permite una caja abierta por usuario, con varios usuarios operando simultáneamente. La selección y autorización de caja debe respetar su propietario.
-- Los depósitos y transferencias bancarias deben registrarse separados del efectivo físico de caja y bóveda.
+- Aclaración del usuario: efectivo y operaciones no efectivas se registran dentro del mismo circuito de caja/bóveda. El arqueo y cierre incluyen ingresos por forma de pago y total conjunto; bóveda conserva su relación y trazabilidad. No implementar un módulo bancario ni conciliación bancaria independiente. El saldo físico disponible y el retorno de efectivo no incluyen importes no efectivos.
 - Para conciliar el efectivo institucional se suma el saldo físico de bóveda y el saldo de todas las cajas abiertas. Las cajas cerradas ya retornaron su efectivo.
 - Estas reglas son requisitos: el diagnóstico de etapa 1 detectó que todavía no se cumplen en todos los flujos. Ver `docs/diagnostico-etapa-1/README.md` antes de corregirlos.
+- Solo el propietario opera o cierra una caja; administradores y encargados consultan cajas ajenas.
+- Los oficiales consultan y modifican únicamente solicitudes y créditos asignados a ellos (`solicitud.id_usuario`).
+- Consultas y exportaciones también requieren permisos del servidor. Los catálogos compartidos declaran permisos alternativos en `routes/web.php`.
+- Las imágenes de expedientes se guardan fuera de `public` en el disco `expedientes` y se sirven mediante `PrivateImageController`. Usar `PrivateImages` para rutas y `expedientes:privatizar` para archivos históricos; nunca crear un enlace público a ese almacenamiento.
+
+
+## Circuito financiero de fase 3
+
+- Los controladores activos delegan en `app/Services/Finance`: `Collections`, `Debt`, `CashMovements`, `Reversals`, `CashSessions`, `VaultOperations`. No volver a introducir cálculos de deuda enviados por el navegador.
+- Toda mutación monetaria toma `FinancialLock` dentro de la transacción antes de validar. `Operations` conserva clave por usuario, huella y resultado; los formularios envían `Idempotency-Key`.
+- `operaciones_financieras.partes` contiene importes aplicados por forma, referencias y comprobantes opcionales. No sumar de nuevo las filas fuente con `id_operacion`: `CashSummary` combina fuentes históricas sin vínculo y operaciones vigentes.
+- Formas canónicas: efectivo, deposito, transferencia (incluye QR). Pagos mixtos permitidos, cambio solo en efectivo. El importe no efectivo no aumenta el disponible físico.
+- Multa Bs3 por día/credito sin gracia ni multiplicación por cuota; adelantos cobran devengado y reducen interés futuro proporcional al capital adelantado.
+- `condonar`, `anular_finanzas` y `pagos_retroactivos` son permisos distintos. Condonación de interés/multa, nunca capital; motivo obligatorio. Anulación completa en caja propia abierta, sin operaciones posteriores y con físico suficiente.
+- No borrar originales ni reconstruir históricos dudosos. `finanzas:diagnosticar` es de solo lectura. Guías: `docs/fase-3-avance.md`, `docs/fase-3-pruebas-manuales.md`.

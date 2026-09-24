@@ -9,6 +9,13 @@ class Cuota extends Model
 {
     use HasFactory;
 
+    protected static function booted(): void
+    {
+        static::addGlobalScope('cartera', function ($query) {
+            if (\App\Services\CarteraAccess::restricted()) $query->whereIn('cuota.id_plan_pago', \App\Services\CarteraAccess::query('plan_pago')->select('plan_pago.id'));
+        });
+    }
+
     /**
      * El nombre de la tabla asociada con el modelo.
      *

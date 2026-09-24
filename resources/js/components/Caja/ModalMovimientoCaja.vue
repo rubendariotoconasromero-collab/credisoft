@@ -118,7 +118,7 @@ export default {
             // Detecta si es "Otros ingresos" o "Otros gastos" para pedir detalle extra
             if (!this.form.descripcion) return false;
             const desc = this.form.descripcion.toLowerCase();
-            return desc.includes('otros ingresos') || desc.includes('otros gastos');
+            return desc === 'otro' || desc.includes('otros ingresos') || desc.includes('otros gastos');
         }
     },
     methods: {
@@ -211,8 +211,7 @@ export default {
             // ── Validar saldo solo para egresos ──────────────────────────
             if (!this.esIngreso) {
                 const monto = parseFloat(this.form.monto) || 0;
-                const saldoOk = await this.validarSaldoParaEgreso(monto);
-                if (!saldoOk) return;
+                // El servidor valida la porción de efectivo después de elegir las formas de pago.
             }
             // ─────────────────────────────────────────────────────────────
 
@@ -225,6 +224,7 @@ export default {
                 this.$emit('guardado');
                 this.cerrar();
             } catch (error) {
+                if (axios.isCancel(error)) return;
                 if (error.response?.status === 422) {
                     const d = error.response.data;
                     const faltante = parseFloat(d.faltante ?? 0).toFixed(2);

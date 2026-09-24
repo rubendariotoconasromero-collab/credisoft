@@ -43,12 +43,42 @@ class DevelopmentSeeder extends Seeder
             $people = $this->people();
             $this->credits($people);
             $this->cashHistory();
+            $this->mixedCollection();
             DB::commit();
         } catch (\Throwable $exception) {
             DB::rollBack();
             throw $exception;
         }
-        $this->command?->info('DEMO lista: 16 clientes, 8 codeudores, 13 solicitudes, 11 planes. Bóveda 38.257,00; caja A 2.060,00; caja B 1.500,00 Bs. Ver docs/poblacion-desarrollo.md.');
+        $this->command?->info('DEMO lista: 16 clientes, 8 codeudores, 13 solicitudes, 11 planes. Bóveda 38.257,00; caja A 2.100,00; caja B 1.500,00 Bs. Ver docs/poblacion-desarrollo.md.');
+    }
+
+    private function mixedCollection(): void
+    {
+        $previous = \Illuminate\Support\Facades\Auth::user();
+        try {
+            $user = \App\Models\User::findOrFail($this->users['cajero_user']);
+            \Illuminate\Support\Facades\Auth::setUser($user);
+            $plan = DB::table('plan_pago')->join('solicitud', 'solicitud.id', '=', 'plan_pago.id_solicitud')
+                ->join('cliente', 'cliente.id', '=', 'solicitud.id_cliente')->where('cliente.ci', 'DEMO-C005')->value('plan_pago.id');
+            $quota = DB::table('cuota')->where('id_plan_pago', $plan)->orderBy('numero')->value('id');
+            $request = new \Illuminate\Http\Request([
+                'id_caja' => DB::table('caja')->where('id_usuario', $user->id)->where('estado', 1)->value('id'),
+                'id_plan_pago' => $plan, 'cuotas' => [['id_cuota' => $quota]],
+                'fecha_pago' => $this->today->toDateString(), 'modalidad_pago' => 'parcial', 'monto_aplicado' => '100.00',
+                'clave_operacion' => 'demo-cobro-mixto-001',
+                'partes' => [
+                    ['forma_pago' => 'efectivo', 'monto' => '40.00'],
+                    ['forma_pago' => 'deposito', 'monto' => '30.00', 'referencia' => 'DEMO-DEP-001'],
+                    ['forma_pago' => 'transferencia', 'monto' => '30.00', 'referencia' => 'DEMO-QR-001'],
+                ],
+            ]);
+            app(\App\Services\Finance\Collections::class)->collect($request);
+            // The identical retry must preserve one operation and one collection.
+            app(\App\Services\Finance\Collections::class)->collect($request);
+        } finally {
+            if ($previous) \Illuminate\Support\Facades\Auth::setUser($previous);
+            else \Illuminate\Support\Facades\Auth::forgetGuards();
+        }
     }
 
     private function people(): array

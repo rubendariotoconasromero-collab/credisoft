@@ -461,7 +461,7 @@
 
                             <div class="col-md-7">
                                 
-                                <div class="card border-warning border-opacity-50 shadow-sm mb-3" v-if="showCondInt || showCondMora">
+                                <div class="card border-warning border-opacity-50 shadow-sm mb-3" v-if="tienePermiso('condonar') && (showCondInt || showCondMora)">
                                     <div class="card-header bg-warning bg-opacity-10 py-2">
                                         <h6 class="fw-bold text-warning-emphasis mb-0 small text-uppercase">
                                             <i class="fas fa-gift me-2"></i>Opciones de Condonación
@@ -529,15 +529,11 @@
 
                                             <div class="col-sm-6">
                                                 <label class="form-label small fw-bold text-muted mb-1">Fecha de Transacción</label>
-                                                <input type="date" class="form-control form-control-sm bg-white" v-model="paymentDetails.fecha_pago">
+                                                <input type="date" class="form-control form-control-sm bg-white" v-model="paymentDetails.fecha_pago" :disabled="!tienePermiso('pagos_retroactivos')" @change="actualizarFechaCobro">
                                             </div>
                                             <div class="col-sm-6">
                                                 <label class="form-label small fw-bold text-muted mb-1">Método de Pago</label>
-                                                <select v-model="paymentDetails.forma_pago" class="form-select form-select-sm bg-white">
-                                                    <option value="efectivo">Efectivo Físico</option>
-                                                    <option value="transferencia - QR">Transferencia / QR</option>
-                                                    <option value="Depósito banco">Depósito Bancario</option>
-                                                </select>
+                                                <p class="small mb-0">Al confirmar podrá distribuir el importe entre Efectivo, Depósito y Transferencia / QR.</p>
                                             </div>
                                         </div>
 
@@ -563,6 +559,7 @@
 </template>
 
 <script>
+import { tienePermiso } from '../../router/session';
 import moment from "moment";
 import axios from "axios";
 import Swal from "sweetalert2";
@@ -570,6 +567,7 @@ import Swal from "sweetalert2";
 export default {
     data() {
         return {
+            revisionDeuda: null,
             vistaInterna: 'lista', // 'lista' | 'detalle'
             tabActual: 'normal',
             preloader: false,
@@ -695,6 +693,20 @@ export default {
         this.buscarPlanPago(); // Cargar inicial
     },
     methods: {
+        tienePermiso,
+        async actualizarFechaCobro() {
+            try {
+                const response = await axios.get('/listar_amortizaciones_cuotas', { params: { id_plan_pago: this.plan_pago.id, fecha_corte: this.paymentDetails.fecha_pago } });
+                this.lista_cuotas_plan = response.data.cuotas;
+                this.revisionDeuda = response.data.revision;
+                this.selectedCuotas = [];
+                this.paymentDetails.monto_recibido = 0;
+            } catch (error) {
+                if (axios.isCancel(error)) return;
+                this.selectedCuotas = [];
+                Swal.fire('No se pudo calcular la fecha', error.response?.data?.message || 'Actualice el detalle del crédito.', 'error');
+            }
+        },
         handleCobrarTotal() {
             if (this.cobrarTotal) {
                 this.paymentDetails.monto_recibido = parseFloat(this.totalLiquido);
@@ -809,6 +821,7 @@ export default {
                 });
                 this.lista_planespago = response.data;
             } catch (error) {
+                if (axios.isCancel(error)) return;
                 console.error(error);
             }
         },
@@ -820,6 +833,7 @@ export default {
                 });
                 this.lista_ordenes_repro = response.data;
             } catch (error) {
+                if (axios.isCancel(error)) return;
                 console.error(error);
             } finally {
                 this.preloader = false;
@@ -837,6 +851,7 @@ export default {
             try {
                 const response = await axios.get(`/listar_amortizaciones_cuotas?id_plan_pago=${item.id}`);
                 this.lista_cuotas_plan = response.data.cuotas;
+                this.revisionDeuda = response.data.revision;
                 this.dias_mora = response.data.dias_pasados_mora;
                 this.multa_dia = response.data.multa_dia || 3;
                 // Limpiar selección
@@ -845,6 +860,7 @@ export default {
                 
                 this.vistaInterna = 'detalle'; // Cambiar vista
             } catch (error) {
+                if (axios.isCancel(error)) return;
                 console.error(error);
                 Swal.fire('Error', 'No se pudieron cargar las cuotas.', 'error');
             }
@@ -925,6 +941,7 @@ export default {
 
                 const payload = {
                     id_plan_pago: this.plan_pago.id,
+                    revision: this.revisionDeuda,
                     cuotas: cuotasData,
                     modalidad_pago: this.paymentDetails.modalidad,
                     monto_recibido: parseFloat(this.paymentDetails.monto_recibido || 0),
@@ -933,7 +950,7 @@ export default {
                     condonacion_interes: parseFloat(this.paymentDetails.monto_condonado_interes) || 0,
                     motivo_condonacion_interes: this.paymentDetails.motivo_condonacion_interes || '',
                     condonacion_mora: parseFloat(this.paymentDetails.monto_condonado_multa) || 0,
-                    motivo_condonacion_mora: this.paymentDetails.motivo_condonacion_multa || ''
+                    motivo_condonacion_mora: this.paymentDetails.motivo_condonacion_interes || ''
                 };
 
                 if (payload.monto_recibido <= 0 && payload.condonacion_interes <= 0 && payload.condonacion_mora <= 0) {
@@ -975,8 +992,9 @@ export default {
                 });
 
             } catch (error) {
+                if (axios.isCancel(error)) return;
                 console.error(error);
-                Swal.fire('Error', error.response?.data?.error || 'No se pudo procesar el pago.', 'error');
+                Swal.fire('Error', error.response?.data?.message || error.response?.data?.error || error.message || 'No se pudo procesar el pago.', 'error');
             }
         },
 
