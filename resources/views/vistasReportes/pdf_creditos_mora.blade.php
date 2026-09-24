@@ -166,13 +166,13 @@
                 {{ number_format($cuota->interes_acumulado_neto, 2) }}
                 <br><span class="sub-line"><span class="sub-dev">Dev: {{ number_format($cuota->interes_devengado_neto, 2) }}</span> · <span class="sub-mor">Mor: {{ number_format($cuota->interes_moratorio_neto, 2) }}</span></span>
                 @if($cuota->interes_pagado_total > 0)
-                    <br><span class="sub-line sub-pag">Pag: {{ number_format($cuota->interes_pagado_total, 2) }}</span>
+                    <br><span class="sub-line sub-pag">Cobrado: {{ number_format($cuota->interes_cobrado_total, 2) }} · Condonado: {{ number_format($cuota->interes_condonado_total, 2) }}</span>
                 @endif
             </td>
             <td class="text-right text-red">
                 {{ number_format($cuota->mora_fija_neta, 2) }}
                 @if($cuota->mora_pagada_total > 0)
-                    <br><span class="sub-line sub-pag">Pag: {{ number_format($cuota->mora_pagada_total, 2) }}</span>
+                    <br><span class="sub-line sub-pag">Cobrado: {{ number_format($cuota->mora_cobrado_total, 2) }} · Condonado: {{ number_format($cuota->mora_condonado_total, 2) }}</span>
                 @endif
             </td>
             <td class="text-right fw-bold text-red">{{ number_format($cuota->total_a_pagar, 2) }}</td>

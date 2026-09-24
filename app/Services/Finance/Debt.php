@@ -80,7 +80,18 @@ final class Debt
                 $paidField = $component === 'mora' ? 'mora_pagada' : $component.'_pagado';
                 $paid = Money::cents($q->$paidField ?? 0);
                 $q->{$paidField.'_total'} = Money::decimal($paid);
-                $gross = match ($component) { 'capital' => Money::cents($q->capital), 'interes' => $normalCents + $moratory, default => $days * 300 };
+                $collected = $own->sum(fn ($p) => Money::cents($p->{'pago_'.$component}));
+                $forgiven = $component === 'capital' ? 0 : $own->sum(fn ($p) => Money::cents($p->{'monto_condonado_'.$component}));
+                $q->{$component.'_cobrado_total'} = Money::decimal($collected);
+                $q->{$component.'_condonado_total'} = Money::decimal($forgiven);
+                // Coverage includes forgiveness. A settled installment has no residual;
+                // do not compare its historical settlement with today's ordinary interest.
+                $residual = (int) $q->estado === 2 ? 0 : match ($component) {
+                    'capital' => Money::cents($q->capital_neto),
+                    'interes' => Money::cents($q->interes_acumulado_neto),
+                    default => Money::cents($q->mora_fija_neta),
+                };
+                $gross = $paid + $residual;
                 $q->{'porcentaje_'.$paidField} = $gross > 0 ? round($paid * 100 / $gross, 1) : 0;
             }
             if ((int) $q->estado === 2) {
@@ -89,6 +100,12 @@ final class Debt
             $q->total_a_pagar = Money::decimal(Money::cents($q->capital_neto) + Money::cents($q->interes_acumulado_neto) + Money::cents($q->mora_fija_neta));
             $scheduled -= Money::cents($q->capital);
         }
-        return ['cuotas' => $quotas, 'dias_pasados_mora' => $days, 'fecha_corte' => $cutoff->toDateString(), 'revision' => $revision];
+        return ['cuotas' => $quotas, 'dias_pasados_mora' => $days,
+            'resumen_multa' => [
+                'dias_historicos' => $days, 'generada' => Money::decimal($days * 300),
+                'cobrada' => Money::decimal($payments->sum(fn ($p) => Money::cents($p->pago_mora))),
+                'condonada' => Money::decimal($payments->sum(fn ($p) => Money::cents($p->monto_condonado_mora))),
+                'pendiente' => Money::decimal($fine),
+            ], 'fecha_corte' => $cutoff->toDateString(), 'revision' => $revision];
     }
 }

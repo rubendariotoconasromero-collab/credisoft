@@ -238,7 +238,7 @@
                                                 <td class="text-end text-danger">
                                                     <div>{{ formatMoney(cuota.mora_fija_neta) }}</div>
                                                     <div v-if="parseFloat(cuota.mora_pagada_total) > 0" class="text-success lh-1 mt-1" style="font-size:8.5px;">
-                                                        Pagado: {{ formatMoney(cuota.mora_pagada_total) }}
+                                                        Cobrado: {{ formatMoney(cuota.mora_cobrado_total) }} · Condonado: {{ formatMoney(cuota.mora_condonado_total) }}
                                                     </div>
                                                 </td>
 

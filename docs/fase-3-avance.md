@@ -62,3 +62,12 @@ Ver `fase-3-pruebas-manuales.md` para los recorridos de aceptación.
 - Totales con la misma búsqueda y rango que el listado, solo movimientos vigentes y todas las páginas. Las pestañas de cajas abiertas mantienen ese ámbito; se corrigió el título anterior «Caja actual».
 - Verificado: 59 pruebas y 911 comprobaciones; compilación Vite; consulta de ambos historiales en MySQL local sin escrituras; navegador con desglose mixto, vínculo de imagen y ocultación de anulación al cajero sin permiso.
 - No se añadieron permisos ni migraciones ni se alteraron movimientos existentes.
+
+
+## Presentación de condonaciones y atraso histórico
+
+El porcentaje de cobertura se calcula sobre el importe cubierto más el residual de la cuota. Una cuota liquidada no se compara contra el interés ordinario recalculado hoy. Los campos históricos de acumulados se conservan; los nuevos campos `*_cobrado_total` y `*_condonado_total` separan dinero y condonación a partir de pagos vigentes.
+
+En Caja, «Int. pendiente» identifica el importe residual. «Atraso histórico» muestra días acumulados y el resumen de multa generada, cobrada, condonada y pendiente. El detalle de plan y los PDF consultados separan también los importes condonados del dinero cobrado.
+
+Regresión DEMO Nicolás al 24/09/2026: interés cobrado30, condonado20, pendiente0, cubierto100%; multa histórica24 por8días, cobrada0, condonada21, pendiente3. Prueba de lectura sin alterar pagos. Suite:60pruebas/922comprobaciones; compilación aprobada.

@@ -191,7 +191,7 @@
             @foreach($detalles as $cuota)
                 <?php 
                     // Cálculos de total pagado igual que en el frontend
-                    $totalPagado = $cuota->capital_pagado_total + $cuota->interes_pagado_total + $cuota->mora_pagada;
+                    $totalPagado = $cuota->capital_cobrado_total + $cuota->interes_cobrado_total + $cuota->mora_cobrado_total;
                 ?>
                 <tr>
                     <td style="font-weight: bold;">{{ $cuota->numero }}</td>
@@ -211,9 +211,12 @@
                     <td class="bg-light-success">
                         @if($totalPagado > 0)
                             <strong class="text-success">{{ number_format($totalPagado, 2) }} Bs</strong>
-                            <span class="small-text">Cap: {{ number_format($cuota->capital_pagado_total, 2) }} | Int: {{ number_format($cuota->interes_pagado_total, 2) }}</span>
+                            <span class="small-text">Cap: {{ number_format($cuota->capital_pagado_total, 2) }} | Int: {{ number_format($cuota->interes_cobrado_total, 2) }} | Multa: {{ number_format($cuota->mora_cobrado_total, 2) }}</span>
                         @else
                             <span style="color:#aaa; font-style:italic;">Sin pagos</span>
+                        @endif
+                        @if($cuota->interes_condonado_total > 0 || $cuota->mora_condonado_total > 0)
+                            <span class="small-text">Condonado: Int {{ number_format($cuota->interes_condonado_total, 2) }} | Multa {{ number_format($cuota->mora_condonado_total, 2) }}</span>
                         @endif
                     </td>
                     

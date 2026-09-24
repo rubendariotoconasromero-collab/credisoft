@@ -255,8 +255,14 @@
                             <div class="d-flex justify-content-between mb-1"><strong>Inicio:</strong> <span>{{ formatDate(plan_pago.fecha_inicio_plan) }}</span></div>
                             <div class="d-flex justify-content-between mb-1"><strong>Fin:</strong> <span>{{ formatDate(plan_pago.fecha_fin_plan) }}</span></div>
                             <div v-if="dias_mora > 0" class="d-flex justify-content-between">
-                                <span class="fw-bold text-danger">Multa General:</span>
-                                <span class="fw-bold text-danger">{{ dias_mora }} Días</span>
+                                <span class="fw-bold text-danger">Atraso histórico:</span>
+                                <span class="fw-bold text-danger">{{ dias_mora }} días acumulados</span>
+                            </div>
+                            <div v-if="resumenMulta" class="small mt-2">
+                                <div>Multa generada: {{ formatNumero(resumenMulta.generada) }} Bs</div>
+                                <div>Cobrada: {{ formatNumero(resumenMulta.cobrada) }} Bs · Condonada: {{ formatNumero(resumenMulta.condonada) }} Bs</div>
+                                <div class="fw-bold text-danger">Multa pendiente: {{ formatNumero(resumenMulta.pendiente) }} Bs</div>
+                                <div class="text-muted">Los días históricos incluyen períodos de multa ya cobrados o condonados.</div>
                             </div>
                         </div>
                     </div>
@@ -281,7 +287,7 @@
                                 <th class="text-center text-danger">Multa a Pagar</th>
                                 <th class="text-center fw-bold">Total a Pagar</th>
 
-                                <th class="text-center">Int. Acumulado</th>
+                                <th class="text-center">Int. pendiente</th>
                                 <th class="text-center">Estado</th>
                                 <th class="text-center">Pagar</th>
                             </tr>
@@ -317,8 +323,9 @@
                                         {{ cuota.estado == 0 ? '---' : formatNumero(cuota.mora_fija_neta) }}
                                     </div>
                                     <div v-if="cuota.mora_pagada_total > 0" class="text-success fw-bold lh-1 mt-1" style="font-size: 0.65rem;">
-                                        Pagado: {{ formatNumero(cuota.mora_pagada_total) }} <br>
-                                        ({{ cuota.porcentaje_mora_pagada }}%)
+                                        Cobrado: {{ formatNumero(cuota.mora_cobrado_total) }}<br>
+                                        Condonado: {{ formatNumero(cuota.mora_condonado_total) }}<br>
+                                        Cubierto: {{ cuota.porcentaje_mora_pagada }}%
                                     </div>
                                 </td>
 
@@ -334,8 +341,9 @@
                                         {{ cuota.estado == 0 ? '---' : formatNumero(cuota.interes_acumulado_neto) }}
                                     </div>
                                     <div v-if="cuota.interes_pagado_total > 0" class="text-success fw-bold lh-1 mt-1" style="font-size: 0.65rem;">
-                                        Pagado: {{ formatNumero(cuota.interes_pagado_total) }} <br>
-                                        ({{ cuota.porcentaje_interes_pagado }}%)
+                                        Cobrado: {{ formatNumero(cuota.interes_cobrado_total) }}<br>
+                                        Condonado: {{ formatNumero(cuota.interes_condonado_total) }}<br>
+                                        Cubierto: {{ cuota.porcentaje_interes_pagado }}%
                                     </div>
                                 </td>
                                 
@@ -592,6 +600,7 @@ export default {
             plan_pago: {}, // Datos del plan seleccionado
             lista_cuotas_plan: [],
             dias_mora: 0,
+            resumenMulta: null,
             multa_dia: 3,
             selectedCuotas: [], // IDs seleccionados
             cobrarTotal: false,
@@ -699,6 +708,8 @@ export default {
                 const response = await axios.get('/listar_amortizaciones_cuotas', { params: { id_plan_pago: this.plan_pago.id, fecha_corte: this.paymentDetails.fecha_pago } });
                 this.lista_cuotas_plan = response.data.cuotas;
                 this.revisionDeuda = response.data.revision;
+                this.resumenMulta = response.data.resumen_multa;
+                this.dias_mora = response.data.dias_pasados_mora;
                 this.selectedCuotas = [];
                 this.paymentDetails.monto_recibido = 0;
             } catch (error) {
@@ -852,6 +863,8 @@ export default {
                 const response = await axios.get(`/listar_amortizaciones_cuotas?id_plan_pago=${item.id}`);
                 this.lista_cuotas_plan = response.data.cuotas;
                 this.revisionDeuda = response.data.revision;
+                this.resumenMulta = response.data.resumen_multa;
+                this.dias_mora = response.data.dias_pasados_mora;
                 this.dias_mora = response.data.dias_pasados_mora;
                 this.multa_dia = response.data.multa_dia || 3;
                 // Limpiar selección

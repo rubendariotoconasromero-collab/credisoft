@@ -146,4 +146,25 @@ class DevelopmentSeederTest extends TestCase
         $this->assertDatabaseCount('cliente', 16);
         $this->assertEquals(38257, DB::table('boveda')->value('saldo_actual'));
     }
+    public function test_nicolas_settlement_separates_collected_and_forgiven_interest_and_historical_fine(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+        $plan = DB::table('plan_pago')->join('solicitud', 'solicitud.id', '=', 'plan_pago.id_solicitud')
+            ->join('cliente', 'cliente.id', '=', 'solicitud.id_cliente')->where('cliente.ci', 'DEMO-C014')->value('plan_pago.id');
+        $before = DB::table('pago')->get()->toJson();
+        $result = app(\App\Services\Finance\Debt::class)->calculate($plan, '2026-09-24');
+        $first = $result['cuotas']->first();
+        $this->assertEquals(100, $first->porcentaje_interes_pagado);
+        $this->assertSame('30.00', $first->interes_cobrado_total);
+        $this->assertSame('20.00', $first->interes_condonado_total);
+        $this->assertSame('0.00', $first->interes_acumulado_neto);
+        $this->assertSame('0.00', $first->mora_cobrado_total);
+        $this->assertSame('21.00', $first->mora_condonado_total);
+        $this->assertEquals(100, $first->porcentaje_mora_pagada);
+        $this->assertSame(['dias_historicos' => 8, 'generada' => '24.00', 'cobrada' => '0.00', 'condonada' => '21.00', 'pendiente' => '3.00'], $result['resumen_multa']);
+        $this->assertSame('28.57', $result['cuotas'][1]->interes_acumulado_neto);
+        $this->assertSame('3.00', $result['cuotas'][1]->mora_fija_neta);
+        $this->assertSame($before, DB::table('pago')->get()->toJson());
+    }
+
 }

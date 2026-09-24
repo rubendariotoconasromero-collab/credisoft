@@ -172,14 +172,17 @@
                                         <div v-if="calcularTotalPagado(cuota) > 0">
                                             <span class="d-block fw-bold text-success fs-6">{{ formatNumero(calcularTotalPagado(cuota)) }} Bs</span>
                                             <span class="d-block text-muted lh-1 mb-1" style="font-size: 0.65rem;">
-                                                Cap: {{ formatNumero(cuota.capital_pagado_total) }} | Int: {{ formatNumero(cuota.interes_pagado_total) }}
-                                                <template v-if="parseFloat(cuota.mora_pagada) > 0">| Multa: {{ formatNumero(cuota.mora_pagada) }}</template>
+                                                Cap: {{ formatNumero(cuota.capital_pagado_total) }} | Int: {{ formatNumero(cuota.interes_cobrado_total) }}
+                                                <template v-if="parseFloat(cuota.mora_pagada) > 0">| Multa: {{ formatNumero(cuota.mora_cobrado_total) }}</template>
                                             </span>
                                             <button @click="verDetallePagos(cuota)" class="btn btn-outline-success btn-sm py-0 px-2 shadow-sm" style="font-size: 0.65rem;" title="Ver detalle de pagos">
                                                 <i class="fas fa-receipt"></i> Ver Historial
                                             </button>
                                         </div>
                                         <div v-else class="text-muted small fst-italic">Sin pagos</div>
+                                        <div v-if="Number(cuota.interes_condonado_total) || Number(cuota.mora_condonado_total)" class="small text-muted">
+                                            Condonado: Int {{ formatNumero(cuota.interes_condonado_total) }} | Multa {{ formatNumero(cuota.mora_condonado_total) }}
+                                        </div>
                                     </td>
                                     
                                     <td>
@@ -337,8 +340,8 @@ export default {
         // --- NUEVOS MÉTODOS PARA EL HISTORIAL DE PAGOS ---
         calcularTotalPagado(cuota) {
             const cap = parseFloat(cuota.capital_pagado_total) || 0;
-            const int = parseFloat(cuota.interes_pagado_total) || 0;
-            const mora = parseFloat(cuota.mora_pagada) || 0;
+            const int = parseFloat(cuota.interes_cobrado_total) || 0;
+            const mora = parseFloat(cuota.mora_cobrado_total) || 0;
             return cap + int + mora;
         },
 
