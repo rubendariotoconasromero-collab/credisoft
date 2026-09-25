@@ -24,6 +24,7 @@
                     v-if="view == 1"
                     :plan="plan_pago"
                     :cuotas="lista_cuotas_plan"
+                    :resumen-multa="resumen_multa_plan"
                     @cerrar="cerrarModalCuotas"
                     @ver-ficha="verFicha"
                     @ver-original="verDetalleOriginal"
@@ -844,6 +845,7 @@ export default {
             lapso_capitales: lapso_capitales,
             buscar: '',
             lista_cuotas_plan: [],
+            resumen_multa_plan: null,
             lista_planespago: [],
             pagination: {
                 'total': 0,
@@ -1993,6 +1995,7 @@ export default {
             this.view = 0;
             this.plan_pago = {};
             this.lista_cuotas_plan = [];
+            this.resumen_multa_plan = null;
         },
 
         async abrirModalVerCuotas(item) {
@@ -2036,12 +2039,14 @@ export default {
         },
         async getCuotas(item) {
             this.lista_cuotas_plan = [];
+            this.resumen_multa_plan = null;
             // Llama al endpoint unificado que acabamos de ajustar
             await axios.get('/listar_amortizaciones_cuotas?id_plan_pago=' + item.id_plan_pago)
                 .then((response) => {
                     console.log("Cuotas cargadas unificadas:", response.data);
                     // Como el backend ahora retorna $resultado['cuotas'], data ya es el array
                     this.lista_cuotas_plan = response.data.cuotas;
+                    this.resumen_multa_plan = response.data.resumen_multa ?? null;
                     this.plan_pago.revision_deuda = response.data.revision;
                 })
                 .catch((error) => {
