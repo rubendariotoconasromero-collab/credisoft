@@ -12,6 +12,8 @@ final class CancelPlan
         $request->validate(['id_planpago' => 'required|integer', 'motivo' => 'required|string|min:3|max:1000']);
         return app(Operations::class)->run($request, 'anular_plan', function ($op) use ($request) {
             $plan = DB::table('plan_pago')->find($request->id_planpago);
+            abort_if(DB::table('reprogramaciones_financieras')->where('id_plan_nuevo', $request->id_planpago)->where('estado', 'aprobada')->exists(),
+                422, 'Cancele esta reprogramación desde Solicitudes para restablecer el crédito original.');
             abort_unless($plan && (int) $plan->estado === 1, 422, 'El plan no está activo.');
             $cash = Operations::cash($request->id_caja);
             $ids = DB::table('cuota')->where('id_plan_pago', $plan->id)->pluck('id');

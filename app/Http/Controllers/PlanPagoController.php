@@ -74,7 +74,7 @@ class PlanPagoController extends Controller
 
         // --- SEGURIDAD: Lista blanca para el buscador ---
         // Define aquí exactamente qué columnas permites que el usuario use para buscar
-        $criteriosPermitidos = ['cliente.nombre', 'cliente.ci', 'solicitud.id']; 
+        $criteriosPermitidos = ['plan_pago.id', 'cliente.nombre', 'cliente.ci', 'solicitud.id'];
         
         if (in_array($request->criterio, $criteriosPermitidos) && !empty($request->buscar)) {
             $planes_pago->where($request->criterio, 'like', '%' . $request->buscar . '%');
@@ -112,6 +112,11 @@ class PlanPagoController extends Controller
 
     public function getPlanesPagoCaja(Request $request)
     {
+        $request->validate([
+            'criterio' => 'nullable|in:plan_pago.id,cliente.nombre,cliente.ci',
+            'fecha_inicio' => 'nullable|date_format:Y-m-d',
+            'fecha_fin' => 'nullable|date_format:Y-m-d',
+        ]);
         $fechaActual = Carbon::now()->format('Y-m-d');
 
         $planes_pago = \App\Services\CarteraAccess::query('plan_pago')
@@ -125,6 +130,7 @@ class PlanPagoController extends Controller
                 'solicitud.lapso_capital',
                 'solicitud.nro_cuotas',
                 'solicitud.tasa',
+                'solicitud.tipo_tasa',
                 'solicitud.fecha_desembolso',
                 'solicitud.fecha_primera_cuota',
                 'solicitud.destino_prestamo',
@@ -142,20 +148,20 @@ class PlanPagoController extends Controller
                 'plan_pago.id',
                 'cliente.ci',
                 'cliente.lugar_expedicion',
+                'cliente.imagen',
+                'cliente.vivienda',
+                'cliente.actividad',
                 'plan_pago.desembolso',
                 'plan_pago.pago_administrativo',
                 'plan_pago.fecha_ultima_amortizacion',
             )
             ->where('plan_pago.desembolso', 0)
-            ->where($request->criterio, 'like', '%'.$request->buscar.'%');
+            ->where('plan_pago.estado', 1)
+            ->where($request->input('criterio') ?: 'cliente.nombre', 'like', '%'.$request->buscar.'%');
 
         // Filtro por fechas
-        if ($request->fecha_inicio && $request->fecha_fin) {
-            $planes_pago->whereBetween('plan_pago.fecha_inicio', [
-                $request->fecha_inicio, 
-                $request->fecha_fin
-            ]);
-        }
+        if ($request->filled('fecha_inicio')) $planes_pago->whereDate('plan_pago.fecha_inicio', '>=', $request->fecha_inicio);
+        if ($request->filled('fecha_fin')) $planes_pago->whereDate('plan_pago.fecha_inicio', '<=', $request->fecha_fin);
 
         // Filtros existentes (asesor y estado)
         if ($request->estado_credito == 'vigentes') {
@@ -255,6 +261,7 @@ class PlanPagoController extends Controller
     {
         return DB::transaction(function () use ($request) {
             \App\Services\Finance\FinancialLock::acquire();
+            abort_if(DB::table('reprogramaciones_financieras')->where('id_plan_origen', $request->id_planpago)->whereIn('estado', ['pendiente', 'aprobada'])->exists(), 422, 'El crédito tiene una reprogramación vigente.');
             \App\Services\CarteraAccess::assertRecord('plan_pago', $request->id_planpago);
             $plan = DB::table('plan_pago')->where('id', $request->id_planpago)->lockForUpdate()->first();
             abort_unless($plan && (int) $plan->estado === 0, 422, 'Solo se puede activar un plan anulado.');

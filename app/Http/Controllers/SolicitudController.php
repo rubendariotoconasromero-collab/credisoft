@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
 use DB;
 use Dompdf\Dompdf;
@@ -30,6 +31,12 @@ class SolicitudController extends Controller
     }
 
     public function save(Request $request){
+        $request->validate([
+            'moneda' => ['required', Rule::in(['Bolivianos'])],
+        ], [
+            'moneda.in' => 'Actualmente solo se permiten solicitudes de crédito en bolivianos.',
+        ]);
+
         DB::beginTransaction();
         try{
             $id_solicitud=\App\Services\CarteraAccess::query('solicitud')->insertGetId([
@@ -42,7 +49,7 @@ class SolicitudController extends Controller
                 'fecha'=>now(),
                 'fecha_primera_cuota'=>$request->fecha_primera_cuota,
                 'destino_prestamo'=>$request->destino_prestamo,
-                // 'monto_pago_adm'=>$request->monto_pago_adm,
+                'monto_pago_adm'=>\App\Services\Finance\AdministrativeFee::decimalFromAmount($request->importe_solicitud),
                 'tipo_garantia'=>$request->tipo_garantia,
                 'tipo_desembolso'=>$request->tipo_desembolso,
                 'id_cliente'=>$request->id_cliente,
@@ -88,6 +95,8 @@ class SolicitudController extends Controller
     }
 
     public function modify(Request $request){
+        abort_if(DB::table('reprogramaciones_financieras')->where('id_solicitud', $request->id_solicitud)->exists(),
+            422, 'Los términos de esta solicitud se ajustan desde Aprobar Reprogramación o Refinanciamiento. Para cambiar su origen o capital, cancele y registre una nueva.');
         DB::beginTransaction();
         try{
             $id_solicitud=\App\Services\CarteraAccess::query('solicitud')->where('id', $request->id_solicitud)->update([
@@ -99,7 +108,7 @@ class SolicitudController extends Controller
                 'fecha_desembolso'=>$request->fecha_desembolso,
                 'fecha_primera_cuota'=>$request->fecha_primera_cuota,
                 'destino_prestamo'=>$request->destino_prestamo,
-                'monto_pago_adm'=>$request->monto_pago_adm,
+                'monto_pago_adm'=>\App\Services\Finance\AdministrativeFee::decimalFromAmount($request->importe_solicitud),
                 'tipo_garantia'=>$request->tipo_garantia,
                 'tipo_desembolso'=>$request->tipo_desembolso,
                 'id_cliente'=>$request->id_cliente,
@@ -225,6 +234,7 @@ class SolicitudController extends Controller
         return $solicitudes;
     }
     public function activarSolicitud(Request $request){
+        abort_if(DB::table('reprogramaciones_financieras')->where('id_solicitud', $request->id_solicitud)->exists(), 422, 'Registre una nueva reprogramación con la deuda vigente.');
         \App\Services\CarteraAccess::query('solicitud')->where('solicitud.id', $request->id_solicitud)
         ->update([
             'estado'=>1
@@ -232,6 +242,9 @@ class SolicitudController extends Controller
     }
 
     public function desactivarSolicitud(Request $request){
+        if (DB::table('reprogramaciones_financieras')->where('id_solicitud', $request->id_solicitud)->exists()) {
+            return app(\App\Services\Finance\Rescheduling::class)->cancel($request);
+        }
         \App\Services\CarteraAccess::query('solicitud')->where('solicitud.id', $request->id_solicitud)
         ->update([
             'estado'=>0
@@ -382,6 +395,7 @@ class SolicitudController extends Controller
     }
 
     public function savePlanPagosCuotas(Request $request){
+        abort_if(DB::table('solicitud')->where('id', $request->id_solicitud)->whereNotNull('id_solicitud_origen')->exists(), 422, 'Use la aprobación de reprogramación para esta solicitud.');
         DB::beginTransaction();
         try{
             $solicitud=\App\Services\CarteraAccess::query('solicitud')
@@ -419,7 +433,8 @@ class SolicitudController extends Controller
             }
 
             \App\Services\CarteraAccess::query('solicitud')->where('id', $request->id_solicitud)->update([
-                'estado'=>2
+                'estado'=>2,
+                'monto_pago_adm'=>\App\Services\Finance\AdministrativeFee::decimalFromAmount($solicitud[0]->importe_solicitud),
             ]);
 
             DB::commit();
@@ -1075,166 +1090,9 @@ class SolicitudController extends Controller
 
     public function registrarSolicitudEspecial(Request $request)
     {
-        // 1. VALIDACIONES
-        //dd($request);
-        $importeString = $request->input('plan_pago.importe_solicitud'); // "3.401"
-        // 2. Quitar el punto (.)
-        $importeLimpio = str_replace('.', '', $importeString); // "3401"
-
-        // 3. Convertir a entero (o float)
-        $importeEntero = (int) $importeLimpio; // 3401
-
-        $request->validate([
-            'tipo_operacion' => 'required|in:REPROGRAMACION,REFINANCIAMIENTO', // Nuevo campo
-            'monto_adicional' => 'nullable|numeric|min:0', // Solo para refinanciamiento
-            'plan_pago' => 'required|array',
-            'plan_pago.id_cliente' => 'required|integer|exists:cliente,id',
-            'plan_pago.id_solicitud' => 'required|integer|exists:solicitud,id',
-            'plan_pago.importe_solicitud' => 'required|numeric|min:0',
-            'plan_pago.forma_pago_reprogramacion' => 'required|string',
-            'plan_pago.numero_cuotas_reprogramacion' => 'required|integer|min:1',
-            'pago_intereses' => 'nullable|array'
-        ]);
-
-        $plan_pago = $request->input('plan_pago');
-        $tipoOperacion = $request->input('tipo_operacion');
-        $montoAdicional = $request->input('monto_adicional', 0);
-
-        $pagoData = $request->input('pago_intereses');
-
-        DB::beginTransaction();
-        try {
-
-            // 2. Obtener Solicitud Original
-            $solicitudOriginal = Solicitud::find($plan_pago['id_solicitud']);
-            if (!$solicitudOriginal) {
-                throw new Exception('La solicitud original no fue encontrada.');
-            }
-
-            // 3. Configurar Variables Variables según el Tipo
-            $tipoBD = '';
-            $cntReprog = $solicitudOriginal->cantidad_reprogramaciones;
-            $cntRefin = $solicitudOriginal->cantidad_refinanciamientos;
-            $montoRefin = 0;
-
-            if ($tipoOperacion === 'REFINANCIAMIENTO') {
-                $tipoBD = 'Refinanciamiento';
-                $cntRefin++; // Aumentamos refinanciamientos
-                $montoRefin = $montoAdicional; // Guardamos el dinero fresco
-            } else {
-                $tipoBD = 'Reprogramacion';
-                $cntReprog++; // Aumentamos reprogramaciones
-            }
-
-            // 4. Calcular Fechas
-            $fechaCalculo = Carbon::today();
-            $fechaPrimeraCuota = Carbon::parse($plan_pago['fecha_primera_cuota'] ?? Carbon::today());
-            
-            // Si no viene fecha, calculamos la tentativa
-            if (!isset($plan_pago['fecha_primera_cuota'])) {
-                 $formaPago = $plan_pago['forma_pago_reprogramacion'];
-                 if ($formaPago === 'Mensual') $fechaPrimeraCuota->addMonth();
-                 elseif ($formaPago === 'Quincenal') $fechaPrimeraCuota->addDays(15);
-                 elseif ($formaPago === 'Semanal') $fechaPrimeraCuota->addWeek();
-            }
-
-            // 5. Crear la NUEVA Solicitud
-            $nuevaSolicitud = Solicitud::create([
-                // Vínculos
-                'id_cliente' => $plan_pago['id_cliente'],
-                'id_usuario' => Auth::id(),
-                'id_solicitud_origen' => $solicitudOriginal->id,
-                
-                // Lógica Diferenciada
-                'tipo_solicitud' => $tipoBD,
-                'cantidad_reprogramaciones' => $cntReprog,
-                'cantidad_refinanciamientos' => $cntRefin,
-                'monto_refinanciamiento' => $montoRefin,
-                
-                // Datos Generales
-                'moneda' => $plan_pago['moneda'],
-                'destino_prestamo' => $plan_pago['destino_prestamo'],
-                'tipo_garantia' => $plan_pago['tipo_garantia'],
-                'tipo_desembolso' => $plan_pago['tipo_desembolso'],
-                'tipo_tasa' => $plan_pago['tipo_tasa'],
-                'tasa' => (float)$plan_pago['tasa'],
-                'importe_solicitud' => $importeEntero,
-                'lapso_capital' => $plan_pago['forma_pago_reprogramacion'],
-                'nro_cuotas' => $plan_pago['numero_cuotas_reprogramacion'],
-                
-                'fecha' => $fechaCalculo,
-                'fecha_desembolso' => $fechaCalculo,
-                'fecha_primera_cuota' => $fechaPrimeraCuota->format('Y-m-d'),
-                'estado' => 1, // Nuevo
-            ]);
-            
-            $id_nueva = $nuevaSolicitud->id;
-
-            // 6. COPIAR ENTIDADES (Garantías, Codeudores, Respaldos)
-            $this->copiarEntidadesAsociadas($solicitudOriginal->id, $id_nueva);
-
-            // 7. [NUEVO BLOQUE] REGISTRAR ORDEN DE PAGO (INTERESES/MORA)
-            // Verificamos si el usuario seleccionó pagar algo en el frontend
-            if ($pagoData && isset($pagoData['seleccionado']) && $pagoData['seleccionado'] == true) {
-                
-                // Combinar IDs de cuotas (interés y mora) en un solo array sin duplicados
-                $idsInteres = $pagoData['ids_cuotas_interes'] ?? [];
-                $idsMora = $pagoData['ids_cuotas_mora'] ?? [];
-                $idsAfectados = array_values(array_unique(array_merge($idsInteres, $idsMora)));
-
-                // Crear la orden
-                OrdenPagoReprogramacion::create([
-                    'id_solicitud_nueva' => $id_nueva,
-                    // OJO: Asegúrate de enviar 'id_plan_pago' o 'id' del plan original desde el front
-                    'id_plan_pago_origen' => $plan_pago['id'] ?? $plan_pago['id_plan_pago'], 
-                    // Montos calculados (Información Bruta)
-                    'monto_interes_calculado' => $pagoData['detalle_interes'] ?? 0,
-                    'monto_mora_calculado' => $pagoData['detalle_mora'] ?? 0,
-                    // Condonaciones
-                    'se_condono_interes' => $pagoData['condonar_interes'] ?? false,
-                    'monto_condonado_interes' => $pagoData['monto_condonar_interes'] ?? 0,
-                    'se_condono_mora' => $pagoData['condonar_mora'] ?? false,
-                    'monto_condonado_mora' => $pagoData['monto_condonar_mora'] ?? 0,
-                    'motivo_condonacion' => $pagoData['motivo_condonacion'] ?? null,
-                    // Total Final a Pagar (Caja cobrará esto)
-                    'total_a_pagar' => $pagoData['total_pagar'],
-                    // Detalles técnicos
-                    'ids_cuotas_afectadas' => $idsAfectados,
-                    'estado' => OrdenPagoReprogramacion::ESTADO_NO_DISPONIBLE // 0
-                ]);
-            }
-            // =================================================================================
-
-            $idPlanOrigen = $plan_pago['id'] ?? $plan_pago['id_plan_pago'];
-            $planOriginalObj = PlanPago::find($idPlanOrigen);
-
-            if ($planOriginalObj) {
-                // Opción A: Cambiar estado a uno especial (Ej: 5 = En Proceso)
-                // Asegúrate de que tus validaciones en otros lados ignoren el estado 5 para cobros normales
-                $planOriginalObj->estado = 5; 
-                
-                // Opción B: Si tienes una columna 'bloqueado'
-                // $planOriginalObj->bloqueado = true;
-
-                $planOriginalObj->save();
-            }
-
-            DB::commit();
-            $mensaje = ($tipoOperacion === 'REFINANCIAMIENTO') 
-                ? 'Solicitud de Refinanciamiento registrada (Dinero extra: ' . $montoAdicional . ').'
-                : 'Solicitud de Reprogramación registrada con éxito.';
-
-            return response()->json([
-                'message' => $mensaje,
-                'solicitud_id' => $id_nueva
-            ], 201);
-
-        } catch (Exception $e) {
-            DB::rollBack();
-            return response()->json(['message' => 'Error: ' . $e->getMessage()], 500);
-        }
+        return app(\App\Services\Finance\Rescheduling::class)->register($request,
+            fn ($original, $nuevo) => $this->copiarEntidadesAsociadas($original, $nuevo));
     }
-
     // Helper para copiar (reutilizable)
     private function copiarEntidadesAsociadas($idOriginal, $idNuevo) {
         // Garantías
@@ -1262,66 +1120,14 @@ class SolicitudController extends Controller
 
     public function calcularMonto($id_plan_pago)
     {
-        // 1. Usar la fecha actual del servidor
-        $hoy = Carbon::today(); 
-        // --- Para propósitos de prueba, si tu BD está en el futuro: ---
-        // $hoy = Carbon::parse('2025-11-14'); 
-
-        // 2. Obtener el Plan de Pago y la Solicitud asociada
-        $plan = PlanPago::with('solicitud')->find($id_plan_pago);
-
-        if (!$plan || !$plan->solicitud) {
-            return response()->json(['message' => 'Plan de pago o solicitud asociada no encontrados.'], 404);
-        }
-
-        $solicitud = $plan->solicitud;
-        
-        // 3. VALIDACIÓN (Tu Regla de Negocio: estado=1 es Pendiente)
-        $cuotasVencidas = Cuota::where('id_plan_pago', $id_plan_pago)
-            ->where('estado', 1) // 1 = Pendiente
-            ->where('fecha', '<', $hoy)
-            ->count();
-
-        // if ($cuotasVencidas > 0) {
-        //     return response()->json([
-        //         'message' => 'No se puede reprogramar: El cliente tiene ' . $cuotasVencidas . ' cuota(s) vencida(s).'
-        //     ], 422);
-        // }
-
-        // 4. CÁLCULO
-
-        // A. Capital Pendiente neto (estados 1=Pendiente y 3=Parcial, descontando lo pagado)
-        $cuotasPendientes = Cuota::where('id_plan_pago', $id_plan_pago)
-            ->whereIn('estado', [1, 3])
-            ->get();
-
-        $capitalPendiente = $cuotasPendientes->sum(function ($c) {
-            return max(0, (float)$c->capital - (float)($c->capital_pagado ?? 0));
-        });
-
-        // B. Interés Acumulado sobre saldo capital pendiente
-        $interesAcumulado = 0.00;
-        $fechaBase = $plan->fecha_ultima_amortizacion ?? $solicitud->fecha_desembolso;
-
-        if ($fechaBase) {
-            $fechaBase = Carbon::parse($fechaBase)->startOfDay();
-            $diasTranscurridos = (int) $fechaBase->diffInDays($hoy, true);
-
-            if ($diasTranscurridos > 0 && $capitalPendiente > 0 && $plan->tasa > 0) {
-                $tasaDiaria = ($plan->tasa / 100) / 30;
-                $interesAcumulado = $capitalPendiente * $tasaDiaria * $diasTranscurridos;
-            }
-        }
-
-        // C. Monto Total a Reprogramar (capital neto + interés acumulado)
-        $montoTotalReprogramar = $capitalPendiente + $interesAcumulado;
-
-        // 5. DEVOLVER RESPUESTA
-        return response()->json([
-            // Enviamos el objeto 'solicitud' (que se convierte en 'plan_pago' en Vue)
-            'plan_pago' => $solicitud, 
-            'monto_a_reprogramar' => round($montoTotalReprogramar, 2)
-        ]);
+        \App\Services\CarteraAccess::assertRecord('plan_pago', $id_plan_pago);
+        $plan = PlanPago::with('solicitud')->findOrFail($id_plan_pago);
+        abort_unless($plan->solicitud && (int) $plan->estado === 1, 422, 'Seleccione un crédito activo.');
+        $debt = app(\App\Services\Finance\Debt::class)->calculate((int) $plan->id);
+        $amount = $debt['cuotas']->whereIn('estado', [1, 3])->sum(fn ($q) => \App\Services\Finance\Money::cents($q->total_a_pagar));
+        return response()->json(['plan_pago' => $plan->solicitud,
+            'monto_a_reprogramar' => \App\Services\Finance\Money::decimal($amount),
+            'fecha_corte' => $debt['fecha_corte'], 'revision' => $debt['revision']]);
     }
 
     public function obtenerDatosOriginales($id_reprogramacion)
@@ -1345,10 +1151,8 @@ class SolicitudController extends Controller
         
         if ($planOriginal) {
             $cuotas = Cuota::where('id_plan_pago', $planOriginal->id)->get();
-            // Calculamos el saldo capital real sumando las cuotas pendientes
-            $saldoActual = Cuota::where('id_plan_pago', $planOriginal->id)
-                                ->where('estado', 1) // Pendiente
-                                ->sum('capital'); 
+            $saldoActual = $cuotas->whereIn('estado', [1, 3])->sum(fn ($c) =>
+                max(0, (float) $c->capital - (float) ($c->capital_pagado ?? 0)));
         }
 
         return response()->json([
@@ -1362,126 +1166,8 @@ class SolicitudController extends Controller
     
     public function aprobarReprogramacionFinal(Request $request)
     {
-        // 1. Validar datos básicos
-        $request->validate([
-            'id_solicitud' => 'required|exists:solicitud,id',
-            'datos_actualizados' => 'required|array',
-            'cuotas' => 'required|array|min:1'
-        ]);
-
-        $idSolicitud = $request->input('id_solicitud');
-        $datos = $request->input('datos_actualizados');
-        $cuotas = $request->input('cuotas');
-
-        DB::beginTransaction();
-        try {
-            // 2. Obtener la Solicitud Nueva (que está en estado Pendiente)
-            $nuevaSolicitud = Solicitud::find($idSolicitud);
-            
-            // === LÓGICA DE DESEMBOLSO (CRÍTICO) ===
-            // Si es REFINANCIAMIENTO, el estado de desembolso es 0 (Pendiente de entregar efectivo en caja)
-            // Si es REPROGRAMACION, el estado de desembolso es 1 (Ya desembolsado contablemente)
-            $estadoDesembolso = ($nuevaSolicitud->tipo_solicitud === 'Refinanciamiento') ? 0 : 1;
-
-            // 3. Actualizar Solicitud con datos finales editados por el aprobador
-            $nuevaSolicitud->update([
-                'importe_solicitud' => $datos['importe_solicitud'], // El monto Final
-                'lapso_capital'     => $datos['lapso_capital'],
-                'nro_cuotas'        => $datos['nro_cuotas'],
-                'fecha_desembolso'  => $datos['fecha_desembolso'], // Fecha de Aprobación
-                'fecha_primera_cuota' => $datos['fecha_primera_cuota'],
-                'tasa'              => $datos['tasa'],
-                
-                'estado'            => 2, // 2 = APROBADO
-                'desembolso'        => $estadoDesembolso 
-            ]);
-
-            // 4. Anular el Crédito Original (El Padre)
-            if ($nuevaSolicitud->id_solicitud_origen) {
-                $solicitudOriginal = Solicitud::find($nuevaSolicitud->id_solicitud_origen);
-                
-                if ($solicitudOriginal) {
-                    // Estado 3 = Anulado/Reprogramado
-                    $solicitudOriginal->update(['estado' => 3]); 
-                }
-
-                // Desactivar el Plan de Pagos Viejo
-                // estado 1 = Activo, estado 5 = En Proceso (bloqueado al iniciar reprogramación)
-                $planOriginal = PlanPago::where('id_solicitud', $nuevaSolicitud->id_solicitud_origen)
-                                        ->whereIn('estado', [1, 5])->first();
-                                        
-                if ($planOriginal) {
-                    $planOriginal->update(['estado' => 0]); // 0 = Inactivo
-                    
-                    // Anular cuotas pendientes del plan viejo (estado 1=Pendiente, 3=Parcial)
-                    Cuota::where('id_plan_pago', $planOriginal->id)
-                         ->whereIn('estado', [1, 3])
-                         ->update(['estado' => 0]);
-                }
-            }
-
-            // 5. Crear el Nuevo Plan de Pagos
-            // Calculamos la suma del CAPITAL puro (según tu requerimiento anterior)
-            $totalCapital = collect($cuotas)->sum('capital'); 
-            // $totalContrato = collect($cuotas)->sum('total_cuota'); // Si quisieras capital + interés
-
-            $nuevoPlan = PlanPago::create([
-                'id_solicitud'   => $nuevaSolicitud->id,
-                'fecha_inicio'   => $datos['fecha_desembolso'],
-                'fecha_fin'      => end($cuotas)['fecha'],
-                'moneda'         => $nuevaSolicitud->moneda,
-                'lapso_capital'  => $nuevaSolicitud->lapso_capital,
-                'nro_cuotas'     => $nuevaSolicitud->nro_cuotas,
-                'tasa'           => $nuevaSolicitud->tasa,
-                'estado'         => 1, // 1 = Activo
-                
-                'desembolso'     => ($nuevaSolicitud->tipo_solicitud === 'Refinanciamiento') ? 1 : 0,// Hereda el estado
-                
-                'total_pagar'    => $totalCapital, // 6500 (Capital del préstamo)
-                'saldo_pendiente'=> $totalCapital, // Inicia debiendo todo
-                'fecha_registro' => Carbon::now()
-            ]);
-
-            // 6. Registrar las Nuevas Cuotas
-            foreach ($cuotas as $c) {
-                Cuota::create([
-                    'id_plan_pago'  => $nuevoPlan->id,
-                    'numero'        => $c['nro'],
-                    'fecha'         => $c['fecha'],
-                    'capital'       => $c['capital'],
-                    'interes'       => $c['interes'],
-                    'total'         => $c['total_cuota'],
-                    'saldo_capital' => $c['saldo_capital'],
-                    'estado'        => 1, 
-                    'amortizado'    => 0
-                ]);
-            }
-
-            // =========================================================================
-            // 7. [NUEVO] ACTIVAR ORDEN DE PAGO DE INTERESES (SI EXISTE)
-            // =========================================================================
-            
-            // Buscamos si existe una orden creada para esta solicitud específica
-            $ordenPago = OrdenPagoReprogramacion::where('id_solicitud_nueva', $nuevaSolicitud->id)
-                            ->where('estado', OrdenPagoReprogramacion::ESTADO_NO_DISPONIBLE) // Solo las pendientes
-                            ->first();
-
-            if ($ordenPago) {
-                // Cambiamos el estado a 1 (POR PAGAR) para que aparezca en Caja
-                $ordenPago->update([
-                    'estado' => OrdenPagoReprogramacion::ESTADO_POR_PAGAR
-                ]);
-            }
-
-            DB::commit();
-            return response()->json(['message' => 'Operación aprobada exitosamente.'], 200);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(['message' => 'Error: ' . $e->getMessage()], 500);
-        }
+        return app(\App\Services\Finance\Rescheduling::class)->approve($request);
     }
-
     public function getDetalleCompletoSolicitud($id_solicitud)
     {
         try {

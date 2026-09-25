@@ -514,12 +514,6 @@ import { sesion, tienePermiso } from '../router/session';
 import { mostrarDetalleOperacion } from '../financialOperationDetail';
 
 export default {
-    props: {
-        rolUsuario: {
-            type: String,
-            required: true,
-        },
-    },
     data() {
         return {
             view: 0,

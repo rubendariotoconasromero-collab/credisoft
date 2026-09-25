@@ -12,24 +12,25 @@
 
             <form @submit.prevent="accion === 0 ? saveGuarantor() : updateGuarantor()">
                 <div class="card-body">
+                    <div class="text-end text-muted small mb-1"><span class="text-danger fw-bold">*</span> Campos obligatorios</div>
                     <div class="row g-3">
                         <div class="col-md-4">
-                            <label class="fw-bold">Nombre</label>
+                            <label class="fw-bold">Nombre <span class="text-danger" title="Campo obligatorio">*</span></label>
                             <input v-model="currentGuarantor.nombre" :disabled="accion === 2" class="form-control text-capitalize" />
                             <small v-if="!currentGuarantor.nombre && currentGuarantor.enviado" class="text-danger">Ingrese un nombre *</small>
                         </div>
                         <div class="col-md-2">
-                            <label class="fw-bold">Fecha de Nacimiento</label>
+                            <label class="fw-bold">Fecha de Nacimiento <span class="text-danger" title="Campo obligatorio">*</span></label>
                             <input v-model="currentGuarantor.fecha_nacimiento" type="date" :disabled="accion === 2" class="form-control" />
                         </div>
                         <div class="col-md-2">
-                            <label class="fw-bold">CI</label>
+                            <label class="fw-bold">CI <span class="text-danger" title="Campo obligatorio">*</span></label>
                             <input v-model="currentGuarantor.ci" :disabled="accion === 2" class="form-control" />
                             <small v-if="!currentGuarantor.ci && currentGuarantor.enviado" class="text-danger">Ingrese un CI *</small>
                         </div>
 
                         <div class="col-md-2">
-                            <label class="fw-bold">DPTO</label>
+                            <label class="fw-bold">DPTO <span class="text-danger" title="Campo obligatorio">*</span></label>
                             <select v-model="currentGuarantor.lugar_expedicion" :disabled="accion === 2" class="form-select">
                                 <option value="0" disabled>Seleccione</option>
                                 <option v-for="place in expeditionPlaces" :key="place.sigla" :value="place.sigla">{{ place.sigla }}</option>
@@ -37,7 +38,7 @@
                             <small v-if="(!currentGuarantor.lugar_expedicion || currentGuarantor.lugar_expedicion === '0') && currentGuarantor.enviado" class="text-danger">Seleccione *</small>
                         </div>
                         <div class="col-md-2">
-                            <label class="fw-bold">Género</label>
+                            <label class="fw-bold">Género <span class="text-danger" title="Campo obligatorio">*</span></label>
                             <select v-model="currentGuarantor.sexo" :disabled="accion === 2" class="form-select">
                                 <option value="0" disabled>Seleccione</option>
                                 <option v-for="gender in genders" :key="gender.nombre" :value="gender.nombre">{{ gender.nombre }}</option>
@@ -45,7 +46,7 @@
                             <small v-if="(!currentGuarantor.sexo || currentGuarantor.sexo === '0') && currentGuarantor.enviado" class="text-danger">Seleccione *</small>
                         </div>
                         <div class="col-md-2">
-                            <label class="fw-bold">Estado Civil</label>
+                            <label class="fw-bold">Estado Civil <span class="text-danger" title="Campo obligatorio">*</span></label>
                             <select v-model="currentGuarantor.estado_civil" :disabled="accion === 2" class="form-select">
                                 <option value="0" disabled>Seleccione</option>
                                 <option v-for="status in maritalStatuses" :key="status.nombre" :value="status.nombre">{{ status.nombre }}</option>
@@ -54,13 +55,13 @@
                         </div>
 
                         <div class="col-md-2">
-                            <label class="fw-bold">Ingreso Mensual</label>
+                            <label class="fw-bold">Ingreso Mensual <span class="text-danger" title="Campo obligatorio">*</span></label>
                             <input v-model="currentGuarantor.ingreso_mensual" :disabled="accion === 2" class="form-control" @input="filterNumericInput" />
                             <small v-if="!currentGuarantor.ingreso_mensual && currentGuarantor.enviado" class="text-danger">Ingrese un ingreso *</small>
                         </div>
 
                         <div class="col-md-2">
-                            <label class="fw-bold">Vivienda</label>
+                            <label class="fw-bold">Vivienda <span class="text-danger" title="Campo obligatorio">*</span></label>
                             <select v-model="currentGuarantor.vivienda" :disabled="accion === 2" class="form-select">
                                 <option value="0" disabled>Seleccione</option>
                                 <option v-for="housing in housingTypes" :key="housing.nombre" :value="housing.nombre">{{ housing.nombre }}</option>
@@ -69,7 +70,7 @@
                         </div>
 
                         <div class="col-md-2">
-                            <label class="fw-bold">Garante/Codeudor</label>
+                            <label class="fw-bold">Garante/Codeudor <span class="text-danger" title="Campo obligatorio">*</span></label>
                             <select v-model="currentGuarantor.tipo" :disabled="accion === 2" class="form-select">
                                 <option value="0" disabled>Seleccione</option>
                                 <option value="Garante">Garante</option>
@@ -81,7 +82,7 @@
                             <div class="form-group my-0">
                                 <div class="row">
                                     <div class="col-md-12">
-                                        <label class="fw-bold text-dark">Seleccione una actividad:</label>
+                                        <label class="fw-bold text-dark">Seleccione una actividad <span class="text-danger" title="Campo obligatorio">*</span></label>
                                         <live-search
                                             v-model="actividadClase.buscar"
                                             :options="nombresActividades"
@@ -116,7 +117,7 @@
                         <div class="card-body">
                             <div class="row g-3">
                                 <div class="col-md-2">
-                                    <label class="fw-bold">Tipo</label>
+                                    <label class="fw-bold">Tipo <span class="text-danger" title="Campo obligatorio">*</span></label>
                                     <select v-model="address.tipo" :disabled="accion === 2" class="form-select">
                                         <option value="" disabled>Seleccione</option>
                                         <option v-for="type in addressTypes" :key="type" :value="type">{{ type }}</option>
@@ -124,10 +125,10 @@
                                     <small v-if="!address.tipo && currentGuarantor.enviado" class="text-danger">Requerido *</small>
                                 </div>
                                 <div class="col-md-2">
-                                    <label class="fw-bold">Departamento</label>
+                                    <label class="fw-bold">Departamento <span class="text-danger" title="Campo obligatorio">*</span></label>
                                     <select v-model="address.departamento" :disabled="accion === 2" class="form-control">
                                         <option value="">Seleccione</option>
-                                        <option v-for="depto in departamentosBolivia" :key="depto.id" :value="depto.nombre">{{ depto.nombre }}</option>
+                                        <option v-for="depto in departamentosBolivia" :key="depto.codigo" :value="depto.nombre">{{ depto.nombre }}</option>
                                     </select>
                                     <small v-if="!address.departamento && currentGuarantor.enviado" class="text-danger">Requerido *</small>
                                 </div>
@@ -140,7 +141,7 @@
                                     <input v-model="address.zona" :disabled="accion === 2" class="form-control" />
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="fw-bold">Descripción</label>
+                                    <label class="fw-bold">Descripción <span class="text-danger" title="Campo obligatorio">*</span></label>
                                     <input v-model="address.descripcion" :disabled="accion === 2" class="form-control" />
                                     <small v-if="!address.descripcion && currentGuarantor.enviado" class="text-danger">Requerido *</small>
                                 </div>
@@ -161,14 +162,14 @@
                         <div class="card-body">
                             <div class="row g-3">
                                 <div class="col-md-3">
-                                    <label class="fw-bold">Tipo</label>
+                                    <label class="fw-bold">Tipo <span class="text-danger" title="Campo obligatorio">*</span></label>
                                     <select v-model="phone.tipo" :disabled="accion === 2" class="form-select" @change="resetPhoneFields(phone)">
                                         <option value="Numero telefono">Nr. Telf.</option>
                                         <option value="Informacion contacto">Inf. Contacto</option>
                                     </select>
                                 </div>
                                 <div class="col-md-2">
-                                    <label class="fw-bold">Número</label>
+                                    <label class="fw-bold">Número <span class="text-danger" title="Campo obligatorio">*</span></label>
                                     <input v-model="phone.numero" :disabled="accion === 2" class="form-control" />
                                     <small v-if="!phone.numero && currentGuarantor.enviado" class="text-danger">Requerido *</small>
                                 </div>
@@ -260,6 +261,7 @@
 </template>
 
 <script>
+import { departamentosBolivia, normalizeDepartamento } from '../../departmentCatalog';
 import moment from "moment";
 import Swal from "sweetalert2";
 
@@ -283,11 +285,7 @@ export default {
     data() {
         return {
             // Datos Estáticos
-            departamentosBolivia: [
-                { id: 1, nombre: "La Paz" }, { id: 2, nombre: "Cochabamba" }, { id: 3, nombre: "Santa Cruz" },
-                { id: 4, nombre: "Oruro" }, { id: 5, nombre: "Potosí" }, { id: 6, nombre: "Tarija" },
-                { id: 7, nombre: "Chuquisaca" }, { id: 8, nombre: "Beni" }, { id: 9, nombre: "Pando" },
-            ],
+            departamentosBolivia,
             expeditionPlaces: [
                 { sigla: "LP", nombre: "La Paz" }, { sigla: "CB", nombre: "Cochabamba" }, { sigla: "SC", nombre: "Santa Cruz" },
                 { sigla: "OR", nombre: "Oruro" }, { sigla: "PT", nombre: "Potosí" }, { sigla: "TJ", nombre: "Tarija" },
@@ -416,6 +414,7 @@ export default {
                 const response = await axios.get(`/get_direcciones_telefono_codeudor?id_codeudor=${id}`);
                 this.addresses = response.data.direcciones.map(d => ({
                     ...d,
+                    departamento: normalizeDepartamento(d.departamento),
                     lat: d.lat ? parseFloat(d.lat) : null,
                     lng: d.lng ? parseFloat(d.lng) : null,
                 }));
@@ -436,14 +435,23 @@ export default {
                 });
                 if (response.data.success) {
                     Swal.fire({ icon: "success", title: "Guardado correctamente", timer: 1000 });
-                    this.$emit('guardado');
+                    this.currentGuarantor.id = response.data.id;
+                    this.$emit('guardado', { ...this.currentGuarantor });
                     this.cerrarFormulario();
                 } else if (response.data.error === "duplicate") {
                     Swal.fire("Error", response.data.message, "error");
                 }
             } catch (error) {
                 console.error("Error saving:", error);
-                Swal.fire("Error", "Ocurrió un error al guardar", "error");
+                const backendMessage = error.response?.data?.message;
+                const message = typeof backendMessage === 'object'
+                    ? Object.values(backendMessage).flat().join('\n')
+                    : backendMessage;
+                Swal.fire(
+                    error.response?.data?.error === 'duplicate' ? 'Codeudor duplicado' : 'Error',
+                    message || 'Ocurrió un error al guardar',
+                    'error'
+                );
             } finally {
                 this.savingGuarantor = false;
             }
@@ -459,7 +467,7 @@ export default {
                     telefonos: this.phones,
                 });
                 Swal.fire({ icon: "success", title: "Actualizado correctamente", timer: 1000 });
-                this.$emit('guardado');
+                this.$emit('guardado', { ...this.currentGuarantor });
                 this.cerrarFormulario();
             } catch (error) {
                 console.error("Error updating:", error);

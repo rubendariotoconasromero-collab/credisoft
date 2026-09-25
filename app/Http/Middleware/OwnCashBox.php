@@ -27,7 +27,7 @@ class OwnCashBox
             'IngresoController@save', 'GastoController@save', 'PagoController@save',
             'PagoController@pagarCuotas', 'CajaController@closeCaja',
             'CajaController@actualizarDesembolso', 'CajaController@registrarDesembolso',
-            'CajaController@guardarPagoAdministrativo',
+            'CajaController@guardarPagoAdministrativo', 'CajaController@registrarPagoAdministrativoYDesembolso',
             'PlanPagoController@anularPlanPago', 'PlanPagoController@saveAmortizacion',
             'PlanPagoController@saveAmortizacionNuevo', 'PlanPagoController@liquidarDeuda',
         ];

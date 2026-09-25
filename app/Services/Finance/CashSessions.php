@@ -46,17 +46,18 @@ final class CashSessions
             abort_unless($vault, 422, 'No existe bóveda para recibir el efectivo.');
             $summary = app(CashSummary::class)->forCash($cashId);
             abort_if($summary['requiere_revision'], 422, 'La caja contiene operaciones históricas que requieren revisión antes del cierre.');
-            $return = Money::cents($summary['efectivo_esperado']);
-            $countedCents = $counted === null ? $return : Money::cents($counted, 'efectivo_contado');
-            abort_if($countedCents < 0 || $countedCents !== $return, 422, 'El efectivo contado no coincide con el esperado. Revise los movimientos antes de cerrar; no se generarán ajustes automáticos.');
+            $return = Money::cents($summary['saldo_disponible']);
+            $expectedCash = Money::cents($summary['efectivo_esperado']);
+            $countedCents = $counted === null ? $expectedCash : Money::cents($counted, 'efectivo_contado');
+            abort_if($countedCents < 0 || $countedCents !== $expectedCash, 422, 'El efectivo contado no coincide con el esperado. Revise los movimientos antes de cerrar; no se generarán ajustes automáticos.');
             $summary['efectivo_contado'] = Money::decimal($countedCents);
-            $summary['diferencia'] = Money::decimal($countedCents - $return);
-            abort_if($return < 0, 422, 'El saldo físico de caja es negativo. Revise los movimientos.');
+            $summary['diferencia'] = Money::decimal($countedCents - $expectedCash);
+            abort_if($return < 0, 422, 'El saldo disponible de caja es negativo. Revise los movimientos.');
             $noncash = Money::cents($summary['formas_pago']['deposito']['ingresos']) + Money::cents($summary['formas_pago']['transferencia']['ingresos']);
             DB::table('caja')->where('id', $cashId)->update([
                 'fechahora_cierre' => now(), 'estado' => 0, 'monto_final' => Money::decimal($return),
                 'efectivo_contado' => Money::decimal($countedCents), 'diferencia' => $summary['diferencia'],
-                'efectivo_total' => Money::decimal($return), 'deposito_total' => Money::decimal($noncash),
+                'efectivo_total' => Money::decimal($expectedCash), 'deposito_total' => Money::decimal($noncash),
                 'efectivo_venta' => $summary['formas_pago']['efectivo']['ingresos'], 'deposito_venta' => Money::decimal($noncash),
                 'efectivo_gasto' => $summary['formas_pago']['efectivo']['egresos'],
                 'deposito_gasto' => Money::decimal(Money::cents($summary['formas_pago']['deposito']['egresos']) + Money::cents($summary['formas_pago']['transferencia']['egresos'])),

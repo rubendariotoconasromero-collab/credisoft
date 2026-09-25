@@ -13,7 +13,7 @@ class CashSessionsTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_close_ignores_tampered_totals_preserves_opening_and_returns_only_cash_once(): void
+    public function test_close_ignores_tampered_totals_and_returns_the_unified_balance_once(): void
     {
         $f = DiagnosticFixture::seed();
         DB::table('pago')->insert(['id_cuota' => $f['installment'], 'id_caja' => $f['cash'],
@@ -23,14 +23,17 @@ class CashSessionsTest extends TestCase
         $this->actingAs($f['users']['cajero_a'])->postJson('/close_caja', ['id_caja' => $f['cash'],
             'monto_inicial' => 999999, 'monto_final' => 888888, 'total_ingreso' => 555555, 'efectivo_contado' => '100.00',
             'fechahora_apertura' => '2000-01-01', 'diferencia' => 111111])
-            ->assertOk()->assertJsonPath('resumen.total_ingresos', '200.02')->assertJsonPath('resumen.efectivo_esperado', '100.00');
+            ->assertOk()->assertJsonPath('resumen.total_ingresos', '200.02')
+            ->assertJsonPath('resumen.efectivo_esperado', '100.00')
+            ->assertJsonPath('resumen.saldo_disponible', '300.02');
         $cash = DB::table('caja')->find($f['cash']);
         $this->assertEquals(100, $cash->monto_inicial);
-        $this->assertEquals(100, $cash->monto_final);
+        $this->assertEquals(300.02, $cash->monto_final);
+        $this->assertEquals(100, $cash->efectivo_total);
         $this->assertSame('2026-09-24 08:00:00', $cash->fechahora_apertura);
-        $this->assertEquals(1000, DB::table('boveda')->value('saldo_actual'));
+        $this->assertEquals(1200.02, DB::table('boveda')->value('saldo_actual'));
         $this->postJson('/close_caja', ['id_caja' => $f['cash']])->assertUnprocessable();
-        $this->assertEquals(1000, DB::table('boveda')->value('saldo_actual'));
+        $this->assertEquals(1200.02, DB::table('boveda')->value('saldo_actual'));
         $this->assertDatabaseCount('caja_cierres', 1);
         $this->getJson('/caja/resumen-financiero?id_caja='.$f['cash'])->assertOk()
             ->assertJsonPath('formas_pago.deposito.ingresos', '200.02');

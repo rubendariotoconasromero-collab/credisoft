@@ -126,7 +126,7 @@
                                                             <i class="fas fa-print me-2 text-primary"></i> Imprimir Comprobante
                                                         </a>
                                                     </li>
-                                                    <li v-if="rolUsuario == 'Administrador' && item.estado != 1 && esHoy(item.fecha)" @click="anularDesembolso(item)">
+                                                    <li v-if="puedeAnularDesembolso(item)" @click="anularDesembolso(item)">
                                                         <hr class="dropdown-divider">
                                                         <a class="dropdown-item text-danger fw-bold" href="#">
                                                             <i class="fas fa-times me-2"></i> Anular Desembolso
@@ -270,14 +270,9 @@
 <script>
 import moment from 'moment';
 import Swal from 'sweetalert2';
+import { sesion, tienePermiso } from '../router/session';
 
 export default {
-    props: {
-        rolUsuario: {
-            type: String,
-            required: true,
-        },
-    },
     data() {
         return {
             view: 0,
@@ -336,6 +331,14 @@ export default {
         }
     },
     methods: {
+        puedeAnularDesembolso(item) {
+            return tienePermiso('controlcaja')
+                && tienePermiso('anular_finanzas')
+                && Number(item.estado) !== 1
+                && Number(item.estado_caja) === 1
+                && Number(item.propietario_caja) === Number(sesion.id)
+                && this.esHoy(item.fecha);
+        },
         esHoy(fechaDesembolso) {
             if (!fechaDesembolso) return false;
             const fechaItem = moment(fechaDesembolso, 'YYYY-MM-DD HH:mm:ss').format('YYYY-MM-DD');
@@ -419,6 +422,11 @@ export default {
                         })
                         .catch((error) => {
                             console.error('Error al anular el desembolso:', error);
+                            Swal.fire(
+                                'No se pudo anular',
+                                error.response?.data?.message || error.response?.data?.error || 'La operación fue rechazada.',
+                                'error'
+                            );
                         });
                 }
             });

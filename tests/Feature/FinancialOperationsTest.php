@@ -53,6 +53,7 @@ class FinancialOperationsTest extends TestCase
         $summary = app(CashSummary::class)->forCash($this->fixture['cash']);
         $this->assertSame('150.00', $summary['total_ingresos']);
         $this->assertSame('200.00', $summary['efectivo_esperado']);
+        $this->assertSame('250.00', $summary['saldo_disponible']);
         $this->postJson('/pagar_cuotas', $this->payload(['monto_recibido' => '2.00']))->assertConflict();
     }
 
@@ -194,8 +195,9 @@ class FinancialOperationsTest extends TestCase
         $this->assertDatabaseHas('pago', ['pago_interes' => 13.33, 'monto_condonado_interes' => 110]);
     }
 
-    public function test_disbursement_is_exact_unique_and_checks_only_physical_component(): void
+    public function test_disbursement_is_exact_unique_and_checks_total_and_physical_balances(): void
     {
+        DB::table('caja')->where('id', $this->fixture['cash'])->update(['monto_inicial' => '1000.00']);
         DB::table('plan_pago')->where('id', $this->fixture['plan'])->update(['desembolso' => 1]);
         DB::table('solicitud')->where('id', $this->fixture['request'])->update(['estado' => 2]);
         $payload = ['id_plan_pago' => $this->fixture['plan'], 'id_caja' => $this->fixture['cash'], 'monto' => '1000.00',
@@ -204,8 +206,172 @@ class FinancialOperationsTest extends TestCase
         $this->postJson('/actualizar_desembolso', $payload)->assertOk();
         $this->postJson('/actualizar_desembolso', $payload)->assertUnprocessable();
         $this->assertDatabaseCount('desembolso', 1);
-        $this->assertSame('0.00', app(CashSummary::class)->forCash($this->fixture['cash'])['efectivo_esperado']);
+        $summary = app(CashSummary::class)->forCash($this->fixture['cash']);
+        $this->assertSame('900.00', $summary['efectivo_esperado']);
+        $this->assertSame('0.00', $summary['saldo_disponible']);
         $this->assertEquals(900, DB::table('boveda')->value('saldo_actual'));
+    }
+
+    public function test_noncash_income_is_available_for_a_qr_disbursement(): void
+    {
+        DB::table('pago')->insert([
+            'id_cuota' => $this->fixture['installment'],
+            'id_caja' => $this->fixture['cash'],
+            'id_usuario' => $this->fixture['users']['cajero_a']->id,
+            'fecha_pago' => '2026-09-24',
+            'monto_pago' => '900.00',
+            'pago_capital' => '900.00',
+            'pago_interes' => 0,
+            'pago_mora' => 0,
+            'forma_pago' => 'transferencia',
+            'estado' => 1,
+        ]);
+        DB::table('plan_pago')->where('id', $this->fixture['plan'])->update(['desembolso' => 1]);
+        DB::table('solicitud')->where('id', $this->fixture['request'])->update(['estado' => 2]);
+
+        $before = app(CashSummary::class)->forCash($this->fixture['cash']);
+        $this->assertSame('1000.00', $before['saldo_disponible']);
+        $this->assertSame('100.00', $before['efectivo_esperado']);
+
+        $this->postJson('/actualizar_desembolso', [
+            'id_plan_pago' => $this->fixture['plan'],
+            'id_caja' => $this->fixture['cash'],
+            'monto' => '1000.00',
+            'partes' => [[
+                'forma_pago' => 'transferencia',
+                'monto' => '1000.00',
+                'referencia' => 'QR-FONDOS-NO-EFECTIVOS',
+            ]],
+        ])->assertOk();
+
+        $after = app(CashSummary::class)->forCash($this->fixture['cash']);
+        $this->assertSame('0.00', $after['saldo_disponible']);
+        $this->assertSame('100.00', $after['efectivo_esperado']);
+    }
+
+    public function test_administrative_fee_uses_one_percent_in_list_modal_source_and_backend(): void
+    {
+        DB::table('plan_pago')->where('id', $this->fixture['plan'])->update([
+            'desembolso' => 1,
+            'pago_administrativo' => 1,
+        ]);
+        DB::table('solicitud')->where('id', $this->fixture['request'])->update([
+            'estado' => 2,
+            'monto_pago_adm' => '20.00', // valor legado inconsistente
+        ]);
+
+        $this->getJson('/get_planes_pago_sin_pago_adm')
+            ->assertOk()
+            ->assertJsonPath('0.monto_pago_adm', '10.00');
+
+        $this->postJson('/guardar_pago_adm', [
+            'id_plan_pago' => $this->fixture['plan'],
+            'id_caja' => $this->fixture['cash'],
+            'monto' => '20.00',
+        ])->assertUnprocessable();
+
+        $this->postJson('/guardar_pago_adm', [
+            'id_plan_pago' => $this->fixture['plan'],
+            'id_caja' => $this->fixture['cash'],
+            'monto' => '10.00',
+        ])->assertOk();
+
+        $this->assertDatabaseHas('solicitud', [
+            'id' => $this->fixture['request'],
+            'monto_pago_adm' => '10.00',
+        ]);
+        $this->assertDatabaseHas('pago_administrativo', [
+            'id_plan_pago' => $this->fixture['plan'],
+            'monto' => '10.00',
+        ]);
+    }
+
+    public function test_administrative_fee_and_disbursement_are_atomic_when_cash_is_insufficient(): void
+    {
+        DB::table('plan_pago')->where('id', $this->fixture['plan'])->update([
+            'desembolso' => 1,
+            'pago_administrativo' => 1,
+        ]);
+        DB::table('solicitud')->where('id', $this->fixture['request'])->update(['estado' => 2]);
+
+        $this->postJson('/registrar_pago_adm_desembolso', [
+            'id_plan_pago' => $this->fixture['plan'],
+            'id_caja' => $this->fixture['cash'],
+            'monto_pago_adm' => '10.00',
+            'monto_desembolso' => '1000.00',
+            'partes_pago_adm' => [['forma_pago' => 'efectivo', 'monto' => '10.00']],
+            'partes_desembolso' => [['forma_pago' => 'transferencia', 'monto' => '1000.00', 'referencia' => 'QR-SIN-SALDO']],
+        ])->assertUnprocessable()
+            ->assertJsonPath('codigo', 'SALDO_CAJA_INSUFICIENTE')
+            ->assertJsonPath('saldo_disponible', '100.00')
+            ->assertJsonPath('faltante', '900.00');
+
+        $this->assertDatabaseCount('pago_administrativo', 0);
+        $this->assertDatabaseCount('desembolso', 0);
+        $this->assertDatabaseCount('operaciones_financieras', 0);
+        $this->assertDatabaseHas('plan_pago', [
+            'id' => $this->fixture['plan'],
+            'pago_administrativo' => 1,
+            'desembolso' => 1,
+        ]);
+    }
+
+    public function test_administrative_fee_and_disbursement_commit_together(): void
+    {
+        DB::table('caja')->where('id', $this->fixture['cash'])->update(['monto_inicial' => '1000.00']);
+        DB::table('plan_pago')->where('id', $this->fixture['plan'])->update([
+            'desembolso' => 1,
+            'pago_administrativo' => 1,
+        ]);
+        DB::table('solicitud')->where('id', $this->fixture['request'])->update(['estado' => 2]);
+
+        $this->withHeader('Idempotency-Key', (string) Str::uuid())
+            ->postJson('/registrar_pago_adm_desembolso', [
+                'id_plan_pago' => $this->fixture['plan'],
+                'id_caja' => $this->fixture['cash'],
+                'monto_pago_adm' => '10.00',
+                'monto_desembolso' => '1000.00',
+                'partes_pago_adm' => [['forma_pago' => 'efectivo', 'monto' => '10.00']],
+                'partes_desembolso' => [['forma_pago' => 'efectivo', 'monto' => '1000.00']],
+            ])->assertOk()
+            ->assertJsonPath('success', true);
+
+        $this->assertDatabaseCount('pago_administrativo', 1);
+        $this->assertDatabaseCount('desembolso', 1);
+        $this->assertDatabaseHas('plan_pago', [
+            'id' => $this->fixture['plan'],
+            'pago_administrativo' => 0,
+            'desembolso' => 0,
+        ]);
+        $this->assertSame('10.00', app(CashSummary::class)->forCash($this->fixture['cash'])['efectivo_esperado']);
+    }
+
+    public function test_combined_disbursement_rolls_back_fee_when_second_write_fails(): void
+    {
+        DB::table('caja')->where('id', $this->fixture['cash'])->update(['monto_inicial' => '1000.00']);
+        DB::table('plan_pago')->where('id', $this->fixture['plan'])->update([
+            'desembolso' => 1,
+            'pago_administrativo' => 1,
+        ]);
+        DB::table('solicitud')->where('id', $this->fixture['request'])->update(['estado' => 2]);
+
+        $this->postJson('/registrar_pago_adm_desembolso', [
+            'id_plan_pago' => $this->fixture['plan'],
+            'id_caja' => $this->fixture['cash'],
+            'monto_pago_adm' => '10.00',
+            'monto_desembolso' => '999.00',
+            'partes_pago_adm' => [['forma_pago' => 'efectivo', 'monto' => '10.00']],
+            'partes_desembolso' => [['forma_pago' => 'efectivo', 'monto' => '999.00']],
+        ])->assertUnprocessable();
+
+        $this->assertDatabaseCount('pago_administrativo', 0);
+        $this->assertDatabaseCount('desembolso', 0);
+        $this->assertDatabaseCount('operaciones_financieras', 0);
+        $this->assertDatabaseHas('plan_pago', [
+            'id' => $this->fixture['plan'],
+            'pago_administrativo' => 1,
+            'desembolso' => 1,
+        ]);
     }
 
     public function test_transfer_reversal_restores_both_sides_and_close_retry_is_safe(): void

@@ -356,74 +356,75 @@
         </div>
 
         <div id="modalCobrarPagoAdm" class="modal fade" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content border-0 shadow-lg">
+            <div class="modal-dialog modal-dialog-centered disbursement-dialog">
+                <div class="modal-content border-0 shadow-lg disbursement-modal">
                     
-                    <div class="modal-header bg-success py-3">
-                        <h5 class="modal-title fw-bold text-white text-uppercase">
-                            <!-- <i class="fas fa-hand-holding-usd me-2"></i>  -->
+                    <div class="modal-header disbursement-header">
+                        <h5 class="modal-title fw-bold text-uppercase">
+                            <i class="fas fa-hand-holding-usd me-2" aria-hidden="true"></i>
                             Desembolso de Crédito
                         </h5>
-                        <button type="button" class="btn-close btn-close-white" @click="cerrarModalCobrarPagoAdm()"></button>
+                        <button type="button" class="btn-close" :disabled="desembolsando" aria-label="Cerrar" @click="cerrarModalCobrarPagoAdm()"></button>
                     </div>
 
-                    <div class="modal-body p-4">
+                    <div class="modal-body disbursement-body">
                         
-                        <div class="card border-success border-opacity-25 shadow-sm mb-4">
-                            <div class="card-header bg-success bg-opacity-10 py-2 border-bottom-0">
-                                <h6 class="fw-bold text-success mb-0 text-uppercase">
-                                    <i class="fas fa-user-tag me-2"></i> Detalles del Cliente
-                                </h6>
+                        <div class="disbursement-client mb-3">
+                            <div class="disbursement-section-title">
+                                <i class="fas fa-user-tag" aria-hidden="true"></i> Datos de la operación
                             </div>
-                            <div class="card-body py-2">
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span class="text-muted fw-semibold">Cliente:</span>
-                                    <span class="fw-bold text-dark text-uppercase text-end">{{ pago_administrativo.cliente }}</span>
+                            <div class="disbursement-client-grid">
+                                <div class="disbursement-data disbursement-data-client">
+                                    <span>Cliente</span>
+                                    <strong class="text-uppercase">{{ pago_administrativo.cliente }}</strong>
                                 </div>
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span class="text-muted fw-semibold">Asesor:</span>
-                                    <span class="fw-bold text-dark text-uppercase text-end">{{ pago_administrativo.asesor }}</span>
+                                <div class="disbursement-data">
+                                    <span>Asesor</span>
+                                    <strong class="text-uppercase">{{ pago_administrativo.asesor }}</strong>
                                 </div>
-                                <div class="d-flex justify-content-between">
-                                    <span class="text-muted fw-semibold">Cód. Plan de Pago:</span>
-                                    <span class="badge bg-secondary shadow-sm">#{{ pago_administrativo.id_plan_pago }}</span>
+                                <div class="disbursement-data">
+                                    <span>Plan de pago</span>
+                                    <strong>#{{ pago_administrativo.id_plan_pago }}</strong>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="row g-3 mb-4">
+                        <div class="row g-2 mb-3">
                             <div class="col-6">
-                                <div class="p-3 border rounded bg-light text-center h-100 shadow-sm">
-                                    <span class="d-block text-muted fw-bold small mb-1">MONTO A ENTREGAR</span>
-                                    <h4 class="text-primary fw-bold mb-0">Bs. {{ parseFloat(pago_administrativo.monto_solicitud).toFixed(2) }}</h4>
+                                <div class="disbursement-amount-card amount-delivery">
+                                    <span>Monto a entregar</span>
+                                    <strong>{{ parseFloat(pago_administrativo.monto_solicitud).toFixed(2) }} <small>Bs</small></strong>
                                 </div>
                             </div>
                             <div class="col-6">
-                                <div class="p-3 border border-warning rounded bg-warning bg-opacity-10 text-center h-100 shadow-sm">
-                                    <span class="d-block text-warning-emphasis fw-bold small mb-1">COBRO ADMINISTRATIVO</span>
-                                    <h4 class="text-danger fw-bold mb-0">Bs. {{ parseFloat(pago_administrativo.monto).toFixed(2) }}</h4>
+                                <div class="disbursement-amount-card amount-administrative">
+                                    <span>Cobro administrativo</span>
+                                    <strong>{{ parseFloat(pago_administrativo.monto).toFixed(2) }} <small>Bs</small></strong>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="alert alert-warning border-warning shadow-sm mb-4">
-                            <div class="form-check form-switch d-flex align-items-center gap-3">
-                                <input class="form-check-input fs-3 m-0 border-warning" type="checkbox" id="checkCobroAdm" v-model="confirmacionCobroAdm" style="cursor: pointer; border-radius:10px !important;">
-                                <label class="form-check-label text-dark lh-sm" for="checkCobroAdm" style="cursor: pointer; user-select: none;">
-                                    <strong>Confirmo</strong> que he retenido/cobrado los <strong class="text-danger">Bs. {{ parseFloat(pago_administrativo.monto).toFixed(2) }}</strong> por concepto de pago administrativo.
+                        <div class="disbursement-confirmation mb-3">
+                            <i class="fas fa-info-circle" aria-hidden="true"></i>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="checkCobroAdm" v-model="confirmacionCobroAdm">
+                                <label class="form-check-label" for="checkCobroAdm">
+                                    <strong>Confirmo el cobro de {{ parseFloat(pago_administrativo.monto).toFixed(2) }} Bs.</strong>
+                                    <small>El cobro administrativo y el desembolso se registrarán juntos.</small>
                                 </label>
                             </div>
                         </div>
 
-                        <div class="d-grid">
+                        <div class="disbursement-actions">
+                            <button type="button" class="btn btn-outline-secondary" :disabled="desembolsando" @click="cerrarModalCobrarPagoAdm()">Cancelar</button>
                             <button :disabled="desembolsando || !confirmacionCobroAdm" @click="guardarPagoAdm()"
-                                class="btn btn-success btn-lg py-3 fw-bold shadow-sm">
+                                class="btn btn-success fw-bold">
                                 
                                 <span v-if="desembolsando" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                                 <i v-else class="fas fa-check-circle me-2"></i>
 
-                                <span v-if="!desembolsando">Procesar Desembolso y Cobro</span>
-                                <span v-else>Procesando Registro...</span>
+                                <span v-if="!desembolsando">Procesar desembolso y cobro</span>
+                                <span v-else>Procesando registro...</span>
                             </button>
                         </div>
 
@@ -1397,36 +1398,24 @@ export default {
                 return;
             }
 
-            // ── VALIDAR SALDO ANTES de cualquier operación ────────────────────
-            // Si no validamos aquí primero, el pago administrativo puede guardarse
-            // y el desembolso fallar, dejando el plan en estado inconsistente
-            // (no aparece en la lista porque el JOIN requiere ambos registros).
             const montoDesembolso = parseFloat(this.pago_administrativo.monto_solicitud);
-            // La validación de saldo se realiza en servidor sobre el componente de efectivo.
-            // ──────────────────────────────────────────────────────────────────
+            this.desembolsando = true;
+
+            // Evita solicitar las formas de pago cuando el saldo total de la
+            // caja ya es insuficiente para cubrir el desembolso.
+            const saldoSuficiente = await this.validarSaldoCajaParaEgreso(montoDesembolso);
+            if (!saldoSuficiente) {
+                this.desembolsando = false;
+                return;
+            }
 
             try {
-                this.desembolsando = true;
-
-                // 1) Registrar el cobro administrativo
-                await this.guardarPagoAdmPrivado();
-
-                // 2) Registrar el desembolso — si falla aquí es un caso borde
-                //    (saldo cambió entre la validación y la ejecución)
-                const desembolsoOk = await this.guardarDesembolso(this.item_pago_desembolso);
-
-                if (!desembolsoOk) {
-                    // El cobro administrativo ya se registró pero el desembolso no.
-                    // Advertimos al administrador para que lo revise manualmente.
-                    await Swal.fire({
-                        title: 'Atención: operación incompleta',
-                        html: `El <strong>cobro administrativo</strong> fue registrado correctamente, pero el <strong>desembolso no pudo completarse</strong> (saldo insuficiente al momento de ejecutar).<br><br>
-                               Solicite un traspaso de bóveda a caja e intente el desembolso nuevamente desde la sección de <strong>Desembolsos Pendientes</strong>.`,
-                        icon: 'warning',
-                        confirmButtonText: 'Entendido',
-                    });
-                    return;
-                }
+                await axios.post('/registrar_pago_adm_desembolso', {
+                    id_plan_pago: this.pago_administrativo.id_plan_pago,
+                    id_caja: this.idCajaPropia,
+                    monto_pago_adm: this.pago_administrativo.monto,
+                    monto_desembolso: montoDesembolso,
+                });
 
                 // Ambas operaciones OK → mostrar comprobante y éxito
                 this.openModalReportePlanComprobante();
@@ -1442,23 +1431,12 @@ export default {
 
             } catch (error) {
                 if (axios.isCancel(error)) return;
-                await Swal.fire({
-                    title: 'Error',
-                    text: 'Hubo un problema al procesar la operación: ' + (error.message ?? 'error desconocido'),
-                    icon: 'error',
-                    confirmButtonText: 'OK',
-                });
+                this.manejarErrorSaldoCaja(error, montoDesembolso);
             } finally {
                 this.desembolsando = false;
                 await this.getPagosAdm();
                 this.getCajas(1);
             }
-        },
-
-        async guardarPagoAdmPrivado() {
-            this.pago_administrativo.id_caja = this.idCajaPropia;
-            // Lanza el error hacia arriba para que guardarPagoAdm() lo capture
-            await axios.post('/guardar_pago_adm', this.pago_administrativo);
         },
 
         registrarPagoAdm(item) {
@@ -1481,6 +1459,7 @@ export default {
             $('#modalCobrarPagoAdm').modal('show');
         },
         cerrarModalCobrarPagoAdm() {
+            this.confirmacionCobroAdm = false;
             $('#modalCobrarPagoAdm').modal('hide');
         },
 
@@ -1510,9 +1489,10 @@ export default {
         async actualizarDesembolso(item) {
             const monto = Number(item.importe_solicitud);
 
-            // ── Validar saldo de caja antes de confirmar ─────────────────
-            // La validación de saldo se realiza en servidor sobre el componente de efectivo.
-            // ─────────────────────────────────────────────────────────────
+            // La verificación previa evita abrir la confirmación y el formulario
+            // de pago cuando el saldo disponible ya resulta insuficiente.
+            const saldoSuficiente = await this.validarSaldoCajaParaEgreso(monto);
+            if (!saldoSuficiente) return;
 
             const result = await Swal.fire({
                 title: '¿Confirmar desembolso?',
@@ -1610,9 +1590,15 @@ export default {
 
                 return true;
             } catch (e) {
-                // Si el endpoint falla, dejamos pasar (el backend validará igual)
                 console.warn('No se pudo verificar el saldo de caja:', e);
-                return true;
+                if (!axios.isCancel(e) && ![401, 419].includes(e.response?.status)) {
+                    await Swal.fire(
+                        'No se pudo verificar el saldo',
+                        'Intente nuevamente antes de registrar las formas de pago.',
+                        'error'
+                    );
+                }
+                return false;
             }
         },
 
@@ -1621,7 +1607,7 @@ export default {
          */
         manejarErrorSaldoCaja(error, montoRequerido) {
             if (axios.isCancel(error)) return;
-            if (error.response?.status === 422) {
+            if (error.response?.status === 422 && error.response?.data?.codigo === 'SALDO_CAJA_INSUFICIENTE') {
                 const data = error.response.data;
                 const faltante = data.faltante ?? (montoRequerido - (data.saldo_disponible ?? 0)).toFixed(2);
                 Swal.fire({
@@ -1649,7 +1635,7 @@ export default {
                     confirmButtonText: 'Entendido',
                 });
             } else {
-                Swal.fire('Error', 'Ha ocurrido un error inesperado.', 'error');
+                Swal.fire('Operación no realizada', error.response?.data?.message || 'Ha ocurrido un error inesperado.', 'error');
             }
         },
         async getPlanesPago() {
@@ -2006,4 +1992,71 @@ export default {
 
 <style scoped>
     @import './styles/frmCaja.css';
+
+    .disbursement-dialog { max-width: 610px; }
+    .disbursement-modal { border-radius: 7px; overflow: hidden; }
+    .disbursement-header {
+        padding: 12px 18px;
+        border: 0;
+        background: #f4b247;
+        color: #24292e;
+    }
+    .disbursement-header .modal-title { font-size: 14px; letter-spacing: 1.7px; }
+    .disbursement-header .btn-close { filter: none; font-size: 11px; }
+    .disbursement-body { padding: 15px 18px 17px; }
+    .disbursement-client { border: 1px solid #dfe3e6; border-radius: 5px; overflow: hidden; }
+    .disbursement-section-title {
+        padding: 6px 10px;
+        border-bottom: 1px solid #e5e8ea;
+        background: #f5f7f6;
+        color: #198754;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: .8px;
+        text-transform: uppercase;
+    }
+    .disbursement-client-grid { display: grid; grid-template-columns: 1.5fr 1fr .55fr; gap: 0; }
+    .disbursement-data { min-width: 0; padding: 8px 10px; border-left: 1px solid #eceeef; }
+    .disbursement-data:first-child { border-left: 0; }
+    .disbursement-data span { display: block; margin-bottom: 2px; color: #7a8187; font-size: 9px; text-transform: uppercase; }
+    .disbursement-data strong { display: block; overflow: hidden; color: #30363b; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+    .disbursement-amount-card {
+        height: 100%;
+        padding: 9px 12px;
+        border: 1px solid #dfe3e6;
+        border-left: 3px solid #198754;
+        border-radius: 4px;
+        background: #f6faf8;
+    }
+    .disbursement-amount-card > span { display: block; margin-bottom: 2px; color: #6d747a; font-size: 9px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; }
+    .disbursement-amount-card strong { color: #198754; font-size: 17px; }
+    .disbursement-amount-card small { font-size: 10px; }
+    .disbursement-amount-card.amount-administrative { border-left-color: #d99a2b; background: #fffaf1; }
+    .disbursement-amount-card.amount-administrative strong { color: #b36c12; }
+    .disbursement-confirmation {
+        display: flex;
+        align-items: flex-start;
+        gap: 9px;
+        padding: 9px 11px;
+        border: 1px solid #ead7a8;
+        border-radius: 4px;
+        background: #fff9eb;
+        color: #41474c;
+    }
+    .disbursement-confirmation > i { margin-top: 3px; color: #c18419; font-size: 12px; }
+    .disbursement-confirmation .form-check { min-height: 0; margin: 0; }
+    .disbursement-confirmation .form-check-input { margin-top: 1px; cursor: pointer; }
+    .disbursement-confirmation .form-check-label { padding-left: 3px; cursor: pointer; font-size: 11px; line-height: 1.35; }
+    .disbursement-confirmation small { display: block; margin-top: 2px; color: #777d82; font-size: 9px; }
+    .disbursement-actions { display: flex; justify-content: flex-end; gap: 8px; }
+    .disbursement-actions .btn { min-height: 34px; padding: 6px 13px; border-radius: 3px; font-size: 10px; }
+
+    @media (max-width: 575.98px) {
+        .disbursement-dialog { margin: 10px; }
+        .disbursement-body { padding: 12px; }
+        .disbursement-client-grid { grid-template-columns: 1fr 1fr; }
+        .disbursement-data { border-bottom: 1px solid #eceeef; }
+        .disbursement-data-client { grid-column: 1 / -1; }
+        .disbursement-actions { display: grid; grid-template-columns: auto 1fr; }
+    }
 </style>

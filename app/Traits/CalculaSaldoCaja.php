@@ -8,7 +8,8 @@ trait CalculaSaldoCaja
 {
     protected function calcularSaldoCaja(int $id_caja): float
     {
-        // Compatibility for legacy consumers; aggregation itself uses exact centavos.
-        return (float) app(CashSummary::class)->forCash($id_caja)['efectivo_esperado'];
+        // El saldo operativo incluye todas las formas de pago. El efectivo físico
+        // se conserva por separado en efectivo_esperado para el arqueo.
+        return (float) app(CashSummary::class)->forCash($id_caja)['saldo_disponible'];
     }
 }

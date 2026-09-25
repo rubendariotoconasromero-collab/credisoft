@@ -44,21 +44,20 @@ class DevelopmentSeederTest extends TestCase
         $this->assertDatabaseCount('desembolso', 10);
         $this->assertDatabaseCount('pago_administrativo', 10);
         $this->assertSame(2, DB::table('caja')->where('estado', 1)->count());
-        $this->assertEquals(38257, DB::table('boveda')->value('saldo_actual'));
+        $this->assertEquals(38157, DB::table('boveda')->value('saldo_actual'));
         $openBalances = [];
         foreach (DB::table('caja')->where('estado', 1)->get() as $cash) {
             $openBalances[] = $this->calcularSaldoCaja($cash->id);
         }
         sort($openBalances);
-        $this->assertSame([1500.0, 2100.0], $openBalances);
-        $physical = 50000 - DB::table('desembolso')->sum('monto') + DB::table('pago')->sum('monto_pago')
+        $this->assertSame([1500.0, 2160.0], $openBalances);
+        $available = 50000 - DB::table('desembolso')->sum('monto') + DB::table('pago')->sum('monto_pago')
             + DB::table('pago_administrativo')->sum('monto') + DB::table('ingreso')->sum('monto') - DB::table('egreso')->sum('monto');
-        $physical -= 60; // The new mixed receipt includes 60 noncash.
-        $this->assertEquals(41857, $physical);
-        $this->assertEquals($physical, array_sum($openBalances) + DB::table('boveda')->value('saldo_actual'));
+        $this->assertEquals(41817, $available);
+        $this->assertEquals($available, array_sum($openBalances) + DB::table('boveda')->value('saldo_actual'));
         $vaultLedger = DB::table('movimientos_boveda')->where('tipo_movimiento', 'ingreso')->sum('monto')
             - DB::table('movimientos_boveda')->where('tipo_movimiento', 'salida')->sum('monto');
-        $this->assertEquals(38257, $vaultLedger);
+        $this->assertEquals(38157, $vaultLedger);
         foreach (DB::table('caja')->where('estado', 0)->get() as $cash) {
             $this->assertEquals($cash->monto_final, $this->calcularSaldoCaja($cash->id));
             $ledger = DB::table('movimientos_caja')->where('id_caja', $cash->id)->where('tipo_movimiento', 'ingreso')->sum('monto')
@@ -144,7 +143,7 @@ class DevelopmentSeederTest extends TestCase
             $this->assertStringContainsString('tablas de negocio vacías', $exception->getMessage());
         }
         $this->assertDatabaseCount('cliente', 16);
-        $this->assertEquals(38257, DB::table('boveda')->value('saldo_actual'));
+        $this->assertEquals(38157, DB::table('boveda')->value('saldo_actual'));
     }
     public function test_nicolas_settlement_separates_collected_and_forgiven_interest_and_historical_fine(): void
     {

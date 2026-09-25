@@ -27,6 +27,7 @@ class FinancialSummaryTest extends TestCase
             'monto' => '50.00', 'descripcion' => 'Transferencia desde Bóveda', 'fecha' => '2026-09-24']);
         $summary = app(CashSummary::class)->forCash($f['cash']);
         $this->assertSame('250.01', $summary['efectivo_esperado']);
+        $this->assertSame('500.06', $summary['saldo_disponible']);
         $this->assertSame('350.06', $summary['total_ingresos']);
         $this->assertSame('200.02', $summary['formas_pago']['deposito']['ingresos']);
         $this->assertSame('50.03', $summary['formas_pago']['transferencia']['ingresos']);
@@ -43,6 +44,7 @@ class FinancialSummaryTest extends TestCase
             'pago_mora' => 0, 'forma_pago' => 'Importado sin evidencia', 'estado' => 1]);
         $summary = app(CashSummary::class)->forCash($f['cash']);
         $this->assertSame('100.00', $summary['efectivo_esperado']);
+        $this->assertSame('140.00', $summary['saldo_disponible']);
         $this->assertSame('40.00', $summary['total_ingresos']);
         $this->assertTrue($summary['requiere_revision']);
     }

@@ -113,7 +113,7 @@ Route::middleware(['auth', 'auth.session', \App\Http\Middleware\OwnCashBox::clas
 
     // ==================== SOLICITUD  [permiso: solicitudprestamos] ====================
     Route::get('/get_solicitudes', 'App\Http\Controllers\SolicitudController@getSolicitudes')->middleware('permiso:solicitudprestamos');
-    Route::get('/get_garantias', 'App\Http\Controllers\SolicitudController@getGarantias')->middleware('permiso:solicitudprestamos');
+    Route::get('/get_garantias', 'App\Http\Controllers\SolicitudController@getGarantias')->middleware('permiso:solicitudprestamos,planpagos');
     Route::post('/activar_solicitud', 'App\Http\Controllers\SolicitudController@activarSolicitud')->middleware('permiso:solicitudprestamos');
     Route::post('/desactivar_solicitud', 'App\Http\Controllers\SolicitudController@desactivarSolicitud')->middleware('permiso:solicitudprestamos');
     Route::post('/guardar_observacion', 'App\Http\Controllers\SolicitudController@guardarObservacion')->middleware('permiso:solicitudprestamos');
@@ -130,11 +130,15 @@ Route::middleware(['auth', 'auth.session', \App\Http\Middleware\OwnCashBox::clas
     Route::get('/reporte_hoja_aprobacion', 'App\Http\Controllers\SolicitudController@reporteHojaAprobacion')->middleware('permiso:solicitudprestamos');
     Route::get('/reporte_hoja_solicitud', 'App\Http\Controllers\SolicitudController@reporteHojaSolicitud')->middleware('permiso:solicitudprestamos');
     Route::post('/guardar_garantias_imagenes', 'App\Http\Controllers\SolicitudController@guardarGarantiasImagenes')->middleware('permiso:solicitudprestamos');
-    Route::post('/solicitud/registrar-especial', [SolicitudController::class, 'registrarSolicitudEspecial'])->middleware('permiso:solicitudprestamos');
+    Route::post('/solicitud/registrar-especial', [SolicitudController::class, 'registrarSolicitudEspecial'])->middleware('permiso:solicitudprestamos,planpagos');
     Route::post('/solicitud/aprobar-reprogramacion-final', [SolicitudController::class, 'aprobarReprogramacionFinal'])->middleware('permiso:solicitudprestamos');
-    Route::get('/reprogramacion/calcular/{id_plan_pago}', [SolicitudController::class, 'calcularMonto'])->middleware('permiso:solicitudprestamos');
+    Route::post('/solicitud/previsualizar-reprogramacion', [\App\Services\Finance\Rescheduling::class, 'preview'])->middleware('permiso:solicitudprestamos');
+    Route::post('/solicitud/simular-especial', [\App\Services\Finance\Rescheduling::class, 'previewDraft'])->middleware('permiso:solicitudprestamos,planpagos');
+    Route::post('/solicitud/cancelar-especial', [\App\Services\Finance\Rescheduling::class, 'cancel'])->middleware('permiso:solicitudprestamos');
+    Route::post('/caja/cobrar-orden-reprogramacion', [\App\Services\Finance\Rescheduling::class, 'collect'])->middleware('permiso:controlcaja');
+    Route::get('/reprogramacion/calcular/{id_plan_pago}', [SolicitudController::class, 'calcularMonto'])->middleware('permiso:solicitudprestamos,planpagos');
     Route::get('/solicitud/datos-originales/{id_reprogramacion}', [SolicitudController::class, 'obtenerDatosOriginales'])->middleware('permiso:solicitudprestamos');
-    Route::get('/solicitud/detalle-completo/{id_solicitud}', [SolicitudController::class, 'getDetalleCompletoSolicitud'])->middleware('permiso:solicitudprestamos');
+    Route::get('/solicitud/detalle-completo/{id_solicitud}', [SolicitudController::class, 'getDetalleCompletoSolicitud'])->middleware('permiso:solicitudprestamos,planpagos');
     Route::get('/get_orden_pago_reprogramacion', [SolicitudController::class, 'getOrdenPagoReprogramacion'])->middleware('permiso:solicitudprestamos,controlcaja');
     Route::get('/listar_cuotas_plan_reprogramacion', 'App\Http\Controllers\SolicitudController@listarCuotasPlanReprogramacion')->middleware('permiso:solicitudprestamos,controlcaja');
 
@@ -232,6 +236,7 @@ Route::middleware(['auth', 'auth.session', \App\Http\Middleware\OwnCashBox::clas
     Route::get('/get_planes_pago_sin_pago_adm', 'App\Http\Controllers\CajaController@getPlanesPagoSinPagoAdm')->middleware('permiso:controlcaja,consultasfinancieras');
     Route::post('/actualizar_desembolso', 'App\Http\Controllers\CajaController@actualizarDesembolso')->middleware('permiso:controlcaja');
     Route::post('/guardar_pago_adm', 'App\Http\Controllers\CajaController@guardarPagoAdministrativo')->middleware('permiso:controlcaja');
+    Route::post('/registrar_pago_adm_desembolso', 'App\Http\Controllers\CajaController@registrarPagoAdministrativoYDesembolso')->middleware('permiso:controlcaja');
     Route::get('/reporte_cajas_fecha', 'App\Http\Controllers\CajaController@reporteCajasFecha')->middleware('permiso:controlcaja,consultasfinancieras');
     Route::get('/get_desembolsos', 'App\Http\Controllers\CajaController@getDesembolsos')->middleware('permiso:controlcaja,consultasfinancieras');
     Route::get('/exportar_desembolsos_caja_pdf', 'App\Http\Controllers\CajaController@exportarDesembolsosCaja')->middleware('permiso:controlcaja,consultasfinancieras');
@@ -270,8 +275,8 @@ Route::middleware(['auth', 'auth.session', \App\Http\Middleware\OwnCashBox::clas
     Route::get('/operaciones/{codigo}/recibo', [\App\Http\Controllers\FinancialOperationController::class, 'receipt'])->middleware('permiso:controlcaja,boveda,listadopagos');
     Route::post('/operaciones/{codigo}/comprobante', [\App\Http\Controllers\FinancialOperationController::class, 'attach'])->middleware('permiso:controlcaja');
     Route::get('/operaciones/{codigo}/comprobante/{indice}', [\App\Http\Controllers\FinancialOperationController::class, 'proof'])->middleware('permiso:controlcaja,boveda,listadopagos');
-    Route::get('/historial_ingresos_listado_general', 'App\Http\Controllers\IngresoController@historialIngresosListado')->middleware('permiso:controlcaja');
-    Route::get('/historial_gastos_listado_general', 'App\Http\Controllers\GastoController@historialGastosListado')->middleware('permiso:controlcaja');
+    Route::get('/historial_ingresos_listado_general', 'App\Http\Controllers\IngresoController@historialIngresosListado')->middleware('permiso:controlcaja,consultasfinancieras');
+    Route::get('/historial_gastos_listado_general', 'App\Http\Controllers\GastoController@historialGastosListado')->middleware('permiso:controlcaja,consultasfinancieras');
     Route::post('/anular_ingreso_caja', 'App\Http\Controllers\IngresoController@anularIngreso')->middleware('permiso:controlcaja');
     Route::post('/anular_egreso_caja', 'App\Http\Controllers\GastoController@anularGasto')->middleware('permiso:controlcaja');
 
@@ -283,7 +288,7 @@ Route::middleware(['auth', 'auth.session', \App\Http\Middleware\OwnCashBox::clas
     Route::get('/get_monto_total_egresos', 'App\Http\Controllers\EstadoResultadosController@getMontoTotalEgresos')->middleware('permiso:consultasfinancieras');
 
     // ==================== CODEUDORES  [permiso: codeudores] ====================
-    Route::post('/save_codeudor', 'App\Http\Controllers\CodeudorController@save')->middleware('permiso:codeudores');
+    Route::post('/save_codeudor', 'App\Http\Controllers\CodeudorController@save')->middleware('permiso:codeudores,solicitudprestamos');
     Route::get('/get_codeudores', 'App\Http\Controllers\CodeudorController@getCodeudores')->middleware('permiso:codeudores');
     Route::get('/get_direcciones_telefono_codeudor', 'App\Http\Controllers\CodeudorController@getDireccionesTelefonos')->middleware('permiso:codeudores');
     Route::post('/modify_codeudor', 'App\Http\Controllers\CodeudorController@modify')->middleware('permiso:codeudores');
@@ -294,7 +299,7 @@ Route::middleware(['auth', 'auth.session', \App\Http\Middleware\OwnCashBox::clas
     Route::get('/get_codeudores_sin', 'App\Http\Controllers\CodeudorController@getCodeudoresSin')->middleware('permiso:codeudores,solicitudprestamos');
     Route::get('/get_codeudores_solicitud', 'App\Http\Controllers\CodeudorController@getCodeudorSolicitud')->middleware('permiso:codeudores,solicitudprestamos');
     Route::get('/get_codeudores_solicitudes', 'App\Http\Controllers\CodeudorController@getCodeudoresSolicitudes')->middleware('permiso:codeudores,solicitudprestamos,planpagos');
-    Route::get('/get_actividades', 'App\Http\Controllers\CodeudorController@getActividades')->middleware('permiso:cliente,codeudores');
+    Route::get('/get_actividades', 'App\Http\Controllers\CodeudorController@getActividades')->middleware('permiso:cliente,codeudores,solicitudprestamos');
     Route::get('/codeudor/reporte', [CodeudorController::class, 'imprimirReporteCodeudores'])->middleware('permiso:codeudores');
 
     // ==================== CONSULTAS FINANCIERAS  [permiso: consultasfinancieras] ====================

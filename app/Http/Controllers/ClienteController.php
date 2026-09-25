@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use App\Support\BoliviaDepartments;
 use DB;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Dompdf\Dompdf;
@@ -23,6 +25,8 @@ class ClienteController extends Controller
 
     public function save(Request $request)
     {
+        $request->merge(['direcciones' => BoliviaDepartments::normalizeDirections($request->input('direcciones'))]);
+
         try {
             DB::beginTransaction();
 
@@ -39,7 +43,7 @@ class ClienteController extends Controller
                 'ingreso_mensual' => 'required|numeric',
                 'direcciones' => 'required|array|min:1',
                 'direcciones.*.tipo' => 'required|string',
-                'direcciones.*.departamento' => 'required|string',
+                'direcciones.*.departamento' => ['required', 'string', Rule::in(BoliviaDepartments::names())],
                 'direcciones.*.descripcion' => 'required|string',
                 'telefonos' => 'required|array|min:1',
                 'telefonos.*.tipo' => 'required|string',
@@ -135,6 +139,12 @@ class ClienteController extends Controller
     }
 
     public function modify(Request $request){
+        $request->merge(['direcciones' => BoliviaDepartments::normalizeDirections($request->input('direcciones'))]);
+        $request->validate([
+            'direcciones' => 'required|array|min:1',
+            'direcciones.*.departamento' => ['required', 'string', Rule::in(BoliviaDepartments::names())],
+        ]);
+
         DB::beginTransaction();
         try{
             DB::table('cliente')->where('cliente.id', $request->id)->update([

@@ -13,7 +13,7 @@
                     :solicitudes="filteredSolicitudes"
                     :pagination="pagination"
                     :codeudores-tabla="lista_codeudores_tabla"
-                    :rol-usuario="rolUsuario"
+                    :rol-usuario="rolUsuarioEfectivo"
                     :filtros-iniciales="{
                         fecha_inicial: fecha_inicial_buscar,
                         fecha_final: fecha_final_buscar,
@@ -256,6 +256,14 @@
                                                     :disabled="solicitud.accion === 2" 
                                                     @input="filteredItemsCodeudorMetodo(item.select_codeudor.codeudor.idd_codeudor, index)" 
                                                 />
+
+                                                <button v-if="solicitud.accion !== 2"
+                                                    @click="abrirModalCodeudor(index)" type="button"
+                                                    class="btn btn-success ms-1 shadow-sm"
+                                                    aria-label="Registrar nuevo garante"
+                                                    title="Registrar y seleccionar un nuevo garante">
+                                                    <i class="fas fa-plus-circle"></i>
+                                                </button>
                                                 
                                                 <button v-if="item.select_codeudor.codeudor.id_codeudor !== 0 && solicitud.accion !== 2" 
                                                     @click="limpiarSeleccionCodeudor(index)" type="button" 
@@ -264,10 +272,12 @@
                                                     <i class="fas fa-times"></i>
                                                 </button>
 
-                                                <button v-if="solicitud.accion !== 2" 
+                                                <button v-if="solicitud.accion !== 2
+                                                    && index === lista_codeudores.length - 1
+                                                    && item.select_codeudor.codeudor.id_codeudor !== 0"
                                                     @click="addCodeudor" type="button"
-                                                    class="btn btn-success ms-1 shadow-sm"
-                                                    data-bs-toggle="tooltip" title="Agregar otro codeudor">
+                                                    class="btn btn-outline-success ms-1 shadow-sm"
+                                                    data-bs-toggle="tooltip" title="Agregar otra fila de garante">
                                                     <i class="fas fa-plus"></i>
                                                 </button>
                                                 <button v-if="solicitud.accion !== 2 && lista_codeudores.length > 1" 
@@ -364,6 +374,23 @@
 
                             </div>
 
+                            <div class="modal fade" id="modalCodeudorOverlay" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+                                <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" style="max-width:90%;">
+                                    <div class="modal-content border-0 shadow-lg">
+                                        <div class="modal-body p-0">
+                                            <CodeudorForm
+                                                v-if="mostrarModalCodeudor"
+                                                :codeudor-id="codeudorFormId"
+                                                :accion="codeudorFormAccion"
+                                                :initial-data="selectedGuarantorData"
+                                                @cerrar="cerrarModalCodeudor"
+                                                @guardado="alGuardarCodeudor"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="card mb-4 border-success shadow-sm">
 
                                 <div class="card-header bg-white text-dark">
@@ -403,7 +430,8 @@
                                                             Seleccione moneda
                                                         </option>
                                                         <option v-for="item in lista_monedas" :key="item.nombre"
-                                                            :value="item.nombre">
+                                                            :value="item.nombre"
+                                                            :disabled="solicitud.accion === 0 && item.nombre !== 'Bolivianos'">
                                                             {{ item.nombre }}
                                                         </option>
                                                     </select>
@@ -684,17 +712,17 @@
                             </button>
 
                             <button
-                                v-if="solicitud.estado != 2 && solicitud.accion === 2 && rolUsuario === 'Administrador' && solicitud.observacion == ''"
+                                v-if="solicitud.estado != 2 && solicitud.accion === 2 && rolUsuarioEfectivo === 'Administrador' && solicitud.observacion == ''"
                                 type="button" class="btn btn-info" @click="abrirModalObservacion('guardar')">
                                 <i class="fas fa-eye"></i> Observar
                             </button>
                             <button
-                                v-if="solicitud.accion === 2 && rolUsuario === 'Administrador' && solicitud.observacion != ''"
+                                v-if="solicitud.accion === 2 && rolUsuarioEfectivo === 'Administrador' && solicitud.observacion != ''"
                                 type="button" class="btn btn-info me-2" @click="abrirModalObservacion('modificar')">
                                 <i class="fas fa-pencil-alt"></i> Modificar Observación
                             </button>
                             <button @click="eliminarObservacion()"
-                                v-if="solicitud.accion === 2 && rolUsuario === 'Administrador' && solicitud.observacion != ''"
+                                v-if="solicitud.accion === 2 && rolUsuarioEfectivo === 'Administrador' && solicitud.observacion != ''"
                                 type="button" class="btn btn-danger">
                                 <i class="fas fa-trash-alt"></i> Eliminar Observación
                             </button>
@@ -889,7 +917,7 @@
                                                 </div>
                                             </div>
             
-                                            <div class="col-md-3 text-end" v-if="rolUsuario === 'Administrador'">
+                                            <div class="col-md-3 text-end" v-if="rolUsuarioEfectivo === 'Administrador'">
                                                 <button v-if="!solicitud_editar.observacion"
                                                     @click="abrirObservacionRepro('guardar')"
                                                     class="btn btn-outline-danger fw-bold btn-sm">
@@ -971,7 +999,6 @@
                                                         <option value="Mensual">Mensual</option>
                                                         <option value="Quincenal">Quincenal</option>
                                                         <option value="Semanal">Semanal</option>
-                                                        <option value="Diario">Diario</option>
                                                     </select>
                                                 </div>
                                                 <!-- Plazo -->
@@ -1078,6 +1105,8 @@ import ModalGarantias from './Solicitud/ModalGarantias.vue';
 import ModalRespaldos from './Solicitud/ModalRespaldos.vue';
 import ModalCalculadoraCredito from './Solicitud/ModalCalculadoraCredito.vue';
 import ClienteForm from './Cliente/ClienteForm.vue'; 
+import CodeudorForm from './Codeudor/CodeudorForm.vue';
+import { sesion } from '../router/session';
 
 import {lista_monedas, lapso_capitales, tipos_desembolsos, tipos_garantias} from '../constants';
 
@@ -1091,12 +1120,13 @@ export default {
         ModalGarantias,
         ModalRespaldos,
         ModalCalculadoraCredito,
-        ClienteForm
+        ClienteForm,
+        CodeudorForm
     },
     props: {
         rolUsuario: {
             type: String,
-            required: true,
+            default: '',
         },
     },
     data() {
@@ -1108,6 +1138,11 @@ export default {
             mostrarModalCliente: false, // Controla si se renderiza el componente
             clienteFormAccion: 0,       // 0: Nuevo, 1: Editar
             clienteFormId: 0,
+            mostrarModalCodeudor: false,
+            codeudorFormAccion: 0,
+            codeudorFormId: 0,
+            codeudorTargetIndex: -1,
+            selectedGuarantorData: null,
             orden_pago_actual: null,
             solicitud_editar: {},
             original_data: {
@@ -1151,7 +1186,7 @@ export default {
             solicitud: {
                 id_solicitud: 0,
                 importe_solicitud: 0,
-                moneda: "",
+                moneda: "Bolivianos",
                 lapso_capital: "",
                 nro_cuotas: 0,
                 tasa: 0,
@@ -1229,6 +1264,9 @@ export default {
     },
 
     computed: {
+        rolUsuarioEfectivo() {
+            return this.rolUsuario || sesion.role_name || '';
+        },
       
         filteredSolicitudes() {
             return this.lista_solicitudes.filter(
@@ -1296,10 +1334,12 @@ export default {
         },
 
         // Callback cuando el ClienteForm emite "guardado"
-        async alGuardarCliente() {
+        async alGuardarCliente(clienteGuardado) {
             // Capturar antes de cualquier await: cerrarModalCliente (via @cerrar) los resetea a 0 tras 300ms
             const accion = this.clienteFormAccion;
-            const clienteId = this.clienteFormId;
+            const clienteId = Number(
+                clienteGuardado?.id || clienteGuardado?.id_cliente || this.clienteFormId || 0
+            );
 
             // 1. Recargar la lista de clientes en memoria para el buscador
             await this.getClientes();
@@ -1335,12 +1375,36 @@ export default {
                 });
             }
             // 3. Si estábamos creando uno nuevo
-            else if (accion === 0) {
+            else if (accion === 0 && clienteId) {
+                let clienteNuevo = this.items_cliente.find(
+                    item => Number(item.id || item.id_cliente) === clienteId
+                );
+
+                // El listado puede estar filtrado por permisos o todavía no reflejar la inserción.
+                // En ese caso obtenemos el registro recién creado directamente por su identificador.
+                if (!clienteNuevo) {
+                    try {
+                        const response = await axios.get('/get_cliente_info', {
+                            params: { id: clienteId, _t: Date.now() }
+                        });
+                        clienteNuevo = response.data;
+                    } catch (error) {
+                        console.error('Error al seleccionar el cliente recién creado:', error);
+                    }
+                }
+
+                if (clienteNuevo) {
+                    this.selectedCustomerData = clienteNuevo;
+                    this.seleccionarCliente(clienteNuevo);
+                }
+
                 Swal.fire({
                     toast: true,
                     position: 'top-end',
-                    icon: 'success',
-                    title: 'Cliente creado exitosamente. Puede buscarlo ahora.',
+                    icon: clienteNuevo ? 'success' : 'warning',
+                    title: clienteNuevo
+                        ? 'Cliente creado y seleccionado en la solicitud.'
+                        : 'Cliente creado, pero no se pudo seleccionarlo automáticamente.',
                     showConfirmButton: false,
                     timer: 3000
                 });
@@ -1489,7 +1553,7 @@ export default {
                         saldo_actual: this.calcularSaldoCapitalOriginal(response.data.lista_cuotas) 
                     };
                 }
-                this.simularNuevaTabla();
+                await this.simularNuevaTabla();
                 this.view = 'aprobar_reprogramacion';
 
             } catch (error) {
@@ -1505,8 +1569,8 @@ export default {
             if (!cuotas) return 0;
             // Sumar capital de cuotas pendientes (Estado 1)
             return cuotas
-                .filter(c => c.estado === 1)
-                .reduce((acc, curr) => acc + parseFloat(curr.capital), 0);
+                .filter(c => [1, 3].includes(Number(c.estado)))
+                .reduce((acc, curr) => acc + Math.max(0, Number(curr.capital) - Number(curr.capital_pagado || 0)), 0);
         },
 
         // --- 2. LÓGICA DE EDICIÓN ---
@@ -1527,6 +1591,15 @@ export default {
         },
 
         async simularNuevaTabla() {
+            if (this.view === 'aprobar_reprogramacion' || this.solicitud_editar.id_solicitud_origen) {
+                this.lista_cuotas_simuladas = [];
+                const response = await axios.post('/solicitud/previsualizar-reprogramacion', {
+                    id_solicitud: this.solicitud_editar.id, datos_actualizados: this.solicitud_editar,
+                });
+                this.solicitud_editar.importe_solicitud = response.data.importe_solicitud;
+                this.lista_cuotas_simuladas = response.data.cuotas;
+                return;
+            }
             const backupSolicitud = { ...this.solicitud }; // Guardar estado actual
             const backupLista = [...this.lista_cuotas];    // Guardar lista actual
             this.solicitud = {
@@ -1548,6 +1621,12 @@ export default {
         // --- 4. APROBACIÓN FINAL ---
         
         async aprobarDefinitivamente() {
+            try {
+                await this.simularNuevaTabla();
+            } catch (error) {
+                Swal.fire('Error', error.response?.data?.message || 'No se pudo validar el nuevo cronograma.', 'error');
+                return;
+            }
             if (this.solicitud_editar.observacion && this.solicitud_editar.observacion.trim() !== '') {
                 Swal.fire('No permitido', 'No se puede aprobar una solicitud que tiene observaciones pendientes.', 'error');
                 return;
@@ -1560,7 +1639,7 @@ export default {
 
             const result = await Swal.fire({
                 title: '¿Aprobar Reprogramación?',
-                text: "Esta acción es irreversible. Se anulará el crédito anterior y se activará este nuevo plan.",
+                text: "Se sustituirá el crédito anterior por el nuevo plan calculado por el servidor. Si existe una orden pendiente, deberá liquidarse en caja antes de operar el nuevo crédito.",
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#28a745',
@@ -1583,7 +1662,7 @@ export default {
 
                 } catch (error) {
                     console.error(error);
-                    Swal.fire('Error', 'No se pudo procesar la aprobación.', 'error');
+                    Swal.fire('Error', error.response?.data?.message || 'No se pudo procesar la aprobación.', 'error');
                 } finally {
                     this.preloader = false;
                 }
@@ -1618,6 +1697,8 @@ export default {
         },
         limpiarSeleccionCliente() {
             this.cliente.id_cliente = 0; // O null, dependiendo de tu inicialización
+            this.solicitud.id_cliente = 0;
+            this.selectedCustomerData = null;
             this.cliente.nombre = '';
             this.cliente.idd_cliente = '';
             this.cliente.ci = '';
@@ -1818,6 +1899,15 @@ export default {
                 });
             }
         },
+        async refrescarCatalogoCodeudores() {
+            const { data } = await axios.get('/get_codeudores_sin', {
+                params: { _t: Date.now() }
+            });
+            this.lista_codeudores.forEach(item => {
+                item.select_codeudor.codeudor.items_codeudor = data;
+            });
+            return data;
+        },
         async getCodeudoresTabla() {
             try {
                 const { data } = await axios.get("/get_codeudores_solicitudes");
@@ -1970,6 +2060,12 @@ export default {
                 return;
             }
             const searchTerm = this.normalizeString(keyword);
+            const seleccionadosEnOtrasFilas = new Set(
+                this.lista_codeudores
+                    .filter((_, rowIndex) => rowIndex !== index)
+                    .map(row => Number(row.select_codeudor.codeudor.id_codeudor))
+                    .filter(Boolean)
+            );
             this.lista_codeudores[
                 index
             ].select_codeudor.codeudor.filteredItemsCodeudorAux =
@@ -1977,8 +2073,9 @@ export default {
                     index
                 ].select_codeudor.codeudor.items_codeudor.filter(
                     (item) =>
-                        this.normalizeString(item.nombre).includes(searchTerm) ||
-                        this.normalizeString(item.ci).includes(searchTerm)
+                        !seleccionadosEnOtrasFilas.has(Number(item.id)) &&
+                        (this.normalizeString(item.nombre).includes(searchTerm) ||
+                        this.normalizeString(item.ci).includes(searchTerm))
                 );
         },
 
@@ -1993,6 +2090,9 @@ export default {
         },
 
         addCodeudor() {
+            const ultimaFila = this.lista_codeudores[this.lista_codeudores.length - 1];
+            if (!ultimaFila?.select_codeudor?.codeudor?.id_codeudor) return;
+
             const newIndex =
                 this.lista_codeudores.push({
                     select_codeudor: {
@@ -2051,12 +2151,28 @@ export default {
         // },
 
         seleccionarCodeudor(item, index) {
+            const idCodeudor = Number(item.id || item.id_codeudor);
+            const yaSeleccionado = this.lista_codeudores.some((row, rowIndex) =>
+                rowIndex !== index && Number(row.select_codeudor.codeudor.id_codeudor) === idCodeudor
+            );
+            if (yaSeleccionado) {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'warning',
+                    title: 'Este garante ya está seleccionado en otra fila.',
+                    showConfirmButton: false,
+                    timer: 2500
+                });
+                return;
+            }
+
             // Referencia al objeto codeudor específico en la lista
             let codeudorTarget = this.lista_codeudores[index].select_codeudor.codeudor;
 
             // Asignación de datos básicos
             codeudorTarget.idd_codeudor = item.nombre;
-            codeudorTarget.id_codeudor = item.id;
+            codeudorTarget.id_codeudor = idCodeudor;
             codeudorTarget.ci = `${item.ci} ${item.lugar_expedicion ? item.lugar_expedicion : ''}`;
             codeudorTarget.actividad = item.actividad;
 
@@ -2070,6 +2186,56 @@ export default {
 
             // Limpiar lista de búsqueda
             codeudorTarget.filteredItemsCodeudorAux = [];
+        },
+
+        abrirModalCodeudor(index) {
+            if (!this.lista_codeudores[index] || this.solicitud.accion === 2) return;
+            this.codeudorTargetIndex = index;
+            this.codeudorFormAccion = 0;
+            this.codeudorFormId = 0;
+            this.selectedGuarantorData = null;
+            this.mostrarModalCodeudor = true;
+            this.$nextTick(() => $('#modalCodeudorOverlay').modal('show'));
+        },
+
+        cerrarModalCodeudor() {
+            $('#modalCodeudorOverlay').modal('hide');
+            setTimeout(() => {
+                this.mostrarModalCodeudor = false;
+                this.codeudorFormId = 0;
+                this.codeudorTargetIndex = -1;
+                this.selectedGuarantorData = null;
+            }, 300);
+        },
+
+        async alGuardarCodeudor(codeudorGuardado) {
+            // El formulario también emite "cerrar"; capturamos el destino antes del reset diferido.
+            const targetIndex = this.codeudorTargetIndex;
+            const codeudorId = Number(codeudorGuardado?.id || codeudorGuardado?.id_codeudor || 0);
+            if (targetIndex < 0 || !this.lista_codeudores[targetIndex] || !codeudorId) {
+                Swal.fire('Atención', 'El garante fue creado, pero no se recibió información suficiente para seleccionarlo.', 'warning');
+                return;
+            }
+
+            let catalogo = [];
+            try {
+                catalogo = await this.refrescarCatalogoCodeudores();
+            } catch (error) {
+                console.error('Error al actualizar el catálogo de garantes:', error);
+            }
+
+            const codeudorNuevo = catalogo.find(item => Number(item.id) === codeudorId)
+                || { ...codeudorGuardado, id: codeudorId };
+            this.seleccionarCodeudor(codeudorNuevo, targetIndex);
+
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: 'Garante creado y seleccionado en la solicitud.',
+                showConfirmButton: false,
+                timer: 3000
+            });
         },
 
         abrirModalNuevo() {
@@ -2119,7 +2285,7 @@ export default {
             this.solicitud = {
                 id_solicitud: 0,
                 importe_solicitud: 0,
-                moneda: "",
+                moneda: "Bolivianos",
                 lapso_capital: "",
                 nro_cuotas: 0,
                 tasa: 0,
@@ -2370,7 +2536,7 @@ export default {
             });
             if (result.isConfirmed) {
                 try {
-                    await axios.post('/desactivar_solicitud', { id_solicitud: item.id });
+                    await axios.post(item.id_solicitud_origen ? '/solicitud/cancelar-especial' : '/desactivar_solicitud', { id_solicitud: item.id });
                     this.getSolicitudes(this.pagination.current_page);
                     
                     Swal.fire({

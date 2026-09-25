@@ -31,11 +31,11 @@ const routes = [
     // Caja                            [permiso: controlcaja]
     // ------------------------------------------------------------------
     { path: '/caja', name: 'caja', component: () => import('../components/frmCaja.vue'), meta: { permiso: ['controlcaja', 'consultasfinancieras'], titulo: 'Control de Caja' } },
-    { path: '/historial_desembolsos_pagos', name: 'historial-desembolsos-pagos', component: () => import('../components/frmHistorialDesPagos.vue'), meta: { permiso: 'controlcaja', titulo: 'Historial Desembolsos y Pagos Adm.' } },
-    { path: '/historial_gastos', name: 'historial-gastos', component: () => import('../components/frmHistorialGastos.vue'), meta: { permiso: 'controlcaja', titulo: 'Historial Ingresos y Gastos Corrientes' } },
-    { path: '/historial_pagos', name: 'historial-pagos', component: () => import('../components/frmHistorialPagos.vue'), meta: { permiso: 'controlcaja', titulo: 'Historial Pagos de Cuotas' } },
+    { path: '/historial_desembolsos_pagos', name: 'historial-desembolsos-pagos', component: () => import('../components/frmHistorialDesPagos.vue'), meta: { permiso: ['controlcaja', 'consultasfinancieras'], titulo: 'Historial Desembolsos y Pagos Adm.' } },
+    { path: '/historial_gastos', name: 'historial-gastos', component: () => import('../components/frmHistorialGastos.vue'), meta: { permiso: ['controlcaja', 'consultasfinancieras'], titulo: 'Historial Ingresos y Gastos Corrientes' } },
+    { path: '/historial_pagos', name: 'historial-pagos', component: () => import('../components/frmHistorialPagos.vue'), meta: { permiso: ['controlcaja', 'listadopagos'], titulo: 'Historial Pagos de Cuotas' } },
     // Página existente en el backend pero sin enlace en el menú actual (se preserva igual).
-    { path: '/historial_ingresos', name: 'historial-ingresos', component: () => import('../components/frmHistorialIngresos.vue'), meta: { permiso: 'controlcaja', titulo: 'Historial de Ingresos' } },
+    { path: '/historial_ingresos', name: 'historial-ingresos', component: () => import('../components/frmHistorialIngresos.vue'), meta: { permiso: ['controlcaja', 'consultasfinancieras'], titulo: 'Historial de Ingresos' } },
 
     // ------------------------------------------------------------------
     // Clientes / Codeudores            [permiso: cliente / codeudores]

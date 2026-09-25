@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use App\Traits\CalculaSaldoCaja;
 use DB;
 use Dompdf\Dompdf;
@@ -421,13 +422,25 @@ class CajaController extends Controller
         ->where('plan_pago.pago_administrativo', 1)
         ->where('plan_pago.desembolso', 1)
         ->orderBy('solicitud.fecha_desembolso', 'desc')
-        ->get();
+        ->get()
+        ->each(function ($plan) {
+            $montoBase = $plan->tipo_solicitud === 'Refinanciamiento'
+                ? $plan->monto_refinanciamiento
+                : $plan->importe_solicitud;
+            $plan->monto_pago_adm = \App\Services\Finance\AdministrativeFee::decimalFromAmount($montoBase);
+        });
         return $planes_pago;
     }
 
     public function guardarPagoAdministrativo(Request $request)
     {
         return app(\App\Services\Finance\CashMovements::class)->save($request, 'administrativo');
+    }
+
+    public function registrarPagoAdministrativoYDesembolso(Request $request)
+    {
+        return app(\App\Services\Finance\CashMovements::class)
+            ->saveAdministrativeFeeAndDisbursement($request);
     }
 
     public function reporteCajasFecha(Request $request){
@@ -583,13 +596,23 @@ class CajaController extends Controller
 
     public function historialDesembolsosPagosListado(Request $request)
     {
+        $request->validate([
+            'fecha_inicio' => 'required|date_format:Y-m-d',
+            'fecha_final' => 'required|date_format:Y-m-d|after_or_equal:fecha_inicio',
+            'criterio' => ['nullable', Rule::in(['cliente.nombre', 'cliente.ci', 'users.personal'])],
+            'buscar' => 'nullable|string|max:200',
+            'page' => 'nullable|integer|min:1',
+        ]);
         $fechaInicio = $request->fecha_inicio;
         $fechaFinal = $request->fecha_final;
+        $criterio = $request->input('criterio') ?: 'cliente.nombre';
 
         $desembolsos = DB::table('desembolso')
         ->select(DB::raw('DISTINCT desembolso.id, cliente.nombre as cliente, desembolso.fecha, 
             plan_pago.id as id_plan_pago, desembolso.monto, users.personal as asesor, 
-            desembolso.estado, pago_administrativo.monto as monto_pago_adm, cliente.ci, 
+            desembolso.estado, desembolso.id_caja, caja.estado as estado_caja,
+            caja.id_usuario as propietario_caja,
+            pago_administrativo.monto as monto_pago_adm, cliente.ci,
             cliente.id as id_cliente, cliente.lugar_expedicion, solicitud.tipo_garantia, 
             solicitud.lapso_capital, solicitud.nro_cuotas'))
         ->join('plan_pago', 'plan_pago.id', '=', 'desembolso.id_plan_pago')
@@ -600,7 +623,7 @@ class CajaController extends Controller
         ->join('users', 'users.id', '=', 'solicitud.id_usuario')
         ->whereDate('desembolso.fecha', '>=', $fechaInicio)
         ->whereDate('desembolso.fecha', '<=', $fechaFinal)
-        ->where($request->criterio, 'like', '%'.$request->buscar.'%')
+        ->where($criterio, 'like', '%'.$request->input('buscar', '').'%')
         // ->where('desembolso.estado', 0)
         ->orderBy('desembolso.fecha', 'desc')
         ->paginate(50);
@@ -985,21 +1008,25 @@ class CajaController extends Controller
 
     public function getOrdenesReprogramacion(Request $request)
     {
-        $criterio = $request->get('criterio');
+        $request->validate(['criterio' => 'nullable|in:plan_pago.id,cliente.nombre,cliente.ci', 'buscar' => 'nullable|string|max:255']);
+        $criterio = $request->get('criterio') ?: 'cliente.nombre';
         $buscar = $request->get('buscar');
 
         $query = OrdenPagoReprogramacion::select(
                 'orden_pago_reprogramaciones.*',
+                'rf.id as id_calculo_financiero', 'op.codigo as codigo_operacion',
                 'cliente.nombre as cliente_nombre',
                 'cliente.ci as cliente_ci',
                 'plan_pago.id as id_credito_ref'
             )
             ->join('plan_pago', 'orden_pago_reprogramaciones.id_plan_pago_origen', '=', 'plan_pago.id')
+            ->leftJoin('reprogramaciones_financieras as rf', 'rf.id_orden', '=', 'orden_pago_reprogramaciones.id')
+            ->leftJoin('operaciones_financieras as op', 'op.id', '=', 'rf.id_operacion_cobro')
             ->join('solicitud', 'plan_pago.id_solicitud', '=', 'solicitud.id')
             ->join('cliente', 'solicitud.id_cliente', '=', 'cliente.id')
             ->whereIn('orden_pago_reprogramaciones.estado', [
                 OrdenPagoReprogramacion::ESTADO_POR_PAGAR, 
-                // OrdenPagoReprogramacion::ESTADO_PAGADO // Descomenta si quieres ver historial
+                OrdenPagoReprogramacion::ESTADO_PAGADO
             ]);
 
         if (!empty($buscar)) {
@@ -1010,11 +1037,15 @@ class CajaController extends Controller
             }
         }
 
+        if (\App\Services\CarteraAccess::restricted()) $query->where('solicitud.id_usuario', Auth::id());
         $ordenes = $query->orderBy('orden_pago_reprogramaciones.created_at', 'desc')->get();
 
         $data = $ordenes->map(function($orden) {
             return [
                 'id' => $orden->id,
+                'puede_cobrar' => (bool) $orden->id_calculo_financiero,
+                'codigo_operacion' => $orden->codigo_operacion,
+                'monto_cobro' => $orden->total_a_pagar,
                 'created_at_fmt' => \Carbon\Carbon::parse($orden->created_at)->format('d/m/Y H:i'),
                 'cliente_nombre' => $orden->cliente_nombre,
                 'id_plan_pago_origen' => $orden->id_plan_pago_origen,

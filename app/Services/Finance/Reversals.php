@@ -30,6 +30,13 @@ final class Reversals
             $cash = Operations::cash($op->id_caja);
             abort_unless(in_array($op->tipo, ['cobro', 'ingreso', 'egreso', 'administrativo', 'desembolso', 'transferencia_caja'], true), 422, 'Esta operación no admite anulación.');
             if ($op->anulado_at) return ['success' => true, 'respuesta' => 1, 'ya_anulada' => true];
+            $before = $op->antes ? json_decode($op->antes, true, 512, JSON_THROW_ON_ERROR) : [];
+            if (isset($before['reprogramacion'])) {
+                Rescheduling::assertNoNewActivity((int) $before['id_plan_nuevo']);
+            } elseif ($op->id_plan_pago) {
+                abort_if(DB::table('reprogramaciones_financieras')->where('id_plan_origen', $op->id_plan_pago)->whereIn('estado', ['pendiente', 'aprobada'])->exists(),
+                    422, 'El crédito tiene una reprogramación vigente; no se pueden alterar sus pagos originales.');
+            }
             if ($op->id_plan_pago) {
                 abort_if(DB::table('operaciones_financieras')->where('id_plan_pago', $op->id_plan_pago)->where('id', '>', $op->id)->whereNull('anulado_at')->exists(), 422, 'Existen operaciones posteriores en el crédito.');
                 $quotaIds = DB::table('cuota')->where('id_plan_pago', $op->id_plan_pago)->pluck('id');
@@ -39,7 +46,11 @@ final class Reversals
             }
             $parts = json_decode($op->partes, true, 512, JSON_THROW_ON_ERROR);
             $physical = array_sum(array_map(fn ($p) => $p['forma_pago'] === 'efectivo' ? Money::cents($p['monto']) : 0, $parts));
-            if ($op->direccion === 'ingreso') abort_if(Money::cents(app(CashSummary::class)->forCash($cash->id)['efectivo_esperado']) < $physical, 422, 'Saldo físico insuficiente para devolver el cobro.');
+            if ($op->direccion === 'ingreso') {
+                $summary = app(CashSummary::class)->forCash($cash->id);
+                abort_if(Money::cents($summary['saldo_disponible']) < Money::cents($op->monto), 422, 'Saldo disponible insuficiente para devolver el cobro.');
+                abort_if(Money::cents($summary['efectivo_esperado']) < $physical, 422, 'Saldo físico insuficiente para devolver el componente en efectivo.');
+            }
             if ($op->interno && $op->id_boveda) {
                 $vault = DB::table('boveda')->where('id', $op->id_boveda)->lockForUpdate()->first();
                 $delta = $op->direccion === 'ingreso' ? $physical : -$physical;
@@ -52,6 +63,11 @@ final class Reversals
             if ($op->tipo === 'cobro') {
                 DB::table('pago')->where('id_operacion', $op->id)->update(['estado' => 0]);
                 foreach ($before['cuotas'] as $q) { $id = $q['id']; unset($q['id']); DB::table('cuota')->where('id', $id)->update($q); }
+                if (isset($before['reprogramacion'])) {
+                    $reprogramacion = DB::table('reprogramaciones_financieras')->find($before['reprogramacion']);
+                    DB::table('orden_pago_reprogramaciones')->where('id', $reprogramacion->id_orden)->update(['estado' => 1, 'updated_at' => now()]);
+                    DB::table('reprogramaciones_financieras')->where('id', $reprogramacion->id)->update(['id_operacion_cobro' => null, 'updated_at' => now()]);
+                }
             } else {
                 $table = match ($op->tipo) { 'administrativo' => 'pago_administrativo', 'transferencia_caja' => 'ingreso', default => $op->tipo };
                 DB::table($table)->where('id_operacion', $op->id)->update(['estado' => in_array($table, ['desembolso', 'pago_administrativo'], true) ? 1 : 0]);

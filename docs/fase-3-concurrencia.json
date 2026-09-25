@@ -22,5 +22,10 @@
     "competing_disbursements": [
         200,
         422
-    ]
+    ],
+    "reprogramming_order_same_key": [
+        200,
+        200
+    ],
+    "reprogramming_order_single_income": "76.67"
 }

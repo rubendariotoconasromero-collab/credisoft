@@ -12,6 +12,23 @@ window.axios = axios;
 
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
+// Una sesión puede vencer mientras la SPA permanece abierta. Cualquier API
+// que lo detecte conduce al login; 419 cubre el token CSRF de una sesión
+// caducada. replace() evita volver con el navegador a una pantalla inválida.
+let redirigiendoAlLogin = false;
+window.axios.interceptors.response.use(
+    response => response,
+    error => {
+        if ([401, 419].includes(error.response?.status) && window.location.pathname !== '/') {
+            if (!redirigiendoAlLogin) {
+                redirigiendoAlLogin = true;
+                window.location.replace('/');
+            }
+        }
+        return Promise.reject(error);
+    }
+);
+
 /**
  * Echo exposes an expressive API for subscribing to channels and listening
  * for events that are broadcast by Laravel. Echo and event broadcasting

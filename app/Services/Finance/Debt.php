@@ -69,7 +69,11 @@ final class Debt
             $normalCents = $this->rounded($normal);
             $lateDays = max(0, (int) $due->diffInDays($end, false));
             $divisor = match (mb_strtolower(trim($plan->lapso_capital))) { 'semanal' => 7, 'quincenal' => 15, default => 30 };
-            $moratory = $index === $first ? $this->rounded(bcdiv(bcmul((string) $interest, (string) $lateDays, 12), (string) $divisor, 12)) : 0;
+            // Each pending installment keeps its own accrued interest, regardless
+            // of whether earlier installments are collected in the same request.
+            // The fixed daily fine remains allocated once per credit below.
+            $moratory = in_array((int) $q->estado, [1, 3], true)
+                ? $this->rounded(bcdiv(bcmul((string) $interest, (string) $lateDays, 12), (string) $divisor, 12)) : 0;
             $paidInterest = Money::cents($q->interes_pagado ?? 0);
             $q->fecha_corte = $cutoff->toDateString();
             $q->interes_ordinario_generado = Money::decimal($normalCents);

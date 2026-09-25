@@ -131,18 +131,18 @@
                                         <ul class="dropdown-menu dropdown-menu-end shadow"
                                             style="position: absolute; z-index: 1000; min-width: 200px;">
                                             
-                                            <li v-if="item.estado === 1" @click="$emit('anular', item)">
+                                            <li v-if="Number(item.estado) === 1" @click="$emit('anular', item)">
                                                 <a class="dropdown-item text-danger" href="#">
                                                     <i class="fas fa-times me-1"></i> Anular
                                                 </a>
                                             </li>
-                                            <li v-else-if="item.estado === 0" @click="$emit('activar', item)">
+                                            <li v-else-if="Number(item.estado) === 0" @click="$emit('activar', item)">
                                                 <a class="dropdown-item text-success" href="#">
                                                     <i class="fas fa-check me-1"></i> Activar
                                                 </a>
                                             </li>
     
-                                            <li v-if="item.estado === 1" @click="$emit('editar', item)">
+                                            <li v-if="Number(item.estado) === 1 && !item.id_solicitud_origen" @click="$emit('editar', item)">
                                                 <a class="dropdown-item text-primary" href="#">
                                                     <i class="fas fa-pencil-alt me-1"></i> Editar
                                                 </a>
@@ -179,12 +179,12 @@
                                                     <i class="fas fa-folder-open me-1"></i> Respaldos de Verificación
                                                 </a>
                                             </li>
-                                            <li v-if="item.estado === 2" @click="$emit('ver-hoja-aprobacion', item)">
+                                            <li v-if="Number(item.estado) === 2" @click="$emit('ver-hoja-aprobacion', item)">
                                                 <a class="dropdown-item text-dark" href="#">
                                                     <i class="fas fa-check-circle me-1"></i> Ver Hoja Aprobacion
                                                 </a>
                                             </li>
-                                            <li v-if="item.estado !== 2" @click="$emit('ver-hoja-solicitud', item)">
+                                            <li v-if="Number(item.estado) !== 2" @click="$emit('ver-hoja-solicitud', item)">
                                                 <a class="dropdown-item text-dark" href="#">
                                                     <i class="fas fa-file-alt me-1"></i> Ver Hoja Solicitud
                                                 </a>
@@ -308,8 +308,9 @@ export default {
         },
         // --- Lógica de Permisos / Visualización en botones ---
         esAprobable(item) {
-            return item.estado !== 0 &&
-                   item.estado !== 2 &&
+            const estado = Number(item.estado);
+            return estado !== 0 &&
+                   estado !== 2 &&
                    item.tipo_solicitud !== 'Reprogramacion' &&
                    item.tipo_solicitud !== 'Refinanciamiento' &&
                    this.rolUsuario === 'Administrador' &&
@@ -378,6 +379,17 @@ export default {
     background-color: white;
 }
 
+/* La tabla responsive recorta los dropdowns altos. Se reserva espacio solo
+   mientras hay un menú abierto y se mantiene todo su contenido accesible. */
+.table-container-custom:has(.dropdown-menu.show) {
+    padding-bottom: 320px;
+}
+
+.table-container-custom .dropdown-menu {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
 .table-compact-custom {
     font-size: 0.82rem;
     margin-bottom: 0;
@@ -405,8 +417,8 @@ export default {
 
 .badge-custom {
     width: 100px;
-    font-size: 0.7rem;
-    padding: 4px 6px;
+    font-size: 0.63rem;
+    padding: 3px 5px;
     text-transform: uppercase;
     letter-spacing: 0.3px;
     display: block;

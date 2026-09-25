@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Direccion;
+use App\Support\BoliviaDepartments;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class DireccionFactory extends Factory
@@ -13,7 +14,7 @@ class DireccionFactory extends Factory
     {
         return [
             'tipo' => $this->faker->randomElement(['Casa', 'Oficina', 'Negocio', 'Apartamento']),
-            'departamento' => $this->faker->randomElement(['Santa Cruz', 'La Paz', 'Cochabamba', 'Oruro', 'Potosí', 'Tarija', 'Chuquisaca', 'Beni', 'Pando']),
+            'departamento' => $this->faker->randomElement(BoliviaDepartments::names()),
             'ciudad' => $this->faker->city(),
             'zona' => 'Zona ' . $this->faker->word(),
             'descripcion' => $this->faker->streetAddress(),

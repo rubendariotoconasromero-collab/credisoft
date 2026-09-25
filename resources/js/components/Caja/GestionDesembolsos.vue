@@ -68,7 +68,7 @@
                                 {{ formatMoney(item.tipo_solicitud == 'Refinanciamiento' ? item.monto_refinanciamiento : item.total_pagar_plan) }}
                             </td>
                             <td class="text-uppercase text-end text-dark fw-bold">
-                                {{ formatMoney(calcularPagoAdm(item)) }}
+                                {{ formatMoney(item.monto_pago_adm) }}
                             </td>
                             <td class="text-uppercase text-center">
                                 <button
@@ -122,12 +122,6 @@ export default {
         formatMoney(value) {
             const val = parseFloat(value || 0);
             return isNaN(val) ? '0.00' : val.toFixed(2);
-        },
-        calcularPagoAdm(item) {
-            const monto = item.tipo_solicitud == 'Refinanciamiento' 
-                ? parseFloat(item.monto_refinanciamiento) 
-                : parseFloat(item.total_pagar_plan);
-            return monto * 0.01;
         }
     }
 };

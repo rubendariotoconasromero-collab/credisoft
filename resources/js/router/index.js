@@ -25,10 +25,12 @@ router.beforeEach(async (to) => {
         try {
             await cargarSesion();
         } catch (error) {
-            // Sesión no disponible (401 u otro error): dejar que el backend
-            // resuelva el login en la próxima navegación de página completa.
-            console.error('No se pudo cargar la sesión del usuario:', error);
-            return true;
+            if ([401, 419].includes(error.response?.status)) {
+                window.location.replace('/');
+            } else {
+                console.error('No se pudo cargar la sesión del usuario:', error);
+            }
+            return false;
         }
     }
 

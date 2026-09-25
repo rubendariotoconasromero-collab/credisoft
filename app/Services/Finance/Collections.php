@@ -14,6 +14,7 @@ final class Collections
             'modalidad_pago' => 'required|in:completo,parcial,solo_interes,solo_mora,interes_mora']);
         return app(Operations::class)->run($request, 'cobro', function ($id, $code) use ($request) {
             $cash = Operations::cash($request->id_caja);
+            Rescheduling::assertReady((int) $request->id_plan_pago);
             \App\Services\CarteraAccess::assertRecord('plan_pago', $request->id_plan_pago);
             $plan = DB::table('plan_pago')->where('id', $request->id_plan_pago)->lockForUpdate()->first();
             abort_unless($plan && (int) $plan->estado === 1 && (int) $plan->desembolso === 0, 422, 'El crédito no está activo y desembolsado.');

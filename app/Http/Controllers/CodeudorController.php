@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use App\Support\BoliviaDepartments;
 use DB;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Dompdf\Dompdf;
@@ -19,6 +21,8 @@ class CodeudorController extends Controller
  
     public function save(Request $request)
     {
+        $request->merge(['direcciones' => BoliviaDepartments::normalizeDirections($request->input('direcciones'))]);
+
         try {
             DB::beginTransaction();
 
@@ -35,7 +39,7 @@ class CodeudorController extends Controller
                 'ingreso_mensual' => 'required|numeric',
                 'direcciones' => 'required|array|min:1',
                 'direcciones.*.tipo' => 'required|string',
-                'direcciones.*.departamento' => 'required|string',
+                'direcciones.*.departamento' => ['required', 'string', Rule::in(BoliviaDepartments::names())],
                 'direcciones.*.descripcion' => 'required|string',
                 'telefonos' => 'required|array|min:1',
                 'telefonos.*.tipo' => 'required|string',
@@ -54,6 +58,7 @@ class CodeudorController extends Controller
                 $message = $existingCodeudor->nombre === $request->nombre 
                     ? 'Ya existe un codeudor con este nombre'
                     : 'Ya existe un codeudor con este CI';
+                DB::rollBack();
                 return response()->json([
                     'success' => false,
                     'error' => 'duplicate',
@@ -132,6 +137,12 @@ class CodeudorController extends Controller
     }
 
     public function modify(Request $request){
+        $request->merge(['direcciones' => BoliviaDepartments::normalizeDirections($request->input('direcciones'))]);
+        $request->validate([
+            'direcciones' => 'required|array|min:1',
+            'direcciones.*.departamento' => ['required', 'string', Rule::in(BoliviaDepartments::names())],
+        ]);
+
         $id_codeudor=$request->id;
         DB::beginTransaction();
         try{
@@ -251,9 +262,9 @@ class CodeudorController extends Controller
     public function getCodeudoresSin(){
         $codeudores = DB::table('codeudor')->leftJoin('direccion', 'direccion.id_codeudor', '=', 'codeudor.id')
         ->leftJoin('telefono', 'telefono.id_codeudor', '=', 'codeudor.id')
-        ->select('codeudor.lugar_expedicion','codeudor.id','codeudor.nombre', 'codeudor.fecha_nacimiento', 'codeudor.ci', 'codeudor.sexo', 'codeudor.estado_civil', 'codeudor.vivienda', 'codeudor.ingreso_mensual', 'codeudor.tipo',
+        ->select('codeudor.lugar_expedicion','codeudor.id','codeudor.nombre', 'codeudor.fecha_nacimiento', 'codeudor.ci', 'codeudor.sexo', 'codeudor.estado_civil', 'codeudor.vivienda', 'codeudor.ingreso_mensual', 'codeudor.tipo', 'codeudor.imagen',
         'codeudor.estado', 'codeudor.actividad')
-        ->groupBy('codeudor.lugar_expedicion','codeudor.id','codeudor.nombre', 'codeudor.fecha_nacimiento', 'codeudor.ci', 'codeudor.sexo', 'codeudor.estado_civil', 'codeudor.vivienda', 'codeudor.ingreso_mensual', 'codeudor.tipo',
+        ->groupBy('codeudor.lugar_expedicion','codeudor.id','codeudor.nombre', 'codeudor.fecha_nacimiento', 'codeudor.ci', 'codeudor.sexo', 'codeudor.estado_civil', 'codeudor.vivienda', 'codeudor.ingreso_mensual', 'codeudor.tipo', 'codeudor.imagen',
         'codeudor.estado', 'codeudor.actividad')
         // ->where()
         //->orderBy('codeudor.id', 'desc')

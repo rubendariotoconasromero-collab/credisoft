@@ -12,30 +12,31 @@
         
         <form @submit.prevent="accion === 0 ? saveCustomer() : updateCustomer()">
             <div class="card-body">
+                <div class="text-end text-muted small mb-1"><span class="text-danger fw-bold">*</span> Campos obligatorios</div>
                 <div class="row">
                     <div class="col-md-4">
                         <div class="form-group my-2">
-                            <label class="fw-bold">Nombre</label>
+                            <label class="fw-bold">Nombre <span class="text-danger" title="Campo obligatorio">*</span></label>
                             <input v-model="currentCustomer.nombre" :disabled="accion === 2" class="form-control text-capitalize" />
                             <small v-if="!currentCustomer.nombre && currentCustomer.enviado" class="text-danger">Ingrese un nombre *</small>
                         </div>
                     </div>
                     <div class="col-md-2">
                         <div class="form-group my-2">
-                            <label class="fw-bold">Fecha de Nacimiento</label>
+                            <label class="fw-bold">Fecha de Nacimiento <span class="text-danger" title="Campo obligatorio">*</span></label>
                             <input v-model="currentCustomer.fecha_nacimiento" type="date" :disabled="accion === 2" class="form-control" />
                         </div>
                     </div>
                     <div class="col-md-2">
                         <div class="form-group my-2">
-                            <label class="fw-bold">CI</label>
+                            <label class="fw-bold">CI <span class="text-danger" title="Campo obligatorio">*</span></label>
                             <input v-model="currentCustomer.ci" :disabled="accion === 2" class="form-control" />
                             <small v-if="!currentCustomer.ci && currentCustomer.enviado" class="text-danger">Ingrese un CI *</small>
                         </div>
                     </div>
                     <div class="col-md-2">
                         <div class="form-group my-2">
-                            <label class="fw-bold">DPTO</label>
+                            <label class="fw-bold">DPTO <span class="text-danger" title="Campo obligatorio">*</span></label>
                             <select v-model="currentCustomer.lugar_expedicion" :disabled="accion === 2" class="form-select">
                                 <option value="0" disabled>Seleccione</option>
                                 <option v-for="place in expeditionPlaces" :key="place.sigla" :value="place.sigla">{{ place.sigla }}</option>
@@ -45,7 +46,7 @@
                     </div>
                     <div class="col-md-2">
                         <div class="form-group my-2">
-                            <label class="fw-bold">Género</label>
+                            <label class="fw-bold">Género <span class="text-danger" title="Campo obligatorio">*</span></label>
                             <select v-model="currentCustomer.sexo" :disabled="accion === 2" class="form-select">
                                 <option value="0" disabled>Seleccione</option>
                                 <option v-for="gender in genders" :key="gender.nombre" :value="gender.nombre">{{ gender.nombre }}</option>
@@ -58,25 +59,19 @@
                         <div class="form-group my-2">
                             <div class="row">
                                 <div class="col-md-12">
-                                    <label class="fw-bold text-dark">Seleccione una actividad:</label>
-                                    <div class="input-group mt-0 pt-0">
-                                        <textarea @keydown.enter.prevent :disabled="accion === 2" v-model="actividadClase.buscar" 
-                                            class="form-control text-dark" placeholder="Buscar actividad..."
-                                            @input="filtrarActividades(actividadClase.buscar)" autocomplete="off" rows="2">
-                                        </textarea>
-                                    </div>
-                                    <small v-if="(!currentCustomer.actividad || actividadClase.buscar == '') && currentCustomer.enviado" class="text-danger">Ingrese una actividad *</small>
-                                </div>
-                                <div class="col-md-12" style="position:relative;">
-                                    <template v-if="filteredItemsActividades.length > 0">
-                                        <div class="com-completion-results shadow" style="z-index: 1050; position: absolute; top: 100%; width: 100%; background: #fff; border: 1px solid #ececec; max-height: 250px; overflow: auto;">
-                                            <ul style="list-style: none; padding: 0; margin: 0">
-                                                <li v-for="(actividadItem, index) in filteredItemsActividades" :key="index" @click="seleccionarActividad(actividadItem)" style="cursor: pointer; padding: 8px; border-bottom: 1px solid #ececec;">
-                                                    <h6 style="font-size: 14px; color: #000; margin: 0;">{{ actividadItem.nombre }}</h6>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </template>
+                                    <label class="fw-bold text-dark">Seleccione una actividad <span class="text-danger" title="Campo obligatorio">*</span></label>
+                                    <live-search
+                                        v-model="actividadClase.buscar"
+                                        :options="nombresActividades"
+                                        placeholder="Buscar actividad..."
+                                        color="success"
+                                        variant="select"
+                                        :disabled="accion === 2"
+                                        @selected="seleccionarActividadPorNombre"
+                                    />
+                                    <small v-if="(!currentCustomer.actividad || actividadClase.buscar == '') && currentCustomer.enviado" class="text-danger">
+                                        Ingrese una actividad *
+                                    </small>
                                 </div>
                             </div>
                         </div>
@@ -84,7 +79,7 @@
 
                     <div class="col-md-2">
                         <div class="form-group my-2">
-                            <label class="fw-bold">Estado Civil</label>
+                            <label class="fw-bold">Estado Civil <span class="text-danger" title="Campo obligatorio">*</span></label>
                             <select v-model="currentCustomer.estado_civil" :disabled="accion === 2" class="form-select">
                                 <option value="0" disabled>Seleccione</option>
                                 <option v-for="status in maritalStatuses" :key="status.nombre" :value="status.nombre">{{ status.nombre }}</option>
@@ -94,7 +89,7 @@
                     </div>
                     <div class="col-md-2">
                         <div class="form-group my-2">
-                            <label class="fw-bold">Vivienda</label>
+                            <label class="fw-bold">Vivienda <span class="text-danger" title="Campo obligatorio">*</span></label>
                             <select v-model="currentCustomer.vivienda" :disabled="accion === 2" class="form-select">
                                 <option value="0" disabled>Seleccione</option>
                                 <option v-for="housing in housingTypes" :key="housing.nombre" :value="housing.nombre">{{ housing.nombre }}</option>
@@ -104,7 +99,7 @@
                     </div>
                     <div class="col-md-2">
                         <div class="form-group my-2">
-                            <label class="fw-bold">Ingreso Mensual</label>
+                            <label class="fw-bold">Ingreso Mensual <span class="text-danger" title="Campo obligatorio">*</span></label>
                             <input v-model="currentCustomer.ingreso_mensual" :disabled="accion === 2" class="form-control" @input="filterNumericInput" />
                             <small v-if="!currentCustomer.ingreso_mensual && currentCustomer.enviado" class="text-danger">Ingrese un ingreso *</small>
                         </div>
@@ -126,7 +121,7 @@
                     </div>
                     <div class="card-body grid">
                         <div>
-                            <label class="fw-bold">Tipo</label>
+                            <label class="fw-bold">Tipo <span class="text-danger" title="Campo obligatorio">*</span></label>
                             <select v-model="address.tipo" :disabled="accion === 2" class="form-select">
                                 <option value="" disabled>Seleccione</option>
                                 <option v-for="type in addressTypes" :key="type" :value="type">{{ type }}</option>
@@ -134,10 +129,10 @@
                             <small v-if="!address.tipo && currentCustomer.enviado" class="text-danger">Requerido *</small>
                         </div>
                         <div>
-                            <label class="fw-bold">Departamento</label>
+                            <label class="fw-bold">Departamento <span class="text-danger" title="Campo obligatorio">*</span></label>
                             <select v-model="address.departamento" :disabled="accion === 2" class="form-control">
                                 <option value="">Seleccione</option>
-                                <option v-for="depto in departamentosBolivia" :key="depto.id" :value="depto.nombre">{{ depto.nombre }}</option>
+                                <option v-for="depto in departamentosBolivia" :key="depto.codigo" :value="depto.nombre">{{ depto.nombre }}</option>
                             </select>
                             <small v-if="!address.departamento && currentCustomer.enviado" class="text-danger">Requerido *</small>
                         </div>
@@ -150,7 +145,7 @@
                             <input v-model="address.zona" :disabled="accion === 2" class="form-control" />
                         </div>
                         <div>
-                            <label class="fw-bold">Descripción</label>
+                            <label class="fw-bold">Descripción <span class="text-danger" title="Campo obligatorio">*</span></label>
                             <input v-model="address.descripcion" :disabled="accion === 2" class="form-control" />
                             <small v-if="!address.descripcion && currentCustomer.enviado" class="text-danger">Requerido *</small>
                         </div>
@@ -169,14 +164,14 @@
                     </div>
                     <div class="card-body grid">
                         <div>
-                            <label class="fw-bold">Tipo</label>
+                            <label class="fw-bold">Tipo <span class="text-danger" title="Campo obligatorio">*</span></label>
                             <select v-model="phone.tipo" :disabled="accion === 2" class="form-select">
                                 <option value="Numero telefono">Nr. Telf.</option>
                                 <option value="Informacion contacto">Inf. Contacto</option>
                             </select>
                         </div>
                         <div>
-                            <label class="fw-bold">Número</label>
+                            <label class="fw-bold">Número <span class="text-danger" title="Campo obligatorio">*</span></label>
                             <input v-model="phone.numero" :disabled="accion === 2" class="form-control" />
                             <small v-if="!phone.numero && currentCustomer.enviado" class="text-danger">Requerido *</small>
                         </div>
@@ -243,6 +238,7 @@
 </template>
 
 <script>
+import { departamentosBolivia, normalizeDepartamento } from '../../departmentCatalog';
 import moment from "moment";
 import Swal from "sweetalert2";
 
@@ -266,11 +262,7 @@ export default {
     data() {
         return {
             // Datos estáticos
-            departamentosBolivia: [
-                { id: 1, nombre: "La Paz" }, { id: 2, nombre: "Cochabamba" }, { id: 3, nombre: "Santa Cruz" },
-                { id: 4, nombre: "Oruro" }, { id: 5, nombre: "Potosí" }, { id: 6, nombre: "Tarija" },
-                { id: 7, nombre: "Chuquisaca" }, { id: 8, nombre: "Beni" }, { id: 9, nombre: "Pando" },
-            ],
+            departamentosBolivia,
             expeditionPlaces: [
                 { sigla: "LP", nombre: "La Paz" }, { sigla: "CB", nombre: "Cochabamba" }, { sigla: "SC", nombre: "Santa Cruz" },
                 { sigla: "OR", nombre: "Oruro" }, { sigla: "PT", nombre: "Potosí" }, { sigla: "TJ", nombre: "Tarija" },
@@ -291,7 +283,6 @@ export default {
             
             // Actividades
             actividades: [],
-            filteredItemsActividades: [],
             actividadClase: { id_actividad: 0, buscar: "" },
 
             // Mapa
@@ -307,6 +298,9 @@ export default {
             if (this.accion === 0) return "Agregar Cliente";
             if (this.accion === 1) return "Modificar Cliente";
             return "Información del Cliente";
+        },
+        nombresActividades() {
+            return this.actividades.map(a => a.nombre);
         }
     },
     watch: {
@@ -328,6 +322,20 @@ export default {
                     this.currentCustomer = { ...newVal, enviado: 0 };
                     this.currentCustomer.lugar_expedicion = this.normalizeExpeditionPlace(this.currentCustomer.lugar_expedicion);
                     this.actividadClase.buscar = this.currentCustomer.actividad || "";
+                }
+            }
+        },
+        'actividadClase.buscar'(val) {
+            if (!val) {
+                this.actividadClase.id_actividad = 0;
+                this.currentCustomer.actividad = "";
+            } else {
+                const item = this.actividades.find(a => a.nombre.toLowerCase() === val.toLowerCase());
+                if (item) {
+                    this.actividadClase.id_actividad = item.id;
+                    this.currentCustomer.actividad = item.nombre;
+                } else {
+                    this.currentCustomer.actividad = val;
                 }
             }
         }
@@ -391,6 +399,7 @@ export default {
                 const response = await axios.get(`/get_direcciones_telefono?id_cliente=${id}`);
                 this.addresses = response.data.direcciones.map(d => ({
                     ...d,
+                    departamento: normalizeDepartamento(d.departamento),
                     lat: d.lat ? parseFloat(d.lat) : null,
                     lng: d.lng ? parseFloat(d.lng) : null,
                 }));
@@ -485,15 +494,15 @@ export default {
                 this.actividades = response.data;
             } catch (error) { console.log(error); }
         },
-        filtrarActividades(keyword) {
-            if (keyword === "") { this.filteredItemsActividades = []; return; }
-            this.filteredItemsActividades = this.actividades.filter((act) => act.nombre.toLowerCase().includes(keyword.toLowerCase()));
-        },
-        seleccionarActividad(item) {
-            this.actividadClase.id_actividad = item.id;
-            this.actividadClase.buscar = item.nombre;
-            this.currentCustomer.actividad = item.nombre;
-            this.filteredItemsActividades = [];
+        seleccionarActividadPorNombre(nombre) {
+            const item = this.actividades.find(a => a.nombre === nombre);
+            if (item) {
+                this.actividadClase.id_actividad = item.id;
+                this.currentCustomer.actividad = item.nombre;
+            } else {
+                this.actividadClase.id_actividad = 0;
+                this.currentCustomer.actividad = nombre || "";
+            }
         },
         // --- Lógica del Mapa ---
         openMapModal(index, mode) {
@@ -569,7 +578,5 @@ export default {
 <style scoped>
 @import './../styles/frmCliente.css';
 /* Estilos adicionales específicos del form si son necesarios */
-.com-completion-results::-webkit-scrollbar { width: 8px; }
-.com-completion-results::-webkit-scrollbar-track { background: #f1f1f1; }
-.com-completion-results::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+
 </style>

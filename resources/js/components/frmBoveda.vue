@@ -21,7 +21,7 @@
                             <summary class="fw-bold">Cierres de caja: ingresos por forma de pago</summary>
                             <div class="table-responsive mt-2">
                                 <table class="table table-sm table-bordered">
-                                    <thead><tr><th>Caja / usuario</th><th>Fecha</th><th>Efectivo</th><th>Depósito</th><th>Transferencia</th><th>Total ingresos</th><th>Efectivo retornado</th></tr></thead>
+                                    <thead><tr><th>Caja / usuario</th><th>Fecha</th><th>Efectivo</th><th>Depósito</th><th>Transferencia</th><th>Total ingresos</th><th>Saldo retornado</th></tr></thead>
                                     <tbody>
                                         <tr v-for="cierre in cierres.data" :key="cierre.id">
                                             <td>{{ cierre.id_caja }} / {{ cierre.usuario }}</td><td>{{ cierre.created_at }}</td>

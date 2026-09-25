@@ -71,6 +71,40 @@ class AccessSecurityTest extends TestCase
         $this->getJson('/me')->assertUnauthorized();
     }
 
+    public function test_guest_and_expired_browser_sessions_redirect_to_the_real_login(): void
+    {
+        $this->get('/caja')->assertRedirect('/');
+
+        $user = User::where('name', 'administrador')->firstOrFail();
+        $this->actingAs($user)
+            ->withSession(['password_hash_web' => 'hash-de-sesion-expirado'])
+            ->get('/caja')
+            ->assertRedirect('/');
+
+        $this->assertGuest();
+        $this->getJson('/me')->assertUnauthorized()
+            ->assertJsonPath('message', 'La sesión expiró. Inicie sesión nuevamente.');
+    }
+
+    public function test_financial_supervisor_can_read_the_history_routes_exposed_by_the_menu(): void
+    {
+        $user = User::where('name', 'encargado_user')->firstOrFail();
+        $this->assertTrue($user->tienePermiso('consultasfinancieras'));
+        $this->assertFalse($user->tienePermiso('controlcaja'));
+        $this->actingAs($user);
+
+        foreach ([
+            '/historial_desembolsos_pagos_listado?fecha_inicio=2000-01-01&fecha_final=2100-01-01&criterio=cliente.nombre&buscar=',
+            '/historial_ingresos_listado_general?fecha_inicio=2000-01-01&fecha_final=2100-01-01&criterio=users.name&buscar=',
+            '/historial_gastos_listado_general?fecha_inicio=2000-01-01&fecha_final=2100-01-01&criterio=users.name&buscar=',
+        ] as $url) {
+            $this->getJson($url)->assertSuccessful();
+        }
+
+        $this->getJson('/historial_desembolsos_pagos_listado')->assertUnprocessable()
+            ->assertJsonValidationErrors(['fecha_inicio', 'fecha_final']);
+    }
+
     public function test_reads_and_exports_require_module_permission(): void
     {
         $user = User::where('name', 'cajero_user')->firstOrFail();
@@ -81,13 +115,58 @@ class AccessSecurityTest extends TestCase
         $this->getJson('/get_motivos_ingresos_activos?tipo=caja')->assertOk();
     }
 
+    public function test_request_officer_can_create_a_guarantor_from_the_request_flow(): void
+    {
+        $user = User::where('name', 'oficial_user')->firstOrFail();
+        $codeudoresPermission = DB::table('permiso')->where('nombre', 'codeudores')->value('id');
+        DB::table('permiso_rol')->where('id_rol', $user->id_rol)->where('id_permiso', $codeudoresPermission)->delete();
+        $user->unsetRelation('rol');
+
+        $this->assertTrue($user->tienePermiso('solicitudprestamos'));
+        $this->assertFalse($user->tienePermiso('codeudores'));
+        $this->actingAs($user)->getJson('/get_actividades')->assertOk();
+
+        $response = $this->postJson('/save_codeudor', [
+            'nombre' => 'Garante creado desde solicitud', 'fecha_nacimiento' => '1988-02-10',
+            'ci' => 'GAR-SOL-001', 'lugar_expedicion' => 'SC', 'sexo' => 'Masculino',
+            'estado_civil' => 'Soltero', 'actividad' => 'Comercio', 'vivienda' => 'Propia',
+            'ingreso_mensual' => 3500, 'tipo' => 'Personal',
+            'direcciones' => [['tipo' => 'Casa', 'departamento' => 'santa cruz',
+                'descripcion' => 'Dirección ficticia para prueba']],
+            'telefonos' => [['tipo' => 'Número teléfono', 'numero' => '70000001']],
+        ])->assertOk()->assertJsonPath('success', true);
+
+        $this->assertDatabaseHas('codeudor', ['id' => $response->json('id'), 'ci' => 'GAR-SOL-001']);
+        $this->assertDatabaseHas('direccion', ['id_codeudor' => $response->json('id'), 'departamento' => 'Santa Cruz']);
+    }
+
+    public function test_new_credit_requests_only_accept_bolivianos(): void
+    {
+        $user = User::where('name', 'oficial_user')->firstOrFail();
+        $client = DB::table('cliente')->first();
+        $payload = [
+            'importe_solicitud' => 1500, 'moneda' => 'Dolares', 'lapso_capital' => 'Mensual',
+            'nro_cuotas' => 3, 'tasa' => 10, 'fecha_desembolso' => '2026-09-24',
+            'fecha_primera_cuota' => '2026-10-24', 'destino_prestamo' => 'Capital de trabajo',
+            'tipo_garantia' => 'Garante Personal', 'tipo_desembolso' => 'Efectivo',
+            'tipo_tasa' => 'fija', 'id_cliente' => $client->id, 'lista_codeudores' => [],
+        ];
+
+        $this->actingAs($user)->postJson('/save_solicitud', $payload)->assertUnprocessable()
+            ->assertJsonValidationErrors('moneda');
+        $this->assertDatabaseMissing('solicitud', ['importe_solicitud' => 1500, 'moneda' => 'Dolares']);
+
+        $this->postJson('/save_solicitud', array_replace($payload, ['moneda' => 'Bolivianos']))->assertOk();
+        $this->assertDatabaseHas('solicitud', ['importe_solicitud' => 1500, 'moneda' => 'Bolivianos', 'id_usuario' => $user->id]);
+    }
+
     public function test_only_owner_can_operate_or_close_cash_even_as_administrator(): void
     {
         $cash = DB::table('caja')->where('estado', 1)->first();
         $balance = DB::table('boveda')->value('saldo_actual');
         foreach (['administrador', 'cajero2_user', 'encargado_user'] as $login) {
             $this->actingAs(User::where('name', $login)->firstOrFail());
-            foreach (['/close_caja', '/actualizar_desembolso', '/guardar_pago_adm', '/save_ingreso', '/save_gasto'] as $url) {
+            foreach (['/close_caja', '/actualizar_desembolso', '/guardar_pago_adm', '/registrar_pago_adm_desembolso', '/save_ingreso', '/save_gasto'] as $url) {
                 $this->postJson($url, ['id_caja' => $cash->id])->assertForbidden();
             }
         }

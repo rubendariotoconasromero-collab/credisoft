@@ -21,15 +21,17 @@ Credisoft es un sistema de gestión para una institución de microcrédito. Admi
 - Solicitudes y desembolsos de créditos
 - Planes de pago con cuotas (semanal, quincenal, mensual)
 - Cobro de cuotas con cascada mora → interés → capital
-- Caja diaria y bóveda (efectivo físico)
+- Caja diaria y bóveda (saldo operativo unificado con desglose por forma de pago)
 - Consulta financiera contable (Flujo de Caja, Libro Diario)
 
 ---
 
-## Modelo de Bóveda Física (CRÍTICO)
+## Modelo de saldo operativo unificado (CRÍTICO)
 
-El sistema usa un **Modelo de Bóveda Física**: `boveda.saldo_actual` representa
-el efectivo FÍSICAMENTE en la bóveda, no un total virtual.
+`boveda.saldo_actual` y el saldo disponible de caja representan fondos operativos
+disponibles, incluyendo efectivo, depósitos y Transferencia/QR. La forma de pago
+se conserva para el arqueo y los reportes. `efectivo_esperado` representa únicamente
+el componente físico y no sustituye al saldo disponible.
 
 ### Invariante fundamental
 
@@ -64,7 +66,7 @@ Al cerrar, `CajaController::closeCaja()` calcula el saldo remanente con
 
 | Tabla | Descripción |
 |-------|-------------|
-| `boveda` | Saldo actual del efectivo en bóveda física. Un solo registro activo. |
+| `boveda` | Saldo operativo disponible en bóveda. Un solo registro activo. |
 | `movimientos_boveda` | Historial de ingresos/egresos de bóveda. |
 | `caja` | Sesión de caja diaria (estado 1=abierta, 0=cerrada). |
 | `movimientos_caja` | Historial de movimientos dentro de la caja. |
@@ -244,8 +246,8 @@ modalidad = 'interes_mora':
 ## Reglas operativas confirmadas el 2026-09-24
 
 - Se permite una caja abierta por usuario, con varios usuarios operando simultáneamente. La selección y autorización de caja debe respetar su propietario.
-- Aclaración del usuario: efectivo y operaciones no efectivas se registran dentro del mismo circuito de caja/bóveda. El arqueo y cierre incluyen ingresos por forma de pago y total conjunto; bóveda conserva su relación y trazabilidad. No implementar un módulo bancario ni conciliación bancaria independiente. El saldo físico disponible y el retorno de efectivo no incluyen importes no efectivos.
-- Para conciliar el efectivo institucional se suma el saldo físico de bóveda y el saldo de todas las cajas abiertas. Las cajas cerradas ya retornaron su efectivo.
+- Aclaración del usuario: efectivo y operaciones no efectivas se registran dentro del mismo circuito de caja/bóveda. El saldo disponible y el retorno al cierre incluyen todas las formas de pago; el arqueo conserva el desglose y compara por separado el efectivo contado con `efectivo_esperado`. No implementar un módulo bancario ni conciliación bancaria independiente.
+- Para conciliar los fondos institucionales se suma el saldo operativo de bóveda y el saldo disponible de todas las cajas abiertas. Las cajas cerradas ya retornaron su saldo total.
 - Estas reglas son requisitos: el diagnóstico de etapa 1 detectó que todavía no se cumplen en todos los flujos. Ver `docs/diagnostico-etapa-1/README.md` antes de corregirlos.
 - Solo el propietario opera o cierra una caja; administradores y encargados consultan cajas ajenas.
 - Los oficiales consultan y modifican únicamente solicitudes y créditos asignados a ellos (`solicitud.id_usuario`).
@@ -258,7 +260,7 @@ modalidad = 'interes_mora':
 - Los controladores activos delegan en `app/Services/Finance`: `Collections`, `Debt`, `CashMovements`, `Reversals`, `CashSessions`, `VaultOperations`. No volver a introducir cálculos de deuda enviados por el navegador.
 - Toda mutación monetaria toma `FinancialLock` dentro de la transacción antes de validar. `Operations` conserva clave por usuario, huella y resultado; los formularios envían `Idempotency-Key`.
 - `operaciones_financieras.partes` contiene importes aplicados por forma, referencias y comprobantes opcionales. No sumar de nuevo las filas fuente con `id_operacion`: `CashSummary` combina fuentes históricas sin vínculo y operaciones vigentes.
-- Formas canónicas: efectivo, deposito, transferencia (incluye QR). Pagos mixtos permitidos, cambio solo en efectivo. El importe no efectivo no aumenta el disponible físico.
+- Formas canónicas: efectivo, deposito, transferencia (incluye QR). Pagos mixtos permitidos, cambio solo en efectivo. Todas las formas afectan el saldo disponible; solo efectivo afecta `efectivo_esperado`.
 - Multa Bs3 por día/credito sin gracia ni multiplicación por cuota; adelantos cobran devengado y reducen interés futuro proporcional al capital adelantado.
-- `condonar`, `anular_finanzas` y `pagos_retroactivos` son permisos distintos. Condonación de interés/multa, nunca capital; motivo obligatorio. Anulación completa en caja propia abierta, sin operaciones posteriores y con físico suficiente.
+- `condonar`, `anular_finanzas` y `pagos_retroactivos` son permisos distintos. Condonación de interés/multa, nunca capital; motivo obligatorio. Anulación completa en caja propia abierta, sin operaciones posteriores y con saldo disponible suficiente; si devuelve efectivo también requiere componente físico suficiente.
 - No borrar originales ni reconstruir históricos dudosos. `finanzas:diagnosticar` es de solo lectura. Guías: `docs/fase-3-avance.md`, `docs/fase-3-pruebas-manuales.md`.

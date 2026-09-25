@@ -147,7 +147,7 @@ class DevelopmentSeeder extends Seeder
                 'destino_prestamo' => 'Capital de trabajo ficticio', 'tipo_garantia' => 'Garante Personal',
                 'tipo_desembolso' => 'Efectivo', 'estado' => $number === 2 ? 1 : ($number === 3 ? 0 : 2),
                 'id_cliente' => $clients[$number], 'id_usuario' => $this->users[$number % 2 ? 'oficial_user' : 'oficial2_user'],
-                'monto_pago_adm' => 20, 'desembolso' => $number >= 5 ? 1 : 0,
+                'monto_pago_adm' => 10, 'desembolso' => $number >= 5 ? 1 : 0,
                 'observacion' => $number === 3 ? 'Solicitud inactiva ficticia DEMO' : '', 'tipo_solicitud' => 'Nuevo',
                 'created_at' => $start, 'updated_at' => $start,
             ]);
@@ -174,7 +174,7 @@ class DevelopmentSeeder extends Seeder
             }
             if ($number === 4) continue;
             $this->event($start, 'desembolso', 1000, ['id_plan_pago' => $plan]);
-            $this->event($start, 'pago_administrativo', 20, ['id_plan_pago' => $plan, 'descripcion' => 'Gastos administrativos DEMO']);
+            $this->event($start, 'pago_administrativo', 10, ['id_plan_pago' => $plan, 'descripcion' => 'Gastos administrativos DEMO']);
             if ($number === 9) $this->payment($number, $plan, $cuotas[1], $start->addDays(7), 100, 25, 0, 'parcial');
             if ($number === 10) $this->payment($number, $plan, $cuotas[1], $start->addDays(7), 0, 25, 0, 'solo_interes');
             if ($number === 11) $this->payment($number, $plan, $cuotas[1], $this->today->subDay(), 0, 0, 6, 'solo_mora');

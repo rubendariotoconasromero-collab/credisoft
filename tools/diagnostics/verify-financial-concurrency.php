@@ -81,5 +81,24 @@ DB::table('solicitud')->where('id', $f['request'])->update(['estado' => 2]);
 $report['competing_disbursements'] = $race([['disburse', $b, $cashB], ['disburse', $b, $cashB]]);
 $statuses = $report['competing_disbursements']; sort($statuses);
 if ($statuses !== [200, 422] || DB::table('desembolso')->count() !== 1) throw new RuntimeException('Duplicate disbursement.');
+// New verified reprogramming order, raced with the same idempotency key.
+\Illuminate\Support\Facades\Auth::setUser($f['users']['cajero_b']);
+DB::table('solicitud')->where('id', $f['request'])->update(['tipo_tasa' => 'amortizable']);
+$origin = DB::table('plan_pago')->insertGetId(['fecha_inicio' => '2026-09-01', 'fecha_fin' => '2026-10-01',
+    'total_pagar' => 1100, 'id_solicitud' => $f['request'], 'moneda' => 'Bs', 'lapso_capital' => 'Mensual', 'nro_cuotas' => 1, 'tasa' => 10, 'estado' => 1, 'desembolso' => 0]);
+$quota = DB::table('cuota')->insertGetId(['numero' => 1, 'fecha' => '2026-10-01', 'capital' => 1000, 'interes' => 100, 'saldo_capital' => 0, 'total' => 1100, 'id_plan_pago' => $origin]);
+$service = app(\App\Services\Finance\Rescheduling::class);
+$created = $service->register(new \Illuminate\Http\Request(['tipo_operacion' => 'REPROGRAMACION', 'plan_pago' => [
+    'id' => $origin, 'id_solicitud' => $f['request'], 'forma_pago_reprogramacion' => 'Mensual', 'numero_cuotas_reprogramacion' => 3, 'fecha_primera_cuota' => '2026-10-24'],
+    'pago_intereses' => ['seleccionado' => true, 'ids_cuotas_interes' => [$quota]]]), fn () => null);
+DB::table('rol')->where('id', Auth::user()->id_rol)->update(['nombre' => 'Administrador']);
+Auth::user()->unsetRelation('rol');
+$service->approve(new \Illuminate\Http\Request(['id_solicitud' => $created['solicitud_id'], 'datos_actualizados' => ['tipo_tasa' => 'amortizable']]));
+$previousPayments = DB::table('pago')->count();
+$previousBalance = Money::cents(app(CashSummary::class)->forCash($cashB)['saldo_disponible']);
+$report['reprogramming_order_same_key'] = $race([['collect-order', $b, $cashB], ['collect-order', $b, $cashB]]);
+if ($report['reprogramming_order_same_key'] !== [200, 200] || DB::table('pago')->count() !== $previousPayments + 1
+    || Money::cents(app(CashSummary::class)->forCash($cashB)['saldo_disponible']) !== $previousBalance + 7667) throw new RuntimeException('Duplicate reprogramming collection.');
+$report['reprogramming_order_single_income'] = '76.67';
 file_put_contents(base_path('docs/fase-3-concurrencia.json'), json_encode($report, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR).PHP_EOL);
 echo json_encode($report, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR).PHP_EOL;

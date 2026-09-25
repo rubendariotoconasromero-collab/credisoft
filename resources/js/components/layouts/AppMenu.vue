@@ -32,16 +32,16 @@
                         </router-link>
                     </li>
 
-                    <li v-if="tienePermiso(['controlcaja', 'consultasfinancieras'])">
+                    <li v-if="tienePermiso(['controlcaja', 'consultasfinancieras', 'listadopagos'])">
                         <a href="javascript: void(0);" class="nav-link has-arrow waves-effect" :class="{ 'mm-active': esActivaCaja }">
                             <i class="fas fa-cash-register"></i>
                             <span>Caja</span>
                         </a>
                         <ul class="sub-menu" aria-expanded="false">
-                            <li><router-link to="/caja" :class="{ 'mm-active': esActiva('caja') }">Control caja</router-link></li>
-                            <li v-if="tienePermiso('controlcaja')"><router-link to="/historial_desembolsos_pagos" :class="{ 'mm-active': esActiva('historial_desembolsos_pagos') }">Historial Desembolsos y Pagos Administrativos</router-link></li>
-                            <li v-if="tienePermiso('controlcaja')"><router-link to="/historial_gastos" :class="{ 'mm-active': esActiva('historial_gastos') }">Historial Ingresos y Gastos corrientes</router-link></li>
-                            <li v-if="tienePermiso('controlcaja')"><router-link to="/historial_pagos" :class="{ 'mm-active': esActiva('historial_pagos') }">Historial Pagos de Cuotas</router-link></li>
+                            <li v-if="tienePermiso(['controlcaja', 'consultasfinancieras'])"><router-link to="/caja" :class="{ 'mm-active': esActiva('caja') }">Control caja</router-link></li>
+                            <li v-if="tienePermiso(['controlcaja', 'consultasfinancieras'])"><router-link to="/historial_desembolsos_pagos" :class="{ 'mm-active': esActiva('historial_desembolsos_pagos') }">Historial Desembolsos y Pagos Administrativos</router-link></li>
+                            <li v-if="tienePermiso(['controlcaja', 'consultasfinancieras'])"><router-link to="/historial_gastos" :class="{ 'mm-active': esActiva('historial_gastos') }">Historial Ingresos y Gastos corrientes</router-link></li>
+                            <li v-if="tienePermiso(['controlcaja', 'listadopagos'])"><router-link to="/historial_pagos" :class="{ 'mm-active': esActiva('historial_pagos') }">Historial Pagos de Cuotas</router-link></li>
                         </ul>
                     </li>
 
@@ -66,14 +66,14 @@
                         </router-link>
                     </li>
 
-                    <li v-if="tienePermiso('solicitudprestamos')">
+                    <li v-if="tienePermiso(['solicitudprestamos', 'planpagos'])">
                         <a href="javascript: void(0);" class="nav-link has-arrow waves-effect" :class="{ 'mm-active': esActivaPrestamos }">
                             <i class="fas fa-file-invoice-dollar"></i>
                             <span>Gest. Préstamos</span>
                         </a>
                         <ul class="sub-menu" aria-expanded="false">
-                            <li><router-link to="/solicitud" :class="{ 'mm-active': esActiva('solicitud') }">Solicitud préstamo</router-link></li>
-                            <li><router-link to="/plan_pago" :class="{ 'mm-active': esActiva('plan_pago') }">Gestión cartera</router-link></li>
+                            <li v-if="tienePermiso('solicitudprestamos')"><router-link to="/solicitud" :class="{ 'mm-active': esActiva('solicitud') }">Solicitud préstamo</router-link></li>
+                            <li v-if="tienePermiso('planpagos')"><router-link to="/plan_pago" :class="{ 'mm-active': esActiva('plan_pago') }">Gestión cartera</router-link></li>
                         </ul>
                     </li>
 

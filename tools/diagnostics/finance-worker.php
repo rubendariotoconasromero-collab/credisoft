@@ -20,6 +20,10 @@ try {
         'disburse' => app(\App\Services\Finance\CashMovements::class)->save(new \Illuminate\Http\Request([
             'id_plan_pago' => 1, 'id_caja' => (int) $options['cash'], 'monto' => '1000.00', 'forma_pago' => 'transferencia', 'referencia' => 'DISB-CONCURRENCY',
         ]), 'desembolso'),
+        'collect-order' => app(\App\Services\Finance\Rescheduling::class)->collect(new \Illuminate\Http\Request([
+            'id_orden' => 1, 'id_caja' => (int) $options['cash'], 'clave_operacion' => 'mysql-order-retry-0001',
+            'partes' => [['forma_pago' => 'transferencia', 'monto' => '76.67', 'referencia' => 'MYSQL-ORDER']],
+        ])),
     };
     echo json_encode(['status' => 200]);
 } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e) {

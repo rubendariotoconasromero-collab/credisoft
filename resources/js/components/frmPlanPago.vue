@@ -933,7 +933,7 @@ export default {
             }
 
             // Evitar negativos por seguridad
-            return this.formatNumero(totalDeuda) > 0 ? this.formatNumero(totalDeuda) : 0;
+            return Math.max(0, Math.round(totalDeuda * 100) / 100);
         },
 
         infoMoraActual() {
@@ -1278,6 +1278,7 @@ export default {
                 const response = await axios.post('/solicitud/registrar-especial', {
                     plan_pago: this.plan_pago,
                     tipo_operacion: this.modo_operacion,
+                    revision: this.plan_pago.revision_deuda,
                     monto_adicional: this.monto_adicional,
                     pago_intereses: (this.pago_previo && this.pago_previo.seleccionado) ? this.pago_previo : null
                 });
@@ -1618,14 +1619,22 @@ export default {
                 const fechaHoy = moment();
                 this.solicitud.fecha_desembolso = fechaHoy.format('YYYY-MM-DD'); // Fecha de Hoy
                 this.solicitud.fecha_primera_cuota = this.calcularNuevaPrimeraCuota(fechaHoy);
-                await this.generarPlanPagosGeneral();
+                const { data } = await axios.post('/solicitud/simular-especial', {
+                    plan_pago: { ...this.plan_pago, fecha_primera_cuota: this.solicitud.fecha_primera_cuota },
+                    tipo_operacion: this.modo_operacion, monto_adicional: this.monto_adicional,
+                    pago_intereses: this.pago_previo
+                });
+                this.lista_cuotas = data.cuotas;
+                this.solicitud.importe_solicitud = data.importe_solicitud;
+                this.solicitud.fecha_desembolso = data.fecha_corte;
+                this.plan_pago.revision_deuda = data.revision;
 
             } catch (error) {
                 console.error("Error al generar el plan de reprogramación:", error);
                 Swal.fire({
                     icon: 'error',
                     title: 'Error de Cálculo',
-                    text: 'No se pudo simular el plan de pagos. Verifique los datos.',
+                    text: error.response?.data?.message || 'No se pudo simular el plan de pagos. Verifique los datos.',
                 });
             }
         },
@@ -1719,8 +1728,7 @@ export default {
             return moment(fecha).format('DD/MM/YYYY');
         },
         formatNumero(numero) {
-            // maximumFractionDigits: 0 asegura que no se muestren decimales
-            return new Intl.NumberFormat('es-BO', { maximumFractionDigits: 0 }).format(numero);
+            return new Intl.NumberFormat('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(numero);
         },
 
         exportExcelPlanPagos() {
@@ -2029,11 +2037,12 @@ export default {
         async getCuotas(item) {
             this.lista_cuotas_plan = [];
             // Llama al endpoint unificado que acabamos de ajustar
-            await axios.get('/listar_amortizaciones_cuotas_planpago?id_plan_pago=' + item.id_plan_pago)
+            await axios.get('/listar_amortizaciones_cuotas?id_plan_pago=' + item.id_plan_pago)
                 .then((response) => {
                     console.log("Cuotas cargadas unificadas:", response.data);
                     // Como el backend ahora retorna $resultado['cuotas'], data ya es el array
-                    this.lista_cuotas_plan = response.data; 
+                    this.lista_cuotas_plan = response.data.cuotas;
+                    this.plan_pago.revision_deuda = response.data.revision;
                 })
                 .catch((error) => {
                     console.log(error.message);

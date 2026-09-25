@@ -47,9 +47,11 @@ final class CashSummary
         }
         $income = array_sum(array_column($methods, 'ingresos'));
         $expenses = array_sum(array_column($methods, 'egresos'));
+        $available = $opening + $income + $internal['ingresos'] - $expenses - $internal['egresos'];
         return [
             'id_caja' => $id,
             'monto_inicial' => Money::decimal($opening),
+            'saldo_disponible' => Money::decimal($available),
             'efectivo_esperado' => Money::decimal($physical),
             'total_ingresos' => Money::decimal($income),
             'total_egresos' => Money::decimal($expenses),

@@ -206,7 +206,7 @@ export default {
         },
 
         calcularCierre(item) {
-            if (item.resumen_financiero) return this.formatMoney(item.resumen_financiero.efectivo_esperado);
+            if (item.resumen_financiero) return this.formatMoney(item.resumen_financiero.saldo_disponible);
             const ingresos = parseFloat(this.calcularIngresoTotal(item));
             const egresos = parseFloat(item.egreso_total || 0);
             const inicial = parseFloat(item.monto_inicial || 0);
