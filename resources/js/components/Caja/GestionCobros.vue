@@ -329,6 +329,18 @@
                                     {{ selectedCuotas.length }} cuota(s) seleccionada(s) · {{ formatNumero(totalPagar) }} Bs
                                 </span>
                             </div>
+                            <div v-if="resumenMulta" class="resumen-multa mt-2" aria-label="Resumen de multa del crédito">
+                                <div class="resumen-multa__titulo">
+                                    <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
+                                    Multa única del crédito · {{ formatNumero(multa_dia) }} Bs por día · al {{ formatDate(fechaDeuda) }}
+                                </div>
+                                <div class="resumen-multa__valores">
+                                    <div><span>Generada</span><strong>{{ formatNumero(resumenMulta.generada) }} Bs</strong></div>
+                                    <div><span>Cobrada</span><strong>{{ formatNumero(resumenMulta.cobrada) }} Bs</strong></div>
+                                    <div><span>Condonada</span><strong>{{ formatNumero(resumenMulta.condonada) }} Bs</strong></div>
+                                    <div><span>Pendiente</span><strong>{{ formatNumero(resumenMulta.pendiente) }} Bs</strong></div>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="table-responsive">
@@ -344,14 +356,15 @@
                                         <th class="text-primary border-start">Int. devengado<small class="d-block">Generado</small></th>
                                         <th class="text-danger">Int. moratorio<small class="d-block">Generado</small></th>
                                         <th class="border-start border-end">Int. acumulado<small class="d-block">Total registrado</small></th>
-                                        <th class="text-danger">Multa</th>
+                                        <th class="text-danger">Multa<small class="d-block">Aplicada a la cuota</small></th>
                                         <th class="bg-success bg-opacity-10 text-success border-end">Total pagado</th>
                                         <th>Estado / A pagar</th>
                                         <th>Pagar</th>
                                     </tr>
                                 </thead>
                                 <tbody class="text-center">
-                                    <tr v-for="(cuota, index) in lista_cuotas_plan" :key="cuota.id">
+                                    <tr v-for="(cuota, index) in lista_cuotas_plan" :key="cuota.id"
+                                        :class="{ 'cuota-row--seleccionada': selectedCuotas.includes(cuota.id) }">
                                         <td class="fw-bold text-muted">{{ cuota.numero }}</td>
                                         <td class="text-nowrap">{{ formatDate(cuota.fecha) }}</td>
                                         <td>
@@ -400,7 +413,8 @@
                                             <small v-if="Number(cuota.interes_condonado_total) > 0" class="d-block text-muted">Cond.: {{ formatNumero(cuota.interes_condonado_total) }}</small>
                                         </td>
                                         <td class="text-danger">
-                                            <strong>{{ formatNumero(cuota.mora_fija_neta) }}</strong>
+                                            <strong>Total: {{ formatNumero(cuota.multa_total_registrada) }}</strong>
+                                            <small class="d-block fw-bold">Pend.: {{ formatNumero(cuota.mora_fija_neta) }}</small>
                                             <small v-if="Number(cuota.mora_cobrado_total) > 0" class="d-block text-success">Cobrado: {{ formatNumero(cuota.mora_cobrado_total) }}</small>
                                             <small v-if="Number(cuota.mora_condonado_total) > 0" class="d-block text-muted">Cond.: {{ formatNumero(cuota.mora_condonado_total) }}</small>
                                         </td>
@@ -413,13 +427,16 @@
                                             <span class="badge rounded-pill" :class="getEstadoCuota(cuota).clase">{{ getEstadoCuota(cuota).texto }}</span>
                                             <small class="d-block fw-bold text-primary mt-1 text-nowrap">A pagar: {{ formatNumero(cuota.total_a_pagar) }} Bs</small>
                                         </td>
-                                        <td>
-                                            <input v-if="cuota.estado == 1 || cuota.estado == 3" type="checkbox"
-                                                class="form-check-input cuota-check" :checked="selectedCuotas.includes(cuota.id)"
-                                                :disabled="!isCheckboxEnabled(index)"
-                                                :aria-label="'Seleccionar cuota ' + cuota.numero"
-                                                @change="toggleCuotaSelection(index, cuota.id, $event.target.checked)">
-                                            <i v-else class="fas fa-check-circle text-success" title="Cuota pagada"></i>
+                                        <td class="cuota-selector-cell">
+                                            <label v-if="cuota.estado == 1 || cuota.estado == 3" class="cuota-selector"
+                                                :class="{ 'cuota-selector--seleccionada': selectedCuotas.includes(cuota.id), 'cuota-selector--bloqueada': !isCheckboxEnabled(index) }">
+                                                <input type="checkbox" class="form-check-input cuota-check m-0"
+                                                    :checked="selectedCuotas.includes(cuota.id)"
+                                                    :disabled="!isCheckboxEnabled(index)"
+                                                    :aria-label="'Seleccionar cuota ' + cuota.numero"
+                                                    @change="toggleCuotaSelection(index, cuota.id, $event.target.checked)">
+                                            </label>
+                                            <span v-else class="cuota-selector cuota-selector--pagada" aria-label="Cuota pagada" title="Cuota pagada"><i class="fas fa-check-circle" aria-hidden="true"></i></span>
                                         </td>
                                     </tr>
                                     <tr v-if="!lista_cuotas_plan.length">
@@ -1306,9 +1323,93 @@ export default {
         font-size: 12px;
     }
 
+    .resumen-multa {
+        padding: 0.65rem 0.8rem;
+        border: 1px solid #f0cc83;
+        border-left: 4px solid #c77b12;
+        border-radius: 0.4rem;
+        background: #fffaf0;
+        color: #503607;
+    }
+
+    .resumen-multa__titulo {
+        font-size: 0.78rem;
+        font-weight: 700;
+    }
+
+    .resumen-multa__valores {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem 1.6rem;
+        margin-top: 0.4rem;
+    }
+
+    .resumen-multa__valores > div {
+        display: flex;
+        gap: 0.4rem;
+        align-items: baseline;
+    }
+
+    .resumen-multa__valores span {
+        color: #664f27;
+    }
+
+    .resumen-multa__valores strong {
+        font-variant-numeric: tabular-nums;
+    }
+
     .table-listado-cuotas {
         min-width: 1320px;
         font-variant-numeric: tabular-nums;
+    }
+
+    .table-listado-cuotas tbody tr.cuota-row--seleccionada > td:not(.cuota-selector-cell):not(.bg-success) {
+        background-color: #eaf7ef !important;
+        box-shadow: none !important;
+    }
+
+    .table-listado-cuotas tbody td.cuota-selector-cell {
+        min-width: 48px;
+        background-color: #fff !important;
+        box-shadow: none !important;
+    }
+
+    .cuota-selector {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        border: 2px solid #577568;
+        border-radius: 0.4rem;
+        background: #fff;
+        color: #173e30;
+        cursor: pointer;
+    }
+
+    .cuota-selector:focus-within {
+        outline: 3px solid #94c8ac;
+        outline-offset: 2px;
+    }
+
+    .cuota-selector--seleccionada {
+        border-color: #146c43;
+        background: #dff4e7;
+        color: #0c5130;
+    }
+
+    .cuota-selector--bloqueada,
+    .cuota-selector--pagada {
+        border-color: #c9d0d3;
+        background: #f4f5f6;
+        color: #58636a;
+        cursor: default;
+    }
+
+    .cuota-selector--pagada {
+        border-color: #9bc6a8;
+        background: #f0f8f2;
+        color: #216136;
     }
 
     .table-listado-cuotas th,
@@ -1336,9 +1437,16 @@ export default {
     }
 
     .cuota-check {
-        width: 1.15rem;
-        height: 1.15rem;
+        width: 1.25rem;
+        height: 1.25rem;
+        border: 2px solid #577568;
+        accent-color: #146c43;
         cursor: pointer;
+    }
+
+    .cuota-check:checked {
+        background-color: #146c43;
+        border-color: #146c43;
     }
 
     .cuota-check:disabled {
