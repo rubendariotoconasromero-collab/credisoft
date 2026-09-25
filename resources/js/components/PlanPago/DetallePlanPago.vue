@@ -120,89 +120,98 @@
                 </div>
                 
                 <div class="card-body p-0">
-                    <div class="table-responsive" style="font-size:12px;">
+                    <div class="px-3 py-2 bg-light border-bottom resumen-cuotas">
+                        <div class="d-flex flex-wrap justify-content-between gap-3 align-items-center">
+                            <div>
+                                <strong>Saldo a pagar al {{ formatFecha(cuotas[0]?.fecha_corte) }}</strong>
+                                <div class="small text-muted">Capital pendiente + interés pendiente + multa pendiente. No incluye interés futuro no devengado.</div>
+                            </div>
+                            <strong class="fs-6 text-primary">{{ formatNumero(totalPendiente) }} Bs</strong>
+                        </div>
+                        <p class="small text-muted mb-0 mt-2">La cuota programada incluye capital e interés fijo; el importe exigible cambia con atrasos, adelantos y condonaciones. Los importes cobrados no incluyen condonaciones.</p>
+                    </div>
+                    <div class="table-responsive">
                         <table class="table mb-0 table-striped table-hover align-middle table-listado-cuotas table-sm">
-                            <thead class="text-dark table-warning text-center align-middle">
+                            <thead class="table-warning text-center align-middle">
                                 <tr>
-                                    <th width="3%">#</th>
-                                    <th width="7%">Fecha Venc.</th>
-                                    <th width="9%">Capital</th>
-                                    <th width="8%">Interés Fijo</th>
-                                    <th width="8%">Saldo Cap.</th>
-                                    <th width="9%">Total Bs</th>
-                                    
-                                    <th width="8%" class="text-primary border-start">Int. Devengado</th>
-                                    <th width="8%" class="text-danger">Int. Moratorio</th>
-                                    <th width="9%" class="border-start border-end">Int. Acumulado</th>
-                                    
-                                    <th width="14%" class="bg-success bg-opacity-10 text-success border-end">Total Pagado</th>
-                                    
-                                    <th width="9%">Estado</th>
+                                    <th>#</th>
+                                    <th>Fecha venc.</th>
+                                    <th>Capital</th>
+                                    <th>Interés fijo</th>
+                                    <th>Saldo cap.</th>
+                                    <th title="Capital e interés fijo programados; no incluye recargos">Total Bs</th>
+                                    <th class="text-primary border-start">Int. devengado<small class="d-block">Generado</small></th>
+                                    <th class="text-danger">Int. moratorio<small class="d-block">Generado</small></th>
+                                    <th class="border-start border-end">Int. acumulado<small class="d-block">Total registrado</small></th>
+                                    <th class="bg-success bg-opacity-10 text-success border-end">Total pagado</th>
+                                    <th>Estado</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <tr v-for="(cuota, index) in cuotas" :key="index" class="text-center align-middle">
+                            <tbody class="text-center">
+                                <tr v-for="cuota in cuotas" :key="cuota.id">
                                     <td class="fw-bold text-muted">{{ cuota.numero }}</td>
-                                    <td>{{ formatFecha(cuota.fecha) }}</td>
-                                    
-                                    <td class="fw-bold text-dark fs-6">
-                                        <div>{{ formatNumero(cuota.capital) }}</div>
-                                        <div v-if="parseFloat(cuota.capital_pagado_total) > 0" class="text-success lh-1 mt-1" style="font-size: 0.65rem;">
-                                            <span class="fw-bold">{{ cuota.porcentaje_capital_pagado }}%</span><br>
-                                            {{ formatNumero(cuota.capital_pagado_total) }} Bs
-                                        </div>
+                                    <td class="text-nowrap">{{ formatFecha(cuota.fecha) }}</td>
+                                    <td>
+                                        <strong>{{ formatNumero(cuota.capital) }}</strong>
+                                        <small v-if="Number(cuota.capital_pagado_total) > 0" class="d-block text-success">
+                                            {{ cuota.porcentaje_capital_pagado }}%<br>{{ formatNumero(cuota.capital_pagado_total) }} Bs
+                                        </small>
                                     </td>
                                     <td>{{ formatNumero(cuota.interes) }}</td>
                                     <td class="text-muted">{{ formatNumero(cuota.saldo_capital) }}</td>
-                                    <td class="fw-bold text-dark">{{ formatNumero(cuota.total) }}</td>
-                                    
-                                    <td class="text-primary border-start">
-                                        {{ cuota.estado == 0 ? '---' : formatNumero(cuota.interes_devengado_neto) }}<br>
-                                        <span class="text-muted" style="font-size: 0.6rem;">({{ cuota.dias_transcurridos }} d)</span>
-                                    </td>
-                                    <td class="text-danger fw-bold">
-                                        {{ cuota.estado == 0 ? '---' : formatNumero(cuota.interes_moratorio_neto) }}<br>
-                                        <span v-if="parseFloat(cuota.interes_moratorio_neto) > 0" class="text-muted" style="font-size: 0.6rem;">({{ cuota.dias_pasados }} d)</span>
-                                    </td>
-                                    <td class="fw-bold text-primary border-start border-end fs-6">
-                                        {{ cuota.estado == 0 ? '---' : formatNumero(cuota.interes_acumulado_neto) }}
-                                    </td>
-                                    
-                                    <td class="bg-success bg-opacity-10 border-end">
-                                        <div v-if="calcularTotalPagado(cuota) > 0">
-                                            <span class="d-block fw-bold text-success fs-6">{{ formatNumero(calcularTotalPagado(cuota)) }} Bs</span>
-                                            <span class="d-block text-muted lh-1 mb-1" style="font-size: 0.65rem;">
-                                                Cap: {{ formatNumero(cuota.capital_pagado_total) }} | Int: {{ formatNumero(cuota.interes_cobrado_total) }}
-                                                <template v-if="parseFloat(cuota.mora_pagada) > 0">| Multa: {{ formatNumero(cuota.mora_cobrado_total) }}</template>
-                                            </span>
-                                            <button @click="verDetallePagos(cuota)" class="btn btn-outline-success btn-sm py-0 px-2 shadow-sm" style="font-size: 0.65rem;" title="Ver detalle de pagos">
-                                                <i class="fas fa-receipt"></i> Ver Historial
-                                            </button>
-                                        </div>
-                                        <div v-else class="text-muted small fst-italic">Sin pagos</div>
-                                        <div v-if="Number(cuota.interes_condonado_total) || Number(cuota.mora_condonado_total)" class="small text-muted">
-                                            Condonado: Int {{ formatNumero(cuota.interes_condonado_total) }} | Multa {{ formatNumero(cuota.mora_condonado_total) }}
-                                        </div>
-                                    </td>
-                                    
                                     <td>
-                                        <div v-if="parseFloat(cuota.mora_fija_neta) > 0 && cuota.estado != 2" class="mb-1">
-                                            <span class="badge bg-danger text-white rounded-pill shadow-sm" style="min-width: 90px; font-size: 0.65rem;">
-                                                Multa {{ cuota.dias_pasados }} Días
-                                            </span>
+                                        <strong>{{ formatNumero(cuota.total) }}</strong>
+                                        <small class="d-block text-muted">Programado</small>
+                                        <small class="d-block fw-bold" title="Capital + interés + multa registrados antes de condonar">Antes de cond.: {{ formatNumero(cuota.total_registrado_antes_condonacion) }}</small>
+                                    </td>
+                                    <td class="text-primary border-start">
+                                        <template v-if="cuota.origen_desglose_interes !== 'sin_desglose_historico'">
+                                            {{ formatNumero(cuota.interes_ordinario_generado) }}
+                                            <small class="d-block text-muted">({{ cuota.dias_transcurridos }} d)</small>
+                                        </template>
+                                        <small v-else class="text-muted" title="El registro antiguo no conserva el desglose ordinario y moratorio">Sin detalle histórico</small>
+                                        <template v-if="cuota.desglose_cobros_interes_completo">
+                                            <small class="d-block text-success">Cobrado: {{ formatNumero(cuota.interes_ordinario_cobrado) }}</small>
+                                            <small class="d-block text-muted">Cond.: {{ formatNumero(cuota.interes_ordinario_condonado) }}</small>
+                                        </template>
+                                        <small v-else class="d-block text-muted">Cobros sin desglose</small>
+                                        <small class="d-block fw-bold">Pend.: {{ formatNumero(cuota.interes_devengado_neto) }}</small>
+                                    </td>
+                                    <td class="text-danger">
+                                        <template v-if="cuota.origen_desglose_interes !== 'sin_desglose_historico'">
+                                            {{ formatNumero(cuota.interes_moratorio_generado) }}
+                                            <small v-if="cuota.origen_desglose_interes === 'registro_cobro'" class="d-block text-muted">Histórico</small>
+                                            <small v-else-if="cuota.dias_pasados > 0" class="d-block text-muted">({{ cuota.dias_pasados }} d)</small>
+                                        </template>
+                                        <small v-else class="text-muted" title="El registro antiguo no conserva el desglose ordinario y moratorio">Sin detalle histórico</small>
+                                        <template v-if="cuota.desglose_cobros_interes_completo">
+                                            <small class="d-block text-success">Cobrado: {{ formatNumero(cuota.interes_moratorio_cobrado) }}</small>
+                                            <small class="d-block text-muted">Cond.: {{ formatNumero(cuota.interes_moratorio_condonado) }}</small>
+                                        </template>
+                                        <small v-else class="d-block text-muted">Cobros sin desglose</small>
+                                        <small class="d-block fw-bold">Pend.: {{ formatNumero(cuota.interes_moratorio_neto) }}</small>
+                                    </td>
+                                    <td class="border-start border-end">
+                                        <strong title="Interés cobrado + condonado + pendiente">Total: {{ formatNumero(cuota.interes_total_registrado) }}</strong>
+                                        <small class="d-block fw-bold">Pend.: {{ formatNumero(cuota.interes_acumulado_neto) }}</small>
+                                        <small v-if="Number(cuota.interes_cobrado_total) > 0" class="d-block text-success">Cobrado: {{ formatNumero(cuota.interes_cobrado_total) }}</small>
+                                        <small v-if="Number(cuota.interes_condonado_total) > 0" class="d-block text-muted">Cond.: {{ formatNumero(cuota.interes_condonado_total) }}</small>
+                                    </td>
+                                    <td class="bg-success bg-opacity-10 border-end">
+                                        <div class="d-flex align-items-center justify-content-center gap-1">
+                                            <strong class="text-success text-nowrap">{{ formatNumero(calcularTotalPagado(cuota)) }} Bs</strong>
+                                            <button @click="verDetallePagos(cuota)" class="btn btn-outline-success btn-xs" title="Ver detalle de pagos y pendientes" :aria-label="'Ver detalle de cuota ' + cuota.numero"><i class="fas fa-receipt" aria-hidden="true"></i></button>
                                         </div>
-                                        <span class="badge rounded-pill shadow-sm" :class="getEstadoCuota(cuota).clase" style="min-width: 90px; font-size: 0.65rem;">
-                                            {{ getEstadoCuota(cuota).texto }}
-                                        </span>
+                                        <small class="d-block text-muted text-nowrap">C: {{ formatNumero(cuota.capital_cobrado_total) }} · I: {{ formatNumero(cuota.interes_cobrado_total) }} · Multa: {{ formatNumero(cuota.mora_cobrado_total) }}</small>
+                                        <small v-if="calcularTotalCondonado(cuota) > 0" class="d-block text-muted">Condonado: {{ formatNumero(calcularTotalCondonado(cuota)) }} Bs</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge" :class="getEstadoCuota(cuota).clase">{{ getEstadoCuota(cuota).texto }}</span>
+                                        <small class="d-block fw-bold text-primary mt-1 text-nowrap">A pagar: {{ formatNumero(cuota.total_a_pagar) }} Bs</small>
+                                        <small v-if="Number(cuota.mora_fija_neta) > 0" class="d-block text-danger">Multa: {{ formatNumero(cuota.mora_fija_neta) }}</small>
                                     </td>
                                 </tr>
-
-                                <tr v-if="!cuotas || cuotas.length === 0">
-                                    <td colspan="11" class="text-center p-5 text-muted fst-italic bg-white">
-                                        <i class="fas fa-folder-open fa-3x mb-3 d-block opacity-25"></i>
-                                        Cargando o no hay cuotas registradas para este plan...
-                                    </td>
-                                </tr>
+                                <tr v-if="!cuotas.length"><td colspan="11" class="p-4 text-muted">No hay cuotas disponibles.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -216,29 +225,39 @@
                 <div class="modal-content border-0 shadow-lg">
                     <div class="modal-header bg-success text-white py-3">
                         <h5 class="modal-title fw-bold text-uppercase">
-                            <i class="fas fa-receipt me-2"></i> Historial de Pagos
+                            <i class="fas fa-receipt me-2"></i> Detalle y pagos de la cuota
                         </h5>
                         <button type="button" class="btn-close btn-close-white" @click="cerrarModalPagos()"></button>
                     </div>
                     <div class="modal-body p-4 bg-light">
                         
                         <div v-if="cuota_seleccionada" class="alert border-success bg-white shadow-sm p-3 mb-4">
-                            <div class="d-flex justify-content-between align-items-end mb-2">
+                            <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
                                 <div>
                                     <h5 class="fw-bold text-success text-uppercase mb-1">
                                         <i class="fas fa-calendar-check me-1"></i> Cuota Nro. {{ cuota_seleccionada.numero }}
                                     </h5>
                                     <span class="text-muted fw-semibold" style="font-size: 0.85rem;">
-                                        Total Cuota: <strong class="text-dark">{{ formatNumero(cuota_seleccionada.total) }} Bs</strong>
+                                        Cuota programada: <strong class="text-dark">{{ formatNumero(cuota_seleccionada.total) }} Bs</strong>
                                     </span>
                                 </div>
                                 
-                                <div class="text-end">
-                                    <span class="badge bg-success px-3 py-2 fs-6 shadow-sm mb-1">
-                                        {{ formatNumero(calcularTotalPagado(cuota_seleccionada)) }} Bs Pagados
-                                    </span>
-                                    <div class="text-success fw-bold mt-1" style="font-size: 0.8rem;">
-                                        {{ calcularPorcentaje(cuota_seleccionada) }}% Pagado
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="text-end">
+                                        <span class="badge bg-success px-3 py-2 fs-6 shadow-sm mb-0">
+                                            {{ formatNumero(calcularTotalPagado(cuota_seleccionada)) }} Bs cobrados
+                                        </span>
+                                        <div class="text-success fw-bold mt-1" style="font-size: 0.8rem;">
+                                            {{ calcularPorcentaje(cuota_seleccionada) }}% cubierto (cobros + condonaciones)
+                                        </div>
+                                    </div>
+                                    <div v-if="calcularTotalCondonado(cuota_seleccionada) > 0" class="text-end ps-2 border-start">
+                                        <span class="badge bg-warning text-dark px-3 py-2 fs-6 shadow-sm mb-0" :title="'Int: ' + formatNumero(cuota_seleccionada.interes_condonado_total) + ' Bs | Multa: ' + formatNumero(cuota_seleccionada.mora_condonado_total) + ' Bs'">
+                                            <i class="fas fa-hand-holding-usd me-1"></i> {{ formatNumero(calcularTotalCondonado(cuota_seleccionada)) }} Bs Condonados
+                                        </span>
+                                        <div class="text-muted mt-1" style="font-size: 0.75rem;">
+                                            Int: {{ formatNumero(cuota_seleccionada.interes_condonado_total) }} | Multa: {{ formatNumero(cuota_seleccionada.mora_condonado_total) }}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -252,6 +271,33 @@
                             </div>
                         </div>
 
+                        <div v-if="cuota_seleccionada" class="mb-4">
+                            <div class="bg-white border rounded p-2 mb-2 small">
+                                <strong>Total registrado antes de condonar: {{ formatNumero(cuota_seleccionada.total_registrado_antes_condonacion) }} Bs</strong>
+                                <div>Capital: {{ formatNumero(cuota_seleccionada.capital) }} · Interés total: {{ formatNumero(cuota_seleccionada.interes_total_registrado) }} · Multa: {{ formatNumero(cuota_seleccionada.multa_total_registrada) }}</div>
+                                <div>Menos condonaciones: {{ formatNumero(calcularTotalCondonado(cuota_seleccionada)) }} · Menos cobros: {{ formatNumero(calcularTotalPagado(cuota_seleccionada)) }} · Pendiente: <strong>{{ formatNumero(cuota_seleccionada.total_a_pagar) }} Bs</strong></div>
+                                <small class="text-muted">En cuotas pendientes, los importes corresponden al corte de consulta. Un pendiente de cero no significa que el importe original haya sido cero.</small>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-bordered bg-white text-end">
+                                    <caption class="caption-top text-dark">Desglose en Bs. La multa se calcula por crédito; aquí se muestra lo aplicado a esta cuota.</caption>
+                                    <thead><tr><th class="text-start">Concepto</th><th>Cobrado</th><th>Condonado</th><th>Pendiente</th></tr></thead>
+                                    <tbody>
+                                        <tr><th class="text-start">Capital</th><td>{{ formatNumero(cuota_seleccionada.capital_cobrado_total) }}</td><td>—</td><td>{{ formatNumero(cuota_seleccionada.capital_neto) }}</td></tr>
+                                        <template v-if="cuota_seleccionada.desglose_cobros_interes_completo">
+                                            <tr><th class="text-start">Interés ordinario</th><td>{{ formatNumero(cuota_seleccionada.interes_ordinario_cobrado) }}</td><td>{{ formatNumero(cuota_seleccionada.interes_ordinario_condonado) }}</td><td>{{ formatNumero(cuota_seleccionada.interes_devengado_neto) }}</td></tr>
+                                            <tr><th class="text-start">Interés moratorio</th><td>{{ formatNumero(cuota_seleccionada.interes_moratorio_cobrado) }}</td><td>{{ formatNumero(cuota_seleccionada.interes_moratorio_condonado) }}</td><td>{{ formatNumero(cuota_seleccionada.interes_moratorio_neto) }}</td></tr>
+                                        </template>
+                                        <tr v-else><th class="text-start">Interés ordinario + moratorio<br><small class="text-muted">Historial sin desglose completo</small></th><td>{{ formatNumero(cuota_seleccionada.interes_cobrado_total) }}</td><td>{{ formatNumero(cuota_seleccionada.interes_condonado_total) }}</td><td>{{ formatNumero(cuota_seleccionada.interes_acumulado_neto) }}</td></tr>
+                                        <tr><th class="text-start">Multa</th><td>{{ formatNumero(cuota_seleccionada.mora_cobrado_total) }}</td><td>{{ formatNumero(cuota_seleccionada.mora_condonado_total) }}</td><td>{{ formatNumero(cuota_seleccionada.mora_fija_neta) }}</td></tr>
+                                    </tbody>
+                                    <tfoot class="table-primary fw-bold"><tr><th class="text-start">Totales</th><td>{{ formatNumero(calcularTotalPagado(cuota_seleccionada)) }}</td><td>{{ formatNumero(calcularTotalCondonado(cuota_seleccionada)) }}</td><td>{{ formatNumero(cuota_seleccionada.total_a_pagar) }}</td></tr></tfoot>
+                                </table>
+                            </div>
+                            <p class="small text-muted">La multa es distinta del interés moratorio. En los nuevos cobros, el interés se aplica primero al ordinario y luego al moratorio; las condonaciones se aplican antes del importe cobrado.</p>
+                            <p v-if="!cuota_seleccionada.desglose_cobros_interes_completo" class="alert alert-warning small">Hay pagos anteriores sin distribución de interés. El total se conserva; los recibos nuevos muestran su propio desglose.</p>
+                            <p v-if="cuota_seleccionada.origen_desglose_interes === 'sin_desglose_historico'" class="alert alert-warning small">Este registro antiguo conserva el interés total, pero no el desglose generado ordinario / moratorio. No se reconstruye una distribución que no quedó registrada.</p>
+                        </div>
                         <div v-if="cargando_pagos" class="text-center py-5">
                             <div class="spinner-border text-success" role="status"></div>
                             <div class="mt-2 text-muted small fw-bold">Cargando historial...</div>
@@ -261,11 +307,12 @@
                             <table class="table table-bordered table-striped table-sm text-center align-middle mb-0" style="font-size: 13px;">
                                 <thead class="table-success text-uppercase">
                                     <tr>
-                                        <th>Fecha del Pago</th>
+                                        <th>Fecha / Recibo</th>
                                         <th class="text-end">Abono Capital</th>
                                         <th class="text-end">Abono Interés</th>
                                         <th class="text-end text-danger">Abono Multa</th>
-                                        <th class="text-end fw-bold">Total Recibo</th>
+                                        <th class="text-end fw-bold">Total Pagado</th>
+                                        <th class="text-center bg-warning bg-opacity-25 border-start">Condonación</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -273,18 +320,61 @@
                                         <td>
                                             <span class="fw-bold text-dark">{{ formatFecha(pago.fecha_pago) }}</span><br>
                                             <small class="text-muted" style="font-size: 0.65rem;">Recibo #{{ pago.id }}</small>
+                                            <small v-if="pago.nombre_usuario" class="text-secondary d-block" style="font-size: 0.65rem;">
+                                                <i class="fas fa-user-check me-1"></i>{{ pago.nombre_usuario }}
+                                            </small>
                                         </td>
                                         <td class="text-end">{{ formatNumero(pago.pago_capital) }}</td>
-                                        <td class="text-end">{{ formatNumero(pago.pago_interes) }}</td>
+                                        <td class="text-end">
+                                            <strong>{{ formatNumero(pago.pago_interes) }}</strong>
+                                            <template v-if="pago.desglose_interes">
+                                                <small class="d-block">Ordinario: {{ formatNumero(pago.desglose_interes.ordinario_cobrado) }}</small>
+                                                <small class="d-block">Moratorio: {{ formatNumero(pago.desglose_interes.moratorio_cobrado) }}</small>
+                                            </template>
+                                            <small v-else class="d-block text-muted">Sin desglose histórico</small>
+                                        </td>
                                         <td class="text-end text-danger">{{ formatNumero(pago.pago_mora) }}</td>
                                         <td class="text-end fw-bold text-success bg-success bg-opacity-10">
                                             {{ formatNumero(parseFloat(pago.pago_capital) + parseFloat(pago.pago_interes) + parseFloat(pago.pago_mora)) }} Bs
                                         </td>
+                                        <td class="text-center bg-warning bg-opacity-10">
+                                            <template v-if="parseFloat(pago.monto_condonado) > 0">
+                                                <span class="fw-bold text-dark fs-6">{{ formatNumero(pago.monto_condonado) }} <small class="text-muted fs-6">Bs</small></span>
+                                                <div class="text-muted" style="font-size: 0.7rem;">
+                                                    <span v-if="parseFloat(pago.monto_condonado_interes) > 0">Int: {{ formatNumero(pago.monto_condonado_interes) }}</span>
+                                                    <span v-if="parseFloat(pago.monto_condonado_interes) > 0 && parseFloat(pago.monto_condonado_mora) > 0"> · </span>
+                                                    <span v-if="parseFloat(pago.monto_condonado_mora) > 0" class="text-danger">Multa: {{ formatNumero(pago.monto_condonado_mora) }}</span>
+                                                </div>
+                                                <div v-if="pago.desglose_interes" class="small text-muted">
+                                                    <small class="d-block">Int. ordinario: {{ formatNumero(pago.desglose_interes.ordinario_condonado) }}</small>
+                                                    <small class="d-block">Int. moratorio: {{ formatNumero(pago.desglose_interes.moratorio_condonado) }}</small>
+                                                </div>
+                                                <div v-if="pago.motivo_condonacion" class="mt-1">
+                                                    <span class="badge bg-white text-secondary border border-warning text-wrap" style="font-size: 0.65rem; max-width: 220px;" :title="pago.motivo_condonacion">
+                                                        <i class="fas fa-comment-alt me-1 text-warning"></i>{{ pago.motivo_condonacion }}
+                                                    </span>
+                                                </div>
+                                            </template>
+                                            <span v-else class="text-muted small">---</span>
+                                        </td>
                                     </tr>
                                     <tr v-if="pagos_cuota.length === 0">
-                                        <td colspan="5" class="text-muted fst-italic py-4">No se encontraron registros activos de pago para esta cuota.</td>
+                                        <td colspan="6" class="text-muted fst-italic py-4">No se encontraron registros activos de pago para esta cuota.</td>
                                     </tr>
                                 </tbody>
+                                <tfoot v-if="pagos_cuota.length > 0" class="table-light fw-bold">
+                                    <tr>
+                                        <td class="text-uppercase text-end">Totales:</td>
+                                        <td class="text-end">{{ formatNumero(totalCapitalPagos()) }}</td>
+                                        <td class="text-end">{{ formatNumero(totalInteresPagos()) }}</td>
+                                        <td class="text-end text-danger">{{ formatNumero(totalMoraPagos()) }}</td>
+                                        <td class="text-end text-success bg-success bg-opacity-10">{{ formatNumero(totalPagadoPagos()) }} Bs</td>
+                                        <td class="text-center text-dark bg-warning bg-opacity-10">
+                                            <span v-if="totalCondonadoPagos() > 0" class="fw-bold">{{ formatNumero(totalCondonadoPagos()) }} Bs</span>
+                                            <span v-else class="text-muted">---</span>
+                                        </td>
+                                    </tr>
+                                </tfoot>
                             </table>
                         </div>
                     </div>
@@ -323,6 +413,11 @@ export default {
         }
     },
     emits: ['cerrar', 'ver-ficha', 'ver-original'],
+    computed: {
+        totalPendiente() {
+            return this.cuotas.reduce((total, cuota) => total + Math.round(Number(cuota.total_a_pagar || 0) * 100), 0) / 100;
+        }
+    },
     methods: {
         formatFecha(fechaISO) {
             if (!fechaISO) return 'N/A';
@@ -339,25 +434,51 @@ export default {
         
         // --- NUEVOS MÉTODOS PARA EL HISTORIAL DE PAGOS ---
         calcularTotalPagado(cuota) {
-            const cap = parseFloat(cuota.capital_pagado_total) || 0;
+            if (!cuota) return 0;
+            const cap = parseFloat(cuota.capital_cobrado_total) || 0;
             const int = parseFloat(cuota.interes_cobrado_total) || 0;
             const mora = parseFloat(cuota.mora_cobrado_total) || 0;
             return cap + int + mora;
         },
 
+        calcularTotalCondonado(cuota) {
+            if (!cuota) return 0;
+            const intCond = parseFloat(cuota.interes_condonado_total) || 0;
+            const moraCond = parseFloat(cuota.mora_condonado_total) || 0;
+            return intCond + moraCond;
+        },
+
         calcularPorcentaje(cuota) {
             if (!cuota) return '0.0';
+            if (Number(cuota.estado) === 2) return '100.0';
             
-            const totalPagado = this.calcularTotalPagado(cuota);
-            const totalCuota = parseFloat(cuota.total) || 1; // || 1 Evita error de división por cero
+            const totalCubierto = this.calcularTotalPagado(cuota) + this.calcularTotalCondonado(cuota);
+            const totalCuota = totalCubierto + (parseFloat(cuota.total_a_pagar) || 0);
             
-            let porcentaje = (totalPagado / totalCuota) * 100;
-            
-            // Lo limitamos a 100 en el frontend visualmente en caso de que el cliente 
-            // haya pagado un poco más por temas de multas de mora.
+            let porcentaje = totalCuota > 0 ? (totalCubierto / totalCuota) * 100 : 0;
             if (porcentaje > 100) porcentaje = 100;
             
             return porcentaje.toFixed(1);
+        },
+
+        totalCapitalPagos() {
+            return this.pagos_cuota.reduce((acc, p) => acc + (parseFloat(p.pago_capital) || 0), 0);
+        },
+
+        totalInteresPagos() {
+            return this.pagos_cuota.reduce((acc, p) => acc + (parseFloat(p.pago_interes) || 0), 0);
+        },
+
+        totalMoraPagos() {
+            return this.pagos_cuota.reduce((acc, p) => acc + (parseFloat(p.pago_mora) || 0), 0);
+        },
+
+        totalPagadoPagos() {
+            return this.pagos_cuota.reduce((acc, p) => acc + (parseFloat(p.pago_capital) || 0) + (parseFloat(p.pago_interes) || 0) + (parseFloat(p.pago_mora) || 0), 0);
+        },
+
+        totalCondonadoPagos() {
+            return this.pagos_cuota.reduce((acc, p) => acc + (parseFloat(p.monto_condonado) || 0), 0);
         },
 
         async verDetallePagos(cuota) {
@@ -415,13 +536,36 @@ export default {
 
 <style scoped>
     .table-listado-cuotas th, .table-listado-cuotas td {
-        font-size: 12px !important;
+        font-size: 11px !important;
+        padding: 0.4rem 0.3rem;
+        line-height: 1.25;
+        font-variant-numeric: tabular-nums;
     }
     
+    .table-listado-cuotas {
+        min-width: 1000px;
+    }
+    .table-listado-cuotas small {
+        font-size: 10px;
+        line-height: 1.2;
+    }
+    .table-listado-cuotas .badge {
+        font-size: 10px;
+    }
+    .resumen-cuotas {
+        font-size: 12px;
+    }
+
     .hover-zoom {
         transition: transform 0.2s ease-in-out;
     }
     .hover-zoom:hover {
         transform: scale(1.05);
+    }
+
+    .btn-xs {
+        padding: 1px 4px;
+        font-size: 0.68rem;
+        line-height: 1.2;
     }
 </style>

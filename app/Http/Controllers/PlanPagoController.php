@@ -543,12 +543,15 @@ class PlanPagoController extends Controller
         $id_cuota = $request->input('id_cuota');
         
         $pagos = \App\Services\CarteraAccess::query('pago')
-            ->where('id_cuota', $id_cuota)
-            ->where('estado', 1)
-            ->orderBy('fecha_pago', 'desc')
-            ->orderBy('id', 'desc')
+            ->leftJoin('users', 'pago.id_usuario', '=', 'users.id')
+            ->where('pago.id_cuota', $id_cuota)
+            ->where('pago.estado', 1)
+            ->select('pago.*', 'users.name as nombre_usuario')
+            ->orderBy('pago.fecha_pago', 'desc')
+            ->orderBy('pago.id', 'desc')
             ->get();
             
+        \App\Services\Finance\InterestBreakdown::attach($pagos);
         return response()->json($pagos);
     }
 }

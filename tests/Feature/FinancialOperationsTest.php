@@ -125,6 +125,75 @@ class FinancialOperationsTest extends TestCase
         $this->assertDatabaseHas('cuota', ['id' => $this->fixture['installment'], 'estado' => 2, 'capital_pagado' => 1000]);
     }
 
+    public function test_settlement_preserves_generated_interest_and_reversal_discards_snapshot(): void
+    {
+        DB::table('cuota')->where('id', $this->fixture['installment'])->update(['fecha' => '2026-09-17']);
+        $before = app(Debt::class)->calculate($this->fixture['plan'])['cuotas']->first();
+        $this->assertGreaterThan(0, (float) $before->interes_moratorio_generado);
+        $response = $this->postJson('/pagar_cuotas', $this->payload(['modalidad_pago' => 'completo', 'monto_recibido' => $before->total_a_pagar]))->assertOk();
+        foreach (['2026-09-24', '2026-12-31'] as $date) {
+            $settled = app(Debt::class)->calculate($this->fixture['plan'], $date)['cuotas']->first();
+            $this->assertSame('registro_cobro', $settled->origen_desglose_interes);
+            $this->assertSame($before->interes_ordinario_generado, $settled->interes_ordinario_generado);
+            $this->assertSame($before->interes_moratorio_generado, $settled->interes_moratorio_generado);
+            $this->assertSame('0.00', $settled->total_a_pagar);
+            $this->assertSame($before->interes_moratorio_generado, $settled->interes_moratorio_cobrado);
+            $this->assertSame('0.00', $settled->interes_moratorio_condonado);
+        }
+        $this->grant('anular_finanzas');
+        $this->postJson('/pagos/anular-transaccion', ['codigo' => $response->json('codigo_transaccion'), 'motivo' => 'Prueba de reversión'])->assertOk();
+        $restored = app(Debt::class)->calculate($this->fixture['plan'])['cuotas']->first();
+        $this->assertSame('calculo_actual', $restored->origen_desglose_interes);
+        $this->assertSame($before->total_a_pagar, $restored->total_a_pagar);
+    }
+
+    public function test_partial_interest_payments_keep_split_on_retry_and_reversal(): void
+    {
+        DB::table('cuota')->where('id', $this->fixture['installment'])->update(['fecha' => '2026-09-17']);
+        $key = (string) Str::uuid();
+        $payload = $this->payload(['modalidad_pago' => 'solo_interes', 'monto_recibido' => '110.00']);
+        $result = $this->withHeader('Idempotency-Key', $key)->postJson('/pagar_cuotas', $payload)->assertOk();
+        $result->assertJsonPath('detalles.0.desglose_interes.ordinario_cobrado', '100.00')
+            ->assertJsonPath('detalles.0.desglose_interes.moratorio_cobrado', '10.00');
+        $this->postJson('/pagar_cuotas', $payload)->assertOk();
+        $this->assertDatabaseCount('pago', 1);
+        $this->getJson('/get_pagos_cuota?id_cuota='.$this->fixture['installment'])->assertOk()
+            ->assertJsonPath('0.desglose_interes.moratorio_cobrado', '10.00');
+        $quota = app(Debt::class)->calculate($this->fixture['plan'])['cuotas']->first();
+        $this->assertSame('10.00', $quota->interes_moratorio_cobrado);
+        $this->assertSame('13.33', $quota->interes_moratorio_neto);
+        $this->grant('condonar');
+        $this->withHeader('Idempotency-Key', (string) Str::uuid())->postJson('/pagar_cuotas', $this->payload([
+            'modalidad_pago' => 'solo_interes', 'monto_recibido' => '8.33',
+            'condonacion_interes' => '5.00', 'motivo_condonacion_interes' => 'Beneficio autorizado',
+        ]))->assertOk()->assertJsonPath('detalles.0.desglose_interes.moratorio_condonado', '5.00');
+        $lastCode = DB::table('pago')->orderByDesc('id')->value('codigo_transaccion');
+        $quota = app(Debt::class)->calculate($this->fixture['plan'])['cuotas']->first();
+        $this->assertSame('18.33', $quota->interes_moratorio_cobrado);
+        $this->assertSame('5.00', $quota->interes_moratorio_condonado);
+        $this->assertSame('0.00', $quota->interes_moratorio_neto);
+        $this->grant('anular_finanzas');
+        $this->withHeader('Idempotency-Key', (string) Str::uuid())->postJson('/pagos/anular-transaccion', ['codigo' => $lastCode, 'motivo' => 'Prueba de desglose'])->assertOk();
+        $quota = app(Debt::class)->calculate($this->fixture['plan'])['cuotas']->first();
+        $this->assertSame('10.00', $quota->interes_moratorio_cobrado);
+        $this->assertSame('0.00', $quota->interes_moratorio_condonado);
+        $this->assertSame('13.33', $quota->interes_moratorio_neto);
+    }
+
+    public function test_forgiveness_crosses_ordinary_and_moratory_without_changing_total(): void
+    {
+        DB::table('cuota')->where('id', $this->fixture['installment'])->update(['fecha' => '2026-09-17']);
+        $this->grant('condonar');
+        $this->postJson('/pagar_cuotas', $this->payload([
+            'modalidad_pago' => 'solo_interes', 'monto_recibido' => '13.33',
+            'condonacion_interes' => '110.00', 'motivo_condonacion_interes' => 'Beneficio autorizado',
+        ]))->assertOk()->assertJsonPath('detalles.0.desglose_interes', [
+            'ordinario_cobrado' => '0.00', 'moratorio_cobrado' => '13.33',
+            'ordinario_condonado' => '100.00', 'moratorio_condonado' => '10.00',
+        ]);
+        $this->assertDatabaseHas('pago', ['pago_interes' => 13.33, 'monto_condonado_interes' => 110]);
+    }
+
     public function test_disbursement_is_exact_unique_and_checks_only_physical_component(): void
     {
         DB::table('plan_pago')->where('id', $this->fixture['plan'])->update(['desembolso' => 1]);

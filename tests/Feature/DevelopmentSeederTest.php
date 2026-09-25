@@ -157,6 +157,17 @@ class DevelopmentSeederTest extends TestCase
         $this->assertEquals(100, $first->porcentaje_interes_pagado);
         $this->assertSame('30.00', $first->interes_cobrado_total);
         $this->assertSame('20.00', $first->interes_condonado_total);
+        $this->assertSame('50.00', $first->interes_total_registrado);
+        $this->assertSame('registro_cobro', $first->origen_desglose_interes);
+        $this->assertSame('25.00', $first->interes_ordinario_generado);
+        $this->assertSame('25.00', $first->interes_moratorio_generado);
+        $this->assertTrue($first->desglose_cobros_interes_completo);
+        $this->assertSame('5.00', $first->interes_ordinario_cobrado);
+        $this->assertSame('20.00', $first->interes_ordinario_condonado);
+        $this->assertSame('25.00', $first->interes_moratorio_cobrado);
+        $this->assertSame('0.00', $first->interes_moratorio_condonado);
+        $this->assertSame('321.00', $first->total_registrado_antes_condonacion);
+        $this->assertSame('21.00', $first->multa_total_registrada);
         $this->assertSame('0.00', $first->interes_acumulado_neto);
         $this->assertSame('0.00', $first->mora_cobrado_total);
         $this->assertSame('21.00', $first->mora_condonado_total);
@@ -165,6 +176,21 @@ class DevelopmentSeederTest extends TestCase
         $this->assertSame('28.57', $result['cuotas'][1]->interes_acumulado_neto);
         $this->assertSame('3.00', $result['cuotas'][1]->mora_fija_neta);
         $this->assertSame($before, DB::table('pago')->get()->toJson());
+    }
+
+    public function test_existing_payment_without_snapshot_keeps_known_totals_and_unknown_split(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+        $payment = DB::table('pago')->where('monto_condonado_interes', 20)->first();
+        DB::table('operaciones_financieras')->where('id', $payment->id_operacion)->update(['resultado' => null]);
+        $plan = DB::table('cuota')->where('id', $payment->id_cuota)->value('id_plan_pago');
+        $quota = app(\App\Services\Finance\Debt::class)->calculate($plan)['cuotas']->first();
+        $this->assertSame('321.00', $quota->total_registrado_antes_condonacion);
+        $this->assertSame('50.00', $quota->interes_total_registrado);
+        $this->assertSame('0.00', $quota->total_a_pagar);
+        $this->assertFalse($quota->desglose_cobros_interes_completo);
+        $this->assertNull($quota->interes_moratorio_cobrado);
+        $this->assertNull($quota->interes_moratorio_generado);
     }
 
 }

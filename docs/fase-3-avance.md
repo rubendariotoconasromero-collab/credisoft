@@ -71,3 +71,30 @@ El porcentaje de cobertura se calcula sobre el importe cubierto más el residual
 En Caja, «Int. pendiente» identifica el importe residual. «Atraso histórico» muestra días acumulados y el resumen de multa generada, cobrada, condonada y pendiente. El detalle de plan y los PDF consultados separan también los importes condonados del dinero cobrado.
 
 Regresión DEMO Nicolás al 24/09/2026: interés cobrado30, condonado20, pendiente0, cubierto100%; multa histórica24 por8días, cobrada0, condonada21, pendiente3. Prueba de lectura sin alterar pagos. Suite:60pruebas/922comprobaciones; compilación aprobada.
+
+
+## Detalle del plan: generación, cobro y saldo
+
+La pantalla distingue cuota programada, interés generado ordinario/moratorio, interés cobrado/condonado/pendiente y saldo exigible al corte (capital + interés + multa). El detalle de cada cuota muestra los tres componentes y sus cobros, condonaciones y pendientes. La cobertura usa cobros + condonaciones + saldo residual como base, no la cuota programada.
+
+Los nuevos cobros conservan el cálculo de interés generado en `operaciones_financieras.resultado.detalles`. Al saldar una cuota se consulta ese registro vinculado al último pago vigente; una anulación no aporta datos al historial vigente. Los pagos anteriores sin desglose muestran el total registrado y una advertencia explícita, sin inferir moratorio ni distribuir arbitrariamente el interés cobrado. No se modificaron datos históricos ni las fórmulas de cobro. Esta mejora corresponde a la pantalla; la exportación PDF conserva su formato existente.
+
+Validación: 61 pruebas, 938 comprobaciones; compilación Vite correcta. Regresión de conservación del moratorio tras liquidación y consulta futura, reversión y registros antiguos sin desglose. La sesión de navegador disponible (cajero_user) no tiene acceso a /plan_pago; no se cambiaron sus permisos para la revisión visual.
+
+
+## Desglose del interés cobrado y condonado
+
+Los nuevos cobros guardan `desglose_interes` en cada detalle de `operaciones_financieras.resultado`: ordinario/moratorio cobrado y condonado. Se conserva la prioridad del cálculo existente (ordinario antes que moratorio, condonación antes del dinero). `pago_interes` y los totales financieros permanecen agregados para compatibilidad; el desglose no suma un segundo ingreso. No requiere migración.
+
+El detalle del plan mantiene sus 11 columnas compactas y muestra generado, cobrado, condonado y pendiente dentro de las columnas de interés. El historial por cuota muestra también el desglose de cada pago. La abreviatura M se reemplaza por Multa. Solo se acumulan pagos vigentes; la anulación conserva el registro original y excluye sus importes de los totales activos. Si algún pago de interés anterior carece de desglose, el acumulado separado se muestra como desconocido, sin asignarlo artificialmente a ordinario o moratorio; el total conocido y el detalle de nuevos pagos permanecen disponibles.
+
+Validación: 63 pruebas / 966 comprobaciones y compilación Vite correcta. Casos: pago parcial, reintento sin duplicación, condonación que atraviesa ambos conceptos, anulación, liquidación con consultas futuras y datos antiguos sin desglose.
+
+
+## Importe registrado y población de pruebas con desglose
+
+El plan conserva el total registrado antes de condonar (capital + interés + multa), junto a cobros, condonaciones y pendiente. Para cuotas pendientes se identifica como importe al corte, sin confundirlo con el total programado ni con interés futuro. Nicolás: 321 antes de condonar = 280 cobrados + 41 condonados + 0 pendientes.
+
+DevelopmentSeeder crea operaciones vinculadas para los pagos ficticios con el desglose conocido del escenario, sin cambiar sus importes ni duplicar ingresos. Nicolás: ordinario generado25/cobrado5/condonado20; moratorio generado25/cobrado25/condonado0; multa condonada21. Se mantienen importes y saldos de caja/bóveda. Estos cambios se aplican al crear una nueva población; no se modificaron los pagos de la base habitual ni se ejecutó migrate:fresh sobre ella. Los históricos sin desglose conservan sus totales conocidos y sus campos desconocidos.
+
+Validación:64 pruebas/977 comprobaciones y compilación Vite aprobada, incluida regresión de un histórico sin snapshot.

@@ -190,12 +190,31 @@ class DevelopmentSeeder extends Seeder
     private function payment(int $scenario, int $plan, int $cuota, CarbonImmutable $date, int $capital, int $interest,
         int $mora, string $type, bool $complete = false, int $waivedInterest = 0, int $waivedMora = 0): void
     {
+        $quota = DB::table('cuota')->find($cuota);
+        $planBefore = DB::table('plan_pago')->find($plan);
+        // Explicit fictional scenarios: payments are at/after maturity; 12 and 14
+        // include seven days of moratory interest. Never backfill existing payments.
+        $ordinary = (float) $quota->interes;
+        $moratory = in_array($scenario, [11, 12, 14], true) ? 25 : 0;
+        $detail = ['id_cuota' => $cuota, 'cuota' => $quota->numero,
+            'interes_ordinario_generado' => number_format($ordinary, 2, '.', ''),
+            'interes_moratorio_generado' => number_format($moratory, 2, '.', ''),
+            'desglose_interes' => \App\Services\Finance\InterestBreakdown::allocate(
+                (object) ['interes_devengado_neto' => $ordinary], $interest * 100, $waivedInterest * 100),
+            'pagado' => number_format($capital + $interest + $mora, 2, '.', ''),
+            'capital' => number_format($capital, 2, '.', ''), 'interes' => number_format($interest, 2, '.', ''),
+            'mora' => number_format($mora, 2, '.', ''), 'condonado' => number_format($waivedInterest + $waivedMora, 2, '.', '')];
+        $before = ['cuotas' => [['id' => $cuota, 'capital_pagado' => $quota->capital_pagado,
+            'interes_pagado' => $quota->interes_pagado, 'mora_pagada' => $quota->mora_pagada, 'estado' => $quota->estado]],
+            'plan' => ['saldo_pendiente' => $planBefore->saldo_pendiente, 'estado' => $planBefore->estado,
+                'fecha_ultima_amortizacion' => $planBefore->fecha_ultima_amortizacion]];
         DB::table('cuota')->where('id', $cuota)->update(['capital_pagado' => $capital,
             'interes_pagado' => $interest + $waivedInterest, 'mora_pagada' => $mora + $waivedMora,
             'estado' => $complete ? 2 : 3, 'updated_at' => $date]);
         DB::table('plan_pago')->where('id', $plan)->decrement('saldo_pendiente', $capital);
         if ($complete) DB::table('plan_pago')->where('id', $plan)->update(['fecha_ultima_amortizacion' => $date]);
         $this->event($date, 'pago', $capital + $interest + $mora, [
+            '_operation' => ['plan' => $plan, 'antes' => $before, 'detalle' => $detail],
             'id_cuota' => $cuota, 'codigo_transaccion' => 'DEMO-'.sprintf('%02d', $scenario).'-C'.$cuota,
             'pago_capital' => $capital, 'pago_interes' => $interest, 'pago_mora' => $mora,
             'monto_condonado' => $waivedInterest + $waivedMora, 'monto_condonado_interes' => $waivedInterest,
@@ -223,7 +242,23 @@ class DevelopmentSeeder extends Seeder
             $income = 0; $expense = 0;
             foreach ($events as $event) {
                 ['table' => $table, 'amount' => $amount, 'data' => $data] = $event;
+                $operation = $data['_operation'] ?? null;
+                unset($data['_operation']);
                 $payload = $data + ['id_caja' => $cash, 'id_usuario' => $user];
+                if ($operation) {
+                    $parts = [['forma_pago' => 'efectivo', 'monto' => number_format($amount, 2, '.', ''),
+                        'entregado' => number_format($amount, 2, '.', ''), 'referencia' => null]];
+                    $payload['id_operacion'] = DB::table('operaciones_financieras')->insertGetId([
+                        'codigo' => $data['codigo_transaccion'], 'clave' => $data['codigo_transaccion'],
+                        'huella' => hash('sha256', $data['codigo_transaccion']), 'tipo' => 'cobro',
+                        'id_usuario' => $user, 'id_caja' => $cash, 'id_plan_pago' => $operation['plan'],
+                        'fecha_efectiva' => $date, 'direccion' => 'ingreso', 'monto' => $amount,
+                        'partes' => json_encode($parts, JSON_THROW_ON_ERROR),
+                        'antes' => json_encode($operation['antes'], JSON_THROW_ON_ERROR),
+                        'resultado' => json_encode(['detalles' => [$operation['detalle']], 'fecha_pago' => $date->toDateString()], JSON_THROW_ON_ERROR),
+                        'created_at' => $date->setTime(12, 0), 'updated_at' => $date->setTime(12, 0),
+                    ]);
+                }
                 if ($table === 'pago') {
                     $payload += ['monto_pago' => $amount, 'fecha_pago' => $date, 'created_at' => $date->setTime(12, 0), 'updated_at' => $date->setTime(12, 0)];
                 } else {

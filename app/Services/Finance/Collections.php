@@ -70,7 +70,11 @@ final class Collections
                 foreach ($paid as $c => $value) { $field = $c === 'mora' ? 'mora_pagada' : $c.'_pagado'; $row['pago_'.$c] = Money::decimal($value); $update[$field] = Money::decimal(Money::cents($q->$field) + $value + ($forgiven[$c] ?? 0)); }
                 foreach ($forgiven as $c => $value) $row['monto_condonado_'.$c] = Money::decimal($value);
                 DB::table('pago')->insert($row); DB::table('cuota')->where('id', $q->id)->update($update);
-                $details[] = ['cuota' => $q->numero, 'pagado' => $row['monto_pago'], 'capital' => $row['pago_capital'], 'interes' => $row['pago_interes'], 'mora' => $row['pago_mora'], 'condonado' => $row['monto_condonado']];
+                $details[] = ['cuota' => $q->numero, 'id_cuota' => $q->id,
+                    'desglose_interes' => InterestBreakdown::allocate($q, $paid['interes'], $forgiven['interes']),
+                    'interes_ordinario_generado' => $q->interes_ordinario_generado,
+                    'interes_moratorio_generado' => $q->interes_moratorio_generado,
+                    'pagado' => $row['monto_pago'], 'capital' => $row['pago_capital'], 'interes' => $row['pago_interes'], 'mora' => $row['pago_mora'], 'condonado' => $row['monto_condonado']];
             }
             abort_if($remaining !== 0 || array_sum($condone) !== 0, 422, 'No se pudo distribuir todo el importe.');
             $state = DB::table('cuota')->where('id_plan_pago', $plan->id)->whereIn('estado', [1, 3])->exists() ? 1 : 2;

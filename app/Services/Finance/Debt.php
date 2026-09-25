@@ -21,6 +21,10 @@ final class Debt
         $payments = DB::table('pago')->whereIn('id_cuota', $quotas->pluck('id'))->where('estado', 1)
             ->whereDate('fecha_pago', '<=', $cutoff->toDateString())->orderBy('fecha_pago')->orderBy('id')->get();
         $revision = hash('sha256', json_encode([$plan, $quotas, $payments->pluck('id'), $cutoff->toDateString()], JSON_THROW_ON_ERROR));
+        // Only active payments may supply a settlement snapshot (reversals are excluded).
+        $snapshots = DB::table('operaciones_financieras')->whereIn('id', $payments->pluck('id_operacion')->filter()->unique())
+            ->pluck('resultado', 'id');
+        InterestBreakdown::attach($payments, $snapshots);
         $totalCapital = $quotas->sum(fn ($q) => Money::cents($q->capital));
         $first = $quotas->search(fn ($q) => in_array((int) $q->estado, [1, 3], true));
         $intervals = []; $finePaid = 0;
@@ -67,6 +71,17 @@ final class Debt
             $divisor = match (mb_strtolower(trim($plan->lapso_capital))) { 'semanal' => 7, 'quincenal' => 15, default => 30 };
             $moratory = $index === $first ? $this->rounded(bcdiv(bcmul((string) $interest, (string) $lateDays, 12), (string) $divisor, 12)) : 0;
             $paidInterest = Money::cents($q->interes_pagado ?? 0);
+            $q->fecha_corte = $cutoff->toDateString();
+            $q->interes_ordinario_generado = Money::decimal($normalCents);
+            $q->interes_moratorio_generado = Money::decimal($moratory);
+            $q->origen_desglose_interes = 'calculo_actual';
+            if ((int) $q->estado === 2) {
+                $snapshot = collect(json_decode($snapshots[$own->last()?->id_operacion] ?? '{}', true)['detalles'] ?? [])
+                    ->first(fn ($detail) => ($detail['id_cuota'] ?? null) === $q->id);
+                $q->interes_ordinario_generado = $snapshot['interes_ordinario_generado'] ?? null;
+                $q->interes_moratorio_generado = $snapshot['interes_moratorio_generado'] ?? null;
+                $q->origen_desglose_interes = $q->interes_moratorio_generado !== null ? 'registro_cobro' : 'sin_desglose_historico';
+            }
             $q->capital_neto = Money::decimal(max(0, Money::cents($q->capital) - Money::cents($q->capital_pagado ?? 0)));
             $q->interes_devengado_neto = Money::decimal(max(0, $normalCents - $paidInterest));
             $q->interes_moratorio_neto = Money::decimal(max(0, $moratory - max(0, $paidInterest - $normalCents)));
@@ -98,6 +113,20 @@ final class Debt
                 $q->capital_neto = $q->interes_devengado_neto = $q->interes_moratorio_neto = $q->interes_acumulado_neto = $q->mora_fija_neta = '0.00';
             }
             $q->total_a_pagar = Money::decimal(Money::cents($q->capital_neto) + Money::cents($q->interes_acumulado_neto) + Money::cents($q->mora_fija_neta));
+            $q->interes_total_registrado = Money::decimal($paidInterest + Money::cents($q->interes_acumulado_neto));
+            // Settled installments retain their obligation; zero means residual only.
+            $q->multa_total_registrada = Money::decimal(Money::cents($q->mora_cobrado_total)
+                + Money::cents($q->mora_condonado_total) + Money::cents($q->mora_fija_neta));
+            $q->total_registrado_antes_condonacion = Money::decimal(Money::cents($q->capital_cobrado_total)
+                + Money::cents($q->capital_neto) + Money::cents($q->interes_total_registrado)
+                + Money::cents($q->multa_total_registrada));
+            $q->desglose_cobros_interes_completo = $own->every(fn ($payment) => $payment->desglose_interes !== null);
+            foreach (['ordinario', 'moratorio'] as $type) {
+                foreach (['cobrado', 'condonado'] as $kind) {
+                    $q->{'interes_'.$type.'_'.$kind} = $q->desglose_cobros_interes_completo
+                        ? Money::decimal($own->sum(fn ($payment) => Money::cents($payment->desglose_interes[$type.'_'.$kind]))) : null;
+                }
+            }
             $scheduled -= Money::cents($q->capital);
         }
         return ['cuotas' => $quotas, 'dias_pasados_mora' => $days,
