@@ -3,6 +3,12 @@
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\ServiceProvider;
 
+$seedIdentityExample = in_array(env('APP_ENV', 'production'), ['local', 'testing'], true);
+$seedIdentity = static function (string $key, ?string $example) {
+    $value = env($key);
+    return is_string($value) && trim($value) !== '' ? $value : $example;
+};
+
 return [
 
     /*
@@ -31,16 +37,32 @@ return [
 
     'env' => env('APP_ENV', 'production'),
     'bootstrap_admin_password' => env('BOOTSTRAP_ADMIN_PASSWORD'),
+    // SEED_PROFILE takes precedence over the legacy SEED_DEMO_DATA flag.
+    'seed_profile' => env('SEED_PROFILE'),
+    'seed_operational' => [
+        'company' => [
+            'nombre' => $seedIdentity('SEED_COMPANY_NAME', $seedIdentityExample ? 'Financiera Valle Verde S.R.L.' : null),
+            'nit' => $seedIdentity('SEED_COMPANY_NIT', $seedIdentityExample ? '4762158019' : null),
+            'direccion' => $seedIdentity('SEED_COMPANY_ADDRESS', $seedIdentityExample ? 'Av. Beni 421, Santa Cruz de la Sierra' : null),
+            'telefono' => $seedIdentity('SEED_COMPANY_PHONE', $seedIdentityExample ? '33789012' : null),
+            'email' => $seedIdentity('SEED_COMPANY_EMAIL', $seedIdentityExample ? 'contacto@valleverde.test' : null),
+        ],
+        'admin' => [
+            'personal' => $seedIdentity('SEED_ADMIN_NAME', $seedIdentityExample ? 'Mariana Torres Salvatierra' : null),
+            'email' => $seedIdentity('SEED_ADMIN_EMAIL', $seedIdentityExample ? 'mariana.torres@valleverde.test' : null),
+            'ci' => $seedIdentity('SEED_ADMIN_CI', $seedIdentityExample ? '6897342' : null),
+            'telefono' => $seedIdentity('SEED_ADMIN_PHONE', $seedIdentityExample ? '72168403' : null),
+        ],
+    ],
 
     /*
     |--------------------------------------------------------------------------
-    | Cargar Datos de Demostración (Seeders)
+    | Compatibilidad con SEED_DEMO_DATA
     |--------------------------------------------------------------------------
     |
-    | Cuando está en true, DatabaseSeeder carga datos ficticios de prueba
-    | (clientes, codeudores, solicitudes, socios y usuarios de demo). En
-    | producción debe quedar en false para sembrar únicamente los datos base
-    | (permisos, roles, motivos y el usuario administrador).
+    | Se consulta solo cuando SEED_PROFILE no está definido. El perfil demo
+    | carga los escenarios existentes; operativo carga únicamente la base
+    | funcional, sin clientes, créditos ni movimientos.
     |
     */
 

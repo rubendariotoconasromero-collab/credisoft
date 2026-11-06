@@ -47,7 +47,7 @@ class ImageSecurityTest extends TestCase
         $this->assertStringStartsWith('%PDF-', $pdf->getContent());
         $this->post('/administracion');
         $this->getJson('/img/cliente/'.$filename)->assertUnauthorized();
-        $this->actingAs(User::where('name', 'cajero_user')->firstOrFail());
+        $this->actingAs(User::where('name', 'lucia.rivera')->firstOrFail());
         $this->get('/img/cliente/'.$filename)->assertOk(); // Shared by the cash collection screen.
         DB::table('permiso_rol')->where('id_rol', $this->app['auth']->user()->id_rol)->delete();
         $this->getJson('/img/cliente/'.$filename)->assertForbidden();
@@ -69,7 +69,7 @@ class ImageSecurityTest extends TestCase
 
     public function test_guarantee_image_is_only_visible_to_its_assigned_official(): void
     {
-        $official = User::where('name', 'oficial_user')->firstOrFail();
+        $official = User::where('name', 'camila.ortiz')->firstOrFail();
         $this->actingAs($official);
         foreach ([true, false] as $own) {
             $guarantee = DB::table('garantia')->join('solicitud', 'solicitud.id', '=', 'garantia.id_solicitud')

@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Services\PrivateImages;
+use Database\Seeders\SeedProfile;
 use Illuminate\Console\Command;
 
 class CheckSecurityConfiguration extends Command
@@ -37,7 +38,7 @@ class CheckSecurityConfiguration extends Command
                 'APP_DEBUG=false' => !config('app.debug'),
                 'URL HTTPS' => str_starts_with(config('app.url'), 'https://'),
                 'Cookies Secure' => (bool) config('session.secure'),
-                'Población DEMO deshabilitada' => !config('app.seed_demo_data'),
+                'Población de escenarios deshabilitada' => SeedProfile::requested() !== 'demo',
                 'Sin archivo public/hot de desarrollo' => !is_file(public_path('hot')),
                 'Assets compilados' => is_file(public_path('build/manifest.json')),
             ];

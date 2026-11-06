@@ -128,7 +128,7 @@
                             </div>
                             <strong class="fs-6 text-primary">{{ formatNumero(totalPendiente) }} Bs</strong>
                         </div>
-                        <p class="small text-muted mb-0 mt-2">La cuota programada incluye capital e interés fijo; el importe exigible cambia con atrasos, adelantos y condonaciones. Los importes cobrados no incluyen condonaciones.</p>
+                        <p class="small text-muted mb-0 mt-2">Programado + variación − condonado = exigible neto; este se divide en cobrado y pendiente. La variación refleja interés devengado, recargos o interés futuro aún no devengado.</p>
                         <div v-if="resumenMulta" class="resumen-multa mt-2" aria-label="Resumen de multa del crédito">
                             <div class="resumen-multa__titulo">
                                 <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
@@ -151,7 +151,7 @@
                                     <th>Capital</th>
                                     <th>Interés fijo</th>
                                     <th>Saldo cap.</th>
-                                    <th title="Capital e interés fijo programados; no incluye recargos">Total Bs</th>
+                                    <th title="Importe programado más variación al corte, menos condonaciones">Cálculo del cobro<small class="d-block">En Bs</small></th>
                                     <th class="text-primary border-start">Int. devengado<small class="d-block">Generado</small></th>
                                     <th class="text-danger">Int. moratorio<small class="d-block">Generado</small></th>
                                     <th class="border-start border-end">Int. acumulado<small class="d-block">Total registrado</small></th>
@@ -172,11 +172,7 @@
                                     </td>
                                     <td>{{ formatNumero(cuota.interes) }}</td>
                                     <td class="text-muted">{{ formatNumero(cuota.saldo_capital) }}</td>
-                                    <td>
-                                        <strong>{{ formatNumero(cuota.total) }}</strong>
-                                        <small class="d-block text-muted">Programado</small>
-                                        <small class="d-block fw-bold" title="Capital + interés + multa registrados antes de condonar">Antes de cond.: {{ formatNumero(cuota.total_registrado_antes_condonacion) }}</small>
-                                    </td>
+                                    <td><DesgloseExigibleCuota :cuota="cuota" /></td>
                                     <td class="text-primary border-start">
                                         <template v-if="cuota.origen_desglose_interes !== 'sin_desglose_historico'">
                                             {{ formatNumero(cuota.interes_ordinario_generado) }}
@@ -253,6 +249,7 @@
                             <div class="cuota-resumen bg-white border rounded-3 p-2 mb-3">
                                 <div class="cuota-resumen__valores">
                                     <div><span>Programado</span><strong>{{ formatNumero(cuota_seleccionada.total) }} Bs</strong></div>
+                                    <div><span>Exigible neto</span><strong class="text-primary">{{ formatNumero(Number(cuota_seleccionada.total_registrado_antes_condonacion) - calcularTotalCondonado(cuota_seleccionada)) }} Bs</strong></div>
                                     <div><span>Cobrado</span><strong class="text-success">{{ formatNumero(calcularTotalPagado(cuota_seleccionada)) }} Bs</strong></div>
                                     <div><span>Condonado</span><strong>{{ formatNumero(calcularTotalCondonado(cuota_seleccionada)) }} Bs</strong></div>
                                     <div class="cuota-resumen__pendiente"><span>A pagar</span><strong>{{ formatNumero(cuota_seleccionada.total_a_pagar) }} Bs</strong></div>
@@ -383,9 +380,11 @@
 import moment from 'moment';
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import DesgloseExigibleCuota from './DesgloseExigibleCuota.vue';
 
 export default {
     name: 'DetallePlanPago',
+    components: { DesgloseExigibleCuota },
     props: {
         plan: {
             type: Object,
@@ -581,7 +580,7 @@ export default {
     }
     .cuota-resumen__valores {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(5, minmax(0, 1fr));
         gap: 0.4rem;
     }
     .cuota-resumen__valores > div {
@@ -640,6 +639,9 @@ export default {
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
         .cuota-resumen__valores > div:nth-child(2) {
+            border-right: 0;
+        }
+        .cuota-resumen__valores > div:nth-child(4) {
             border-right: 0;
         }
     }

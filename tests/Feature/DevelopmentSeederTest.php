@@ -66,11 +66,19 @@ class DevelopmentSeederTest extends TestCase
         }
         foreach (User::all() as $user) $this->assertTrue(Hash::check('admin123', $user->password));
         $this->assertTrue(User::where('name', 'administrador')->first()->tienePermiso('boveda'));
-        $this->assertTrue(User::where('name', 'cajero_user')->first()->tienePermiso('controlcaja'));
-        $this->assertFalse(User::where('name', 'cajero_user')->first()->tienePermiso('usuarios'));
-        $this->assertTrue(User::where('name', 'oficial_user')->first()->tienePermiso('codeudores'));
+        $this->assertTrue(User::where('name', 'lucia.rivera')->first()->tienePermiso('controlcaja'));
+        $this->assertFalse(User::where('name', 'lucia.rivera')->first()->tienePermiso('usuarios'));
+        $this->assertTrue(User::where('name', 'camila.ortiz')->first()->tienePermiso('codeudores'));
         $this->assertSame(24, DB::table('direccion')->count());
         $this->assertSame(24, DB::table('telefono')->count());
+        foreach (['mi_empresa', 'users', 'cliente', 'codeudor', 'socios', 'direccion', 'telefono',
+            'solicitud', 'garantia', 'pago_administrativo', 'pago', 'operaciones_financieras',
+            'ingreso', 'egreso', 'movimientos_caja', 'movimientos_boveda',
+            'transferencia_caja_boveda'] as $table) {
+            $data = mb_strtolower(DB::table($table)->get()->toJson());
+            $this->assertStringNotContainsString('demo', $data, $table);
+            $this->assertStringNotContainsString('fictici', $data, $table);
+        }
     }
 
     public function test_payments_match_installment_accumulators_and_scenario_dates(): void
@@ -127,6 +135,7 @@ class DevelopmentSeederTest extends TestCase
     public function test_flag_false_seeds_only_reference_data(): void
     {
         config(['app.seed_demo_data' => false]);
+        config(['app.bootstrap_admin_password' => 'Clave-operativa-segura-2026']);
         $this->seed(DatabaseSeeder::class);
         $this->assertDatabaseCount('cliente', 0);
         $this->assertDatabaseCount('users', 1);
@@ -149,7 +158,7 @@ class DevelopmentSeederTest extends TestCase
     {
         $this->seed(DatabaseSeeder::class);
         $plan = DB::table('plan_pago')->join('solicitud', 'solicitud.id', '=', 'plan_pago.id_solicitud')
-            ->join('cliente', 'cliente.id', '=', 'solicitud.id_cliente')->where('cliente.ci', 'DEMO-C014')->value('plan_pago.id');
+            ->join('cliente', 'cliente.id', '=', 'solicitud.id_cliente')->where('cliente.ci', '7593186')->value('plan_pago.id');
         $before = DB::table('pago')->get()->toJson();
         $result = app(\App\Services\Finance\Debt::class)->calculate($plan, '2026-09-24');
         $first = $result['cuotas']->first();

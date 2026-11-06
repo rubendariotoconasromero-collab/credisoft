@@ -18,14 +18,14 @@ class DevelopmentSeeder extends Seeder
 
     public static function enabled(): bool
     {
-        return app()->environment(['local', 'testing']) && config('app.seed_demo_data');
+        return SeedProfile::resolve() === 'demo';
     }
 
     public static function assertEmpty(): void
     {
         foreach (['cliente', 'codeudor', 'solicitud', 'plan_pago', 'caja', 'boveda', 'socios'] as $table) {
             if (DB::table($table)->exists()) {
-                throw new LogicException('La población DEMO requiere tablas de negocio vacías. Use migrate:fresh --seed únicamente en su BD de desarrollo; no se mezclaron datos.');
+                throw new LogicException('La población de escenarios requiere tablas de negocio vacías. Use migrate:fresh --seed únicamente en su BD de desarrollo; no se mezclaron datos.');
             }
         }
     }
@@ -49,27 +49,27 @@ class DevelopmentSeeder extends Seeder
             DB::rollBack();
             throw $exception;
         }
-        $this->command?->info('DEMO lista: 16 clientes, 8 codeudores, 13 solicitudes, 11 planes. Bóveda 38.257,00; caja A 2.100,00; caja B 1.500,00 Bs. Ver docs/poblacion-desarrollo.md.');
+        $this->command?->info('Escenarios listos: 16 clientes, 8 codeudores, 13 solicitudes, 11 planes. Bóveda 38.157,00; caja A 2.160,00 disponibles (2.100,00 en efectivo); caja B 1.500,00 Bs. Ver docs/poblacion-desarrollo.md.');
     }
 
     private function mixedCollection(): void
     {
         $previous = \Illuminate\Support\Facades\Auth::user();
         try {
-            $user = \App\Models\User::findOrFail($this->users['cajero_user']);
+            $user = \App\Models\User::findOrFail($this->users['lucia.rivera']);
             \Illuminate\Support\Facades\Auth::setUser($user);
             $plan = DB::table('plan_pago')->join('solicitud', 'solicitud.id', '=', 'plan_pago.id_solicitud')
-                ->join('cliente', 'cliente.id', '=', 'solicitud.id_cliente')->where('cliente.ci', 'DEMO-C005')->value('plan_pago.id');
+                ->join('cliente', 'cliente.id', '=', 'solicitud.id_cliente')->where('cliente.ci', '7294168')->value('plan_pago.id');
             $quota = DB::table('cuota')->where('id_plan_pago', $plan)->orderBy('numero')->value('id');
             $request = new \Illuminate\Http\Request([
                 'id_caja' => DB::table('caja')->where('id_usuario', $user->id)->where('estado', 1)->value('id'),
                 'id_plan_pago' => $plan, 'cuotas' => [['id_cuota' => $quota]],
                 'fecha_pago' => $this->today->toDateString(), 'modalidad_pago' => 'parcial', 'monto_aplicado' => '100.00',
-                'clave_operacion' => 'demo-cobro-mixto-001',
+                'clave_operacion' => 'cobro-mixto-inicial-001',
                 'partes' => [
                     ['forma_pago' => 'efectivo', 'monto' => '40.00'],
-                    ['forma_pago' => 'deposito', 'monto' => '30.00', 'referencia' => 'DEMO-DEP-001'],
-                    ['forma_pago' => 'transferencia', 'monto' => '30.00', 'referencia' => 'DEMO-QR-001'],
+                    ['forma_pago' => 'deposito', 'monto' => '30.00', 'referencia' => 'DEP-'.$this->today->format('ymd').'-0184'],
+                    ['forma_pago' => 'transferencia', 'monto' => '30.00', 'referencia' => 'QR-'.$this->today->format('ymd').'-0327'],
                 ],
             ]);
             app(\App\Services\Finance\Collections::class)->collect($request);
@@ -83,50 +83,87 @@ class DevelopmentSeeder extends Seeder
 
     private function people(): array
     {
-        $activity = DB::table('actividades')->orderBy('id')->value('nombre');
-        $labels = [1 => 'Ana - Nuevo cliente', 'Bruno - Solicitud pendiente', 'Carla - Solicitud inactiva',
-            'Diego - Por desembolsar', 'Elena - Vigente semanal', 'Fabian - Vigente quincenal',
-            'Gabriela - Vigente mensual', 'Hugo - Credito vencido', 'Irene - Pago parcial',
-            'Jorge - Solo interes', 'Karla - Solo mora', 'Luis - Interes y mora',
-            'Marta - Credito cancelado', 'Nicolas - Condonacion', 'Olga - Cliente inactivo', 'Pablo - Sin credito'];
+        $activities = DB::table('actividades')->orderBy('id')->pluck('nombre')->all();
+        $people = [
+            1 => ['Ana María Vargas Quispe', '7128043', 'Femenino'],
+            2 => ['Bruno Alejandro Salazar Rocha', '6851327', 'Masculino'],
+            3 => ['Carla Fernanda Ríos Mendoza', '7482036', 'Femenino'],
+            4 => ['Diego Armando Cabrera López', '7016854', 'Masculino'],
+            5 => ['Elena Patricia Guzmán Vera', '7294168', 'Femenino'],
+            6 => ['Fabián Mauricio Herrera Soria', '6748901', 'Masculino'],
+            7 => ['Gabriela Lucía Flores Arce', '7531069', 'Femenino'],
+            8 => ['Hugo Daniel Rojas Méndez', '6982475', 'Masculino'],
+            9 => ['Irene Valeria Choque Aguilar', '7163842', 'Femenino'],
+            10 => ['Jorge Luis Molina Paredes', '7428150', 'Masculino'],
+            11 => ['Karla Beatriz Sandoval Céspedes', '6835097', 'Femenino'],
+            12 => ['Luis Fernando Suárez Velasco', '7316548', 'Masculino'],
+            13 => ['Marta Isabel Quiroga Salinas', '7059283', 'Femenino'],
+            14 => ['Nicolás Adrián Vaca Rivero', '7593186', 'Masculino'],
+            15 => ['Olga Teresa Barrientos Cruz', '6917425', 'Femenino'],
+            16 => ['Pablo Andrés Mendoza Ávila', '7258031', 'Masculino'],
+        ];
         $clients = [];
-        foreach ($labels as $number => $label) {
-            $data = $this->person('DEMO '.sprintf('%02d', $number).' - '.$label, 'DEMO-C'.sprintf('%03d', $number), $activity);
-            $data['sexo'] = in_array($number, [1, 3, 5, 7, 9, 11, 13, 15]) ? 'Femenino' : 'Masculino';
+        foreach ($people as $number => [$name, $ci, $sex]) {
+            $data = $this->person($name, $ci, $activities[($number * 37) % count($activities)], $number, $sex);
             $clients[$number] = DB::table('cliente')->insertGetId($data + [
                 'estado' => $number === 15 ? 0 : 1, 'created_at' => $this->today, 'updated_at' => $this->today,
             ]);
             $this->contact('id_cliente', $clients[$number], $number);
         }
-        for ($number = 1; $number <= 8; $number++) {
-            $id = DB::table('codeudor')->insertGetId($this->person('DEMO '.($number <= 4 ? 'Garante ' : 'Codeudor ').sprintf('%02d', $number),
-                'DEMO-G'.sprintf('%03d', $number), $activity) + ['tipo' => $number <= 4 ? 'Garante' : 'Codeudor', 'estado' => 1]);
+        $guarantors = [
+            ['Ricardo Alberto Peña Ortiz', '6572038', 'Masculino'],
+            ['Verónica Isabel Arias Rojas', '7149062', 'Femenino'],
+            ['Miguel Ángel Poma Castro', '6895174', 'Masculino'],
+            ['Rosa Elena Méndez Peña', '7351806', 'Femenino'],
+            ['César Augusto Terrazas Lima', '7084259', 'Masculino'],
+            ['Daniela Paola Flores Vargas', '7620913', 'Femenino'],
+            ['Fernando Javier Cuéllar Soto', '6817304', 'Masculino'],
+            ['María Eugenia Roca Suárez', '7465821', 'Femenino'],
+        ];
+        foreach ($guarantors as $index => [$name, $ci, $sex]) {
+            $number = $index + 1;
+            $id = DB::table('codeudor')->insertGetId($this->person($name, $ci,
+                $activities[(($number + 16) * 37) % count($activities)], $number + 16, $sex)
+                + ['tipo' => $number <= 4 ? 'Garante' : 'Codeudor', 'estado' => 1]);
             $this->contact('id_codeudor', $id, $number + 16);
         }
-        foreach ([1, 2] as $number) {
-            DB::table('socios')->insert(['nombres' => 'Socio DEMO '.$number, 'apellidos' => 'Pruebas',
-                'ci' => 'DEMO-S00'.$number, 'email' => 'socio'.$number.'@example.test', 'estado' => 1,
+        foreach ([
+            ['Roberto Carlos', 'Salinas Gutiérrez', '7264813', 'roberto.salinas@horizonteandino.test'],
+            ['María Teresa', 'Vargas Céspedes', '6942057', 'maria.vargas@horizonteandino.test'],
+        ] as [$names, $lastNames, $ci, $email]) {
+            DB::table('socios')->insert(['nombres' => $names, 'apellidos' => $lastNames,
+                'ci' => $ci, 'email' => $email, 'estado' => 1,
                 'created_at' => $this->today, 'updated_at' => $this->today]);
         }
         return $clients;
     }
 
-    private function person(string $name, string $ci, string $activity): array
+    private function person(string $name, string $ci, string $activity, int $number, string $sex): array
     {
-        return ['nombre' => $name, 'ci' => $ci, 'fecha_nacimiento' => '1990-05-15', 'lugar_expedicion' => 'SC',
-            'sexo' => 'Masculino', 'estado_civil' => 'soltero/a', 'actividad' => $activity,
-            'vivienda' => 'Casa propia', 'ingreso_mensual' => 4000, 'imagen' => null];
+        return ['nombre' => $name, 'ci' => $ci,
+            'fecha_nacimiento' => sprintf('%04d-%02d-%02d', 1968 + ($number * 3) % 28,
+                1 + ($number * 5) % 12, 1 + ($number * 7) % 27),
+            'lugar_expedicion' => 'SC', 'sexo' => $sex,
+            'estado_civil' => $number % 3 === 0 ? 'soltero/a' : 'casado/a', 'actividad' => $activity,
+            'vivienda' => $number % 4 === 0 ? 'Alquiler' : 'Casa propia',
+            'ingreso_mensual' => 2400 + $number * 175, 'imagen' => null];
     }
 
     private function contact(string $owner, int $id, int $number): void
     {
+        $streets = ['Calle Bolívar', 'Av. Circunvalación', 'Calle Sucre', 'Av. Barrientos',
+            'Calle Warnes', 'Av. Guabirá', 'Calle Potosí', 'Av. 25 de Mayo'];
+        $zones = ['Centro', 'Villa Busch', 'Norte', 'Santa Rosa', 'Los Ángeles', 'San José'];
+        $references = ['Cerca de la plaza', 'Frente a la farmacia', 'A media cuadra del mercado',
+            'Junto al centro de salud', 'Esquina con la avenida principal', 'Frente a la unidad educativa'];
         DB::table('direccion')->insert([$owner => $id, 'tipo' => 'Casa', 'departamento' => 'Santa Cruz',
-            'ciudad' => 'Montero', 'zona' => 'DEMO', 'descripcion' => 'Dirección ficticia '.$number.' para pruebas',
-            'referencia' => 'No corresponde a una persona real',
+            'ciudad' => 'Montero', 'zona' => $zones[($number - 1) % count($zones)],
+            'descripcion' => $streets[($number - 1) % count($streets)].' N.º '.(100 + $number * 13),
+            'referencia' => $references[($number - 1) % count($references)],
             'lat' => -17.338440 + ($number - 1) * 0.0001, 'lng' => -63.246961,
             'created_at' => $this->today, 'updated_at' => $this->today]);
         DB::table('telefono')->insert([$owner => $id, 'tipo' => 'Numero telefono',
-            'numero' => sprintf('0000%04d', $number), 'observacion' => 'Número ficticio no operativo',
+            'numero' => sprintf('7%07d', 1300000 + $number * 3791), 'observacion' => null,
             'created_at' => $this->today, 'updated_at' => $this->today]);
     }
 
@@ -144,15 +181,15 @@ class DevelopmentSeeder extends Seeder
                 'importe_solicitud' => 1000, 'moneda' => 'Bolivianos', 'lapso_capital' => $interval,
                 'nro_cuotas' => $term, 'tasa' => 10, 'tipo_tasa' => 'fija', 'fecha' => $start,
                 'fecha_desembolso' => $start, 'fecha_primera_cuota' => $start->addDays($step),
-                'destino_prestamo' => 'Capital de trabajo ficticio', 'tipo_garantia' => 'Garante Personal',
+                'destino_prestamo' => 'Capital de trabajo para actividad comercial', 'tipo_garantia' => 'Garante Personal',
                 'tipo_desembolso' => 'Efectivo', 'estado' => $number === 2 ? 1 : ($number === 3 ? 0 : 2),
-                'id_cliente' => $clients[$number], 'id_usuario' => $this->users[$number % 2 ? 'oficial_user' : 'oficial2_user'],
+                'id_cliente' => $clients[$number], 'id_usuario' => $this->users[$number % 2 ? 'camila.ortiz' : 'rodrigo.mendez'],
                 'monto_pago_adm' => 10, 'desembolso' => $number >= 5 ? 1 : 0,
-                'observacion' => $number === 3 ? 'Solicitud inactiva ficticia DEMO' : '', 'tipo_solicitud' => 'Nuevo',
+                'observacion' => $number === 3 ? 'Solicitud archivada por desistimiento del cliente' : '', 'tipo_solicitud' => 'Nuevo',
                 'created_at' => $start, 'updated_at' => $start,
             ]);
             DB::table('solicitud_codeudor')->insert(['id_solicitud' => $request, 'id_codeudor' => $guarantors[($number - 2) % 8]]);
-            DB::table('garantia')->insert(['id_solicitud' => $request, 'descripcion' => 'Garantía personal ficticia DEMO',
+            DB::table('garantia')->insert(['id_solicitud' => $request, 'descripcion' => 'Garantía personal respaldada por codeudor',
                 'created_at' => $start, 'updated_at' => $start]);
             if ($number < 4) continue;
             $plan = DB::table('plan_pago')->insertGetId([
@@ -174,7 +211,7 @@ class DevelopmentSeeder extends Seeder
             }
             if ($number === 4) continue;
             $this->event($start, 'desembolso', 1000, ['id_plan_pago' => $plan]);
-            $this->event($start, 'pago_administrativo', 10, ['id_plan_pago' => $plan, 'descripcion' => 'Gastos administrativos DEMO']);
+            $this->event($start, 'pago_administrativo', 10, ['id_plan_pago' => $plan, 'descripcion' => 'Gastos administrativos de apertura']);
             if ($number === 9) $this->payment($number, $plan, $cuotas[1], $start->addDays(7), 100, 25, 0, 'parcial');
             if ($number === 10) $this->payment($number, $plan, $cuotas[1], $start->addDays(7), 0, 25, 0, 'solo_interes');
             if ($number === 11) $this->payment($number, $plan, $cuotas[1], $this->today->subDay(), 0, 0, 6, 'solo_mora');
@@ -215,10 +252,10 @@ class DevelopmentSeeder extends Seeder
         if ($complete) DB::table('plan_pago')->where('id', $plan)->update(['fecha_ultima_amortizacion' => $date]);
         $this->event($date, 'pago', $capital + $interest + $mora, [
             '_operation' => ['plan' => $plan, 'antes' => $before, 'detalle' => $detail],
-            'id_cuota' => $cuota, 'codigo_transaccion' => 'DEMO-'.sprintf('%02d', $scenario).'-C'.$cuota,
+            'id_cuota' => $cuota, 'codigo_transaccion' => 'RC-'.sprintf('%04d', $scenario).'-'.sprintf('%05d', $cuota),
             'pago_capital' => $capital, 'pago_interes' => $interest, 'pago_mora' => $mora,
             'monto_condonado' => $waivedInterest + $waivedMora, 'monto_condonado_interes' => $waivedInterest,
-            'monto_condonado_mora' => $waivedMora, 'motivo_condonacion' => $waivedInterest + $waivedMora ? 'Condonación ficticia DEMO' : '',
+            'monto_condonado_mora' => $waivedMora, 'motivo_condonacion' => $waivedInterest + $waivedMora ? 'Acuerdo de regularización aprobado' : '',
             'forma_pago' => 'efectivo', 'tipo_pago' => $type, 'estado' => 1,
         ]);
     }
@@ -233,11 +270,11 @@ class DevelopmentSeeder extends Seeder
         $initial = $this->today->subDays(60);
         $this->vault = DB::table('boveda')->insertGetId(['saldo_actual' => 50000, 'fecha_apertura' => $initial,
             'id_usuario' => $this->users['administrador'], 'created_at' => $initial, 'updated_at' => $initial]);
-        $this->vaultMovement('ingreso', 50000, 'Aporte de capital DEMO', $initial, $this->users['administrador']);
+        $this->vaultMovement('ingreso', 50000, 'Aporte inicial de capital', $initial, $this->users['administrador']);
         ksort($this->events);
         foreach ($this->events as $day => $events) {
             $date = CarbonImmutable::parse($day);
-            $user = $this->users['cajero_user'];
+            $user = $this->users['lucia.rivera'];
             $cash = $this->openCash($date, $user, 5000);
             $income = 0; $expense = 0;
             foreach ($events as $event) {
@@ -267,10 +304,10 @@ class DevelopmentSeeder extends Seeder
                 DB::table($table)->insert($payload);
                 if ($table === 'desembolso') $expense += $amount; else $income += $amount;
                 $this->cashMovement($cash, $user, $table === 'desembolso' ? 'egreso' : 'ingreso', $amount,
-                    'DEMO '.$table.' '.($data['codigo_transaccion'] ?? 'plan '.$data['id_plan_pago']), $date->setTime(12, 0));
+                    ucfirst(str_replace('_', ' ', $table)).' '.($data['codigo_transaccion'] ?? 'crédito '.$data['id_plan_pago']), $date->setTime(12, 0));
             }
             $remaining = 5000 + $income - $expense;
-            if ($remaining < 0) throw new LogicException('Caja histórica DEMO sin fondos.');
+            if ($remaining < 0) throw new LogicException('Caja histórica sin fondos.');
             $closing = $date->setTime(23, 0);
             DB::table('caja')->where('id', $cash)->update(['estado' => 0, 'fechahora_cierre' => $closing,
                 'monto_final' => $remaining, 'efectivo_total' => $remaining, 'efectivo_venta' => $income,
@@ -278,31 +315,31 @@ class DevelopmentSeeder extends Seeder
                 'updated_at' => $closing]);
             $this->vaultCents += $remaining * 100;
             // Canonical transfer wording prevents counting the seeded return as external income.
-            $this->vaultMovement('ingreso', $remaining, 'Transferencia desde Caja - Retorno de Caja al Cierre DEMO', $closing, $user);
-            $this->cashMovement($cash, $user, 'egreso', $remaining, 'Retorno a Bóveda al Cierre DEMO', $closing);
+            $this->vaultMovement('ingreso', $remaining, 'Transferencia desde Caja - Retorno de Caja al Cierre', $closing, $user);
+            $this->cashMovement($cash, $user, 'egreso', $remaining, 'Retorno a Bóveda al Cierre', $closing);
             $this->transfer($cash, 'caja_a_boveda', $remaining, $closing);
         }
-        $cashA = $this->openCash($this->today, $this->users['cajero_user'], 2000);
-        $this->openCash($this->today, $this->users['cajero2_user'], 1500);
-        foreach ([['ingreso', 100, 'Otro ingreso en efectivo DEMO'], ['egreso', 40, 'Gastos de papelería DEMO']] as [$table, $amount, $description]) {
+        $cashA = $this->openCash($this->today, $this->users['lucia.rivera'], 2000);
+        $this->openCash($this->today, $this->users['andres.flores'], 1500);
+        foreach ([['ingreso', 100, 'Ingreso extraordinario en efectivo'], ['egreso', 40, 'Gastos de papelería']] as [$table, $amount, $description]) {
             DB::table($table)->insert(['monto' => $amount, 'descripcion' => $description, 'estado' => 1,
-                'fecha' => $this->today, 'id_usuario' => $this->users['cajero_user'], 'id_caja' => $cashA,
+                'fecha' => $this->today, 'id_usuario' => $this->users['lucia.rivera'], 'id_caja' => $cashA,
                 'created_at' => $this->today, 'updated_at' => $this->today]);
-            $this->cashMovement($cashA, $this->users['cajero_user'], $table, $amount, $description, $this->today);
+            $this->cashMovement($cashA, $this->users['lucia.rivera'], $table, $amount, $description, $this->today);
         }
         DB::table('boveda')->where('id', $this->vault)->update(['saldo_actual' => $this->vaultCents / 100, 'updated_at' => $this->today]);
     }
 
     private function openCash(CarbonImmutable $date, int $user, int $amount): int
     {
-        if ($this->vaultCents < $amount * 100) throw new LogicException('Bóveda DEMO sin fondos.');
+        if ($this->vaultCents < $amount * 100) throw new LogicException('Bóveda sin fondos.');
         $id = DB::table('caja')->insertGetId(['fechahora_apertura' => $date, 'monto_inicial' => $amount,
             'id_usuario' => $user, 'estado' => 1, 'monto_final' => 0, 'efectivo_total' => 0, 'deposito_total' => 0,
             'efectivo_venta' => 0, 'deposito_venta' => 0, 'efectivo_gasto' => 0, 'deposito_gasto' => 0,
             'total_ingreso' => 0, 'total_egreso' => 0, 'diferencia' => 0, 'created_at' => $date, 'updated_at' => $date]);
         $this->vaultCents -= $amount * 100;
-        $this->vaultMovement('salida', $amount, 'Apertura de caja (Transferencia a Caja) DEMO', $date, $user);
-        $this->cashMovement($id, $user, 'ingreso', $amount, 'Apertura de caja DEMO', $date);
+        $this->vaultMovement('salida', $amount, 'Apertura de caja (Transferencia a Caja)', $date, $user);
+        $this->cashMovement($id, $user, 'ingreso', $amount, 'Apertura de caja', $date);
         $this->transfer($id, 'boveda_a_caja', $amount, $date);
         return $id;
     }
@@ -310,7 +347,7 @@ class DevelopmentSeeder extends Seeder
     private function transfer(int $cash, string $type, int $amount, CarbonImmutable $date): void
     {
         DB::table('transferencia_caja_boveda')->insert(['id_caja' => $cash, 'id_boveda' => $this->vault,
-            'tipo_transferencia' => $type, 'monto' => $amount, 'descripcion' => 'Transferencia interna DEMO',
+            'tipo_transferencia' => $type, 'monto' => $amount, 'descripcion' => 'Transferencia interna',
             'fecha' => $date, 'created_at' => $date, 'updated_at' => $date]);
     }
 

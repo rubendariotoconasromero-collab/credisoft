@@ -107,7 +107,7 @@ $monto_pago_literal = $formatter->toInvoice($total_pagado, 2, 'Bolivianos');
         <div class="header">
             {!! $html_logo !!}
             <h2>RECIBO DE PAGO</h2>
-            <p><strong>{{ strtoupper(empty($empresa->nombre) ? 'EMPRESA DEMO' : $empresa->nombre) }}</strong></p>
+            <p><strong>{{ strtoupper(empty($empresa->nombre) ? 'INSTITUCIÓN FINANCIERA' : $empresa->nombre) }}</strong></p>
             <p>{{ empty($empresa->direccion) ? '' : $empresa->direccion }}</p>
             <p>Telf: {{ empty($empresa->telefono) ? '' : $empresa->telefono }}</p>
         </div>

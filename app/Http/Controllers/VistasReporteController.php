@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use DB;
 use Mpdf\Mpdf;
 use App\Traits\CalculaAmortizaciones;
+use App\Services\Finance\CreditExtract;
 
 
 class VistasReporteController extends Controller
@@ -82,77 +83,8 @@ class VistasReporteController extends Controller
     }
 
     public function getDetalleCreditoExtracto(Request $request){
-        $id_plan_pago = $request->id_plan_pago;
-
-        // 1. Información del crédito y cliente
-        $credito = DB::table('plan_pago')
-            ->join('solicitud', 'solicitud.id', '=', 'plan_pago.id_solicitud')
-            ->join('cliente', 'cliente.id', '=', 'solicitud.id_cliente')
-            ->join('users', 'users.id', '=', 'solicitud.id_usuario')
-            ->select(
-                'plan_pago.id',
-                'plan_pago.total_pagar',
-                'plan_pago.fecha_inicio',
-                'plan_pago.fecha_fin',
-                'plan_pago.estado',
-                'plan_pago.fecha_registro',
-                'plan_pago.desembolso',
-                'plan_pago.pago_administrativo',
-                'plan_pago.fecha_ultima_amortizacion',
-                'solicitud.importe_solicitud',
-                'solicitud.moneda',
-                'solicitud.tasa',
-                'solicitud.nro_cuotas',
-                'solicitud.lapso_capital',
-                'solicitud.destino_prestamo',
-                'solicitud.tipo_garantia',
-                'solicitud.tipo_desembolso',
-                'cliente.nombre as cliente_nombre',
-                'cliente.ci as cliente_ci',
-                'cliente.lugar_expedicion as cliente_expedicion',
-                'cliente.actividad as cliente_actividad',
-                'cliente.vivienda as cliente_vivienda',
-                'cliente.ingreso_mensual as cliente_ingreso',
-                'users.personal as asesor_nombre'
-            )
-            ->where('plan_pago.id', $id_plan_pago)
-            ->first();
-
-        if (!$credito) {
-            return response()->json(['message' => 'Crédito no encontrado'], 404);
-        }
-
-        // 2. Cuotas con sus pagos combinados
-        $cuotas = DB::table('cuota')
-            ->where('id_plan_pago', $id_plan_pago)
-            ->orderBy('numero', 'asc')
-            ->get();
-
-        foreach ($cuotas as $cuota) {
-            $cuota->pagos = DB::table('pago')
-                ->join('users', 'users.id', '=', 'pago.id_usuario')
-                ->select(
-                    'pago.id',
-                    'pago.codigo_transaccion',
-                    'pago.fecha_pago',
-                    'pago.monto_pago',
-                    'pago.multa_total',
-                    'pago.pago_capital',
-                    'pago.pago_interes',
-                    'pago.pago_mora',
-                    'pago.forma_pago',
-                    'users.personal as cajero_nombre'
-                )
-                ->where('pago.id_cuota', $cuota->id)
-                ->where('pago.estado', 1) // Activo
-                ->orderBy('pago.fecha_pago', 'asc')
-                ->get();
-        }
-
-        return response()->json([
-            'credito' => $credito,
-            'cuotas' => $cuotas
-        ]);
+        $request->validate(['id_plan_pago' => 'required|integer|min:1']);
+        return response()->json(app(CreditExtract::class)->build((int) $request->id_plan_pago));
     }
 
     public function getCreditosMoraRep(Request $request)
@@ -296,50 +228,12 @@ class VistasReporteController extends Controller
     }
 
     public function generarReporteExtracto(Request $request){
-        $informacion=DB::table('solicitud')
-        ->join('cliente', 'cliente.id', '=', 'solicitud.id_cliente')
-        ->join('users', 'users.id', '=', 'solicitud.id_usuario')
-        ->join('plan_pago', 'plan_pago.id_solicitud', '=', 'solicitud.id')
-        ->join('cuota', 'cuota.id_plan_pago', '=', 'plan_pago.id')
-        ->where('plan_pago.id', $request->id_plan_pago)
-        ->select('solicitud.id','solicitud.importe_solicitud', 'solicitud.moneda', 'solicitud.lapso_capital', 'solicitud.nro_cuotas',
-        'solicitud.tasa', 'solicitud.fecha_desembolso', 'solicitud.fecha_primera_cuota', 'solicitud.destino_prestamo',
-        'solicitud.tipo_garantia','solicitud.tipo_desembolso','solicitud.id_cliente', 'solicitud.id_usuario', 'cliente.nombre as cliente',
-        'cliente.ci', 'cliente.lugar_expedicion',
-        'users.name as nombre_asesor', 'plan_pago.estado', 'users.personal')
-        ->get();
-
-
-        $cuotas = DB::table('plan_pago')
-        ->join('cuota', 'plan_pago.id', '=', 'cuota.id_plan_pago')
-        ->select('cuota.*')
-        ->where('plan_pago.id', $request->id_plan_pago)
-        ->orderBy('cuota.numero', 'asc')
-        ->get();
-
-        foreach ($cuotas as $cuota) {
-            $cuota->pagos = DB::table('pago')
-                ->where('pago.id_cuota', $cuota->id)
-                ->where('pago.estado', 1) // Activo
-                ->orderBy('pago.fecha_pago', 'asc')
-                ->get();
-        }
-
-
-
-         // Carga la vista HTML para el reporte
-         $data  = [
-             'informacion' => $informacion,
-             'id_plan_pago' => $request->id_plan_pago,
-             'detalles' => $cuotas,
-             'usuario' => auth()->user()->name,
-             'fecha_reporte' => now()->format('d/m/Y'),
-            //  'cantidad_planes'=>$cantidad_registros,
-            //  'planes_pago'=>$planes_pago,
-             
-         ];
-
-         return $this->generatePDF($data, 'reporte_vistas.reporte_extracto_credito', 'reporte_extrato_credito');
+        $request->validate(['id_plan_pago' => 'required|integer|min:1']);
+        $extract = app(CreditExtract::class)->build((int) $request->id_plan_pago);
+        return $this->generatePDF($extract + [
+            'usuario' => auth()->user()->name,
+            'fecha_reporte' => now()->format('d/m/Y'),
+        ], 'reporte_vistas.reporte_extracto_credito', 'reporte_extrato_credito', 'L');
     }
 
     public function indexHistCreditoMora(){

@@ -1,5 +1,5 @@
 {
-    "generated_at": "2026-09-24T16:12:26-04:00",
+    "generated_at": "2026-11-06T16:34:48-04:00",
     "mysql": "8.4.3",
     "command": "migrate:fresh --seed (isolated MySQL; two runs)",
     "success": true,
@@ -19,12 +19,12 @@
             "movimientos_boveda": 21
         },
         "open_cash": {
-            "2": 2100,
+            "2": 2160,
             "3": 1500
         },
-        "vault": 38257,
-        "physical_total": 41857,
-        "book_capital": "41917.00",
+        "vault": 38157,
+        "available_total": 41817,
+        "book_capital": "41817.00",
         "amortization_rows_checked": 42,
         "security_checks": {
             "assigned_portfolio": true,

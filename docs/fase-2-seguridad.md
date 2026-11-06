@@ -87,13 +87,13 @@ En el servidor real: respaldar BD y expedientes; desplegar con PHP compatible; c
 
 Las correcciones financieras de fase 3 siguen pendientes: cálculo autoritativo de la deuda, separación efectivo/bancos, anulación contable consistente, conciliación de retornos, idempotencia de desembolsos y pruebas de concurrencia completas. La nueva protección de acceso no corrige por sí sola esas reglas.
 
-## Prueba manual con la población DEMO
+## Prueba manual con la población de escenarios
 
 Usar la URL de Apache/Laragon y dos navegadores o perfiles separados. Las cuentas y escenarios están en `poblacion-desarrollo.md`.
 
-1. Entrar como `cajero_user` y `cajero2_user`. Confirmar que cada uno ve su propio saldo operativo (2.060 y 1.500 Bs inicialmente) y registra sus ingresos en su caja.
+1. Entrar como `lucia.rivera` y `andres.flores`. Confirmar que cada uno ve su propio saldo operativo (2.160 y 1.500 Bs inicialmente) y registra sus ingresos en su caja.
 2. Abrir el detalle de la caja ajena: el botón de cierre no debe estar disponible. Un POST directo a `/close_caja` con la caja ajena debe devolver 403 sin cambiar saldos.
-3. Entrar como `encargado_user`: abrir Caja para consultar; no deben aparecer los botones de apertura, ingresos, egresos o cobros. El administrador tampoco puede cerrar una caja ajena.
+3. Entrar como `patricia.suarez`: abrir Caja para consultar; no deben aparecer los botones de apertura, ingresos, egresos o cobros. El administrador tampoco puede cerrar una caja ajena.
 4. Entrar como cada oficial. Comparar solicitudes y créditos; modificar la URL para abrir un ID del otro oficial debe fallar. Revisar también cuotas, garantías y respaldos.
 5. Desactivar un usuario desde otra sesión. Su siguiente petición debe perder acceso. Repetir con el rol y con un permiso individual.
 6. Subir una foto PNG/JPEG; intentar luego TXT, PHP o un archivo de más de 2 MB. La foto anterior debe conservarse. Copiar la URL y abrirla sin sesión: debe pedir login.

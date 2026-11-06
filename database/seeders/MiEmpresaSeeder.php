@@ -13,13 +13,22 @@ class MiEmpresaSeeder extends Seeder
     public function run(): void
     {
         if (DB::table('mi_empresa')->exists()) return;
-        DB::table('mi_empresa')->insert([
+        $identity = SeedProfile::resolve() === 'demo'
+            ? [
+                'nombre' => 'Financiera Horizonte Andino S.R.L.',
+                'nit' => '4837162054',
+                'direccion' => 'Av. Monseñor Rivero 318, Santa Cruz de la Sierra',
+                'telefono' => '33468215',
+                'email' => 'contacto@horizonteandino.test',
+            ]
+            : config('app.seed_operational.company');
+        foreach (['nombre', 'nit', 'direccion', 'telefono', 'email'] as $field) {
+            if (!is_string($identity[$field] ?? null) || trim($identity[$field]) === '') {
+                throw new \LogicException("Configure SEED_COMPANY para el campo {$field}.");
+            }
+        }
+        DB::table('mi_empresa')->insert($identity + [
             'id' => 1,
-            'nombre' => 'Credisoft DEMO',
-            'nit' => '0000000000',
-            'direccion' => 'Dirección ficticia de desarrollo - Montero',
-            'telefono' => '00000000',
-            'email' => 'empresa@example.test',
             'logo' => 'logo_sistema_codesoft.png',
             'created_at' => now(),
             'updated_at' => now(),

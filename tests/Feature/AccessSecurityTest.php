@@ -88,7 +88,7 @@ class AccessSecurityTest extends TestCase
 
     public function test_financial_supervisor_can_read_the_history_routes_exposed_by_the_menu(): void
     {
-        $user = User::where('name', 'encargado_user')->firstOrFail();
+        $user = User::where('name', 'patricia.suarez')->firstOrFail();
         $this->assertTrue($user->tienePermiso('consultasfinancieras'));
         $this->assertFalse($user->tienePermiso('controlcaja'));
         $this->actingAs($user);
@@ -107,7 +107,7 @@ class AccessSecurityTest extends TestCase
 
     public function test_reads_and_exports_require_module_permission(): void
     {
-        $user = User::where('name', 'cajero_user')->firstOrFail();
+        $user = User::where('name', 'lucia.rivera')->firstOrFail();
         $this->actingAs($user);
         foreach (['/get_clientes_paginate', '/clientes_pdf', '/get_usuarios', '/libro-mayor', '/reportes/libro-mayor/excel', '/get_permisos'] as $url) {
             $this->getJson($url)->assertForbidden();
@@ -117,7 +117,7 @@ class AccessSecurityTest extends TestCase
 
     public function test_request_officer_can_create_a_guarantor_from_the_request_flow(): void
     {
-        $user = User::where('name', 'oficial_user')->firstOrFail();
+        $user = User::where('name', 'camila.ortiz')->firstOrFail();
         $codeudoresPermission = DB::table('permiso')->where('nombre', 'codeudores')->value('id');
         DB::table('permiso_rol')->where('id_rol', $user->id_rol)->where('id_permiso', $codeudoresPermission)->delete();
         $user->unsetRelation('rol');
@@ -142,7 +142,7 @@ class AccessSecurityTest extends TestCase
 
     public function test_new_credit_requests_only_accept_bolivianos(): void
     {
-        $user = User::where('name', 'oficial_user')->firstOrFail();
+        $user = User::where('name', 'camila.ortiz')->firstOrFail();
         $client = DB::table('cliente')->first();
         $payload = [
             'importe_solicitud' => 1500, 'moneda' => 'Dolares', 'lapso_capital' => 'Mensual',
@@ -164,7 +164,7 @@ class AccessSecurityTest extends TestCase
     {
         $cash = DB::table('caja')->where('estado', 1)->first();
         $balance = DB::table('boveda')->value('saldo_actual');
-        foreach (['administrador', 'cajero2_user', 'encargado_user'] as $login) {
+        foreach (['administrador', 'andres.flores', 'patricia.suarez'] as $login) {
             $this->actingAs(User::where('name', $login)->firstOrFail());
             foreach (['/close_caja', '/actualizar_desembolso', '/guardar_pago_adm', '/registrar_pago_adm_desembolso', '/save_ingreso', '/save_gasto'] as $url) {
                 $this->postJson($url, ['id_caja' => $cash->id])->assertForbidden();
@@ -176,7 +176,7 @@ class AccessSecurityTest extends TestCase
 
     public function test_cash_selection_uses_current_user_and_refuses_closed_box(): void
     {
-        $user = User::where('name', 'cajero2_user')->firstOrFail();
+        $user = User::where('name', 'andres.flores')->firstOrFail();
         $cash = DB::table('caja')->where('estado', 1)->where('id_usuario', $user->id)->first();
         $this->actingAs($user)->getJson('/caja/saldo-actual')->assertOk()->assertJsonPath('id_caja', $cash->id);
         $this->getJson('/caja_abierta')->assertOk()->assertJsonPath('usuario_actual', 1);
@@ -190,7 +190,7 @@ class AccessSecurityTest extends TestCase
 
     public function test_official_cannot_read_or_modify_another_portfolio(): void
     {
-        $user = User::where('name', 'oficial_user')->firstOrFail();
+        $user = User::where('name', 'camila.ortiz')->firstOrFail();
         $other = DB::table('solicitud')->where('id_usuario', '!=', $user->id)->first();
         $plan = DB::table('plan_pago')->where('id_solicitud', $other->id)->first();
         if (!$plan) {

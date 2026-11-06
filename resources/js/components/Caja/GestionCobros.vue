@@ -324,7 +324,7 @@
                                 <strong class="fs-6 text-primary">{{ formatNumero(totalPendientePlan) }} Bs</strong>
                             </div>
                             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-2">
-                                <p class="small text-muted mb-0">Seleccione las cuotas en orden. Los importes cobrados no incluyen condonaciones.</p>
+                                <p class="small text-muted mb-0">Seleccione cuotas en orden. Programado + variación − condonado = exigible neto; este se divide en cobrado y pendiente. La variación refleja interés devengado, recargos o interés futuro aún no devengado.</p>
                                 <span v-if="selectedCuotas.length" class="badge bg-success rounded-pill px-3">
                                     {{ selectedCuotas.length }} cuota(s) seleccionada(s) · {{ formatNumero(totalPagar) }} Bs
                                 </span>
@@ -352,7 +352,7 @@
                                         <th>Capital</th>
                                         <th>Interés fijo</th>
                                         <th>Saldo cap.</th>
-                                        <th title="Capital e interés fijo programados; no incluye recargos">Total Bs</th>
+                                        <th title="Importe programado más variación al corte, menos condonaciones">Cálculo del cobro<small class="d-block">En Bs</small></th>
                                         <th class="text-primary border-start">Int. devengado<small class="d-block">Generado</small></th>
                                         <th class="text-danger">Int. moratorio<small class="d-block">Generado</small></th>
                                         <th class="border-start border-end">Int. acumulado<small class="d-block">Total registrado</small></th>
@@ -375,11 +375,7 @@
                                         </td>
                                         <td>{{ formatNumero(cuota.interes) }}</td>
                                         <td class="text-muted">{{ formatNumero(cuota.saldo_capital) }}</td>
-                                        <td>
-                                            <strong>{{ formatNumero(cuota.total) }}</strong>
-                                            <small class="d-block text-muted">Programado</small>
-                                            <small class="d-block fw-bold">Antes de cond.: {{ formatNumero(cuota.total_registrado_antes_condonacion) }}</small>
-                                        </td>
+                                        <td><DesgloseExigibleCuota :cuota="cuota" /></td>
                                         <td class="text-primary border-start">
                                             <template v-if="cuota.origen_desglose_interes !== 'sin_desglose_historico'">
                                                 {{ formatNumero(cuota.interes_ordinario_generado) }}
@@ -451,43 +447,45 @@
         </div>
 
        
-        <div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-            <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true" data-bs-backdrop="static">
+            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content border-0 shadow-lg">
                     
-                    <div class="modal-header bg-success text-white py-3">
+                    <div class="modal-header bg-success text-white py-2 px-3">
                         <div class="d-flex align-items-center">
-                            <div class="bg-white text-success rounded-circle d-flex justify-content-center align-items-center me-3" style="width: 40px; height: 40px;">
-                                <i class="fas fa-hand-holding-usd fs-5"></i>
+                            <div class="bg-white text-success rounded-circle d-flex justify-content-center align-items-center me-2" style="width: 36px; height: 36px;">
+                                <i class="fas fa-hand-holding-usd" aria-hidden="true"></i>
                             </div>
                             <div>
                                 <h5 class="modal-title fw-bold mb-0" id="paymentModalLabel">Procesar Cobro de Cuota(s)</h5>
-                                <small class="opacity-75">Cliente: {{ plan_pago.cliente }}</small>
+                                <small class="opacity-75">{{ plan_pago.cliente }} · {{ selectedCuotas.length }} {{ selectedCuotas.length === 1 ? 'cuota' : 'cuotas' }}</small>
                             </div>
                         </div>
-                        <button type="button" class="btn-close btn-close-white" @click="cerrarModalCobrarCuotas"></button>
+                        <button type="button" class="btn-close btn-close-white" aria-label="Cerrar cobro" @click="cerrarModalCobrarCuotas"></button>
                     </div>
 
-                    <div class="modal-body p-4 bg-light">
+                    <div class="modal-body p-3 bg-light cobro-modal-body">
 
                         <!-- Selector de modalidad de pago -->
                         <div class="card border-0 shadow-sm mb-3">
-                            <div class="card-body py-2 px-3">
-                                <label class="form-label small fw-bold text-muted mb-2 text-uppercase d-block">
-                                    <i class="fas fa-sliders-h me-1"></i> Modalidad de Pago
-                                </label>
-                                <div class="d-flex gap-2 flex-wrap">
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2 gap-2">
+                                    <h6 class="fw-bold text-dark mb-0"><i class="fas fa-sliders-h me-2 text-success" aria-hidden="true"></i>Modalidad de pago</h6>
+                                    <span class="text-muted small">Seleccione qué conceptos cobrará</span>
+                                </div>
+                                <div class="payment-mode-grid" role="group" aria-label="Modalidad de pago">
                                     <button v-for="m in modalidades" :key="m.value"
                                             type="button"
-                                            class="btn btn-sm fw-bold text-uppercase"
+                                            class="btn btn-sm fw-bold payment-mode-button"
                                             :class="paymentDetails.modalidad === m.value ? m.classActive : 'btn-outline-secondary'"
+                                            :aria-pressed="paymentDetails.modalidad === m.value"
                                             @click="paymentDetails.modalidad = m.value">
                                         {{ m.label }}
                                     </button>
                                 </div>
                                 <div v-if="paymentDetails.modalidad !== 'completo' && paymentDetails.modalidad !== 'parcial'"
-                                     class="mt-2 small text-warning fw-bold">
-                                    <i class="fas fa-info-circle"></i>
+                                     class="mt-2 small text-muted">
+                                    <i class="fas fa-info-circle me-1 text-warning" aria-hidden="true"></i>
                                     Solo se registra {{
                                         paymentDetails.modalidad === 'solo_interes' ? 'el interés' :
                                         paymentDetails.modalidad === 'solo_mora' ? 'la multa' :
@@ -497,152 +495,154 @@
                             </div>
                         </div>
 
-                        <div class="row g-4">
+                        <div class="card border-0 shadow-sm mb-3">
+                            <div class="card-body p-3">
+                                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                                    <h6 class="fw-bold text-dark mb-0"><i class="fas fa-receipt me-2 text-success" aria-hidden="true"></i>Deuda de las cuotas seleccionadas</h6>
+                                    <span class="small text-muted">Total bruto: <strong class="text-dark">{{ formatNumero(totalPagar) }} Bs</strong></span>
+                                </div>
+                                <div class="payment-debt-grid">
+                                    <div><span>Capital</span><strong>{{ formatNumero(totalCapital) }} Bs</strong></div>
+                                    <div><span>Interés devengado</span><strong>{{ formatNumero(totalInteresDevengado) }} Bs</strong></div>
+                                    <div><span>Interés moratorio</span><strong class="text-danger">{{ formatNumero(totalInteresMoratorio) }} Bs</strong></div>
+                                    <div><span>Multa</span><strong class="text-danger">{{ formatNumero(totalMulta) }} Bs</strong></div>
+                                </div>
+                                <small class="d-block text-muted mt-2">Importes pendientes de estas cuotas, antes de elegir modalidad y aplicar condonaciones.</small>
+                            </div>
+                        </div>
 
-                            <div class="col-md-5">
-                                <div class="card border-0 shadow-sm h-100">
-                                    <div class="card-header bg-white border-bottom-0 pt-3 pb-0">
-                                        <h6 class="fw-bold text-uppercase text-muted mb-0"><i class="fas fa-receipt me-2"></i>Resumen de Deuda</h6>
+                        <div v-if="tienePermiso('condonar') && (showCondInt || showCondMora)" class="card border-warning border-opacity-50 shadow-sm mb-3">
+                            <div class="card-body p-3">
+                                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                                    <h6 class="fw-bold text-dark mb-0"><i class="fas fa-gift me-2 text-warning" aria-hidden="true"></i>Condonación</h6>
+                                    <small class="text-muted">Opcional · requiere motivo si se aplica</small>
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-sm-6" v-if="showCondInt">
+                                        <label for="condonacionInteresCobro" class="form-label small fw-bold mb-1">Interés a condonar (Bs)</label>
+                                        <input id="condonacionInteresCobro" type="number" class="form-control form-control-sm bg-white"
+                                            v-model.number="paymentDetails.monto_condonado_interes"
+                                            min="0" :max="totalInteres" step="0.01"
+                                            @focus="$event.target.select()" @blur="verificarVacio('interes')" @input="validarMonto('interes')" placeholder="0,00">
                                     </div>
-                                    <div class="card-body">
-                                        <ul class="list-group list-group-flush mb-3">
-                                            <li class="list-group-item d-flex justify-content-between align-items-center px-0 bg-transparent border-bottom-0 pb-1">
-                                                <span class="text-muted small">Capital Adeudado</span>
-                                                <span class="fw-bold text-dark">{{ formatNumero(totalCapital) }}</span>
-                                            </li>
-                                            
-                                            <!-- Desglose de Intereses -->
-                                            <li class="list-group-item px-0 bg-transparent border-bottom-0 py-1">
-                                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                                    <span class="text-muted small">Interés Devengado</span>
-                                                    <span class="fw-bold text-primary">{{ formatNumero(totalInteresDevengado) }}</span>
-                                                </div>
-                                                <div class="d-flex justify-content-between align-items-center">
-                                                    <span class="text-muted small">Interés Moratorio</span>
-                                                    <span class="fw-bold text-danger">{{ formatNumero(totalInteresMoratorio) }}</span>
-                                                </div>
-                                            </li>
-
-                                            <li class="list-group-item d-flex justify-content-between align-items-center px-0 bg-transparent border-top pt-2 pb-1">
-                                                <span class="text-secondary fw-bold small">Subtotal Intereses</span>
-                                                <span class="fw-bold text-primary">{{ formatNumero(totalInteres) }}</span>
-                                            </li>
-
-                                            <li class="list-group-item d-flex justify-content-between align-items-center px-0 bg-transparent pt-1 border-bottom-0">
-                                                <span class="text-muted small">Multa Fija</span>
-                                                <span class="fw-bold text-danger">{{ formatNumero(totalMulta) }}</span>
-                                            </li>
-                                        </ul>
-                                        
-                                        <div class="alert alert-dark border-0 p-2 px-3 mb-0 d-flex justify-content-between align-items-center shadow-sm">
-                                            <span class="text-uppercase fw-bold opacity-75" style="font-size: 0.7rem;">TOTAL BRUTO</span>
-                                            <span class="fw-bold mb-0 fs-5">{{ plan_pago.moneda }} {{ formatNumero(totalPagar) }}</span>
-                                        </div>
+                                    <div class="col-sm-6" v-if="showCondMora">
+                                        <label for="condonacionMultaCobro" class="form-label small fw-bold mb-1">Multa a condonar (Bs)</label>
+                                        <input id="condonacionMultaCobro" type="number" class="form-control form-control-sm bg-white"
+                                            v-model.number="paymentDetails.monto_condonado_multa"
+                                            min="0" :max="totalMulta" step="0.01"
+                                            @focus="$event.target.select()" @blur="verificarVacio('multa')" @input="validarMonto('multa')" placeholder="0,00">
+                                    </div>
+                                    <div class="col-12" v-if="paymentDetails.monto_condonado_interes > 0 || paymentDetails.monto_condonado_multa > 0">
+                                        <label for="motivoCondonacionCobro" class="form-label small fw-bold mb-1">Motivo de la condonación *</label>
+                                        <input id="motivoCondonacionCobro" type="text" class="form-control form-control-sm bg-white"
+                                            v-model="paymentDetails.motivo_condonacion_interes"
+                                            placeholder="Indique por qué se condona este importe">
+                                        <small v-if="!condonacionValida" class="d-block text-danger mt-1">Escriba un motivo de al menos 3 caracteres.</small>
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="col-md-7">
-                                
-                                <div class="card border-warning border-opacity-50 shadow-sm mb-3" v-if="tienePermiso('condonar') && (showCondInt || showCondMora)">
-                                    <div class="card-header bg-warning bg-opacity-10 py-2">
-                                        <h6 class="fw-bold text-warning-emphasis mb-0 small text-uppercase">
-                                            <i class="fas fa-gift me-2"></i>Opciones de Condonación
-                                        </h6>
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-3">
+                                <div class="row g-3 align-items-end">
+                                    <div class="col-md-5">
+                                        <div class="payment-net-total">
+                                            <span>A cobrar según modalidad</span>
+                                            <strong>{{ formatNumero(totalLiquido) }} <small>Bs</small></strong>
+                                            <small>Después de condonaciones</small>
+                                        </div>
                                     </div>
-                                    <div class="card-body p-3">
+                                    <div class="col-md-7">
+                                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-1">
+                                            <label for="montoCobroCuotas" class="form-label fw-bold text-dark mb-0 small">Monto a cobrar ahora (Bs)</label>
+                                            <div class="form-check form-switch mb-0" v-if="paymentDetails.modalidad === 'parcial'">
+                                                <input class="form-check-input" type="checkbox" id="toggleCobrarTotal"
+                                                    v-model="cobrarTotal" @change="handleCobrarTotal">
+                                                <label class="form-check-label small fw-bold text-primary" for="toggleCobrarTotal">Cobrar todo</label>
+                                            </div>
+                                            <span v-else class="small text-muted">Calculado automáticamente</span>
+                                        </div>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white text-success">Bs</span>
+                                            <input id="montoCobroCuotas" type="number" class="form-control fw-bold text-end"
+                                                v-model.number="paymentDetails.monto_recibido"
+                                                min="0" step="0.01"
+                                                :readonly="paymentDetails.modalidad !== 'parcial'"
+                                                :class="{ 'bg-light': paymentDetails.modalidad !== 'parcial' }"
+                                                @input="cobrarTotal = false"
+                                                @focus="$event.target.select()">
+                                        </div>
+                                        <small v-if="paymentDetails.modalidad === 'parcial' && Number(paymentDetails.monto_recibido) > 0 && Number(paymentDetails.monto_recibido) < Number(totalLiquido)"
+                                            class="d-block text-warning-emphasis mt-1">Quedará un saldo de {{ formatNumero(Number(totalLiquido) - Number(paymentDetails.monto_recibido)) }} Bs.</small>
+                                        <small v-else-if="paymentDetails.modalidad === 'parcial' && Number(paymentDetails.monto_recibido) === 0 && Number(totalLiquido) > 0"
+                                            class="d-block text-muted mt-1">Ingrese el monto que desea cobrar.</small>
+                                        <small v-if="Number(paymentDetails.monto_recibido) > Number(totalLiquido)" class="d-block text-danger mt-1">El importe supera el monto a cobrar según la modalidad.</small>
+                                    </div>
+                                </div>
+                                <div class="row g-3 align-items-end border-top mt-3 pt-2">
+                                    <div class="col-sm-5">
+                                        <label for="fechaCobroCuotas" class="form-label small fw-bold mb-1">Fecha de cobro</label>
+                                        <input id="fechaCobroCuotas" type="date" class="form-control form-control-sm bg-white"
+                                            v-model="paymentDetails.fecha_pago"
+                                            :disabled="!tienePermiso('pagos_retroactivos') || procesandoPago"
+                                            @change="actualizarFechaCobro">
+                                        <small v-if="calculandoDeuda" class="text-muted">Actualizando deuda…</small>
+                                        <button v-else-if="!revisionDeuda" type="button" class="btn btn-sm btn-outline-primary mt-1" @click="actualizarFechaCobro">Recalcular deuda</button>
+                                    </div>
+                                    <div class="col-sm-7">
+                                        <label class="form-label small fw-bold mb-1">Forma de pago</label>
+                                        <div class="payment-method-grid" role="group" aria-label="Forma de pago">
+                                            <button v-for="forma in formasCobro" :key="forma.value" type="button"
+                                                class="btn btn-sm payment-method-button"
+                                                :class="paymentDetails.forma_pago === forma.value ? 'btn-success' : 'btn-outline-secondary'"
+                                                :aria-pressed="paymentDetails.forma_pago === forma.value"
+                                                @click="paymentDetails.forma_pago = forma.value">
+                                                {{ forma.label }}
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div v-if="paymentDetails.forma_pago === 'deposito' || paymentDetails.forma_pago === 'transferencia'" class="col-12">
+                                        <label for="referenciaCobroCuotas" class="form-label small fw-bold mb-1">Referencia o comprobante *</label>
+                                        <input id="referenciaCobroCuotas" v-model.trim="paymentDetails.referencia" type="text"
+                                            class="form-control form-control-sm" maxlength="150" placeholder="Número de operación o comprobante">
+                                        <small v-if="Number(paymentDetails.monto_recibido) > 0 && !paymentDetails.referencia?.trim()" class="d-block text-danger mt-1">Ingrese la referencia para continuar.</small>
+                                    </div>
+                                    <div v-if="paymentDetails.forma_pago === 'mixto'" class="col-12">
                                         <div class="row g-2">
-                                            <div class="col-sm-6" v-if="showCondInt">
-                                                <label class="form-label small fw-bold text-muted mb-1">Desc. Interés (Bs)</label>
-                                                <input type="number" class="form-control form-control-sm border-warning bg-white"
-                                                    v-model.number="paymentDetails.monto_condonado_interes"
-                                                    min="0" :max="totalInteres"
-                                                    @focus="$event.target.select()" @blur="verificarVacio('interes')" @input="validarMonto('interes')" placeholder="0.00">
+                                            <div class="col-sm-4">
+                                                <label for="parteEfectivoCobro" class="form-label small fw-bold mb-1">Efectivo (Bs)</label>
+                                                <input id="parteEfectivoCobro" v-model.number="partesMixtas.efectivo" type="number" min="0" step="0.01" class="form-control form-control-sm">
                                             </div>
-                                            <div class="col-sm-6" v-if="showCondMora">
-                                                <label class="form-label small fw-bold text-danger mb-1">Desc. Multa (Bs)</label>
-                                                <input type="number" class="form-control form-control-sm border-danger bg-white"
-                                                    v-model.number="paymentDetails.monto_condonado_multa"
-                                                    min="0" :max="totalMulta"
-                                                    @focus="$event.target.select()" @blur="verificarVacio('multa')" @input="validarMonto('multa')" placeholder="0.00">
+                                            <div class="col-sm-4">
+                                                <label for="parteDepositoCobro" class="form-label small fw-bold mb-1">Depósito (Bs)</label>
+                                                <input id="parteDepositoCobro" v-model.number="partesMixtas.deposito" type="number" min="0" step="0.01" class="form-control form-control-sm">
+                                                <input v-if="Number(partesMixtas.deposito) > 0" v-model.trim="partesMixtas.referencia_deposito" type="text"
+                                                    class="form-control form-control-sm mt-1" maxlength="150" aria-label="Referencia del depósito" placeholder="Referencia *">
                                             </div>
-                                            <div class="col-12 mt-2" v-if="paymentDetails.monto_condonado_interes > 0 || paymentDetails.monto_condonado_multa > 0">
-                                                <input type="text" class="form-control form-control-sm bg-white"
-                                                    v-model="paymentDetails.motivo_condonacion_interes"
-                                                    placeholder="Escriba el motivo de la condonación...">
+                                            <div class="col-sm-4">
+                                                <label for="parteTransferenciaCobro" class="form-label small fw-bold mb-1">Transferencia / QR (Bs)</label>
+                                                <input id="parteTransferenciaCobro" v-model.number="partesMixtas.transferencia" type="number" min="0" step="0.01" class="form-control form-control-sm">
+                                                <input v-if="Number(partesMixtas.transferencia) > 0" v-model.trim="partesMixtas.referencia_transferencia" type="text"
+                                                    class="form-control form-control-sm mt-1" maxlength="150" aria-label="Referencia de la transferencia" placeholder="Referencia *">
                                             </div>
                                         </div>
+                                        <small class="d-block mt-1" :class="formaPagoValida ? 'text-muted' : 'text-danger'">
+                                            Distribuido: {{ formatNumero(totalPartesMixtas) }} Bs de {{ formatNumero(paymentDetails.monto_recibido) }} Bs. Use al menos dos formas y complete las referencias necesarias.
+                                        </small>
                                     </div>
                                 </div>
-
-                                <div class="card border-primary shadow-sm">
-                                    <div class="card-body p-3">
-                                        
-                                        <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-success bg-opacity-10 rounded">
-                                            <span class="text-primary fw-bold text-uppercase small">A Cobrar (Líquido)</span>
-                                            <span class="fs-4 fw-bold text-primary">{{ plan_pago.moneda }} {{ formatNumero(totalLiquido) }}</span>
-                                        </div>
-
-                                        <div class="row g-3">
-                                            <div class="col-12">
-                                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                                    <label class="form-label fw-bold text-dark mb-0 small text-uppercase">Efectivo a Recibir (Bs) *</label>
-                                                    <div class="form-check form-switch mb-0"
-                                                         v-if="paymentDetails.modalidad === 'parcial'">
-                                                        <input class="form-check-input" type="checkbox" id="toggleCobrarTotal"
-                                                            v-model="cobrarTotal" @change="handleCobrarTotal">
-                                                        <label class="form-check-label small fw-bold text-primary" for="toggleCobrarTotal" style="cursor:pointer;">COBRAR TODO</label>
-                                                    </div>
-                                                    <span v-else class="badge bg-secondary small">Auto-calculado</span>
-                                                </div>
-                                                <div class="input-group shadow-sm">
-                                                    <span class="input-group-text bg-white border-primary py-2"><i class="fas fa-money-bill-wave text-success"></i></span>
-                                                    <input type="number" class="form-control fw-bold text-end border-primary py-2"
-                                                        v-model.number="paymentDetails.monto_recibido"
-                                                        min="1" step="0.01" style="color: #198754;"
-                                                        :readonly="paymentDetails.modalidad !== 'parcial'"
-                                                        :class="{'bg-light': paymentDetails.modalidad !== 'parcial'}"
-                                                        @input="cobrarTotal = false"
-                                                        @focus="$event.target.select()">
-                                                </div>
-                                                <div v-if="paymentDetails.modalidad === 'parcial' && paymentDetails.monto_recibido < totalLiquido" class="form-text text-warning fw-bold mt-1" style="font-size: 0.7rem;">
-                                                    <i class="fas fa-info-circle"></i> Pago Parcial. Saldo: {{ formatNumero(totalLiquido - paymentDetails.monto_recibido) }} Bs.
-                                                </div>
-                                            </div>
-
-                                            <div class="col-sm-6">
-                                                <label class="form-label small fw-bold text-muted mb-1">Fecha de Transacción</label>
-                                                <input type="date" class="form-control form-control-sm bg-white" v-model="paymentDetails.fecha_pago" :disabled="!tienePermiso('pagos_retroactivos') || procesandoPago" @change="actualizarFechaCobro">
-                                                <small v-if="calculandoDeuda" class="text-muted">Actualizando deuda…</small>
-                                                <button v-else-if="!revisionDeuda" type="button" class="btn btn-sm btn-outline-primary mt-1" @click="actualizarFechaCobro">Recalcular deuda</button>
-                                            </div>
-                                            <div class="col-sm-6">
-                                                <label class="form-label small fw-bold text-muted mb-1">Método de Pago</label>
-                                                <div class="payment-step-info">
-                                                    <div class="d-flex align-items-center gap-2 mb-1">
-                                                        <i class="fas fa-wallet text-success"></i>
-                                                        <strong>Se selecciona en el siguiente paso</strong>
-                                                    </div>
-                                                    <span>Efectivo, depósito, transferencia/QR o pago mixto.</span>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                    </div>
-                                </div>
-
                             </div>
                         </div>
                     </div>
                     
-                    <div class="modal-footer bg-white border-top-0 py-3 d-flex justify-content-end">
+                    <div class="modal-footer bg-white border-top-0 py-2 px-3 d-flex justify-content-end">
                         <button type="button" class="btn btn-light px-4 border" @click="cerrarModalCobrarCuotas">Cancelar</button>
                         <button type="button" class="btn btn-success px-4 fw-bold shadow-sm"
                             :disabled="!puedeContinuarCobro || procesandoPago" @click="procesarPagoCuotas">
                             <span v-if="procesandoPago" class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
-                            <i v-else class="fas fa-arrow-right me-2"></i>
-                            {{ procesandoPago ? 'PROCESANDO...' : 'CONTINUAR A FORMAS DE PAGO' }}:
-                            Bs {{ paymentDetails.monto_recibido ? formatNumero(paymentDetails.monto_recibido) : '0.00' }}
+                            <i v-else class="fas fa-check me-2" aria-hidden="true"></i>
+                            {{ procesandoPago ? 'Procesando...' : (Number(paymentDetails.monto_recibido) > 0 ? 'Confirmar cobro' : 'Confirmar condonación') }} · {{ formatNumero(paymentDetails.monto_recibido) }} Bs
                         </button>
                     </div>
 
@@ -658,8 +658,10 @@ import { tienePermiso } from '../../router/session';
 import moment from "moment";
 import axios from "axios";
 import Swal from "sweetalert2";
+import DesgloseExigibleCuota from '../PlanPago/DesgloseExigibleCuota.vue';
 
 export default {
+    components: { DesgloseExigibleCuota },
     data() {
         return {
             revisionDeuda: null,
@@ -703,14 +705,22 @@ export default {
                 motivo_condonacion_interes: '',
                 monto_condonado_multa: 0,
                 motivo_condonacion_multa: '',
-                forma_pago: 'efectivo'
+                forma_pago: 'efectivo',
+                referencia: ''
             },
+            partesMixtas: { efectivo: 0, deposito: 0, transferencia: 0, referencia_deposito: '', referencia_transferencia: '' },
+            formasCobro: [
+                { value: 'efectivo', label: 'Efectivo' },
+                { value: 'deposito', label: 'Depósito' },
+                { value: 'transferencia', label: 'Transferencia / QR' },
+                { value: 'mixto', label: 'Mixto' },
+            ],
             modalidades: [
                 { value: 'completo',     label: 'Cuota Completa',        classActive: 'btn-success' },
                 { value: 'solo_interes', label: 'Solo Interés',          classActive: 'btn-primary' },
                 { value: 'solo_mora',    label: 'Solo Multa',            classActive: 'btn-danger' },
                 { value: 'interes_mora', label: 'Interés + Multa',       classActive: 'btn-warning text-dark' },
-                { value: 'parcial',      label: 'Pago Parcial (libre)',  classActive: 'btn-info text-white' },
+                { value: 'parcial',      label: 'Pago Parcial (libre)',  classActive: 'btn-primary' },
             ]
         };
     },
@@ -767,9 +777,38 @@ export default {
             return ['completo', 'parcial', 'solo_mora', 'interes_mora'].includes(this.paymentDetails.modalidad)
                 && parseFloat(this.totalMulta) > 0;
         },
+        totalPartesMixtas() {
+            return ['efectivo', 'deposito', 'transferencia'].reduce(
+                (total, forma) => total + Math.round(Number(this.partesMixtas[forma] || 0) * 100), 0
+            ) / 100;
+        },
+        formaPagoValida() {
+            const monto = Number(this.paymentDetails.monto_recibido || 0);
+            if (!Number.isFinite(monto) || monto < 0) return false;
+            if (monto === 0) return true;
+            const forma = this.paymentDetails.forma_pago;
+            if (forma === 'efectivo') return true;
+            if (forma === 'deposito' || forma === 'transferencia') {
+                return Boolean(this.paymentDetails.referencia?.trim());
+            }
+            if (forma !== 'mixto') return false;
+            const importes = ['efectivo', 'deposito', 'transferencia'].map(key => Number(this.partesMixtas[key] || 0));
+            return importes.every(value => Number.isFinite(value) && value >= 0)
+                && importes.filter(value => value > 0).length >= 2
+                && Math.round(this.totalPartesMixtas * 100) === Math.round(monto * 100)
+                && (importes[1] === 0 || Boolean(this.partesMixtas.referencia_deposito?.trim()))
+                && (importes[2] === 0 || Boolean(this.partesMixtas.referencia_transferencia?.trim()));
+        },
+        condonacionValida() {
+            const hayCondonacion = Number(this.paymentDetails.monto_condonado_interes) > 0
+                || Number(this.paymentDetails.monto_condonado_multa) > 0;
+            return !hayCondonacion || (this.paymentDetails.motivo_condonacion_interes || '').trim().length >= 3;
+        },
         puedeContinuarCobro() {
             return !this.calculandoDeuda && !!this.revisionDeuda
-                && this.fechaDeuda === this.paymentDetails.fecha_pago && this.selectedCuotas.length > 0 && (
+                && this.fechaDeuda === this.paymentDetails.fecha_pago && this.selectedCuotas.length > 0
+                && this.formaPagoValida && this.condonacionValida
+                && Number(this.paymentDetails.monto_recibido || 0) <= Number(this.totalLiquido) + 0.001 && (
                 parseFloat(this.paymentDetails.monto_recibido || 0) > 0
                 || parseFloat(this.paymentDetails.monto_condonado_interes || 0) > 0
                 || parseFloat(this.paymentDetails.monto_condonado_multa || 0) > 0
@@ -1046,8 +1085,10 @@ export default {
                 motivo_condonacion_interes: '',
                 monto_condonado_multa: 0,
                 motivo_condonacion_multa: '',
-                forma_pago: 'efectivo'
+                forma_pago: 'efectivo',
+                referencia: ''
             };
+            this.partesMixtas = { efectivo: 0, deposito: 0, transferencia: 0, referencia_deposito: '', referencia_transferencia: '' };
             this.cobrarTotal = true;
             this.sincronizarMontoCobro();
         },
@@ -1095,11 +1136,21 @@ export default {
                     monto_recibido: parseFloat(this.paymentDetails.monto_recibido || 0),
                     fecha_pago: this.paymentDetails.fecha_pago,
                     forma_pago: this.paymentDetails.forma_pago,
+                    referencia: this.paymentDetails.referencia,
                     condonacion_interes: parseFloat(this.paymentDetails.monto_condonado_interes) || 0,
                     motivo_condonacion_interes: this.paymentDetails.motivo_condonacion_interes || '',
                     condonacion_mora: parseFloat(this.paymentDetails.monto_condonado_multa) || 0,
                     motivo_condonacion_mora: this.paymentDetails.motivo_condonacion_interes || ''
                 };
+                if (this.paymentDetails.forma_pago === 'mixto') {
+                    payload.partes = ['efectivo', 'deposito', 'transferencia']
+                        .filter(forma_pago => Number(this.partesMixtas[forma_pago]) > 0)
+                        .map(forma_pago => ({
+                            forma_pago,
+                            monto: Number(this.partesMixtas[forma_pago]),
+                            referencia: forma_pago === 'efectivo' ? '' : this.partesMixtas[`referencia_${forma_pago}`]
+                        }));
+                }
 
                 if (payload.monto_recibido <= 0 && payload.condonacion_interes <= 0 && payload.condonacion_mora <= 0) {
                     Swal.fire('Atención', 'Debe ingresar un monto a recibir o aplicar una condonación.', 'warning');
@@ -1453,19 +1504,92 @@ export default {
         cursor: not-allowed;
     }
 
-    .payment-step-info {
-        min-height: 58px;
-        padding: 0.55rem 0.7rem;
-        border: 1px solid #dce7df;
-        border-radius: 0.35rem;
-        background: #f5fbf7;
-        color: #52615a;
-        font-size: 0.72rem;
-        line-height: 1.35;
+    .cobro-modal-body {
+        font-size: 0.85rem;
     }
 
-    .payment-step-info strong {
-        color: #263b2f;
-        font-size: 0.74rem;
+    .payment-mode-grid,
+    .payment-method-grid {
+        display: grid;
+        gap: 0.4rem;
+    }
+
+    .payment-mode-grid {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+
+    .payment-method-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .payment-mode-button,
+    .payment-method-button {
+        min-height: 38px;
+        padding: 0.35rem;
+        line-height: 1.2;
+        white-space: normal;
+    }
+
+    .payment-mode-button[aria-pressed="true"],
+    .payment-method-button[aria-pressed="true"] {
+        box-shadow: 0 0 0 2px rgba(25, 135, 84, 0.18);
+    }
+
+    .payment-debt-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.5rem;
+    }
+
+    .payment-debt-grid > div {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+        min-width: 0;
+        padding: 0.55rem 0.65rem;
+        border: 1px solid #e3e9e5;
+        border-radius: 0.4rem;
+        background: #f8fbf9;
+    }
+
+    .payment-debt-grid span,
+    .payment-net-total > span,
+    .payment-net-total > small {
+        color: #63736a;
+        font-size: 0.73rem;
+    }
+
+    .payment-debt-grid strong,
+    .payment-net-total strong {
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+
+    .payment-net-total {
+        display: flex;
+        flex-direction: column;
+        padding: 0.7rem 0.85rem;
+        border: 1px solid #bfdfcb;
+        border-radius: 0.45rem;
+        background: #eef9f2;
+    }
+
+    .payment-net-total > strong {
+        color: #146c43;
+        font-size: 1.45rem;
+        line-height: 1.2;
+    }
+
+    .payment-net-total > strong small {
+        font-size: 0.72rem;
+    }
+
+    @media (max-width: 767.98px) {
+        .payment-mode-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .payment-debt-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
     }
 </style>
