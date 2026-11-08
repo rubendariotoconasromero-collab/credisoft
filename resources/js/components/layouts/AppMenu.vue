@@ -288,6 +288,11 @@ export default {
         color: rgba(255, 255, 255, 0.85) !important;
     }
 
+    /* La plantilla inicia los submenús en 50 px; alinear sus textos con los títulos principales. */
+    :global(body:not(.vertical-collpsed):not([data-sidebar-size="small"]) #sidebar-menu #side-menu > li > .sub-menu > li > a) {
+        padding-left: calc(25px + 1.35rem + 1rem);
+    }
+
     /* Submenú activo */
     .sub-menu a.mm-active {
         color: #00ffaa !important;
